@@ -1,4 +1,4 @@
-English | Bahasa Indonesia
+**English** | [Bahasa Indonesia](https://github.com/mahalisyarifuddin/PreferenceRank/blob/main/README-id.md)
 
 # PreferenceRank
 Sorting made better, powered by science.
