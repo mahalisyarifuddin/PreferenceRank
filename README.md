@@ -7,8 +7,8 @@ Sorting made better, powered by science.
 Inspired by viral character/bias sorters, but reimagined with a more rigorous approach. This tool brings scientific precision to preference ranking while keeping it fun and easy to use.
 
 ## Quick Start
-1. Download the HTML file
-2. Open it in any modern browser
+1. Download the HTML file.
+2. Open it in any modern browser.
 3. Start ranking!
 
 That's it! No installation needed. Feel free to customize the source code to your needs.
@@ -20,7 +20,7 @@ That's it! No installation needed. Feel free to customize the source code to you
 - **Lightweight**: Single HTML file, no external dependencies.
 
 ## Future Improvements (help wanted)
-- Implement robust "undo" functionality during ranking battles
+- Implement robust "undo" functionality during ranking battles.
 
 ## License
-MIT License
+MIT License.
