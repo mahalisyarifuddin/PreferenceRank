@@ -11,7 +11,9 @@ Terinspirasi dari *character/bias sorter* yang viral, namun dikembangkan dengan 
 2. Buka di peramban web modern apa pun.
 3. Mulai mengurutkan!
 
-Cukup itu saja! Tidak perlu instalasi. Anda juga bebas memodifikasi kode sumber sesuai kebutuhan.
+Cukup itu saja! Tidak perlu instalasi.
+
+Anda juga bebas memodifikasi kode sumber sesuai kebutuhan.
 
 ## Fitur Utama
 - **Masukan Fleksibel**: Urutkan apa saja - karakter, makanan, film, destinasi wisata, terserah Anda;
