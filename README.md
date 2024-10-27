@@ -19,7 +19,7 @@ That's it! No installation needed. Feel free to customize the source code to you
 - **Scientific Scoring**: Implements Bradley-Terry Elo rating system for transparent and relative preference scores;
 - **Lightweight**: Single HTML file, no external dependencies.
 
-## Future Improvements
+## Future Improvements (help wanted)
 - Implement robust "undo" functionality during ranking battles
 
 ## License
