@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PreferenceRank</title>
+        <style>
+            :root {
+                --primary-color: #007BFF;
+                --primary-hover-color: #0056b3;
+                --background-color: #f9f9f9;
+                --container-background: #fff;
+                --text-color: #333;
+                --border-color: #ccc;
+                --button-hover-color: #e6e6e6;
+            }
+
+            body {
+                font-family: sans-serif;
+                background-color: var(--background-color);
+                color: var(--text-color);
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+
+            .container {
+                background-color: var(--container-background);
+                padding: 2rem;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                width: 100%;
+                max-width: 600px;
+                position: relative;
+                padding-top: 3rem;
+            }
+
+            h1, h2 {
+                margin-top: 0;
+                margin-bottom: 1.5rem;
+                text-align: left;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            label {
+                display: inline-block;
+                margin-bottom: 0.5rem;
+                font-weight: bold;
+            }
+
+            select, input, button, textarea {
+                width: 100%;
+                padding: 0.5rem;
+                font-size: 1rem;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+
+            button {
+                background-color: var(--primary-color);
+                color: white;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+
+            button:hover {
+                background-color: var(--primary-hover-color);
+            }
+
+            #battle {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 1rem;
+            }
+
+            #battle button, #tieButtons button {
+                width: 48%;
+                min-height: 100px;
+                font-size: 1.2rem;
+                background-color: white;
+                color: var(--text-color);
+                border: 1px solid var(--border-color);
+                transition: background-color 0.3s ease;
+            }
+
+            #battle button:hover, #tieButtons button:hover {
+                background-color: var(--button-hover-color);
+            }
+
+            #progress {
+                margin-top: 1rem;
+                font-size: 1.1rem;
+                text-align: center;
+            }
+
+            .language-select {
+                width: auto;
+                padding: 5px;
+                font-size: 0.9rem;
+                position: absolute;
+                right: 1rem;
+                top: 1rem;
+            }
+
+            .checkbox-container {
+                display: flex;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+
+            .checkbox-container input[type="checkbox"] {
+                width: auto;
+                margin-right: 10px;
+            }
+
+            .checkbox-container label {
+                margin-bottom: 0;
+            }
+
+            #results table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 1rem;
+            }
+
+            #results th, #results td {
+                border: 1px solid var(--border-color);
+                padding: 0.5rem;
+                text-align: left;
+            }
+
+            #results th {
+                background-color: var(--primary-color);
+                color: white;
+            }
+
+            #tieButtons {
+                display: none;
+                margin-top: 1rem;
+                justify-content: space-between;
+            }
+
+            #tieButtons button {
+                width: 48%;
+            }
+
+            #restartButtons {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 1rem;
+            }
+
+            #restartButtons button {
+                width: 48%;
+            }
+
+            .selected {
+                background-color: var(--primary-color) !important;
+                color: white !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div id="inputSection">
+                <h1 id="title"></h1>
+                <select id="languageSelect" class="language-select">
+                    <option value="en">English</option>
+                    <option value="id">Bahasa Indonesia</option>
+                </select>
+                <div class="form-group">
+                    <label for="itemInput" id="itemInputLabel"></label>
+                    <textarea id="itemInput" rows="5"></textarea>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="allowTies" checked>
+                    <label for="allowTies" id="allowTiesLabel"></label>
+                </div>
+                <button id="startButton"></button>
+            </div>
+            <div id="battleSection" style="display: none;">
+                <div id="battle">
+                    <button id="leftItem"></button>
+                    <button id="rightItem"></button>
+                </div>
+                <div id="tieButtons">
+                    <button id="likeBothButton"></button>
+                    <button id="dislikeBothButton"></button>
+                </div>
+                <div id="progress"></div>
+            </div>
+            <div id="results" style="display: none;"></div>
+            <div id="restartButtons" style="display: none;">
+                <button id="restartBattleButton"></button>
+                <button id="restartNewItemsButton"></button>
+            </div>
+        </div>
+        <script>
+            class PreferenceRank {
+                constructor() {
+                    this.state = {
+                        items: [],
+                        scores: {},
+                        currentPair: [],
+                        remainingPairs: [],
+                        totalPairs: 0,
+                        currentProgress: 0,
+                        allowTies: false,
+                        language: 'en'
+                    };
+
+                    this.config = {
+                        INITIAL_RATING: 1000,
+                        K_FACTOR: 32,
+                        translations: {
+                            en: {
+                                title: "PreferenceRank",
+                                itemInputLabel: "Enter items, one per line:",
+                                allowTiesLabel: "Allow Ties",
+                                alert: "Please enter at least two items.",
+                                startButton: "Start Ranking",
+                                likeBothButton: "Like Both",
+                                dislikeBothButton: "Dislike Both",
+                                progress: "Progress",
+                                results: "Results",
+                                rank: "Rank",
+                                item: "Item",
+                                score: "Score",
+                                restartBattleButton: "Restart Battle",
+                                restartNewItemsButton: "Start with New Items"
+                            },
+                            id: {
+                                title: "PreferenceRank",
+                                itemInputLabel: "Masukkan item, satu per baris:",
+                                allowTiesLabel: "Izinkan Seri",
+                                alert: "Harap masukkan setidaknya dua item.",
+                                startButton: "Mulai Peringkat",
+                                likeBothButton: "Suka Keduanya",
+                                dislikeBothButton: "Tidak Suka Keduanya",
+                                progress: "Kemajuan",
+                                results: "Hasil",
+                                rank: "Peringkat",
+                                item: "Item",
+                                score: "Skor",
+                                restartBattleButton: "Mulai Ulang Pertarungan",
+                                restartNewItemsButton: "Mulai dengan Item Baru"
+                            }
+                        }
+                    };
+
+                    this.init();
+                }
+
+                $ = id=>document.getElementById(id);
+
+                init() {
+                    ['languageSelect', 'allowTies', 'startButton', 'leftItem', 'rightItem', 'likeBothButton', 'dislikeBothButton', 'restartBattleButton', 'restartNewItemsButton'].forEach(id=>{
+                        const el = this.$(id);
+                        if (!el)
+                            return;
+
+                        const handler = {
+                            languageSelect: ()=>this.updateLanguage(),
+                            allowTies: ()=>this.toggleTieOptions(),
+                            startButton: ()=>this.startRank(),
+                            leftItem: e=>this.choose('left', e),
+                            rightItem: e=>this.choose('right', e),
+                            likeBothButton: e=>this.choose('tie', e),
+                            dislikeBothButton: e=>this.choose('tie', e),
+                            restartBattleButton: ()=>this.restartBattle(),
+                            restartNewItemsButton: ()=>this.restartNewItems()
+                        }[id];
+
+                        el.addEventListener(id.includes('Select') || id.includes('Ties') ? 'change' : 'click', handler);
+                    }
+                    );
+
+                    this.updateLanguage();
+                }
+
+                updateLanguage() {
+                    this.state.language = this.$('languageSelect').value;
+                    Object.entries(this.config.translations[this.state.language]).forEach(([key,value])=>{
+                        const el = this.$(key);
+                        if (el)
+                            el.textContent = value;
+                    }
+                    );
+                    this.updateProgress();
+                    if (this.$('results').style.display !== 'none')
+                        this.showResults();
+                }
+
+                startRank() {
+                    const items = this.$('itemInput').value.split('\n').filter(i=>i.trim());
+                    if (items.length < 2) {
+                        alert(this.config.translations[this.state.language].alert);
+                        return;
+                    }
+
+                    this.state = {
+                        ...this.state,
+                        items,
+                        scores: Object.fromEntries(items.map(i=>[i, this.config.INITIAL_RATING])),
+                        remainingPairs: this.shuffleArray(items.flatMap((v,i)=>items.slice(i + 1).map(w=>[v, w]))),
+                        allowTies: this.$('allowTies').checked,
+                        currentProgress: 0
+                    };
+                    this.state.totalPairs = this.state.remainingPairs.length;
+
+                    this.showSection('battleSection');
+                    this.$('tieButtons').style.display = this.state.allowTies ? 'flex' : 'none';
+                    this.nextBattle();
+                }
+
+                choose(winner, event) {
+                    const [left,right] = this.state.currentPair;
+                    const result = winner === 'left' ? 1 : winner === 'right' ? 0 : 0.5;
+
+                    const expectedLeft = 1 / (1 + 10 ** ((this.state.scores[right] - this.state.scores[left]) / 400));
+                    this.state.scores[left] += this.config.K_FACTOR * (result - expectedLeft);
+                    this.state.scores[right] += this.config.K_FACTOR * ((1 - result) - (1 - expectedLeft));
+
+                    this.clearSelections();
+                    if (event)
+                        this.$(winner === 'tie' ? event.target.id : `${winner}Item`).classList.add('selected');
+
+                    this.state.currentProgress++;
+                    this.updateProgress();
+                    setTimeout(()=>this.nextBattle(), 300);
+                }
+
+                showResults() {
+                    const t = this.config.translations[this.state.language];
+                    this.$('results').innerHTML = `
+            <h2>${t.results}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:20%">${t.rank}</th>
+                        <th style="width:60%">${t.item}</th>
+                        <th style="width:20%">${t.score}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td>${item}</td>
+                                <td>${Math.round(score)}</td>
+                            </tr>
+                        `).join('')}
+                </tbody>
+            </table>
+        `;
+                    this.showSection('results');
+                    this.$('restartButtons').style.display = 'flex';
+                }
+
+                shuffleArray(arr) {
+                    return [...arr].sort(()=>Math.random() - 0.5);
+                }
+
+                nextBattle() {
+                    if (!this.state.remainingPairs.length) {
+                        this.showResults();
+                        return;
+                    }
+                    this.state.currentPair = this.state.remainingPairs.pop();
+                    ['left', 'right'].forEach((side,i)=>this.$(`${side}Item`).textContent = this.state.currentPair[i]);
+                    this.updateProgress();
+                    this.clearSelections();
+                }
+
+                updateProgress() {
+                    const t = this.config.translations[this.state.language];
+                    this.$('progress').textContent = `${t.progress}: ${this.state.currentProgress}/${this.state.totalPairs}`;
+                }
+
+                showSection(id) {
+                    ['inputSection', 'battleSection', 'results', 'restartButtons'].forEach(section=>this.$(section).style.display = section === id ? 'block' : 'none');
+                }
+
+                clearSelections() {
+                    ['leftItem', 'rightItem', 'likeBothButton', 'dislikeBothButton'].forEach(id=>this.$(id).classList.remove('selected'));
+                }
+
+                restartBattle() {
+                    this.state = {
+                        ...this.state,
+                        remainingPairs: this.shuffleArray(this.state.items.flatMap((v,i)=>this.state.items.slice(i + 1).map(w=>[v, w]))),
+                        scores: Object.fromEntries(this.state.items.map(i=>[i, this.config.INITIAL_RATING])),
+                        currentProgress: 0
+                    };
+                    this.state.totalPairs = this.state.remainingPairs.length;
+                    this.showSection('battleSection');
+                    this.nextBattle();
+                }
+
+                restartNewItems() {
+                    this.showSection('inputSection');
+                    this.$('itemInput').value = '';
+                    this.$('tieButtons').style.display = this.state.allowTies ? 'flex' : 'none';
+                    this.state = {
+                        items: [],
+                        scores: {},
+                        currentPair: [],
+                        remainingPairs: [],
+                        totalPairs: 0,
+                        currentProgress: 0,
+                        allowTies: false,
+                        language: this.state.language
+                    };
+                }
+            }
+
+            const ranker = new PreferenceRank();
+
+            if (navigator.language?.startsWith('id')) {
+                document.getElementById('languageSelect').value = 'id';
+                ranker.updateLanguage();
+            }
+        </script>
+    </body>
+</html>
