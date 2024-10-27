@@ -11,7 +11,9 @@ Inspired by viral character/bias sorters, but reimagined with a more rigorous ap
 2. Open it in any modern browser.
 3. Start ranking!
 
-That's it! No installation needed. Feel free to customize the source code to your needs.
+That's it! No installation needed. 
+
+You are also feel free to customize the source code to your needs.
 
 ## Key Features
 - **Flexible Input**: Rank anything you want - characters, foods, movies, travel destinations, you name it;
