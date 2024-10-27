@@ -7,8 +7,8 @@
 Terinspirasi dari *character/bias sorter* yang viral, namun dikembangkan dengan pendekatan yang lebih terstruktur. Alat ini menghadirkan ketepatan ilmiah dalam pemeringkatan preferensi sambil tetap mudah dan menyenangkan untuk digunakan.
 
 ## Cara Menggunakan
-1. Unduh berkas HTML-nya
-2. Buka di peramban web modern apa pun
+1. Unduh berkas HTML-nya.
+2. Buka di peramban web modern apa pun.
 3. Mulai mengurutkan!
 
 Cukup itu saja! Tidak perlu instalasi. Anda juga bebas memodifikasi kode sumber sesuai kebutuhan.
@@ -20,7 +20,7 @@ Cukup itu saja! Tidak perlu instalasi. Anda juga bebas memodifikasi kode sumber 
 - **Ringan**: Satu berkas HTML, tanpa dependensi eksternal.
 
 ## Pengembangan Mendatang
-- Implementasi fitur "urungkan (*undo*)" yang andal selama proses pengurutan
+- Implementasi fitur "urungkan (*undo*)" yang andal selama proses pengurutan.
 
 ## Lisensi
-Lisensi MIT
+Lisensi MIT.
