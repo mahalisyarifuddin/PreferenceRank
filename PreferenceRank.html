@@ -13,6 +13,12 @@
                 --text-color: #333;
                 --border-color: #ccc;
                 --button-hover-color: #e6e6e6;
+                --spacing-sm: 0.5rem;
+                --spacing-md: 1rem;
+                --spacing-lg: 1.5rem;
+                --spacing-xl: 2rem;
+                --border-radius: 8px;
+                --border-radius-sm: 4px;
             }
 
             body, h1, h2, p, label, button, input, select, textarea {
@@ -32,9 +38,9 @@
 
             .container {
                 background-color: var(--container-background);
-                padding: 2rem;
+                padding: var(--spacing-xl);
                 padding-top: 3rem;
-                border-radius: 8px;
+                border-radius: var(--border-radius);
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
                 width: 100%;
                 max-width: 600px;
@@ -42,26 +48,26 @@
             }
 
             h1, h2 {
-                margin-bottom: 1.5rem;
+                margin-bottom: var(--spacing-lg);
                 text-align: left;
             }
 
             .form-group {
-                margin-bottom: 1rem;
+                margin-bottom: var(--spacing-md);
             }
 
             label {
                 display: block;
-                margin-bottom: 0.5rem;
+                margin-bottom: var(--spacing-sm);
                 font-weight: bold;
             }
 
             input, select, textarea, button {
                 width: 100%;
-                padding: 0.5rem;
+                padding: var(--spacing-sm);
                 font-size: 1rem;
                 border: 1px solid var(--border-color);
-                border-radius: 4px;
+                border-radius: var(--border-radius-sm);
                 box-sizing: border-box;
             }
 
@@ -82,8 +88,8 @@
 
             #battle {
                 display: flex;
-                gap: 1rem;
-                margin-top: 1rem;
+                gap: var(--spacing-md);
+                margin-top: var(--spacing-md);
             }
 
             #battle button, #tieButtons button {
@@ -102,15 +108,15 @@
             }
 
             #progress {
-                margin-top: 1rem;
+                margin-top: var(--spacing-md);
                 font-size: 1.1rem;
                 text-align: center;
             }
 
             .language-select {
                 position: absolute;
-                right: 2rem;
-                top: 1rem;
+                right: var(--spacing-xl);
+                top: var(--spacing-md);
                 width: auto;
                 padding: 5px;
                 font-size: 0.9rem;
@@ -119,7 +125,7 @@
             .checkbox-container {
                 display: flex;
                 align-items: center;
-                margin-bottom: 1rem;
+                margin-bottom: var(--spacing-md);
             }
 
             .checkbox-container input[type="checkbox"] {
@@ -134,12 +140,12 @@
             #results table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 1rem;
+                margin-top: var(--spacing-md);
             }
 
             #results th, #results td {
                 border: 1px solid var(--border-color);
-                padding: 0.5rem;
+                padding: var(--spacing-sm);
                 text-align: left;
             }
 
@@ -150,14 +156,14 @@
 
             #tieButtons {
                 display: none;
-                gap: 1rem;
-                margin-top: 1rem;
+                gap: var(--spacing-md);
+                margin-top: var(--spacing-md);
             }
 
             #restartButtons {
                 display: flex;
-                gap: 1rem;
-                margin-top: 1rem;
+                gap: var(--spacing-md);
+                margin-top: var(--spacing-md);
             }
 
             #restartButtons button {
@@ -180,7 +186,7 @@
 
             @media (max-width: 768px) {
                 .container {
-                    padding: 1rem;
+                    padding: var(--spacing-md);
                     padding-top: 3rem;
                 }
 
@@ -288,10 +294,7 @@
                 }
 
                 init() {
-                    ["languageSelect", "allowTies", "startButton", "leftItem", "rightItem", "likeBothButton", "dislikeBothButton", "restartBattleButton", "restartNewItemsButton"].forEach(id=>{
-                        this.$(id)?.addEventListener(id.includes("Select") || id.includes("Ties") ? "change" : "click", ()=>this.handleEvent(id));
-                    }
-                    );
+                    ["languageSelect", "allowTies", "startButton", "leftItem", "rightItem", "likeBothButton", "dislikeBothButton", "restartBattleButton", "restartNewItemsButton"].forEach(id=>this.$(id)?.addEventListener(id.includes("Select") || id.includes("Ties") ? "change" : "click", ()=>this.handleEvent(id)));
                     this.updateLanguage();
                 }
 
@@ -314,11 +317,13 @@
                     const lang = this.$("languageSelect").value;
                     this.state.language = lang;
                     Object.entries(this.config.translations[lang]).forEach(([key,value])=>{
-                        this.$(key) && (this.$(key).textContent = value);
+                        if (this.$(key))
+                            this.$(key).textContent = value;
                     }
                     );
                     this.updateProgress();
-                    this.$("results").style.display !== "none" && this.showResults();
+                    if (this.$("results").style.display !== "none")
+                        this.showResults();
                 }
 
                 startRank() {
@@ -332,9 +337,9 @@
                         scores: Object.fromEntries(items.map(i=>[i, this.config.INITIAL_RATING])),
                         remainingPairs: this.shuffleArray(items.flatMap((v,i)=>items.slice(i + 1).map(w=>[v, w]))),
                         allowTies: this.$("allowTies").checked,
-                        currentProgress: 0
+                        currentProgress: 0,
+                        totalPairs: items.length * (items.length - 1) / 2
                     };
-                    this.state.totalPairs = this.state.remainingPairs.length;
 
                     this.showSection("battleSection");
                     this.$("tieButtons").style.display = this.state.allowTies ? "flex" : "none";
@@ -344,18 +349,16 @@
                 choose(winner) {
                     const [left,right] = this.state.currentPair;
                     const result = winner === "left" ? 1 : winner === "right" ? 0 : 0.5;
-
                     const expectedLeft = 1 / (1 + 10 ** ((this.state.scores[right] - this.state.scores[left]) / 400));
+
                     this.state.scores[left] += this.config.K_FACTOR * (result - expectedLeft);
                     this.state.scores[right] += this.config.K_FACTOR * ((1 - result) - (1 - expectedLeft));
 
                     this.clearSelections();
-                    if (winner === "tie") {
-                        const clickedButton = event.target;
-                        clickedButton.classList.add("selected");
-                    } else {
+                    if (winner === "tie")
+                        event.target.classList.add("selected");
+                    else
                         this.$(winner === "left" ? "leftItem" : "rightItem").classList.add("selected");
-                    }
 
                     this.state.currentProgress++;
                     this.updateProgress();
@@ -365,13 +368,13 @@
                 showResults() {
                     const t = this.config.translations[this.state.language];
                     this.$("results").innerHTML = `
-                <h2>${t.results}</h2>
-                <table>
-                    <thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead>
-                    <tbody>${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`
-                        <tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>
-                    `).join('')}</tbody>
-                </table>`;
+            <h2>${t.results}</h2>
+            <table>
+                <thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead>
+                <tbody>${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`
+                    <tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}
+                </tbody>
+            </table>`;
                     this.showSection("results");
                     this.$("restartButtons").style.display = "flex";
                 }
@@ -407,9 +410,9 @@
                         ...this.state,
                         remainingPairs: this.shuffleArray(this.state.items.flatMap((v,i)=>this.state.items.slice(i + 1).map(w=>[v, w]))),
                         scores: Object.fromEntries(this.state.items.map(i=>[i, this.config.INITIAL_RATING])),
-                        currentProgress: 0
+                        currentProgress: 0,
+                        totalPairs: this.state.items.length * (this.state.items.length - 1) / 2
                     };
-                    this.state.totalPairs = this.state.remainingPairs.length;
                     this.showSection("battleSection");
                     this.nextBattle();
                 }
@@ -432,8 +435,10 @@
             }
 
             const ranker = new PreferenceRank();
-            navigator.language?.startsWith("id") && (ranker.$("languageSelect").value = "id",
-            ranker.updateLanguage());
+            if (navigator.language?.startsWith("id")) {
+                ranker.$("languageSelect").value = "id";
+                ranker.updateLanguage();
+            }
         </script>
     </body>
 </html>
