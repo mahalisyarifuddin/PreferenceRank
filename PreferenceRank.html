@@ -78,15 +78,13 @@
             button {
                 background-color: var(--primary-color);
                 color: white;
+                border: none;
+                font-size: 1rem;
                 cursor: pointer;
                 transition: background-color 0.3s ease;
             }
 
-            button:hover {
-                background-color: var(--primary-hover-color);
-            }
-
-            #battle {
+            #battle, #tieButtons, #restartButtons {
                 display: flex;
                 gap: var(--spacing-md);
                 margin-top: var(--spacing-md);
@@ -100,10 +98,9 @@
                 background-color: white;
                 color: var(--text-color);
                 border: 1px solid var(--border-color);
-                transition: background-color 0.3s ease;
             }
 
-            #battle button:hover, #tieButtons button:hover {
+            #battle button:hover, #tieButtons button:hover, button:hover {
                 background-color: var(--button-hover-color);
             }
 
@@ -156,14 +153,6 @@
 
             #tieButtons {
                 display: none;
-                gap: var(--spacing-md);
-                margin-top: var(--spacing-md);
-            }
-
-            #restartButtons {
-                display: flex;
-                gap: var(--spacing-md);
-                margin-top: var(--spacing-md);
             }
 
             #restartButtons button {
@@ -172,11 +161,6 @@
                 color: white;
                 border: none;
                 font-size: 1rem;
-                transition: background-color 0.3s ease;
-            }
-
-            #restartButtons button:hover {
-                background-color: var(--primary-hover-color);
             }
 
             .selected {
