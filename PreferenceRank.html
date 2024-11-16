@@ -316,11 +316,7 @@
                 updateLanguage() {
                     const lang = this.$("languageSelect").value;
                     this.state.language = lang;
-                    Object.entries(this.config.translations[lang]).forEach(([key,value])=>{
-                        if (this.$(key))
-                            this.$(key).textContent = value;
-                    }
-                    );
+                    Object.entries(this.config.translations[lang]).forEach(([key,value])=>this.$(key) && (this.$(key).textContent = value));
                     this.updateProgress();
                     if (this.$("results").style.display !== "none")
                         this.showResults();
@@ -368,13 +364,12 @@
                 showResults() {
                     const t = this.config.translations[this.state.language];
                     this.$("results").innerHTML = `
-            <h2>${t.results}</h2>
-            <table>
-                <thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead>
-                <tbody>${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`
-                    <tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}
-                </tbody>
-            </table>`;
+						<h2>${t.results}</h2>
+						<table>
+							<thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead>
+							<tbody>${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}
+							</tbody>
+						</table>`;
                     this.showSection("results");
                     this.$("restartButtons").style.display = "flex";
                 }
