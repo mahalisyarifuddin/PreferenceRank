@@ -23,7 +23,7 @@ Hanya itu—tanpa instalasi atau dependensi tambahan.
 - **Ringan**: Satu berkas HTML tanpa dependensi eksternal, sehingga portabel dan cepat.
 
 ## Kustomisasi
-PreferenceRank adalah proyek sumber terbuka, sehingga Anda bebas untuk memodifikasi dan menyesuaikannya sesuai kebutuhan. Baik itu untuk menyempurnakan algoritma, mendesain ulang antarmuka, atau menambahkan fitur baru, semua terserah Anda.
+PreferenceRank adalah proyek sumber terbuka, sehingga Anda bebas untuk memodifikasi dan menyesuaikannya sesuai kebutuhan. Baik itu untuk menyempurnakan algoritma, merancang ulang antarmuka, atau menambahkan fitur baru, semua terserah Anda.
 
 ## Lisensi
 Proyek ini dilisensikan di bawah Lisensi MIT. Lihat berkas `LICENSE` untuk detailnya.
