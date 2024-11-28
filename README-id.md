@@ -21,8 +21,5 @@ Anda juga bebas memodifikasi kode sumber sesuai kebutuhan.
 - **Penilaian Ilmiah**: Mengimplementasikan sistem peringkat Elo Bradley-Terry untuk skor preferensi yang transparan dan relatif;
 - **Ringan**: Satu berkas HTML, tanpa dependensi eksternal.
 
-## Pengembangan Mendatang
-- Implementasi fitur "urungkan (*undo*)" yang andal selama proses pengurutan.
-
 ## Lisensi
 Lisensi MIT.
