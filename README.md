@@ -14,7 +14,7 @@ PreferenceRank uses a **round-robin tournament system** where every item is comp
 2. Open the file in any modern web browser.
 3. Start ranking your preferences!
 
-That's it—no installation or dependencies required. Feel free to customize the source code to fit your needs.
+That's it—no installation or dependencies required.
 
 ## Key Features
 - **Flexible Input**: Rank anything—characters, foods, movies, destinations, and more.
