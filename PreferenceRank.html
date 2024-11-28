@@ -76,21 +76,28 @@
             }
 
             button {
-                background-color: var(--primary-color);
-                color: white;
-                border: none;
-                font-size: 1rem;
                 cursor: pointer;
                 transition: background-color 0.3s ease;
             }
 
-            button:hover {
-                background-color: var(--primary-hover-color);
+            .btn-primary {
+                background-color: var(--primary-color);
                 color: white;
+                border: none;
             }
 
-            #startButton:hover, #restartBattleButton:hover, #restartNewItemsButton:hover {
+            .btn-primary:hover {
                 background-color: var(--primary-hover-color);
+            }
+
+            .btn-secondary {
+                background-color: white;
+                color: var(--text-color);
+                border: 1px solid var(--border-color);
+            }
+
+            .btn-secondary:hover {
+                background-color: var(--button-hover-color);
             }
 
             #battle, #tieButtons, #restartButtons {
@@ -104,13 +111,6 @@
                 min-width: 250px;
                 min-height: 100px;
                 font-size: 1.2rem;
-                background-color: white;
-                color: var(--text-color);
-                border: 1px solid var(--border-color);
-            }
-
-            #battle button:hover, #tieButtons button:hover, button:hover {
-                background-color: var(--button-hover-color);
             }
 
             #progress {
@@ -162,12 +162,7 @@
 
             #undoButton {
                 margin-top: var(--spacing-md);
-                background-color: white;
-                color: var(--text-color);
-                border: 1px solid var(--border-color);
                 font-size: 1rem;
-                cursor: pointer;
-                transition: background-color 0.3s ease;
                 width: auto;
             }
 
@@ -182,9 +177,6 @@
 
             #restartButtons button {
                 flex: 1;
-                background-color: var(--primary-color);
-                color: white;
-                border: none;
                 font-size: 1rem;
             }
 
@@ -225,24 +217,24 @@
                     <input type="checkbox" id="allowTies" checked>
                     <label for="allowTies" id="allowTiesLabel"></label>
                 </div>
-                <button id="startButton"></button>
+                <button id="startButton" class="btn-primary"></button>
             </div>
             <div id="battleSection" style="display: none;">
-                <button id="undoButton" disabled></button>
+                <button id="undoButton" class="btn-secondary" disabled></button>
                 <div id="battle">
-                    <button id="leftItem"></button>
-                    <button id="rightItem"></button>
+                    <button id="leftItem" class="btn-secondary"></button>
+                    <button id="rightItem" class="btn-secondary"></button>
                 </div>
                 <div id="tieButtons">
-                    <button id="likeBothButton"></button>
-                    <button id="dislikeBothButton"></button>
+                    <button id="likeBothButton" class="btn-secondary"></button>
+                    <button id="dislikeBothButton" class="btn-secondary"></button>
                 </div>
                 <div id="progress"></div>
             </div>
             <div id="results" style="display: none;"></div>
             <div id="restartButtons" style="display: none;">
-                <button id="restartBattleButton"></button>
-                <button id="restartNewItemsButton"></button>
+                <button id="restartBattleButton" class="btn-primary"></button>
+                <button id="restartNewItemsButton" class="btn-primary"></button>
             </div>
         </div>
         <script>
@@ -307,13 +299,7 @@
                 }
 
                 init() {
-                    ["languageSelect", "allowTies", "startButton", "leftItem", "rightItem", "likeBothButton", "dislikeBothButton", "restartBattleButton", "restartNewItemsButton", "undoButton"// Tambahkan event listener untuk tombol undo
-                    ].forEach(id=>this.$(id)?.addEventListener(id.includes("Select") || id.includes("Ties") ? "change" : "click", ()=>this.handleEvent(id)));
-                    this.updateLanguage();
-                }
-
-                handleEvent(id) {
-                    const actions = {
+                    const eventMap = {
                         languageSelect: ()=>this.updateLanguage(),
                         allowTies: ()=>this.toggleTieOptions(),
                         startButton: ()=>this.startRank(),
@@ -323,15 +309,28 @@
                         dislikeBothButton: ()=>this.choose("tie"),
                         restartBattleButton: ()=>this.restartBattle(),
                         restartNewItemsButton: ()=>this.restartNewItems(),
-                        undoButton: ()=>this.undo()// Tambahkan logika untuk undo
+                        undoButton: ()=>this.undo()
                     };
-                    actions[id]?.();
+
+                    Object.keys(eventMap).forEach(id=>{
+                        const element = this.$(id);
+                        if (element) {
+                            const isInput = id.includes("Select") || id.includes("Ties");
+                            element.addEventListener(isInput ? "change" : "click", eventMap[id]);
+                        }
+                    }
+                    );
+                    this.updateLanguage();
                 }
 
                 updateLanguage() {
                     const lang = this.$("languageSelect").value;
                     this.state.language = lang;
-                    Object.entries(this.config.translations[lang]).forEach(([key,value])=>this.$(key) && (this.$(key).textContent = value));
+                    Object.entries(this.config.translations[lang]).forEach(([key,value])=>{
+                        if (this.$(key))
+                            this.$(key).textContent = value;
+                    }
+                    );
                     this.updateProgress();
                     if (this.$("results").style.display !== "none")
                         this.showResults();
@@ -376,7 +375,7 @@
 
                     this.clearSelections();
                     if (winner === "tie")
-                        event.target.classList.add("selected");
+                        this.$(event.target.id).classList.add("selected");
                     else
                         this.$(winner === "left" ? "leftItem" : "rightItem").classList.add("selected");
 
@@ -391,12 +390,11 @@
                 showResults() {
                     const t = this.config.translations[this.state.language];
                     this.$("results").innerHTML = `
-						<h2>${t.results}</h2>
-						<table>
-							<thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead>
-							<tbody>${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}
-							</tbody>
-						</table>`;
+                    <h2>${t.results}</h2>
+                    <table>
+                        <thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead>
+                        <tbody>${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}</tbody>
+                    </table>`;
                     this.showSection("results");
                     this.$("restartButtons").style.display = "flex";
                 }
@@ -444,9 +442,8 @@
                     this.updateProgress();
                     this.clearSelections();
 
-                    if (this.state.history.length === 0) {
+                    if (this.state.history.length === 0)
                         this.$("undoButton").disabled = true;
-                    }
                 }
 
                 restartBattle() {
