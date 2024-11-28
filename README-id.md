@@ -14,7 +14,7 @@ PreferenceRank menggunakan **sistem turnamen round-robin**, di mana setiap item 
 2. Buka berkas tersebut di peramban web modern apa pun.
 3. Mulai urutkan preferensi Anda!
 
-Hanya itu—tanpa instalasi atau dependensi tambahan. Anda juga bebas memodifikasi kode sumber sesuai kebutuhan.
+Hanya itu—tanpa instalasi atau dependensi tambahan.
 
 ## Fitur Utama
 - **Masukan Fleksibel**: Urutkan apa saja—karakter, makanan, film, destinasi, dan lainnya.
