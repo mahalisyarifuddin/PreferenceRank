@@ -84,6 +84,15 @@
                 transition: background-color 0.3s ease;
             }
 
+            button:hover {
+                background-color: var(--primary-hover-color);
+                color: white;
+            }
+
+            #startButton:hover, #restartBattleButton:hover, #restartNewItemsButton:hover {
+                background-color: var(--primary-hover-color);
+            }
+
             #battle, #tieButtons, #restartButtons {
                 display: flex;
                 gap: var(--spacing-md);
@@ -462,6 +471,7 @@
                     this.showSection("inputSection");
                     this.$("itemInput").value = "";
                     this.$("tieButtons").style.display = this.state.allowTies ? "flex" : "none";
+
                     this.state = {
                         items: [],
                         scores: {},
@@ -470,7 +480,8 @@
                         totalPairs: 0,
                         currentProgress: 0,
                         allowTies: false,
-                        language: this.state.language
+                        language: this.state.language,
+                        history: []
                     };
                 }
             }
