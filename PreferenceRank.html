@@ -253,6 +253,7 @@
 						language: 'en',
 						history: []
 					};
+
 					this.config = {
 						INITIAL_RATING: 1000,
 						K_FACTOR: 32,
@@ -293,6 +294,7 @@
 							}
 						}
 					};
+
 					this.init();
 				}
 
@@ -301,62 +303,81 @@
 				}
 
 				init() {
-					["languageSelect", "allowTies", "startButton", "leftItem", "rightItem", "likeBothButton", "dislikeBothButton", "restartBattleButton", "restartNewItemsButton", "undoButton"].forEach(id=>{
+					const handlers = {
+						languageSelect: "updateLanguage",
+						allowTies: "toggleTieOptions",
+						startButton: "startRank",
+						leftItem: "choose",
+						rightItem: "choose",
+						likeBothButton: "choose",
+						dislikeBothButton: "choose",
+						restartBattleButton: "restartBattle",
+						restartNewItemsButton: "restartNewItems",
+						undoButton: "undo"
+					};
+
+					Object.entries(handlers).forEach(([id,method])=>{
 						const el = this.$(id);
-						if (!el)
-							return;
-						el.addEventListener(id.includes("Select") || id.includes("Ties") ? "change" : "click", ()=>this[({
-							languageSelect: "updateLanguage",
-							allowTies: "toggleTieOptions",
-							startButton: "startRank",
-							leftItem: "choose",
-							rightItem: "choose",
-							likeBothButton: "choose",
-							dislikeBothButton: "choose",
-							restartBattleButton: "restartBattle",
-							restartNewItemsButton: "restartNewItems",
-							undoButton: "undo"
-						})[id]](id.includes("Item") ? id.split("Item")[0] : "tie"));
+						if (el) {
+							const eventType = id.includes("Select") || id.includes("Ties") ? "change" : "click";
+							const param = id.includes("Item") ? id.split("Item")[0] : "tie";
+							el.addEventListener(eventType, ()=>this[method](param));
+						}
 					}
 					);
+
 					this.updateLanguage();
 				}
 
 				updateLanguage() {
 					const lang = this.$("languageSelect").value;
 					this.state.language = lang;
+
 					Object.entries(this.config.translations[lang]).forEach(([key,value])=>{
-						if (this.$(key))
-							this.$(key).textContent = value;
+						const el = this.$(key);
+						if (el)
+							el.textContent = value;
 					}
 					);
+
 					this.updateProgress();
 					if (this.$("results").style.display !== "none")
 						this.showResults();
 				}
 
 				startRank() {
-					const items = this.$("itemInput").value.split("\n").map(i=>i.trim()).filter(Boolean);
-					if (items.length < 2)
-						return alert(this.config.translations[this.state.language].alert);
+					const items = this.$("itemInput").value.trim().split("\n").filter(Boolean);
+					if (items.length < 2) {
+						alert(this.config.translations[this.state.language].alert);
+						return;
+					}
+
 					this.state = {
 						...this.state,
 						items,
 						allowTies: this.$("allowTies").checked,
 						currentProgress: 0,
 						scores: Object.fromEntries(items.map(i=>[i, this.config.INITIAL_RATING])),
-						remainingPairs: this.shuffleArray(items.flatMap((v,i)=>items.slice(i + 1).map(w=>[v, w]))),
-						totalPairs: items.length * (items.length - 1) / 2
+						remainingPairs: this.shuffleArray(this.generatePairs(items)),
+						totalPairs: (items.length * (items.length - 1)) / 2,
+						history: []
 					};
+
 					this.showSection("battleSection");
 					this.$("tieButtons").style.display = this.state.allowTies ? "flex" : "none";
+					this.$("undoButton").disabled = true;
 					this.nextBattle();
 				}
 
+				generatePairs(items) {
+					return items.flatMap((v,i)=>items.slice(i + 1).map(w=>[v, w]));
+				}
+
 				choose(winner) {
-					const [left,right] = this.state.currentPair
-					  , result = winner === "left" ? 1 : winner === "right" ? 0 : 0.5;
+					const [left,right] = this.state.currentPair;
+					const result = winner === "left" ? 1 : winner === "right" ? 0 : 0.5;
 					const expected = 1 / (1 + 10 ** ((this.state.scores[right] - this.state.scores[left]) / 400));
+
 					this.state.history.push({
 						left,
 						right,
@@ -365,35 +386,47 @@
 						remainingPairs: [...this.state.remainingPairs],
 						currentProgress: this.state.currentProgress
 					});
+
 					this.state.scores[left] += this.config.K_FACTOR * (result - expected);
 					this.state.scores[right] += this.config.K_FACTOR * ((1 - result) - (1 - expected));
 					this.state.currentProgress++;
+
 					this.updateProgress();
 					this.$("undoButton").disabled = false;
 					this.clearSelections();
-					this.$(winner === "tie" ? event.target.id : `${winner}Item`).classList.add("selected");
+
+					const selectedEl = winner === "tie" ? event.target : this.$(winner + "Item");
+					selectedEl.classList.add("selected");
+
 					setTimeout(()=>this.nextBattle(), 300);
 				}
 
 				showResults() {
 					const t = this.config.translations[this.state.language];
-					this.$("results").innerHTML = `<h2>${t.results}</h2><table>
-		<thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}
-		</th><th style="width:20%">${t.score}</th></tr></thead><tbody>${Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}
-		</tbody></table>`;
+					const sortedItems = Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('');
+
+					this.$("results").innerHTML = `
+						<h2>${t.results}</h2>
+						<table><thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead><tbody>${sortedItems}</tbody></table>
+					`;
+
 					this.showSection("results");
 					this.$("restartButtons").style.display = "flex";
 				}
 
 				shuffleArray(arr) {
-					return arr.sort(()=>Math.random() - 0.5);
+					return [...arr].sort(()=>Math.random() - 0.5);
 				}
 
 				nextBattle() {
-					if (!this.state.remainingPairs.length)
-						return this.showResults();
+					if (!this.state.remainingPairs.length) {
+						this.showResults();
+						return;
+					}
+
 					this.state.currentPair = this.state.remainingPairs.pop();
-					["left", "right"].forEach((side,i)=>this.$(`${side}Item`).textContent = this.state.currentPair[i]);
+					["left", "right"].forEach((side,i)=>this.$(side + "Item").textContent = this.state.currentPair[i]);
+
 					this.updateProgress();
 					this.clearSelections();
 				}
@@ -414,43 +447,43 @@
 				undo() {
 					if (!this.state.history.length)
 						return;
-					const {left, right, leftScore, rightScore, remainingPairs, currentProgress} = this.state.history.pop();
-					Object.assign(this.state, {
+
+					const lastState = this.state.history.pop();
+					this.state = {
+						...this.state,
 						scores: {
 							...this.state.scores,
-							[left]: leftScore,
-							[right]: rightScore
+							[lastState.left]: lastState.leftScore,
+							[lastState.right]: lastState.rightScore
 						},
-						remainingPairs,
-						currentProgress,
-						currentPair: [left, right]
-					});
-					this.$("leftItem").textContent = left;
-					this.$("rightItem").textContent = right;
+						remainingPairs: lastState.remainingPairs,
+						currentProgress: lastState.currentProgress,
+						currentPair: [lastState.left, lastState.right]
+					};
+
+					this.$("leftItem").textContent = lastState.left;
+					this.$("rightItem").textContent = lastState.right;
 					this.updateProgress();
 					this.clearSelections();
 					this.$("undoButton").disabled = !this.state.history.length;
 				}
 
 				restartBattle() {
-					this.state.history = [];
-					this.$("undoButton").disabled = true;
 					this.state = {
 						...this.state,
-						remainingPairs: this.shuffleArray(this.state.items.flatMap((v,i)=>this.state.items.slice(i + 1).map(w=>[v, w]))),
+						remainingPairs: this.shuffleArray(this.generatePairs(this.state.items)),
 						scores: Object.fromEntries(this.state.items.map(i=>[i, this.config.INITIAL_RATING])),
 						currentProgress: 0,
-						totalPairs: this.state.items.length * (this.state.items.length - 1) / 2
+						totalPairs: (this.state.items.length * (this.state.items.length - 1)) / 2,
+						history: []
 					};
+
+					this.$("undoButton").disabled = true;
 					this.showSection("battleSection");
 					this.nextBattle();
 				}
 
 				restartNewItems() {
-					this.state.history = [];
-					this.$("undoButton").disabled = true;
-					this.showSection("inputSection");
-					this.$("itemInput").value = "";
 					this.state = {
 						items: [],
 						scores: {},
@@ -462,6 +495,10 @@
 						language: this.state.language,
 						history: []
 					};
+
+					this.$("undoButton").disabled = true;
+					this.$("itemInput").value = "";
+					this.showSection("inputSection");
 				}
 			}
 
