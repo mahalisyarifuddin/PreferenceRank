@@ -5,6 +5,16 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>PreferenceRank</title>
 		<style>
+			html {
+				box-sizing: border-box;
+			}
+
+			*, *::before, *::after {
+				margin: 0;
+				padding: 0;
+				box-sizing: inherit;
+			}
+
 			:root {
 				--primary: #007BFF;
 				--primary-hover: #0056b3;
@@ -22,8 +32,6 @@
 			}
 
 			body {
-				margin: 0;
-				padding: 0;
 				font-family: sans-serif;
 				background-color: var(--bg);
 				color: var(--text);
@@ -31,11 +39,6 @@
 				justify-content: center;
 				align-items: center;
 				min-height: 100vh;
-			}
-
-			h1, h2, p, label, button, input, select, textarea {
-				margin: 0;
-				padding: 0;
 			}
 
 			.container {
@@ -70,7 +73,6 @@
 				font-size: 1rem;
 				border: 1px solid var(--border);
 				border-radius: var(--radius-sm);
-				box-sizing: border-box;
 			}
 
 			textarea {
@@ -102,10 +104,16 @@
 				background-color: var(--btn-hover);
 			}
 
-			#battle, #tieButtons, #restartButtons {
+			#battle, #restartButtons {
 				display: flex;
 				gap: var(--space-sm);
 				margin-top: var(--space-sm);
+			}
+
+			#tieButtons {
+				gap: var(--space-sm);
+				margin-top: var(--space-sm);
+				display: none;
 			}
 
 			#battle button, #tieButtons button {
@@ -176,10 +184,6 @@
 			#undoButton:disabled {
 				background-color: var(--btn-hover);
 				cursor: not-allowed;
-			}
-
-			#tieButtons {
-				display: none;
 			}
 
 			.selected {
@@ -253,7 +257,6 @@
 						language: 'en',
 						history: []
 					};
-
 					this.config = {
 						INITIAL_RATING: 1000,
 						K_FACTOR: 32,
@@ -280,10 +283,10 @@
 								itemInputLabel: "Masukkan pilihan, satu per baris:",
 								allowTiesLabel: "Izinkan Seri",
 								alert: "Harap masukkan setidaknya dua pilihan.",
-								undoButton: "Urungkan",
 								startButton: "Mulai Peringkat",
 								likeBothButton: "Suka Keduanya",
 								dislikeBothButton: "Tidak Suka Keduanya",
+								undoButton: "Urungkan",
 								progress: "Kemajuan",
 								results: "Hasil",
 								rank: "Peringkat",
@@ -294,7 +297,6 @@
 							}
 						}
 					};
-
 					this.init();
 				}
 
@@ -315,31 +317,27 @@
 						restartNewItemsButton: "restartNewItems",
 						undoButton: "undo"
 					};
-
 					Object.entries(handlers).forEach(([id,method])=>{
 						const el = this.$(id);
 						if (el) {
 							const eventType = id.includes("Select") || id.includes("Ties") ? "change" : "click";
 							const param = id.includes("Item") ? id.split("Item")[0] : "tie";
-							el.addEventListener(eventType, ()=>this[method](param));
+							el.addEventListener(eventType, e=>this[method](param, e));
 						}
 					}
 					);
-
 					this.updateLanguage();
 				}
 
 				updateLanguage() {
 					const lang = this.$("languageSelect").value;
 					this.state.language = lang;
-
 					Object.entries(this.config.translations[lang]).forEach(([key,value])=>{
 						const el = this.$(key);
 						if (el)
 							el.textContent = value;
 					}
 					);
-
 					this.updateProgress();
 					if (this.$("results").style.display !== "none")
 						this.showResults();
@@ -347,11 +345,8 @@
 
 				startRank() {
 					const items = this.$("itemInput").value.trim().split("\n").filter(Boolean);
-					if (items.length < 2) {
-						alert(this.config.translations[this.state.language].alert);
-						return;
-					}
-
+					if (items.length < 2)
+						return alert(this.config.translations[this.state.language].alert);
 					this.state = {
 						...this.state,
 						items,
@@ -362,7 +357,6 @@
 						totalPairs: (items.length * (items.length - 1)) / 2,
 						history: []
 					};
-
 					this.showSection("battleSection");
 					this.$("tieButtons").style.display = this.state.allowTies ? "flex" : "none";
 					this.$("undoButton").disabled = true;
@@ -373,11 +367,10 @@
 					return items.flatMap((v,i)=>items.slice(i + 1).map(w=>[v, w]));
 				}
 
-				choose(winner) {
+				choose(winner, e) {
 					const [left,right] = this.state.currentPair;
 					const result = winner === "left" ? 1 : winner === "right" ? 0 : 0.5;
 					const expected = 1 / (1 + 10 ** ((this.state.scores[right] - this.state.scores[left]) / 400));
-
 					this.state.history.push({
 						left,
 						right,
@@ -386,47 +379,43 @@
 						remainingPairs: [...this.state.remainingPairs],
 						currentProgress: this.state.currentProgress
 					});
-
 					this.state.scores[left] += this.config.K_FACTOR * (result - expected);
 					this.state.scores[right] += this.config.K_FACTOR * ((1 - result) - (1 - expected));
 					this.state.currentProgress++;
-
 					this.updateProgress();
 					this.$("undoButton").disabled = false;
 					this.clearSelections();
-
-					const selectedEl = winner === "tie" ? event.target : this.$(winner + "Item");
-					selectedEl.classList.add("selected");
-
+					(winner === "tie" ? e.target : this.$(winner + "Item")).classList.add("selected");
 					setTimeout(()=>this.nextBattle(), 300);
 				}
 
 				showResults() {
 					const t = this.config.translations[this.state.language];
-					const sortedItems = Object.entries(this.state.scores).sort(([,a],[,b])=>b - a).map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('');
-
-					this.$("results").innerHTML = `
-						<h2>${t.results}</h2>
-						<table><thead><tr><th style="width:20%">${t.rank}</th><th style="width:60%">${t.item}</th><th style="width:20%">${t.score}</th></tr></thead><tbody>${sortedItems}</tbody></table>
-					`;
-
+					const sorted = Object.entries(this.state.scores).sort(([,a],[,b])=>b - a);
+					this.$("results").innerHTML = `<h2>${t.results}</h2>
+						<table>
+							<thead>
+								<tr>
+									<th style="width:20%">${t.rank}</th>
+									<th style="width:60%">${t.item}</th>
+									<th style="width:20%">${t.score}</th>
+								</tr>
+							</thead>
+							<tbody>${sorted.map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}</tbody>
+						</table>`;
 					this.showSection("results");
 					this.$("restartButtons").style.display = "flex";
 				}
 
 				shuffleArray(arr) {
-					return [...arr].sort(()=>Math.random() - 0.5);
+					return arr.slice().sort(()=>Math.random() - 0.5);
 				}
 
 				nextBattle() {
-					if (!this.state.remainingPairs.length) {
-						this.showResults();
-						return;
-					}
-
+					if (!this.state.remainingPairs.length)
+						return this.showResults();
 					this.state.currentPair = this.state.remainingPairs.pop();
 					["left", "right"].forEach((side,i)=>this.$(side + "Item").textContent = this.state.currentPair[i]);
-
 					this.updateProgress();
 					this.clearSelections();
 				}
@@ -447,37 +436,25 @@
 				undo() {
 					if (!this.state.history.length)
 						return;
-
-					const lastState = this.state.history.pop();
-					this.state = {
-						...this.state,
-						scores: {
-							...this.state.scores,
-							[lastState.left]: lastState.leftScore,
-							[lastState.right]: lastState.rightScore
-						},
-						remainingPairs: lastState.remainingPairs,
-						currentProgress: lastState.currentProgress,
-						currentPair: [lastState.left, lastState.right]
-					};
-
-					this.$("leftItem").textContent = lastState.left;
-					this.$("rightItem").textContent = lastState.right;
+					const last = this.state.history.pop();
+					this.state.scores[last.left] = last.leftScore;
+					this.state.scores[last.right] = last.rightScore;
+					this.state.remainingPairs = last.remainingPairs;
+					this.state.currentProgress = last.currentProgress;
+					this.state.currentPair = [last.left, last.right];
+					this.$("leftItem").textContent = last.left;
+					this.$("rightItem").textContent = last.right;
 					this.updateProgress();
 					this.clearSelections();
 					this.$("undoButton").disabled = !this.state.history.length;
 				}
 
 				restartBattle() {
-					this.state = {
-						...this.state,
-						remainingPairs: this.shuffleArray(this.generatePairs(this.state.items)),
-						scores: Object.fromEntries(this.state.items.map(i=>[i, this.config.INITIAL_RATING])),
-						currentProgress: 0,
-						totalPairs: (this.state.items.length * (this.state.items.length - 1)) / 2,
-						history: []
-					};
-
+					this.state.remainingPairs = this.shuffleArray(this.generatePairs(this.state.items));
+					this.state.scores = Object.fromEntries(this.state.items.map(i=>[i, this.config.INITIAL_RATING]));
+					this.state.currentProgress = 0;
+					this.state.totalPairs = (this.state.items.length * (this.state.items.length - 1)) / 2;
+					this.state.history = [];
 					this.$("undoButton").disabled = true;
 					this.showSection("battleSection");
 					this.nextBattle();
@@ -495,13 +472,17 @@
 						language: this.state.language,
 						history: []
 					};
-
 					this.$("undoButton").disabled = true;
 					this.$("itemInput").value = "";
 					this.showSection("inputSection");
 				}
-			}
 
+				toggleTieOptions() {
+					this.state.allowTies = this.$("allowTies").checked;
+					if (this.$("battleSection").style.display !== "none")
+						this.$("tieButtons").style.display = this.state.allowTies ? "flex" : "none";
+				}
+			}
 			const ranker = new PreferenceRank();
 			if (navigator.language?.startsWith("id")) {
 				ranker.$("languageSelect").value = "id";
