@@ -44,12 +44,15 @@
 			.container {
 				background-color: var(--bg-container);
 				padding: var(--space-lg);
-				padding-top: 3rem;
 				border-radius: var(--radius);
 				box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 				width: 100%;
 				max-width: 600px;
 				position: relative;
+			}
+
+			.container:has(#inputSection:not([style*="display: none"])) {
+				padding-top: 3rem;
 			}
 
 			h1, h2 {
@@ -111,6 +114,7 @@
 			}
 
 			#tieButtons {
+				display: flex;
 				gap: var(--space-sm);
 				margin-top: var(--space-sm);
 				display: none;
@@ -194,7 +198,10 @@
 			@media (max-width: 768px) {
 				.container {
 					padding: var(--space-sm);
-					padding-top: 3rem;
+				}
+
+				.container:has(#inputSection:not([style*="display: none"])) {
+					padding-top: calc(var(--space-sm) + var(--space-sm));
 				}
 
 				#battle, #tieButtons, #restartButtons {
