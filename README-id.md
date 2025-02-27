@@ -14,13 +14,13 @@ PreferenceRank menggunakan **sistem turnamen round-robin**, di mana setiap item 
 2. Buka berkas tersebut di peramban web modern apa pun.
 3. Mulai urutkan preferensi Anda!
 
-Hanya itu—tanpa instalasi atau dependensi tambahan.
-
 ## Fitur Utama
 - **Masukan Fleksibel**: Urutkan apa saja—karakter, makanan, film, destinasi, dan lainnya.
 - **Algoritma Adil**: Setiap item dibandingkan dengan semua item lainnya menggunakan sistem round-robin.
 - **Penilaian Ilmiah**: Menggunakan sistem peringkat Elo Bradley-Terry untuk hasil yang akurat dan transparan.
 - **Ringan**: Satu berkas HTML tanpa dependensi eksternal, sehingga portabel dan cepat.
+- **Opsi Tema**: Pilih antara tema terang, gelap, atau otomatis untuk pengalaman yang dipersonalisasi.
+- **Pintasan Papan Ketik**: Gunakan pintasan papan ketik untuk pemilihan yang lebih cepat saat memeringkatkan.
 
 ## Kustomisasi
 PreferenceRank adalah proyek sumber terbuka, sehingga Anda bebas untuk memodifikasi dan menyesuaikannya sesuai kebutuhan. Baik itu untuk menyempurnakan algoritma, merancang ulang antarmuka, atau menambahkan fitur baru, semua terserah Anda.
