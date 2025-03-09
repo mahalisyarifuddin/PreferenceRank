@@ -21,12 +21,14 @@
 				--radius: 8px;
 			}
 
-			.dark-theme {
-				--bg: #10131b;
-				--bg-container: #181c23;
-				--text: #c1c6d7;
-				--border: #414754;
-				--btn-hover: #10131b;
+			.dark-theme, @media (prefers-color-scheme: dark) {
+				:root:not(.light-theme) {
+					--bg: #10131b;
+					--bg-container: #181c23;
+					--text: #c1c6d7;
+					--border: #414754;
+					--btn-hover: #10131b;
+				}
 			}
 
 			html {
@@ -37,16 +39,6 @@
 				margin: 0;
 				padding: 0;
 				box-sizing: inherit;
-			}
-
-			@media (prefers-color-scheme: dark) {
-				:root:not(.light-theme) {
-					--bg: #10131b;
-					--bg-container: #181c23;
-					--text: #c1c6d7;
-					--border: #414754;
-					--btn-hover: #10131b;
-				}
 			}
 
 			body {
@@ -74,7 +66,7 @@
 			}
 
 			h1, h2 {
-				margin-bottom: var(--space-md);
+				margin: var(--space-xs) 0;
 				text-align: left;
 			}
 
@@ -120,7 +112,6 @@
 			.btn-secondary {
 				background-color: var(--bg-container);
 				color: var(--text);
-				border: 1px solid var(--border);
 			}
 
 			.btn-secondary:hover {
@@ -265,6 +256,11 @@
 					padding-top: calc(var(--space-sm) + var(--space-sm));
 				}
 
+				.selectors-container {
+					top: var(--space-xs);
+					right: var(--space-sm);
+				}
+
 				#battle, #tieButtons, #restartButtons {
 					flex-direction: column;
 				}
@@ -329,7 +325,6 @@
 				constructor() {
 					this.INITIAL_RATING = 1000;
 					this.K_FACTOR = 32;
-
 					this.state = {
 						items: [],
 						scores: {},
@@ -416,8 +411,10 @@
 						],
 						'allowTies': ['change', ()=>{
 							this.state.allowTies = this.el.allowTies.checked;
-							this.el.battleSection.style.display !== 'none' && (this.el.tieButtons.style.display = this.state.allowTies ? 'flex' : 'none',
-							this.updateKeyboardTip());
+							if (this.el.battleSection.style.display !== 'none') {
+								this.el.tieButtons.style.display = this.state.allowTies ? 'flex' : 'none';
+								this.updateKeyboardTip();
+							}
 						}
 						],
 						'startButton': ['click', ()=>this.startRank()],
@@ -453,12 +450,19 @@
 							'z': ()=>(e.ctrlKey || e.metaKey) && !this.el.undoButton.disabled && this.undo()
 						};
 
-						keyMap[e.key] && (e.preventDefault(),
-						keyMap[e.key]());
+						if (keyMap[e.key]) {
+							e.preventDefault();
+							keyMap[e.key]();
+						}
 					}
 					);
 
-					new MutationObserver(mutations=>mutations.some(m=>m.attributeName === 'style') && (this.state.keyboardEnabled = this.el.battleSection.style.display !== 'none')).observe(this.el.battleSection, {
+					new MutationObserver(mutations=>{
+						if (mutations.some(m=>m.attributeName === 'style')) {
+							this.state.keyboardEnabled = this.el.battleSection.style.display !== 'none';
+						}
+					}
+					).observe(this.el.battleSection, {
 						attributes: true
 					});
 				}
@@ -471,7 +475,8 @@
 
 				applyTheme() {
 					document.documentElement.classList.remove('light-theme', 'dark-theme');
-					this.state.theme !== 'auto' && document.documentElement.classList.add(`${this.state.theme}-theme`);
+					if (this.state.theme !== 'auto')
+						document.documentElement.classList.add(`${this.state.theme}-theme`);
 				}
 
 				updateLanguage() {
@@ -480,13 +485,15 @@
 
 					Object.entries(t).forEach(([key,value])=>{
 						const el = document.getElementById(key);
-						el && (el.textContent = value);
+						if (el)
+							el.textContent = value;
 					}
 					);
 
 					this.updateKeyboardTip();
 					this.updateProgress();
-					this.el.results.style.display !== 'none' && this.showResults();
+					if (this.el.results.style.display !== 'none')
+						this.showResults();
 				}
 
 				updateKeyboardTip() {
@@ -615,7 +622,9 @@
 									<th style="width:20%">${t.score}</th>
 								</tr>
 							</thead>
-							<tbody>${sorted.map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}</tbody>
+							<tbody>
+								${sorted.map(([item,score],i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('')}
+							</tbody>
 						</table>
 					`;
 
