@@ -335,8 +335,7 @@
 		</div>
 
 		<div id="tieButtons" class="hidden">
-		  <button id="likeBothButton" class="btn-secondary"></button>
-		  <button id="dislikeBothButton" class="btn-secondary"></button>
+		  <button id="tieButton" class="btn-secondary"></button>
 		</div>
 
 		<div id="progress" aria-live="polite"></div>
@@ -370,8 +369,7 @@
 			  "startButton",
 			  "leftItem",
 			  "rightItem",
-			  "likeBothButton",
-			  "dislikeBothButton",
+			  "tieButton",
 			  "restartBattleButton",
 			  "restartNewItemsButton",
 			  "undoButton",
@@ -405,6 +403,7 @@
 			  theme: "auto",
 			  history: [],
 			  keyboardEnabled: false,
+			  isChoosing: false,
 			};
 
 			this.translations = {
@@ -417,15 +416,15 @@
 				allowTiesLabel: "Allow Ties",
 				quickRankModeLabel: "Use Quick Rank (fewer comparisons)",
 				alert: "Please enter at least two items.",
+				duplicateAlert: "{count} duplicate item(s) were found and have been removed.",
 				startButton: "Start Ranking",
-				likeBothButton: "Like Both",
-				dislikeBothButton: "Dislike Both",
+				tieButton: "It's a Tie",
 				undoButton: "Undo",
 				progress: "Progress",
 				keyboardTipToggle: "Show keyboard shortcuts",
 				keyboardTipHide: "Hide keyboard shortcuts",
 				keyboardTipWithTies:
-				  'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> Like both<br><kbd>↓</kbd> Dislike both<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
+				  "Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> It's a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice",
 				keyboardTipNoTies:
 				  'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
 				results: "Results",
@@ -445,15 +444,15 @@
 				quickRankModeLabel:
 				  "Gunakan Peringkat Cepat (lebih sedikit perbandingan)",
 				alert: "Harap masukkan setidaknya dua pilihan.",
+				duplicateAlert: "{count} item duplikat ditemukan dan telah dihapus.",
 				startButton: "Mulai Peringkat",
-				likeBothButton: "Suka Keduanya",
-				dislikeBothButton: "Tidak Suka Keduanya",
+				tieButton: "Seri",
 				undoButton: "Urungkan",
 				progress: "Kemajuan",
 				keyboardTipToggle: "Tampilkan pintasan papan ketik",
 				keyboardTipHide: "Sembunyikan pintasan papan ketik",
 				keyboardTipWithTies:
-				  "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> Suka keduanya<br><kbd>↓</kbd> Tidak suka keduanya<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
+				  "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
 				keyboardTipNoTies:
 				  "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
 				results: "Hasil",
@@ -497,8 +496,7 @@
 			on(this.el.startButton, "click", () => this.startRank());
 			on(this.el.leftItem, "click", (e) => this.choose("left", e));
 			on(this.el.rightItem, "click", (e) => this.choose("right", e));
-			on(this.el.likeBothButton, "click", (e) => this.choose("tie", e));
-			on(this.el.dislikeBothButton, "click", (e) => this.choose("tie", e));
+			on(this.el.tieButton, "click", (e) => this.choose("tie", e));
 			on(this.el.restartBattleButton, "click", () => this.restartBattle());
 			on(this.el.restartNewItemsButton, "click", () => this.restartNewItems());
 			on(this.el.undoButton, "click", () => this.undo());
@@ -516,9 +514,7 @@
 			  const map = {
 				ArrowLeft: () => this.el.leftItem.click(),
 				ArrowRight: () => this.el.rightItem.click(),
-				ArrowUp: () => this.state.allowTies && this.el.likeBothButton.click(),
-				ArrowDown: () =>
-				  this.state.allowTies && this.el.dislikeBothButton.click(),
+				ArrowUp: () => this.state.allowTies && this.el.tieButton.click(),
 				z: () =>
 				  (e.ctrlKey || e.metaKey) &&
 				  !this.el.undoButton.disabled &&
@@ -552,8 +548,7 @@
 			  "allowTiesLabel",
 			  "quickRankModeLabel",
 			  "startButton",
-			  "likeBothButton",
-			  "dislikeBothButton",
+			  "tieButton",
 			  "undoButton",
 			  "restartBattleButton",
 			  "restartNewItemsButton",
@@ -581,10 +576,17 @@
 		  }
 
 		  startRank() {
-			const items = this.el.itemInput.value
+			const itemsRaw = this.el.itemInput.value
 			  .split("\n")
 			  .map((s) => s.trim())
 			  .filter(Boolean);
+
+			const items = [...new Set(itemsRaw)];
+
+			if (items.length !== itemsRaw.length) {
+			  const removedCount = itemsRaw.length - items.length;
+			  alert(this.t().duplicateAlert.replace("{count}", removedCount));
+			}
 
 			if (items.length < 2) return alert(this.t().alert);
 
@@ -632,7 +634,9 @@
 			const half = Math.floor(n / 2);
 			for (let i = 0; i < n - half; i++) add(i, i + half);
 
-			const target = Math.max(0, Math.floor(n * 0.75) - set.size);
+			const totalPairs = (n * (n - 1)) / 2;
+			const targetComparisons = Math.floor(totalPairs * 0.4);
+			const target = Math.max(0, targetComparisons - set.size);
 			if (target > 0) {
 			  const missing = [];
 			  for (let i = 0; i < n - 1; i++) {
@@ -657,6 +661,9 @@
 		  }
 
 		  choose(winner, e) {
+			if (this.state.isChoosing) return;
+			this.state.isChoosing = true;
+
 			const [li, ri] = this.state.pairs[this.state.i];
 			const result = { left: 1, right: 0, tie: 0.5 }[winner];
 
@@ -682,7 +689,10 @@
 
 			this.clearSelections();
 			(winner === "tie" ? e.target : this.el[winner + "Item"]).classList.add("selected");
-			setTimeout(() => this.nextBattle(), 300);
+			setTimeout(() => {
+			  this.state.isChoosing = false;
+			  this.nextBattle();
+			}, 300);
 		  }
 
 		  nextBattle() {
@@ -699,9 +709,9 @@
 		  }
 
 		  clearSelections() {
-			["leftItem", "rightItem", "likeBothButton", "dislikeBothButton"].forEach((id) =>
-			  this.el[id].classList.remove("selected")
-			);
+			["leftItem", "rightItem", "tieButton"].forEach((id) => {
+			  if (this.el[id]) this.el[id].classList.remove("selected");
+			});
 		  }
 
 		  showResults() {
