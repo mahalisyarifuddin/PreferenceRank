@@ -425,7 +425,7 @@
 				keyboardTipToggle: "Show keyboard shortcuts",
 				keyboardTipHide: "Hide keyboard shortcuts",
 				keyboardTipWithTies:
-				  "Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> It's a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice",
+				  "Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> or <kbd>↓</kbd> It's a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice",
 				keyboardTipNoTies:
 				  'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
 				results: "Results",
@@ -453,7 +453,7 @@
 				keyboardTipToggle: "Tampilkan pintasan papan ketik",
 				keyboardTipHide: "Sembunyikan pintasan papan ketik",
 				keyboardTipWithTies:
-				  "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
+				  "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> atau <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
 				keyboardTipNoTies:
 				  "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
 				results: "Hasil",
@@ -513,6 +513,7 @@
 				ArrowLeft: () => this.el.leftItem.click(),
 				ArrowRight: () => this.el.rightItem.click(),
 				ArrowUp: () => this.state.allowTies && this.el.tieButton.click(),
+				ArrowDown: () => this.state.allowTies && this.el.tieButton.click(),
 				"z": () => (e.ctrlKey || e.metaKey) && this.el.undoButton.click(),
 			  };
 
