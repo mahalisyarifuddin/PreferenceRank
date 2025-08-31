@@ -491,9 +491,9 @@
 				}
 			  }},
 			  startButton: { click: () => this.startRank() },
-			  leftItem: { click: (e) => this.choose("left", e.target) },
-			  rightItem: { click: (e) => this.choose("right", e.target) },
-			  tieButton: { click: (e) => this.choose("tie", e.target) },
+			  leftItem: { click: (e) => this.choose("left", e) },
+			  rightItem: { click: (e) => this.choose("right", e) },
+			  tieButton: { click: (e) => this.choose("tie", e) },
 			  restartBattleButton: { click: () => this.restartBattle() },
 			  restartNewItemsButton: { click: () => this.restartNewItems() },
 			  undoButton: { click: () => this.undo() },
@@ -534,8 +534,17 @@
 			this.state.language = this.el.languageSelect.value;
 
 			const textContentKeys = [
-				"title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel",
-				"quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton",
+				"title",
+				"autoTheme",
+				"lightTheme",
+				"darkTheme",
+				"itemInputLabel",
+				"allowTiesLabel",
+				"quickRankModeLabel",
+				"startButton",
+				"tieButton",
+				"undoButton",
+				"restartBattleButton",
 				"restartNewItemsButton",
 			];
 
@@ -624,7 +633,7 @@
 			}
 		  }
 
-		  choose(winner, targetElement) {
+		  choose(winner, e) {
 			if (this.state.isChoosing) return;
 			this.state.isChoosing = true;
 
@@ -647,7 +656,7 @@
 			this.updateProgress();
 
 			this.clearSelections();
-			targetElement.classList.add("selected");
+			(winner === "tie" ? e.target : this.el[winner + "Item"]).classList.add("selected");
 
 			setTimeout(() => {
 			  this.state.isChoosing = false;
