@@ -362,11 +362,32 @@
 
 			this.el = Object.fromEntries(
 			  [
-				"languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton",
-				"leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton",
-				"undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results",
-				"restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title",
-				"autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel",
+				"languageSelect",
+				"themeSelect",
+				"allowTies",
+				"quickRankMode",
+				"startButton",
+				"leftItem",
+				"rightItem",
+				"tieButton",
+				"restartBattleButton",
+				"restartNewItemsButton",
+				"undoButton",
+				"keyboardTipToggle",
+				"inputSection",
+				"battleSection",
+				"results",
+				"restartButtons",
+				"tieButtons",
+				"keyboardTip",
+				"progress",
+				"itemInput",
+				"title",
+				"autoTheme",
+				"lightTheme",
+				"darkTheme",
+				"itemInputLabel",
+				"allowTiesLabel",
 				"quickRankModeLabel",
 			  ].map((id) => [id, $(id)])
 			);
@@ -464,7 +485,7 @@
 			  themeSelect: { change: (e) => { this.state.theme = e.target.value; this.applyTheme(); } },
 			  allowTies: { change: (e) => {
 				this.state.allowTies = e.target.checked;
-				if (this.state.keyboardEnabled) {
+				if (!this.el.battleSection.classList.contains("hidden")) {
 					this.el.tieButtons.classList.toggle("hidden", !this.state.allowTies);
 					this.updateKeyboardTipContent();
 				}
