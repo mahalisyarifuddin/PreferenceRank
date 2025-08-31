@@ -360,36 +360,16 @@
 			this.INITIAL_RATING = 1000;
 			this.K_FACTOR = 32;
 
-			this.el = {};
-			[
-			  "languageSelect",
-			  "themeSelect",
-			  "allowTies",
-			  "quickRankMode",
-			  "startButton",
-			  "leftItem",
-			  "rightItem",
-			  "tieButton",
-			  "restartBattleButton",
-			  "restartNewItemsButton",
-			  "undoButton",
-			  "keyboardTipToggle",
-			  "inputSection",
-			  "battleSection",
-			  "results",
-			  "restartButtons",
-			  "tieButtons",
-			  "keyboardTip",
-			  "progress",
-			  "itemInput",
-			  "title",
-			  "autoTheme",
-			  "lightTheme",
-			  "darkTheme",
-			  "itemInputLabel",
-			  "allowTiesLabel",
-			  "quickRankModeLabel",
-			].forEach((id) => (this.el[id] = $(id)));
+			this.el = Object.fromEntries(
+			  [
+				"languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton",
+				"leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton",
+				"undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results",
+				"restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title",
+				"autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel",
+				"quickRankModeLabel",
+			  ].map((id) => [id, $(id)])
+			);
 
 			this.state = {
 			  items: [],
@@ -467,8 +447,8 @@
 			this.init();
 		  }
 
-		  t() {
-			return this.translations[this.state.language];
+		  t(key) {
+			return this.translations[this.state.language][key];
 		  }
 
 		  init() {
@@ -479,139 +459,116 @@
 		  }
 
 		  setupEventListeners() {
-			const on = (el, ev, fn) => el.addEventListener(ev, fn);
+			const events = {
+			  languageSelect: { change: () => this.updateLanguage() },
+			  themeSelect: { change: (e) => { this.state.theme = e.target.value; this.applyTheme(); } },
+			  allowTies: { change: (e) => {
+				this.state.allowTies = e.target.checked;
+				if (this.state.keyboardEnabled) {
+					this.el.tieButtons.classList.toggle("hidden", !this.state.allowTies);
+					this.updateKeyboardTipContent();
+				}
+			  }},
+			  startButton: { click: () => this.startRank() },
+			  leftItem: { click: (e) => this.choose("left", e.target) },
+			  rightItem: { click: (e) => this.choose("right", e.target) },
+			  tieButton: { click: (e) => this.choose("tie", e.target) },
+			  restartBattleButton: { click: () => this.restartBattle() },
+			  restartNewItemsButton: { click: () => this.restartNewItems() },
+			  undoButton: { click: () => this.undo() },
+			  keyboardTipToggle: { click: () => this.toggleKeyboardTip() },
+			};
 
-			on(this.el.languageSelect, "change", () => this.updateLanguage());
-			on(this.el.themeSelect, "change", () => {
-			  this.state.theme = this.el.themeSelect.value;
-			  this.applyTheme();
-			});
-			on(this.el.allowTies, "change", () => {
-			  this.state.allowTies = this.el.allowTies.checked;
-			  if (!this.el.battleSection.classList.contains("hidden")) {
-				this.el.tieButtons.classList.toggle("hidden", !this.state.allowTies);
-				this.updateKeyboardTipContent();
+			for (const elKey in events) {
+			  for (const eventType in events[elKey]) {
+				this.el[elKey]?.addEventListener(eventType, events[elKey][eventType]);
 			  }
-			});
-			on(this.el.startButton, "click", () => this.startRank());
-			on(this.el.leftItem, "click", (e) => this.choose("left", e));
-			on(this.el.rightItem, "click", (e) => this.choose("right", e));
-			on(this.el.tieButton, "click", (e) => this.choose("tie", e));
-			on(this.el.restartBattleButton, "click", () => this.restartBattle());
-			on(this.el.restartNewItemsButton, "click", () => this.restartNewItems());
-			on(this.el.undoButton, "click", () => this.undo());
-			on(this.el.keyboardTipToggle, "click", () => this.toggleKeyboardTip());
+			}
 
 			document.addEventListener("keydown", (e) => {
-			  if (
-				!this.state.keyboardEnabled ||
-				["SELECT", "INPUT", "TEXTAREA"].includes(
-				  document.activeElement.tagName
-				)
-			  )
-				return;
+			  if (!this.state.keyboardEnabled || ["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
 
-			  const map = {
+			  const keyMap = {
 				ArrowLeft: () => this.el.leftItem.click(),
 				ArrowRight: () => this.el.rightItem.click(),
 				ArrowUp: () => this.state.allowTies && this.el.tieButton.click(),
-				z: () =>
-				  (e.ctrlKey || e.metaKey) &&
-				  !this.el.undoButton.disabled &&
-				  this.el.undoButton.click(),
+				"z": () => (e.ctrlKey || e.metaKey) && this.el.undoButton.click(),
 			  };
 
-			  if (map[e.key]) {
+			  if (keyMap[e.key]) {
 				e.preventDefault();
-				map[e.key]();
+				keyMap[e.key]();
 			  }
 			});
 		  }
 
 		  applyTheme() {
-			const html = document.documentElement;
-			html.classList.remove("light-theme", "dark-theme");
-			if (this.state.theme === "light") html.classList.add("light-theme");
-			else if (this.state.theme === "dark") html.classList.add("dark-theme");
+			document.documentElement.classList.remove("light-theme", "dark-theme");
+			if (this.state.theme !== 'auto') {
+				document.documentElement.classList.add(`${this.state.theme}-theme`);
+			}
 		  }
 
 		  updateLanguage() {
 			this.state.language = this.el.languageSelect.value;
-			const t = this.t();
 
-			[
-			  "title",
-			  "autoTheme",
-			  "lightTheme",
-			  "darkTheme",
-			  "itemInputLabel",
-			  "allowTiesLabel",
-			  "quickRankModeLabel",
-			  "startButton",
-			  "tieButton",
-			  "undoButton",
-			  "restartBattleButton",
-			  "restartNewItemsButton",
-			].forEach((key) => {
-			  const el = this.el[key];
-			  if (el) el.textContent = t[key];
+			const textContentKeys = [
+				"title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel",
+				"quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton",
+				"restartNewItemsButton",
+			];
+
+			textContentKeys.forEach(key => {
+				if (this.el[key]) this.el[key].textContent = this.t(key);
 			});
 
-			this.el.keyboardTipToggle.textContent = this.el.keyboardTip.classList.contains(
-			  "hidden"
-			)
-			  ? t.keyboardTipToggle
-			  : t.keyboardTipHide;
-
+			this.toggleKeyboardTip(this.el.keyboardTip.classList.contains("hidden"));
 			this.updateKeyboardTipContent();
 			this.updateProgress();
 			if (!this.el.results.classList.contains("hidden")) this.showResults();
 		  }
 
 		  updateKeyboardTipContent() {
-			const t = this.t();
-			this.el.keyboardTip.innerHTML = t[
-			  this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies"
-			];
+			this.el.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies");
 		  }
 
 		  startRank() {
-			const itemsRaw = this.el.itemInput.value
-			  .split("\n")
-			  .map((s) => s.trim())
-			  .filter(Boolean);
-
+			const itemsRaw = this.el.itemInput.value.split("\n").map((s) => s.trim()).filter(Boolean);
 			const items = [...new Set(itemsRaw)];
 
 			if (items.length !== itemsRaw.length) {
-			  const removedCount = itemsRaw.length - items.length;
-			  alert(this.t().duplicateAlert.replace("{count}", removedCount));
+			  alert(this.t("duplicateAlert").replace("{count}", itemsRaw.length - items.length));
 			}
-
-			if (items.length < 2) return alert(this.t().alert);
-
-			const n = items.length;
-			const quick = this.el.quickRankMode.checked;
-			const pairs = quick && n > 4 ? this.generateQuickRankPairs(n) : this.generatePairs(n);
-			this.shuffle(pairs);
+			if (items.length < 2) return alert(this.t("alert"));
 
 			this.state.items = items;
-			this.state.scores = Array(n).fill(this.INITIAL_RATING);
-			this.state.pairs = pairs;
-			this.state.i = 0;
-			this.state.progress = 0;
-			this.state.total = pairs.length;
 			this.state.allowTies = this.el.allowTies.checked;
-			this.state.history = [];
+			this.resetBattleState(this.generateAndShufflePairs());
 
-			this.el.undoButton.disabled = true;
 			this.el.tieButtons.classList.toggle("hidden", !this.state.allowTies);
-			this.el.keyboardTip.classList.add("hidden");
-			this.el.keyboardTipToggle.textContent = this.t().keyboardTipToggle;
+			this.toggleKeyboardTip(true);
 			this.updateKeyboardTipContent();
 
 			this.showSection("battleSection");
 			this.nextBattle();
+		  }
+
+		  resetBattleState(pairs) {
+			this.state.pairs = pairs;
+			this.state.scores = Array(this.state.items.length).fill(this.INITIAL_RATING);
+			this.state.i = 0;
+			this.state.progress = 0;
+			this.state.total = pairs.length;
+			this.state.history = [];
+			this.el.undoButton.disabled = true;
+		  }
+
+		  generateAndShufflePairs() {
+			const n = this.state.items.length;
+			const quick = this.el.quickRankMode.checked;
+			const pairs = quick && n > 4 ? this.generateQuickRankPairs(n) : this.generatePairs(n);
+			this.shuffle(pairs);
+			return pairs;
 		  }
 
 		  generatePairs(n) {
@@ -622,45 +579,31 @@
 
 		  generateQuickRankPairs(n) {
 			if (n <= 4) return this.generatePairs(n);
-
-			const set = new Set(); 
-			const add = (a, b) => {
-			  const i = Math.min(a, b),
-				j = Math.max(a, b);
-			  set.add(i * n + j);
-			};
-
-			for (let i = 0; i < n - 1; i++) add(i, i + 1);
-			const half = Math.floor(n / 2);
-			for (let i = 0; i < n - half; i++) add(i, i + half);
-
-			const totalPairs = (n * (n - 1)) / 2;
-			const targetComparisons = Math.floor(totalPairs * 0.4);
-			const target = Math.max(0, targetComparisons - set.size);
-			if (target > 0) {
-			  const missing = [];
-			  for (let i = 0; i < n - 1; i++) {
-				for (let j = i + 1; j < n; j++) {
-				  const id = i * n + j;
-				  if (!set.has(id)) missing.push(id);
-				}
-			  }
-			  this.shuffle(missing);
-			  for (let k = 0; k < Math.min(target, missing.length); k++) set.add(missing[k]);
+			const set = new Set();
+			const add = (a, b) => set.add(Math.min(a, b) * n + Math.max(a, b));
+			for (let i = 0; i < n; i++) {
+				add(i, (i + 1) % n);
+				add(i, (i + Math.floor(n / 2)) % n);
 			}
-
+			const totalPairs = (n * (n - 1)) / 2;
+			const target = Math.max(0, Math.floor(totalPairs * 0.4) - set.size);
+			if (target > 0) {
+				const missing = [];
+				for (let i = 0; i < n - 1; i++) for (let j = i + 1; j < n; j++) if (!set.has(i * n + j)) missing.push(i * n + j);
+				this.shuffle(missing);
+				for (let k = 0; k < Math.min(target, missing.length); k++) set.add(missing[k]);
+			}
 			return Array.from(set, (id) => [Math.floor(id / n), id % n]);
 		  }
 
 		  shuffle(a) {
 			for (let i = a.length - 1; i > 0; i--) {
-			  const j = (Math.random() * (i + 1)) | 0;
+			  const j = Math.floor(Math.random() * (i + 1));
 			  [a[i], a[j]] = [a[j], a[i]];
 			}
-			return a;
 		  }
 
-		  choose(winner, e) {
+		  choose(winner, targetElement) {
 			if (this.state.isChoosing) return;
 			this.state.isChoosing = true;
 
@@ -668,19 +611,14 @@
 			const result = { left: 1, right: 0, tie: 0.5 }[winner];
 
 			this.state.history.push({
-			  li,
-			  ri,
-			  lScore: this.state.scores[li],
-			  rScore: this.state.scores[ri],
-			  iBefore: this.state.i,
-			  progressBefore: this.state.progress,
+			  li, ri, lScore: this.state.scores[li], rScore: this.state.scores[ri],
+			  iBefore: this.state.i, progressBefore: this.state.progress,
 			});
 
-			const sl = this.state.scores[li];
-			const sr = this.state.scores[ri];
+			const [sl, sr] = [this.state.scores[li], this.state.scores[ri]];
 			const expectedL = 1 / (1 + 10 ** ((sr - sl) / 400));
-			this.state.scores[li] = sl + this.K_FACTOR * (result - expectedL);
-			this.state.scores[ri] = sr + this.K_FACTOR * (expectedL - result);
+			this.state.scores[li] += this.K_FACTOR * (result - expectedL);
+			this.state.scores[ri] += this.K_FACTOR * (expectedL - result);
 
 			this.state.i++;
 			this.state.progress++;
@@ -688,7 +626,8 @@
 			this.updateProgress();
 
 			this.clearSelections();
-			(winner === "tie" ? e.target : this.el[winner + "Item"]).classList.add("selected");
+			targetElement.classList.add("selected");
+
 			setTimeout(() => {
 			  this.state.isChoosing = false;
 			  this.nextBattle();
@@ -696,62 +635,53 @@
 		  }
 
 		  nextBattle() {
+			this.clearSelections();
 			if (this.state.i >= this.state.total) return this.showResults();
 			const [li, ri] = this.state.pairs[this.state.i];
 			this.el.leftItem.textContent = this.state.items[li];
 			this.el.rightItem.textContent = this.state.items[ri];
 			this.updateProgress();
-			this.clearSelections();
 		  }
 
 		  updateProgress() {
-			this.el.progress.textContent = `${this.t().progress}: ${this.state.progress}/${this.state.total}`;
+			this.el.progress.textContent = `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
 		  }
 
 		  clearSelections() {
-			["leftItem", "rightItem", "tieButton"].forEach((id) => {
-			  if (this.el[id]) this.el[id].classList.remove("selected");
-			});
+			this.el.leftItem.classList.remove("selected");
+			this.el.rightItem.classList.remove("selected");
+			this.el.tieButton.classList.remove("selected");
 		  }
 
 		  showResults() {
-			const t = this.t();
-			const idx = this.state.scores
-			  .map((_, i) => i)
-			  .sort((a, b) => this.state.scores[b] - this.state.scores[a]);
+			const sortedItems = this.state.scores
+			  .map((score, i) => ({ score, item: this.state.items[i] }))
+			  .sort((a, b) => b.score - a.score);
 
-			const rows = idx
-			  .map(
-				(i, rank) =>
-				  `<tr><td>${rank + 1}</td><td>${this.state.items[i]}</td><td>${Math.round(
-					this.state.scores[i]
-				  )}</td></tr>`
-			  )
+			const rows = sortedItems
+			  .map((d, i) => `<tr><td>${i + 1}</td><td>${d.item}</td><td>${Math.round(d.score)}</td></tr>`)
 			  .join("");
 
 			this.el.results.innerHTML = `
-			  <h2>${t.results}</h2>
+			  <h2>${this.t("results")}</h2>
 			  <table>
-				<thead>
-				  <tr>
-					<th style="width:20%">${t.rank}</th>
-					<th style="width:60%">${t.item}</th>
-					<th style="width:20%">${t.score}</th>
-				  </tr>
-				</thead>
+				<thead><tr>
+				  <th style="width:20%">${this.t("rank")}</th>
+				  <th style="width:60%">${this.t("item")}</th>
+				  <th style="width:20%">${this.t("score")}</th>
+				</tr></thead>
 				<tbody>${rows}</tbody>
-			  </table>
-			`;
+			  </table>`;
 
 			this.showSection("results");
 		  }
 
-		  showSection(id) {
-			["inputSection", "battleSection", "results"].forEach((sec) => {
-			  this.el[sec].classList.toggle("hidden", sec !== id);
+		  showSection(sectionId) {
+			["inputSection", "battleSection", "results"].forEach((id) => {
+			  this.el[id].classList.toggle("hidden", id !== sectionId);
 			});
-			this.el.restartButtons.classList.toggle("hidden", id !== "results");
-			this.state.keyboardEnabled = id === "battleSection";
+			this.el.restartButtons.classList.toggle("hidden", sectionId !== "results");
+			this.state.keyboardEnabled = sectionId === "battleSection";
 		  }
 
 		  undo() {
@@ -763,51 +693,26 @@
 			this.state.i = last.iBefore;
 			this.state.progress = last.progressBefore;
 
-			const [li, ri] = this.state.pairs[this.state.i];
-			this.el.leftItem.textContent = this.state.items[li];
-			this.el.rightItem.textContent = this.state.items[ri];
-
-			this.updateProgress();
-			this.clearSelections();
+			this.nextBattle();
 			this.el.undoButton.disabled = this.state.history.length === 0;
 		  }
 
 		  restartBattle() {
-			const n = this.state.items.length;
-			const quick = this.el.quickRankMode.checked;
-			const pairs = quick && n > 4 ? this.generateQuickRankPairs(n) : this.generatePairs(n);
-			this.shuffle(pairs);
-
-			this.state.pairs = pairs;
-			this.state.scores = Array(n).fill(this.INITIAL_RATING);
-			this.state.i = 0;
-			this.state.progress = 0;
-			this.state.total = pairs.length;
-			this.state.history = [];
-			this.el.undoButton.disabled = true;
-
+			this.resetBattleState(this.generateAndShufflePairs());
 			this.showSection("battleSection");
 			this.nextBattle();
 		  }
 
 		  restartNewItems() {
 			this.state.items = [];
-			this.state.scores = [];
-			this.state.pairs = [];
-			this.state.i = 0;
-			this.state.progress = 0;
-			this.state.total = 0;
-			this.state.history = [];
-			this.el.undoButton.disabled = true;
 			this.el.itemInput.value = "";
+			this.resetBattleState([]);
 			this.showSection("inputSection");
 		  }
 
-		  toggleKeyboardTip() {
-			const visible = this.el.keyboardTip.classList.toggle("hidden");
-			this.el.keyboardTipToggle.textContent = visible
-			  ? this.t().keyboardTipToggle
-			  : this.t().keyboardTipHide;
+		  toggleKeyboardTip(forceHidden) {
+			const isHidden = this.el.keyboardTip.classList.toggle("hidden", forceHidden);
+			this.el.keyboardTipToggle.textContent = isHidden ? this.t("keyboardTipToggle") : this.t("keyboardTipHide");
 		  }
 		}
 
