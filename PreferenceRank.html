@@ -596,7 +596,8 @@
 		  generateAndShufflePairs() {
 			const n = this.state.items.length;
 			const quick = this.el.quickRankMode.checked;
-			const pairs = quick && n > 4 ? this.generateQuickRankPairs(n) : this.generatePairs(n);
+			let pairs = quick && n > 4 ? this.generateQuickRankPairs(n) : this.generatePairs(n);
+			pairs = pairs.map(p => (Math.random() < 0.5 ? p : [p[1], p[0]]));
 			this.shuffle(pairs);
 			return pairs;
 		  }
