@@ -338,7 +338,68 @@
 		</div>
 		<script>
 			(()=>{
-				const $ = (id)=>document.getElementById(id);
+				const $ = (id) => document.getElementById(id);
+
+				class FullPairProvider {
+					constructor(n) {
+						this.pairs = this.generatePairs(n);
+						this.shuffle(this.pairs);
+					}
+					getNextPair(state) {
+						return this.pairs[state.progress];
+					}
+					markAsCompared(pair) {}
+					unmarkAsCompared(pair) {}
+					getTotal(n) {
+						return this.pairs.length;
+					}
+					generatePairs(n) {
+						const pairs = [];
+						for (let i = 0; i < n - 1; i++)
+							for (let j = i + 1; j < n; j++) pairs.push([i, j]);
+						return pairs;
+					}
+					shuffle(a) {
+						for (let i = a.length - 1; i > 0; i--) {
+							const j = Math.floor(Math.random() * (i + 1));
+							[a[i],a[j]] = [a[j], a[i]];
+						}
+					}
+				}
+
+				class QuickPairProvider {
+					constructor() {
+						this.comparedPairs = new Set();
+					}
+					getNextPair(state) {
+						const n = state.items.length;
+						let bestPair = null;
+						let minDiff = Infinity;
+						for (let i = 0; i < n; i++) {
+							for (let j = i + 1; j < n; j++) {
+								const pairKey = `${Math.min(i, j)}-${Math.max(i, j)}`;
+								if (this.comparedPairs.has(pairKey)) continue;
+								const diff = Math.abs(state.scores[i] - state.scores[j]);
+								if (diff < minDiff) {
+									minDiff = diff;
+									bestPair = [i, j];
+								}
+							}
+						}
+						return bestPair;
+					}
+					markAsCompared(pair) {
+						const pairKey = `${Math.min(pair[0], pair[1])}-${Math.max(pair[0], pair[1])}`;
+						this.comparedPairs.add(pairKey);
+					}
+					unmarkAsCompared(pair) {
+						const pairKey = `${Math.min(pair[0], pair[1])}-${Math.max(pair[0], pair[1])}`;
+						this.comparedPairs.delete(pairKey);
+					}
+					getTotal(n) {
+						return Math.ceil((n * (n - 1) / 2) * 0.33);
+					}
+				}
 
 				class PreferenceRank {
 					constructor() {
@@ -350,14 +411,14 @@
 						this.state = {
 							items: [],
 							scores: [],
-							pairs: [],
-							i: 0,
+							currentPair: null,
 							progress: 0,
 							total: 0,
 							allowTies: false,
 							language: navigator.language?.startsWith("id") ? "id" : "en",
 							theme: "auto",
 							history: [],
+							comparedPairs: new Set(),
 							keyboardEnabled: false,
 							isChoosing: false,
 						};
@@ -542,7 +603,7 @@
 
 						this.state.items = items;
 						this.state.allowTies = this.el.allowTies.checked;
-						this.resetBattleState(this.generateAndShufflePairs());
+						this.resetBattleState();
 
 						this.el.tieButtons.classList.toggle("hidden", !this.state.allowTies);
 						this.toggleKeyboardTip(true);
@@ -552,62 +613,18 @@
 						this.nextBattle();
 					}
 
-					resetBattleState(pairs) {
-						this.state.pairs = pairs;
-						this.state.scores = Array(this.state.items.length).fill(this.INITIAL_RATING);
-						this.state.i = 0;
+					resetBattleState() {
+						const n = this.state.items.length;
+						this.state.scores = Array(n).fill(this.INITIAL_RATING);
 						this.state.progress = 0;
-						this.state.total = pairs.length;
 						this.state.history = [];
 						this.el.undoButton.disabled = true;
-					}
 
-					generateAndShufflePairs() {
-						const n = this.state.items.length;
-						const quick = this.el.quickRankMode.checked;
-						let pairs = quick && n > 4 ? this.generateQuickRankPairs(n) : this.generatePairs(n);
-						pairs = pairs.map(p=>(Math.random() < 0.5 ? p : [p[1], p[0]]));
-						this.shuffle(pairs);
-						return pairs;
-					}
+						this.state.pairProvider = this.el.quickRankMode.checked
+							? new QuickPairProvider()
+							: new FullPairProvider(n);
 
-					generatePairs(n) {
-						const pairs = [];
-						for (let i = 0; i < n - 1; i++)
-							for (let j = i + 1; j < n; j++)
-								pairs.push([i, j]);
-						return pairs;
-					}
-
-					generateQuickRankPairs(n) {
-						if (n <= 4)
-							return this.generatePairs(n);
-						const set = new Set();
-						const add = (a,b)=>set.add(Math.min(a, b) * n + Math.max(a, b));
-						for (let i = 0; i < n; i++) {
-							add(i, (i + 1) % n);
-							add(i, (i + Math.floor(n / 2)) % n);
-						}
-						const totalPairs = (n * (n - 1)) / 2;
-						const target = Math.max(0, Math.floor(totalPairs * 0.4) - set.size);
-						if (target > 0) {
-							const missing = [];
-							for (let i = 0; i < n - 1; i++)
-								for (let j = i + 1; j < n; j++)
-									if (!set.has(i * n + j))
-										missing.push(i * n + j);
-							this.shuffle(missing);
-							for (let k = 0; k < Math.min(target, missing.length); k++)
-								set.add(missing[k]);
-						}
-						return Array.from(set, (id)=>[Math.floor(id / n), id % n]);
-					}
-
-					shuffle(a) {
-						for (let i = a.length - 1; i > 0; i--) {
-							const j = Math.floor(Math.random() * (i + 1));
-							[a[i],a[j]] = [a[j], a[i]];
-						}
+						this.state.total = this.state.pairProvider.getTotal(n);
 					}
 
 					choose(winner, e) {
@@ -615,7 +632,7 @@
 							return;
 						this.state.isChoosing = true;
 
-						const [li,ri] = this.state.pairs[this.state.i];
+						const [li,ri] = this.state.currentPair;
 						const result = {
 							left: 1,
 							right: 0,
@@ -627,16 +644,16 @@
 							ri,
 							lScore: this.state.scores[li],
 							rScore: this.state.scores[ri],
-							iBefore: this.state.i,
 							progressBefore: this.state.progress,
 						});
+
+						this.state.pairProvider.markAsCompared(this.state.currentPair);
 
 						const [sl,sr] = [this.state.scores[li], this.state.scores[ri]];
 						const expectedL = 1 / (1 + 10 ** ((sr - sl) / 400));
 						this.state.scores[li] += this.K_FACTOR * (result - expectedL);
 						this.state.scores[ri] += this.K_FACTOR * (expectedL - result);
 
-						this.state.i++;
 						this.state.progress++;
 						this.el.undoButton.disabled = false;
 						this.updateProgress();
@@ -653,9 +670,17 @@
 
 					nextBattle() {
 						this.clearSelections();
-						if (this.state.i >= this.state.total)
+						if (this.state.progress >= this.state.total) {
 							return this.showResults();
-						const [li,ri] = this.state.pairs[this.state.i];
+						}
+
+						const nextPair = this.state.pairProvider.getNextPair(this.state);
+						if (!nextPair) {
+							return this.showResults();
+						}
+
+						this.state.currentPair = nextPair;
+						const [li, ri] = nextPair;
 						this.el.leftItem.textContent = this.state.items[li];
 						this.el.rightItem.textContent = this.state.items[ri];
 						this.updateProgress();
@@ -716,8 +741,9 @@
 
 						this.state.scores[last.li] = last.lScore;
 						this.state.scores[last.ri] = last.rScore;
-						this.state.i = last.iBefore;
 						this.state.progress = last.progressBefore;
+
+						this.state.pairProvider.unmarkAsCompared([last.li, last.ri]);
 
 						this.nextBattle();
 						this.el.undoButton.disabled = this.state.history.length === 0;
