@@ -7,7 +7,7 @@ Sorting made better, powered by science.
 PreferenceRank is a versatile and scientific tool for ranking anything you like, inspired by viral character/bias sorters but enhanced with a more rigorous approach. Rank your favorite characters, foods, movies, or travel destinations with precision and fun.
 
 ## How It Works
-PreferenceRank employs a **round-robin tournament system** where items are compared against each other. By default, every item is compared with every other item for a full ranking, but a **Quick Rank** option with fewer comparisons is also available. Items are scored using the **Bradley-Terry Elo rating system**, providing transparent and relative preference scores.
+PreferenceRank employs a **round-robin tournament system** where items are compared against each other. By default, every item is compared with every other item for a full ranking. A **Quick Rank** option is also available, which uses an **active learning algorithm** to intelligently select the most informative pairs to compare. This provides a more accurate ranking with fewer comparisons than a random subset. Items are scored using the **Bradley-Terry Elo rating system**, providing transparent and relative preference scores.
 
 ## Quick Start
 1. Download the `PreferenceRank.html` file from the repository.
@@ -16,7 +16,8 @@ PreferenceRank employs a **round-robin tournament system** where items are compa
 
 ## Key Features
 - **Flexible Input**: Rank anything—characters, foods, movies, destinations, and more.
-- **Two Ranking Modes**: Choose between a full round-robin comparison or a "Quick Rank" mode with fewer matchups.
+- **Two Ranking Modes**: Choose between a full round-robin comparison or an intelligent "Quick Rank" mode.
+- **Smart "Quick Rank" Mode**: The quick ranking mode uses an active learning algorithm to intelligently select the most informative matchups, leading to higher accuracy with fewer comparisons.
 - **Scientific Scoring**: Utilizes the Bradley-Terry Elo rating system for accurate results.
 - **Undo and Ties**: Easily undo your last choice or allow for ties in the rankings.
 - **Lightweight**: A single HTML file with no external dependencies, making it portable and fast.
