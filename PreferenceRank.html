@@ -698,7 +698,7 @@
 					}
 
 					undo() {
-						if (!this.state.history.length)
+						if (this.state.isChoosing || !this.state.history.length)
 							return;
 						const last = this.state.history.pop();
 						this.state.scores[last.li] = last.lScore;
