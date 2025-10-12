@@ -636,6 +636,10 @@
 						}
 						const nextPair = this.state.pairProvider.getNextPair(this.state);
 						if (!nextPair) {
+							if (this.ui.quickRankMode.checked) {
+								this.state.total = this.state.progress;
+								this.updateProgress();
+							}
 							return this.showResults();
 						}
 						this.state.currentPair = nextPair;
