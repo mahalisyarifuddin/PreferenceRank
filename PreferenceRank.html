@@ -5,7 +5,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>PreferenceRank</title>
 		<style>
-			/* CSS Variables */
 			:root {
 				--primary: #0070ea;
 				--primary-hover: #005bc0;
@@ -22,7 +21,6 @@
 				--btn-hover: #d7d9e5;
 			}
 
-			/* Dark Theme */
 			@media (prefers-color-scheme: dark) {
 				:root:not(.light-theme) {
 					--bg: #10131b;
@@ -41,7 +39,6 @@
 				--btn-hover: #10131b;
 			}
 
-			/* General Styles */
 			html {
 				box-sizing: border-box;
 			}
@@ -63,7 +60,6 @@
 				padding: var(--space-sm);
 			}
 
-			/* Layout */
 			.container {
 				background-color: var(--bg-container);
 				border-radius: var(--radius);
@@ -83,13 +79,11 @@
 				display: none !important;
 			}
 
-			/* Typography */
 			h1, h2 {
 				margin: var(--space-xs) 0;
 				text-align: left;
 			}
 
-			/* Forms */
 			.form-group {
 				margin-bottom: var(--space-sm);
 			}
@@ -115,7 +109,6 @@
 				resize: vertical;
 			}
 
-			/* Buttons */
 			button {
 				cursor: pointer;
 				transition: background-color 0.2s ease;
@@ -140,7 +133,6 @@
 				background-color: var(--btn-hover);
 			}
 
-			/* Components */
 			#battle, #restartButtons, #tieButtons {
 				display: flex;
 				gap: var(--space-sm);
@@ -265,7 +257,6 @@
 				color: #fff !important;
 			}
 
-			/* Responsive */
 			@media (max-width: 768px) {
 				.container {
 					padding: var(--space-md);
