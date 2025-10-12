@@ -416,6 +416,7 @@
 				constructor() {
 					this.INITIAL_RATING = 1000;
 					this.K_FACTOR = 32;
+					this.sectionIds = ["inputSection", "battleSection", "results"];
 					this.ui = this.getUIElements();
 					this.state = this.getInitialState();
 					this.translations = this.getTranslations();
@@ -700,9 +701,7 @@
 				}
 
 				showSection(sectionId) {
-					["inputSection", "battleSection", "results"].forEach(id => {
-						this.ui[id].classList.toggle("hidden", id !== sectionId);
-					});
+					this.sectionIds.forEach(id => this.ui[id].classList.toggle("hidden", id !== sectionId));
 					this.ui.restartButtons.classList.toggle("hidden", sectionId !== "results");
 					this.state.keyboardEnabled = sectionId === "battleSection";
 				}
