@@ -139,15 +139,17 @@
 				margin-top: var(--space-sm);
 			}
 
-			#battle button, #tieButtons button {
+			#battle button, #tieButtons button, #restartButtons button {
 				flex: 1;
+			}
+
+			#battle button, #tieButtons button {
 				font-size: 1.2rem;
 				min-height: 100px;
 				min-width: 200px;
 			}
 
 			#restartButtons button {
-				flex: 1;
 				font-size: 1rem;
 			}
 
@@ -382,14 +384,16 @@
 					this.comparedPairs = new Set();
 				}
 				getNextPair(state) {
-					const { items, scores } = state;
-					const n = items.length;
+					const { scores } = state;
+					const n = this.n;
 					let bestPair = null;
 					let minDiff = Infinity;
+
 					for (let i = 0; i < n; i++) {
 						for (let j = i + 1; j < n; j++) {
-							const pairKey = `${Math.min(i, j)}-${Math.max(i, j)}`;
+							const pairKey = `${i}-${j}`;
 							if (this.comparedPairs.has(pairKey)) continue;
+
 							const diff = Math.abs(scores[i] - scores[j]);
 							if (diff < minDiff) {
 								minDiff = diff;
@@ -399,13 +403,13 @@
 					}
 					return bestPair;
 				}
+
 				markAsCompared(pair) {
-					const pairKey = `${Math.min(pair[0], pair[1])}-${Math.max(pair[0], pair[1])}`;
-					this.comparedPairs.add(pairKey);
+					this.comparedPairs.add(`${pair[0]}-${pair[1]}`);
 				}
+
 				unmarkAsCompared(pair) {
-					const pairKey = `${Math.min(pair[0], pair[1])}-${Math.max(pair[0], pair[1])}`;
-					this.comparedPairs.delete(pairKey);
+					this.comparedPairs.delete(`${pair[0]}-${pair[1]}`);
 				}
 				getTotal() {
 					return Math.ceil((this.n * (this.n - 1) / 2) * 0.4);
@@ -424,7 +428,7 @@
 
 				getUIElements() {
 					const ids = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
-					return Object.fromEntries(ids.map(id => [id, $(id)]));
+					return ids.reduce((acc, id) => ({ ...acc, [id]: $(id) }), {});
 				}
 
 				getInitialState() {
@@ -499,9 +503,14 @@
 					};
 				}
 
-				t(key) {
-					return this.translations[this.state.language][key];
+				t(key, replacements = {}) {
+					let translation = this.translations[this.state.language][key] || key;
+					Object.entries(replacements).forEach(([placeholder, value]) => {
+						translation = translation.replace(`{${placeholder}}`, value);
+					});
+					return translation;
 				}
+
 
 				init() {
 					this.setupEventListeners();
@@ -512,26 +521,17 @@
 
 				setupEventListeners() {
 					const listeners = {
-						'languageSelect': ['change', () => this.updateLanguage()],
-						'themeSelect': ['change', e => {
-							this.state.theme = e.target.value;
-							this.applyTheme();
-						}],
-						'allowTies': ['change', e => {
-							this.state.allowTies = e.target.checked;
-							if (!this.ui.battleSection.classList.contains("hidden")) {
-								this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
-								this.updateKeyboardTipContent();
-							}
-						}],
-						'startButton': ['click', () => this.startRank()],
-						'leftItem': ['click', e => this.choose("left", e)],
-						'rightItem': ['click', e => this.choose("right", e)],
-						'tieButton': ['click', e => this.choose("tie", e)],
-						'restartBattleButton': ['click', () => this.restartBattle()],
-						'restartNewItemsButton': ['click', () => this.restartNewItems()],
-						'undoButton': ['click', () => this.undo()],
-						'keyboardTipToggle': ['click', () => this.toggleKeyboardTip()],
+						languageSelect: ['change', () => this.updateLanguage()],
+						themeSelect: ['change', e => this.handleThemeChange(e.target.value)],
+						allowTies: ['change', e => this.handleAllowTiesChange(e.target.checked)],
+						startButton: ['click', () => this.startRank()],
+						leftItem: ['click', e => this.choose("left", e)],
+						rightItem: ['click', e => this.choose("right", e)],
+						tieButton: ['click', e => this.choose("tie", e)],
+						restartBattleButton: ['click', () => this.restartBattle()],
+						restartNewItemsButton: ['click', () => this.restartNewItems()],
+						undoButton: ['click', () => this.undo()],
+						keyboardTipToggle: ['click', () => this.toggleKeyboardTip()],
 					};
 
 					for (const id in listeners) {
@@ -541,22 +541,37 @@
 						}
 					}
 
-					document.addEventListener("keydown", e => {
-						if (!this.state.keyboardEnabled || ["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+					document.addEventListener("keydown", e => this.handleKeyDown(e));
+				}
 
-						const keyMap = {
-							ArrowLeft: () => this.ui.leftItem.click(),
-							ArrowRight: () => this.ui.rightItem.click(),
-							ArrowUp: () => this.state.allowTies && this.ui.tieButton.click(),
-							ArrowDown: () => this.state.allowTies && this.ui.tieButton.click(),
-							"z": () => (e.ctrlKey || e.metaKey) && this.ui.undoButton.click(),
-						};
+				handleThemeChange(theme) {
+					this.state.theme = theme;
+					this.applyTheme();
+				}
 
-						if (keyMap[e.key]) {
-							e.preventDefault();
-							keyMap[e.key]();
-						}
-					});
+				handleAllowTiesChange(checked) {
+					this.state.allowTies = checked;
+					if (!this.ui.battleSection.classList.contains("hidden")) {
+						this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
+						this.updateKeyboardTipContent();
+					}
+				}
+
+				handleKeyDown(e) {
+					if (!this.state.keyboardEnabled || ["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+
+					const keyMap = {
+						ArrowLeft: () => this.ui.leftItem.click(),
+						ArrowRight: () => this.ui.rightItem.click(),
+						ArrowUp: () => this.state.allowTies && this.ui.tieButton.click(),
+						ArrowDown: () => this.state.allowTies && this.ui.tieButton.click(),
+						"z": () => (e.ctrlKey || e.metaKey) && this.ui.undoButton.click(),
+					};
+
+					if (keyMap[e.key]) {
+						e.preventDefault();
+						keyMap[e.key]();
+					}
 				}
 
 				applyTheme() {
@@ -585,10 +600,12 @@
 				startRank() {
 					const rawItems = this.ui.itemInput.value.split("\n").map(s => s.trim()).filter(Boolean);
 					const items = [...new Set(rawItems)];
-					if (items.length !== rawItems.length) {
-						alert(this.t("duplicateAlert").replace("{count}", rawItems.length - items.length));
+					const removedCount = rawItems.length - items.length;
+					if (removedCount > 0) {
+						alert(this.t("duplicateAlert", { count: removedCount }));
 					}
 					if (items.length < 2) return alert(this.t("alert"));
+
 					this.state.items = items;
 					this.state.allowTies = this.ui.allowTies.checked;
 					this.resetBattleState();
@@ -675,29 +692,33 @@
 						score,
 						item: this.state.items[i]
 					})).sort((a, b) => b.score - a.score);
+
+					const tableBody = sortedItems.map((entry, i) => `
+						<tr>
+							<td>${i + 1}</td>
+							<td>${entry.item}</td>
+							<td>${Math.round(entry.score)}</td>
+						</tr>
+					`).join("");
+
 					this.ui.results.innerHTML = `
-                <h2>${this.t("results")}</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 20%">${this.t("rank")}</th>
-                            <th style="width: 60%">${this.t("item")}</th>
-                            <th style="width: 20%">${this.t("score")}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${sortedItems.map((entry, i) => `
-                            <tr>
-                                <td>${i + 1}</td>
-                                <td>${entry.item}</td>
-                                <td>${Math.round(entry.score)}</td>
-                            </tr>
-                        `).join("")}
-                    </tbody>
-                </table>
-            `;
+						<h2>${this.t("results")}</h2>
+						<table>
+							<thead>
+								<tr>
+									<th style="width: 20%">${this.t("rank")}</th>
+									<th style="width: 60%">${this.t("item")}</th>
+									<th style="width: 20%">${this.t("score")}</th>
+								</tr>
+							</thead>
+							<tbody>
+								${tableBody}
+							</tbody>
+						</table>
+					`;
 					this.showSection("results");
 				}
+
 
 				showSection(sectionId) {
 					["inputSection", "battleSection", "results"].forEach(id => {
@@ -724,15 +745,14 @@
 				}
 
 				restartNewItems() {
-					this.state.items = [];
+					this.state = this.getInitialState();
 					this.ui.itemInput.value = "";
-					this.resetBattleState();
 					this.showSection("inputSection");
 				}
 
 				toggleKeyboardTip(forceHidden) {
 					const isHidden = this.ui.keyboardTip.classList.toggle("hidden", forceHidden);
-					this.ui.keyboardTipToggle.textContent = isHidden ? this.t("keyboardTipToggle") : this.t("keyboardTipHide");
+					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
 				}
 			}
 
