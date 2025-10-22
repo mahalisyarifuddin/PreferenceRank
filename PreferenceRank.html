@@ -587,8 +587,9 @@
 					textContentKeys.forEach(key => {
 						if (this.ui[key]) this.ui[key].textContent = this.t(key);
 					});
-					this.toggleKeyboardTip(this.ui.keyboardTip.classList.contains("hidden"));
 					this.updateKeyboardTipContent();
+					const isHidden = this.ui.keyboardTip.classList.contains("hidden");
+					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
 					this.updateProgress();
 					if (!this.ui.results.classList.contains("hidden")) this.showResults();
 				}
@@ -745,7 +746,11 @@
 				}
 
 				restartNewItems() {
+					const { language, theme } = this.state;
 					this.state = this.getInitialState();
+					this.state.language = language;
+					this.state.theme = theme;
+					this.ui.languageSelect.value = language;
 					this.ui.itemInput.value = "";
 					this.showSection("inputSection");
 				}
