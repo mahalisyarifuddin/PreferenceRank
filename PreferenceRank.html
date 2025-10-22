@@ -420,6 +420,7 @@
 				constructor() {
 					this.INITIAL_RATING = 1000;
 					this.K_FACTOR = 32;
+					this.TEXT_CONTENT_KEYS = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
 					this.ui = this.getUIElements();
 					this.state = this.getInitialState();
 					this.translations = this.getTranslations();
@@ -428,7 +429,7 @@
 
 				getUIElements() {
 					const ids = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
-					return ids.reduce((acc, id) => ({ ...acc, [id]: $(id) }), {});
+					return Object.fromEntries(ids.map(id => [id, $(id)]));
 				}
 
 				getInitialState() {
@@ -583,9 +584,8 @@
 
 				updateLanguage() {
 					this.state.language = this.ui.languageSelect.value;
-					const textContentKeys = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
-					textContentKeys.forEach(key => {
-						if (this.ui[key]) this.ui[key].textContent = this.t(key);
+					this.TEXT_CONTENT_KEYS.forEach(key => {
+						this.ui[key].textContent = this.t(key);
 					});
 					this.updateKeyboardTipContent();
 					const isHidden = this.ui.keyboardTip.classList.contains("hidden");
@@ -627,11 +627,18 @@
 					this.state.total = this.state.pairProvider.getTotal();
 				}
 
+				updateScores(result) {
+					const [idx1, idx2] = this.state.currentPair;
+					const [score1, score2] = [this.state.scores[idx1], this.state.scores[idx2]];
+					const expected1 = 1 / (1 + 10 ** ((score2 - score1) / 400));
+					this.state.scores[idx1] += this.K_FACTOR * (result - expected1);
+					this.state.scores[idx2] += this.K_FACTOR * (expected1 - result);
+				}
+
 				choose(winner, e) {
 					if (this.state.isChoosing) return;
 					this.state.isChoosing = true;
 
-					const [idx1, idx2] = this.state.currentPair;
 					const p1_wins = (winner === 'left' && !this.state.isSwapped) || (winner === 'right' && this.state.isSwapped);
 					const result = winner === 'tie' ? 0.5 : (p1_wins ? 1 : 0);
 
@@ -642,11 +649,7 @@
 					});
 
 					this.state.pairProvider.markAsCompared(this.state.currentPair);
-
-					const [score1, score2] = [this.state.scores[idx1], this.state.scores[idx2]];
-					const expected1 = 1 / (1 + 10 ** ((score2 - score1) / 400));
-					this.state.scores[idx1] += this.K_FACTOR * (result - expected1);
-					this.state.scores[idx2] += this.K_FACTOR * (expected1 - result);
+					this.updateScores(result);
 
 					this.state.progress++;
 					this.ui.undoButton.disabled = false;
@@ -689,16 +692,15 @@
 				}
 
 				showResults() {
-					const sortedItems = this.state.scores.map((score, i) => ({
-						score,
-						item: this.state.items[i]
-					})).sort((a, b) => b.score - a.score);
+					const sortedItems = this.state.items
+						.map((item, i) => ({ item, score: this.state.scores[i] }))
+						.sort((a, b) => b.score - a.score);
 
-					const tableBody = sortedItems.map((entry, i) => `
+					const tableBody = sortedItems.map(({ item, score }, i) => `
 						<tr>
 							<td>${i + 1}</td>
-							<td>${entry.item}</td>
-							<td>${Math.round(entry.score)}</td>
+							<td>${item}</td>
+							<td>${Math.round(score)}</td>
 						</tr>
 					`).join("");
 
@@ -747,9 +749,7 @@
 
 				restartNewItems() {
 					const { language, theme } = this.state;
-					this.state = this.getInitialState();
-					this.state.language = language;
-					this.state.theme = theme;
+					Object.assign(this.state, this.getInitialState(), { language, theme });
 					this.ui.languageSelect.value = language;
 					this.ui.itemInput.value = "";
 					this.showSection("inputSection");
