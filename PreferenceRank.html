@@ -411,6 +411,9 @@
 				unmarkAsCompared(pair) {
 					this.comparedPairs.delete(`${pair[0]}-${pair[1]}`);
 				}
+				getTotal() {
+					return Math.ceil((this.n * (this.n - 1) / 2) * 0.5);
+				}
 			}
 
 			class PreferenceRank {
@@ -621,7 +624,7 @@
 					this.state.history = [];
 					this.ui.undoButton.disabled = true;
 					this.state.pairProvider = this.ui.quickRankMode.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
-					this.state.total = this.ui.quickRankMode.checked ? 0 : this.state.pairProvider.getTotal();
+					this.state.total = this.state.pairProvider.getTotal();
 				}
 
 				updateScores(result) {
@@ -638,6 +641,7 @@
 
 					const p1_wins = (winner === 'left' && !this.state.isSwapped) || (winner === 'right' && this.state.isSwapped);
 					const result = winner === 'tie' ? 0.5 : (p1_wins ? 1 : 0);
+					const targetButton = winner === "tie" ? e.target : this.ui[winner + "Item"];
 
 					this.state.history.push({
 						pair: this.state.currentPair,
@@ -652,7 +656,7 @@
 					this.ui.undoButton.disabled = false;
 					this.updateProgress();
 					this.clearSelections();
-					(winner === "tie" ? e.target : this.ui[winner + "Item"]).classList.add("selected");
+					targetButton.classList.add("selected");
 
 					setTimeout(() => {
 						this.state.isChoosing = false;
@@ -662,17 +666,9 @@
 
 				nextBattle() {
 					this.clearSelections();
-					const isQuickRank = this.ui.quickRankMode.checked;
-					const isBattleOver = this.state.progress >= this.state.total;
-
-					if (isBattleOver) {
-						if (isQuickRank) this.state.total++;
-						else return this.showResults();
-					}
-
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
-					if (!nextPair) {
-						if (isQuickRank) this.state.total = this.state.progress;
+
+					if (!nextPair || this.state.progress >= this.state.total) {
 						return this.showResults();
 					}
 
