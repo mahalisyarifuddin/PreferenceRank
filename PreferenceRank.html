@@ -752,6 +752,8 @@
 					Object.assign(this.state, this.getInitialState(), { language, theme });
 					this.ui.languageSelect.value = language;
 					this.ui.itemInput.value = "";
+					this.ui.allowTies.checked = false;
+					this.ui.quickRankMode.checked = false;
 					this.showSection("inputSection");
 				}
 
