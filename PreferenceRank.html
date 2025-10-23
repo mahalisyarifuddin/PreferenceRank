@@ -411,9 +411,6 @@
 				unmarkAsCompared(pair) {
 					this.comparedPairs.delete(`${pair[0]}-${pair[1]}`);
 				}
-				getTotal() {
-					return Math.ceil((this.n * (this.n - 1) / 2) * 0.5);
-				}
 			}
 
 			class PreferenceRank {
@@ -624,7 +621,7 @@
 					this.state.history = [];
 					this.ui.undoButton.disabled = true;
 					this.state.pairProvider = this.ui.quickRankMode.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
-					this.state.total = this.state.pairProvider.getTotal();
+					this.state.total = this.ui.quickRankMode.checked ? 0 : this.state.pairProvider.getTotal();
 				}
 
 				updateScores(result) {
@@ -665,13 +662,20 @@
 
 				nextBattle() {
 					this.clearSelections();
-					if (this.state.progress >= this.state.total) {
-						return this.showResults();
+					const isQuickRank = this.ui.quickRankMode.checked;
+					const isBattleOver = this.state.progress >= this.state.total;
+
+					if (isBattleOver) {
+						if (isQuickRank) this.state.total++;
+						else return this.showResults();
 					}
+
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
 					if (!nextPair) {
+						if (isQuickRank) this.state.total = this.state.progress;
 						return this.showResults();
 					}
+
 					this.state.currentPair = nextPair;
 					let [idx1, idx2] = nextPair;
 					this.state.isSwapped = Math.random() < 0.5;
