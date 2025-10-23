@@ -641,6 +641,7 @@
 
 					const p1_wins = (winner === 'left' && !this.state.isSwapped) || (winner === 'right' && this.state.isSwapped);
 					const result = winner === 'tie' ? 0.5 : (p1_wins ? 1 : 0);
+					const targetButton = winner === "tie" ? e.target : this.ui[winner + "Item"];
 
 					this.state.history.push({
 						pair: this.state.currentPair,
@@ -655,7 +656,7 @@
 					this.ui.undoButton.disabled = false;
 					this.updateProgress();
 					this.clearSelections();
-					(winner === "tie" ? e.target : this.ui[winner + "Item"]).classList.add("selected");
+					targetButton.classList.add("selected");
 
 					setTimeout(() => {
 						this.state.isChoosing = false;
@@ -665,13 +666,12 @@
 
 				nextBattle() {
 					this.clearSelections();
-					if (this.state.progress >= this.state.total) {
-						return this.showResults();
-					}
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
-					if (!nextPair) {
+
+					if (!nextPair || this.state.progress >= this.state.total) {
 						return this.showResults();
 					}
+
 					this.state.currentPair = nextPair;
 					let [idx1, idx2] = nextPair;
 					this.state.isSwapped = Math.random() < 0.5;
