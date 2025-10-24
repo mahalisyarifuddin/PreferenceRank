@@ -421,15 +421,9 @@
 					this.INITIAL_RATING = 1000;
 					this.K_FACTOR = 32;
 					this.TEXT_CONTENT_KEYS = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
-					this.ui = this.getUIElements();
 					this.state = this.getInitialState();
 					this.translations = this.getTranslations();
 					this.init();
-				}
-
-				getUIElements() {
-					const ids = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
-					return Object.fromEntries(ids.map(id => [id, $(id)]));
 				}
 
 				getInitialState() {
@@ -512,15 +506,10 @@
 					return translation;
 				}
 
-
 				init() {
-					this.setupEventListeners();
-					this.ui.languageSelect.value = this.state.language;
-					this.applyTheme();
-					this.updateLanguage();
-				}
+					const uiElements = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
+					this.ui = Object.fromEntries(uiElements.map(id => [id, $(id)]));
 
-				setupEventListeners() {
 					const listeners = {
 						languageSelect: ['change', () => this.updateLanguage()],
 						themeSelect: ['change', e => this.handleThemeChange(e.target.value)],
@@ -535,14 +524,15 @@
 						keyboardTipToggle: ['click', () => this.toggleKeyboardTip()],
 					};
 
-					for (const id in listeners) {
-						if (this.ui[id]) {
-							const [event, handler] = listeners[id];
-							this.ui[id].addEventListener(event, handler);
-						}
-					}
+					Object.entries(listeners).forEach(([id, [event, handler]]) => {
+						this.ui[id]?.addEventListener(event, handler);
+					});
 
 					document.addEventListener("keydown", e => this.handleKeyDown(e));
+
+					this.ui.languageSelect.value = this.state.language;
+					this.applyTheme();
+					this.updateLanguage();
 				}
 
 				handleThemeChange(theme) {
@@ -641,21 +631,17 @@
 
 					const p1_wins = (winner === 'left' && !this.state.isSwapped) || (winner === 'right' && this.state.isSwapped);
 					const result = winner === 'tie' ? 0.5 : (p1_wins ? 1 : 0);
-					const targetButton = winner === "tie" ? e.target : this.ui[winner + "Item"];
 
-					this.state.history.push({
-						pair: this.state.currentPair,
-						scores: [...this.state.scores],
-						progressBefore: this.state.progress,
-					});
-
+					this.state.history.push({ pair: this.state.currentPair, scores: [...this.state.scores], progressBefore: this.state.progress });
 					this.state.pairProvider.markAsCompared(this.state.currentPair);
 					this.updateScores(result);
 
 					this.state.progress++;
 					this.ui.undoButton.disabled = false;
 					this.updateProgress();
+
 					this.clearSelections();
+					const targetButton = winner === "tie" ? this.ui.tieButton : this.ui[`${winner}Item`];
 					targetButton.classList.add("selected");
 
 					setTimeout(() => {
@@ -696,14 +682,6 @@
 						.map((item, i) => ({ item, score: this.state.scores[i] }))
 						.sort((a, b) => b.score - a.score);
 
-					const tableBody = sortedItems.map(({ item, score }, i) => `
-						<tr>
-							<td>${i + 1}</td>
-							<td>${item}</td>
-							<td>${Math.round(score)}</td>
-						</tr>
-					`).join("");
-
 					this.ui.results.innerHTML = `
 						<h2>${this.t("results")}</h2>
 						<table>
@@ -715,13 +693,17 @@
 								</tr>
 							</thead>
 							<tbody>
-								${tableBody}
+								${sortedItems.map(({ item, score }, i) => `
+									<tr>
+										<td>${i + 1}</td>
+										<td>${item}</td>
+										<td>${Math.round(score)}</td>
+									</tr>`).join("")}
 							</tbody>
 						</table>
 					`;
 					this.showSection("results");
 				}
-
 
 				showSection(sectionId) {
 					["inputSection", "battleSection", "results"].forEach(id => {
@@ -732,7 +714,8 @@
 				}
 
 				undo() {
-					if (this.state.isChoosing || !this.state.history.length) return;
+					if (this.state.isChoosing || this.state.history.length === 0) return;
+
 					const last = this.state.history.pop();
 					this.state.scores = last.scores;
 					this.state.progress = last.progressBefore;
@@ -755,6 +738,7 @@
 					this.ui.allowTies.checked = false;
 					this.ui.quickRankMode.checked = false;
 					this.showSection("inputSection");
+					this.updateLanguage();
 				}
 
 				toggleKeyboardTip(forceHidden) {
