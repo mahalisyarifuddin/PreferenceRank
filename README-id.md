@@ -1,4 +1,4 @@
-[English](https://github.com/mahalisyarifuddin/PreferenceRank) | **Bahasa Indonesia**
+[English](https://github.com/mahalisyarifuddin/PreferenceRank/blob/main/README.md) | **Bahasa Indonesia**
 
 # PreferenceRank
 *Sorting made better, powered by science.*
@@ -7,7 +7,14 @@
 PreferenceRank adalah alat fleksibel dan ilmiah untuk mengurutkan apa saja sesuai preferensi Anda, terinspirasi dari *character/bias sorter* yang viral, tetapi dikembangkan dengan pendekatan yang lebih terstruktur. Baik itu karakter favorit, makanan, film, atau destinasi wisata, alat ini memastikan hasil pemeringkatan yang akurat dan menyenangkan.
 
 ## Cara Kerja
-PreferenceRank menggunakan **sistem turnamen round-robin**, di mana setiap item dibandingkan satu sama lain. Secara default, setiap item akan dibandingkan dengan semua item lainnya untuk pemeringkatan penuh. Tersedia juga opsi **Peringkat Cepat**, yang menggunakan **algoritma *active learning*** untuk secara cerdas memilih pasangan yang paling informatif untuk dibandingkan. Ini memberikan peringkat yang lebih akurat dengan lebih sedikit perbandingan daripada subset acak. Item diberikan skor menggunakan **sistem peringkat Elo Bradley-Terry**, yang memberikan hasil yang transparan dan relatif.
+PreferenceRank mengurutkan item Anda dengan membandingkannya secara berpasangan. Alat ini menggunakan **sistem peringkat Elo Bradley-Terry** untuk memberikan skor pada setiap item berdasarkan pilihan Anda, sehingga menghasilkan peringkat yang transparan dan relatif. Lihat bagian "Mode Peringkat" untuk detail lebih lanjut mengenai metode perbandingan.
+
+## Mode Peringkat
+PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
+
+- **Peringkat Penuh (Default):** Mode ini menggunakan sistem turnamen round-robin yang komprehensif, di mana setiap item akan dibandingkan dengan semua item lainnya. Metode ini menyeluruh dan menjamin representasi preferensi Anda yang paling akurat, tetapi bisa memakan waktu untuk daftar yang panjang.
+
+- **Peringkat Cepat:** Mode ini menggunakan algoritma *active learning* yang cerdas untuk mengurangi jumlah perbandingan. Mode ini memprioritaskan pertandingan antara item dengan skor serupa, sehingga pemeringkatan dapat disempurnakan secara efisien. Pengujian kami menunjukkan bahwa Peringkat Cepat bisa jauh lebih cepat (lebih dari 30% pengurangan waktu untuk daftar 10 item) sambil mempertahankan tingkat akurasi yang sangat tinggi. Mode ini direkomendasikan untuk daftar yang panjang atau ketika Anda membutuhkan peringkat yang baik dengan cepat.
 
 ## Cara Menggunakan
 1. Unduh berkas `PreferenceRank.html` dari repositori.
@@ -16,9 +23,8 @@ PreferenceRank menggunakan **sistem turnamen round-robin**, di mana setiap item 
 
 ## Fitur Utama
 - **Masukan Fleksibel**: Urutkan apa saja—karakter, makanan, film, destinasi, dan lainnya.
-- **Dua Mode Peringkat**: Pilih antara perbandingan round-robin penuh atau mode "Peringkat Cepat" yang cerdas.
-- **Mode "Peringkat Cepat" Cerdas**: Mode peringkat cepat menggunakan algoritma *active learning* untuk secara cerdas memilih pertandingan yang paling informatif, menghasilkan akurasi yang lebih tinggi dengan lebih sedikit perbandingan.
-- **Penilaian Ilmiah**: Menggunakan sistem peringkat Elo Bradley-Terry untuk hasil yang akurat dan transparan.
+- **Dua Mode Peringkat**: Pilih antara "Peringkat Penuh" yang komprehensif atau "Peringkat Cepat" yang cerdas (lihat detail di atas).
+- **Penilaian Ilmiah**: Menggunakan sistem peringkat Elo Bradley-Terry untuk hasil yang akurat.
 - **Urungkan dan Seri**: Batalkan pilihan terakhir Anda dengan mudah atau izinkan hasil seri dalam pemeringkatan.
 - **Ringan**: Satu berkas HTML tanpa dependensi eksternal, sehingga portabel dan cepat.
 - **Opsi Tema**: Pilih antara tema terang, gelap, atau otomatis untuk pengalaman yang dipersonalisasi.
