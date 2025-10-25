@@ -383,25 +383,25 @@
 					super(n);
 					this.comparedPairs = new Set();
 				}
+
 				getNextPair(state) {
 					const { scores } = state;
 					const n = this.n;
-					let bestPair = null;
-					let minDiff = Infinity;
 
-					for (let i = 0; i < n; i++) {
-						for (let j = i + 1; j < n; j++) {
-							const pairKey = `${i}-${j}`;
-							if (this.comparedPairs.has(pairKey)) continue;
+					const sortedIndices = Array.from({ length: n }, (_, i) => i)
+						.sort((a, b) => scores[b] - scores[a]);
 
-							const diff = Math.abs(scores[i] - scores[j]);
-							if (diff < minDiff) {
-								minDiff = diff;
-								bestPair = [i, j];
-							}
+					for (let i = 0; i < n - 1; i++) {
+						const p1 = sortedIndices[i];
+						const p2 = sortedIndices[i + 1];
+						const pair = [Math.min(p1, p2), Math.max(p1, p2)];
+						const pairKey = `${pair[0]}-${pair[1]}`;
+						if (!this.comparedPairs.has(pairKey)) {
+							return pair;
 						}
 					}
-					return bestPair;
+
+					return null;
 				}
 
 				markAsCompared(pair) {
@@ -411,18 +411,68 @@
 				unmarkAsCompared(pair) {
 					this.comparedPairs.delete(`${pair[0]}-${pair[1]}`);
 				}
-				getTotal() {
-					return Math.ceil((this.n * (this.n - 1) / 2) * 0.5);
-				}
 			}
 
+			const translations = {
+				en: {
+					title: "PreferenceRank",
+					autoTheme: "Auto Theme",
+					lightTheme: "Light",
+					darkTheme: "Dark",
+					itemInputLabel: "Enter items, one per line:",
+					allowTiesLabel: "Allow Ties",
+					quickRankModeLabel: "Use Quick Rank (fewer comparisons)",
+					alert: "Please enter at least two items.",
+					duplicateAlert: "{count} duplicate item(s) were found and have been removed.",
+					startButton: "Start Ranking",
+					tieButton: "It's a Tie",
+					undoButton: "Undo",
+					progress: "Progress",
+					keyboardTipToggle: "Show keyboard shortcuts",
+					keyboardTipHide: "Hide keyboard shortcuts",
+					keyboardTipWithTies: "Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> or <kbd>↓</kbd> It's a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice",
+					keyboardTipNoTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
+					results: "Results",
+					rank: "Rank",
+					item: "Item",
+					score: "Score",
+					restartBattleButton: "Restart Battle",
+					restartNewItemsButton: "Start with New Items",
+				},
+				id: {
+					title: "PreferenceRank",
+					autoTheme: "Tema Otomatis",
+					lightTheme: "Terang",
+					darkTheme: "Gelap",
+					itemInputLabel: "Masukkan pilihan, satu per baris:",
+					allowTiesLabel: "Izinkan Seri",
+					quickRankModeLabel: "Gunakan Peringkat Cepat (lebih sedikit perbandingan)",
+					alert: "Harap masukkan setidaknya dua pilihan.",
+					duplicateAlert: "{count} item duplikat ditemukan dan telah dihapus.",
+					startButton: "Mulai Peringkat",
+					tieButton: "Seri",
+					undoButton: "Urungkan",
+					progress: "Kemajuan",
+					keyboardTipToggle: "Tampilkan pintasan papan ketik",
+					keyboardTipHide: "Sembunyikan pintasan papan ketik",
+					keyboardTipWithTies: "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> atau <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
+					keyboardTipNoTies: "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
+					results: "Hasil",
+					rank: "Peringkat",
+					item: "Nama",
+					score: "Skor",
+					restartBattleButton: "Mulai Ulang Pertarungan",
+					restartNewItemsButton: "Mulai dengan Pilihan Baru",
+				},
+			};
+
 			class PreferenceRank {
-				constructor() {
+				constructor(translations) {
 					this.INITIAL_RATING = 1000;
 					this.K_FACTOR = 32;
 					this.TEXT_CONTENT_KEYS = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
 					this.state = this.getInitialState();
-					this.translations = this.getTranslations();
+					this.translations = translations;
 					this.init();
 				}
 
@@ -440,61 +490,6 @@
 						history: [],
 						keyboardEnabled: false,
 						isChoosing: false,
-					};
-				}
-
-				getTranslations() {
-					return {
-						en: {
-							title: "PreferenceRank",
-							autoTheme: "Auto Theme",
-							lightTheme: "Light",
-							darkTheme: "Dark",
-							itemInputLabel: "Enter items, one per line:",
-							allowTiesLabel: "Allow Ties",
-							quickRankModeLabel: "Use Quick Rank (fewer comparisons)",
-							alert: "Please enter at least two items.",
-							duplicateAlert: "{count} duplicate item(s) were found and have been removed.",
-							startButton: "Start Ranking",
-							tieButton: "It's a Tie",
-							undoButton: "Undo",
-							progress: "Progress",
-							keyboardTipToggle: "Show keyboard shortcuts",
-							keyboardTipHide: "Hide keyboard shortcuts",
-							keyboardTipWithTies: "Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> or <kbd>↓</kbd> It's a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice",
-							keyboardTipNoTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
-							results: "Results",
-							rank: "Rank",
-							item: "Item",
-							score: "Score",
-							restartBattleButton: "Restart Battle",
-							restartNewItemsButton: "Start with New Items",
-						},
-						id: {
-							title: "PreferenceRank",
-							autoTheme: "Tema Otomatis",
-							lightTheme: "Terang",
-							darkTheme: "Gelap",
-							itemInputLabel: "Masukkan pilihan, satu per baris:",
-							allowTiesLabel: "Izinkan Seri",
-							quickRankModeLabel: "Gunakan Peringkat Cepat (lebih sedikit perbandingan)",
-							alert: "Harap masukkan setidaknya dua pilihan.",
-							duplicateAlert: "{count} item duplikat ditemukan dan telah dihapus.",
-							startButton: "Mulai Peringkat",
-							tieButton: "Seri",
-							undoButton: "Urungkan",
-							progress: "Kemajuan",
-							keyboardTipToggle: "Tampilkan pintasan papan ketik",
-							keyboardTipHide: "Sembunyikan pintasan papan ketik",
-							keyboardTipWithTies: "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> atau <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
-							keyboardTipNoTies: "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
-							results: "Hasil",
-							rank: "Peringkat",
-							item: "Nama",
-							score: "Skor",
-							restartBattleButton: "Mulai Ulang Pertarungan",
-							restartNewItemsButton: "Mulai dengan Pilihan Baru",
-						},
 					};
 				}
 
@@ -614,7 +609,7 @@
 					this.state.history = [];
 					this.ui.undoButton.disabled = true;
 					this.state.pairProvider = this.ui.quickRankMode.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
-					this.state.total = this.state.pairProvider.getTotal();
+					this.state.total = this.ui.quickRankMode.checked ? 0 : this.state.pairProvider.getTotal();
 				}
 
 				updateScores(result) {
@@ -654,7 +649,7 @@
 					this.clearSelections();
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
 
-					if (!nextPair || this.state.progress >= this.state.total) {
+					if (!nextPair || (!this.ui.quickRankMode.checked && this.state.progress >= this.state.total)) {
 						return this.showResults();
 					}
 
@@ -670,7 +665,10 @@
 				}
 
 				updateProgress() {
-					this.ui.progress.textContent = `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
+					const progressText = this.ui.quickRankMode.checked
+						? `${this.t("progress")}: ${this.state.progress}`
+						: `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
+					this.ui.progress.textContent = progressText;
 				}
 
 				clearSelections() {
@@ -747,7 +745,7 @@
 				}
 			}
 
-			new PreferenceRank();
+			new PreferenceRank(translations);
 		</script>
 	</body>
 </html>
