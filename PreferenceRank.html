@@ -8,179 +8,163 @@
 			:root {
 				--primary: #0070ea;
 				--primary-hover: #005bc0;
-				--space-xs: 0.5rem;
-				--space-sm: 1rem;
-				--space-md: 1.5rem;
-				--space-lg: 2rem;
-				--radius-sm: 4px;
-				--radius: 8px;
 				--bg: #f9f9ff;
-				--bg-container: #ffffff;
+				--bg-container: #fff;
 				--text: #414754;
 				--border: #c1c6d7;
-				--btn-hover: #d7d9e5;
+				--btn-hover: #d7d9e5
 			}
 
-			@media (prefers-color-scheme: dark) {
-				:root:not(.light-theme) {
-					--bg: #10131b;
+			@media(prefers-color-scheme: dark) {
+				:root:not(.light) {
+					--bg:#10131b;
 					--bg-container: #181c23;
 					--text: #c1c6d7;
 					--border: #414754;
-					--btn-hover: #10131b;
+					--btn-hover: #10131b
 				}
 			}
 
-			:root.dark-theme {
+			:root.dark {
 				--bg: #10131b;
 				--bg-container: #181c23;
 				--text: #c1c6d7;
 				--border: #414754;
-				--btn-hover: #10131b;
+				--btn-hover: #10131b
 			}
 
-			html {
+			* {
 				box-sizing: border-box;
-			}
-
-			*, *::before, *::after {
-				box-sizing: inherit;
 				margin: 0;
-				padding: 0;
+				padding: 0
 			}
 
 			body {
-				align-items: center;
-				background-color: var(--bg);
+				background: var(--bg);
 				color: var(--text);
 				display: flex;
-				font-family: sans-serif;
+				align-items: center;
 				justify-content: center;
 				min-height: 100vh;
-				padding: var(--space-sm);
+				padding: 1rem;
+				font-family: sans-serif
 			}
 
 			.container {
-				background-color: var(--bg-container);
-				border-radius: var(--radius);
-				box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-				color: var(--text);
+				background: var(--bg-container);
+				border-radius: 8px;
+				box-shadow: 0 2px 10px rgba(0,0,0,.1);
 				max-width: 720px;
-				padding: var(--space-lg);
-				position: relative;
+				padding: 2rem;
 				width: 100%;
+				position: relative
 			}
 
 			.container:has(#inputSection:not(.hidden)) {
-				padding-top: 3rem;
+				padding-top: 3rem
 			}
 
 			.hidden {
-				display: none !important;
+				display: none!important
 			}
 
-			h1, h2 {
-				margin: var(--space-xs) 0;
-				text-align: left;
+			h1,h2 {
+				margin: .5rem 0;
+				text-align: left
 			}
 
 			.form-group {
-				margin-bottom: var(--space-sm);
+				margin-bottom: 1rem
 			}
 
 			label {
 				display: block;
-				font-weight: bold;
-				margin-bottom: var(--space-xs);
+				font-weight: 700;
+				margin-bottom: .5rem
 			}
 
-			input, select, textarea, button {
-				background-color: var(--bg-container);
+			input,select,textarea,button {
+				background: var(--bg-container);
 				border: 1px solid var(--border);
-				border-radius: var(--radius-sm);
+				border-radius: 4px;
 				color: var(--text);
 				font-size: 1rem;
-				padding: var(--space-xs);
-				width: 100%;
+				padding: .5rem;
+				width: 100%
 			}
 
 			textarea {
 				min-height: 80px;
-				resize: vertical;
+				resize: vertical
 			}
 
 			button {
 				cursor: pointer;
-				transition: background-color 0.2s ease;
+				transition: background .2s
 			}
 
 			.btn-primary {
-				background-color: var(--primary);
+				background: var(--primary);
 				border: none;
-				color: #fff;
+				color: #fff
 			}
 
 			.btn-primary:hover {
-				background-color: var(--primary-hover);
+				background: var(--primary-hover)
 			}
 
 			.btn-secondary {
-				background-color: var(--bg-container);
-				color: var(--text);
+				background: var(--bg-container);
+				color: var(--text)
 			}
 
 			.btn-secondary:hover {
-				background-color: var(--btn-hover);
+				background: var(--btn-hover)
 			}
 
-			#battle, #restartButtons, #tieButtons {
+			#battle,#restartButtons,#tieButtons {
 				display: flex;
-				gap: var(--space-sm);
-				margin-top: var(--space-sm);
+				gap: 1rem;
+				margin-top: 1rem
 			}
 
-			#battle button, #tieButtons button, #restartButtons button {
-				flex: 1;
+			#battle button,#tieButtons button,#restartButtons button {
+				flex: 1
 			}
 
-			#battle button, #tieButtons button {
+			#battle button,#tieButtons button {
 				font-size: 1.2rem;
-				min-height: 100px;
-				min-width: 200px;
-			}
-
-			#restartButtons button {
-				font-size: 1rem;
+				min-height: 100px
 			}
 
 			#progress {
 				font-size: 1.1rem;
-				margin-top: var(--space-sm);
-				text-align: center;
+				margin-top: 1rem;
+				text-align: center
 			}
 
 			#keyboardTip {
-				background-color: var(--bg);
+				background: var(--bg);
 				border: 1px solid var(--border);
-				border-radius: var(--radius-sm);
-				font-size: 0.85rem;
+				border-radius: 4px;
+				font-size: .85rem;
 				line-height: 1.5;
 				margin-top: 15px;
-				opacity: 0.9;
+				opacity: .9;
 				padding: 8px;
-				text-align: center;
+				text-align: center
 			}
 
 			#keyboardTip kbd {
-				background-color: var(--bg-container);
+				background: var(--bg-container);
 				border: 1px solid var(--border);
 				border-radius: 3px;
-				box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+				box-shadow: 0 1px 1px rgba(0,0,0,.2);
 				display: inline-block;
-				font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-				font-size: 0.9em;
+				font-family: monospace;
+				font-size: .9em;
 				margin: 0 3px;
-				padding: 2px 5px;
+				padding: 2px 5px
 			}
 
 			#keyboardTipToggle {
@@ -189,103 +173,100 @@
 				color: var(--primary);
 				cursor: pointer;
 				display: block;
-				font-size: 0.85rem;
+				font-size: .85rem;
 				margin: 10px auto 0;
 				padding: 0;
-				text-align: center;
 				text-decoration: underline;
-				width: auto;
+				width: auto
 			}
 
-			.selectors-container {
-				display: flex;
-				gap: 8px;
+			.selectors {
 				position: absolute;
-				right: var(--space-lg);
-				top: var(--space-sm);
-			}
-
-			.selector {
-				font-size: 0.9rem;
-				padding: 5px;
-				width: auto;
-			}
-
-			.checkbox-container {
-				align-items: center;
+				right: 2rem;
+				top: 1rem;
 				display: flex;
+				gap: 8px
+			}
+
+			.selectors select {
+				font-size: .9rem;
+				padding: 5px;
+				width: auto
+			}
+
+			.checkbox {
+				display: flex;
+				align-items: center;
 				gap: 10px;
-				margin-bottom: var(--space-sm);
+				margin-bottom: 1rem
 			}
 
-			.checkbox-container input[type="checkbox"] {
-				width: auto;
+			.checkbox input {
+				width: auto
 			}
 
-			.checkbox-container label {
-				margin-bottom: 0;
+			.checkbox label {
+				margin: 0
 			}
 
 			#results table {
 				border-collapse: collapse;
-				margin-top: var(--space-sm);
-				width: 100%;
+				margin-top: 1rem;
+				width: 100%
 			}
 
-			#results th, #results td {
+			#results th,#results td {
 				border: 1px solid var(--border);
-				padding: var(--space-xs);
-				text-align: left;
+				padding: .5rem;
+				text-align: left
 			}
 
 			#results th {
-				background-color: var(--primary);
-				color: #fff;
+				background: var(--primary);
+				color: #fff
 			}
 
 			#undoButton {
-				font-size: 1rem;
-				margin-top: var(--space-sm);
-				width: auto;
+				margin-top: 1rem;
+				width: auto
 			}
 
 			#undoButton:disabled {
-				background-color: var(--btn-hover);
-				cursor: not-allowed;
+				background: var(--btn-hover);
+				cursor: not-allowed
 			}
 
 			.selected {
-				background-color: var(--primary) !important;
-				color: #fff !important;
+				background: var(--primary)!important;
+				color: #fff!important
 			}
 
-			@media (max-width: 768px) {
+			@media(max-width: 768px) {
 				.container {
-					padding: var(--space-md);
+					padding:1.5rem
 				}
 
 				.container:has(#inputSection:not(.hidden)) {
-					padding-top: calc(var(--space-sm) + var(--space-md) + var(--space-xs));
+					padding-top: calc(1.5rem + 1rem)
 				}
 
-				.selectors-container {
+				.selectors {
 					gap: 4px;
-					right: var(--space-xs);
-					top: var(--space-xs);
+					right: .5rem;
+					top: .5rem
 				}
 
-				.selector {
-					font-size: 0.8rem;
-					padding: 4px;
+				.selectors select {
+					font-size: .8rem;
+					padding: 4px
 				}
 
-				#battle, #tieButtons, #restartButtons {
-					flex-direction: column;
+				#battle,#tieButtons,#restartButtons {
+					flex-direction: column
 				}
 
-				#battle button, #tieButtons button {
-					min-width: auto;
-					width: 100%;
+				#battle button,#tieButtons button {
+					width: 100%
 				}
 			}
 		</style>
@@ -294,12 +275,12 @@
 		<div class="container">
 			<div id="inputSection">
 				<h1 id="title"></h1>
-				<div class="selectors-container">
-					<select id="languageSelect" class="selector" aria-label="Language">
+				<div class="selectors">
+					<select id="langSelect">
 						<option value="en">English</option>
 						<option value="id">Bahasa Indonesia</option>
 					</select>
-					<select id="themeSelect" class="selector" aria-label="Theme">
+					<select id="themeSelect">
 						<option value="auto" id="autoTheme"></option>
 						<option value="light" id="lightTheme"></option>
 						<option value="dark" id="darkTheme"></option>
@@ -309,111 +290,38 @@
 					<label for="itemInput" id="itemInputLabel"></label>
 					<textarea id="itemInput" rows="5" spellcheck="false"></textarea>
 				</div>
-				<div class="checkbox-container">
+				<div class="checkbox">
 					<input type="checkbox" id="allowTies"/>
 					<label for="allowTies" id="allowTiesLabel"></label>
 				</div>
-				<div class="checkbox-container">
-					<input type="checkbox" id="quickRankMode"/>
-					<label for="quickRankMode" id="quickRankModeLabel"></label>
+				<div class="checkbox">
+					<input type="checkbox" id="quickRank"/>
+					<label for="quickRank" id="quickRankLabel"></label>
 				</div>
 				<button id="startButton" class="btn-primary"></button>
 			</div>
-			<div id="battleSection" class="hidden" aria-live="polite">
+			<div id="battleSection" class="hidden">
 				<button id="undoButton" class="btn-secondary" disabled></button>
 				<div id="battle">
-					<button id="leftItem" class="btn-secondary" aria-label="Left choice"></button>
-					<button id="rightItem" class="btn-secondary" aria-label="Right choice"></button>
+					<button id="leftItem" class="btn-secondary"></button>
+					<button id="rightItem" class="btn-secondary"></button>
 				</div>
 				<div id="tieButtons" class="hidden">
 					<button id="tieButton" class="btn-secondary"></button>
 				</div>
-				<div id="progress" aria-live="polite"></div>
+				<div id="progress"></div>
 				<button id="keyboardTipToggle"></button>
 				<div id="keyboardTip" class="hidden"></div>
 			</div>
 			<div id="results" class="hidden"></div>
 			<div id="restartButtons" class="hidden">
 				<button id="restartBattleButton" class="btn-primary"></button>
-				<button id="restartNewItemsButton" class="btn-primary"></button>
+				<button id="restartNewButton" class="btn-primary"></button>
 			</div>
 		</div>
 		<script>
-			const $ = (id) => document.getElementById(id);
-
-			class PairProvider {
-				constructor(n) {
-					this.n = n;
-				}
-				shuffle(a) {
-					for (let i = a.length - 1; i > 0; i--) {
-						const j = Math.floor(Math.random() * (i + 1));
-						[a[i], a[j]] = [a[j], a[i]];
-					}
-				}
-				markAsCompared(pair) {}
-				unmarkAsCompared(pair) {}
-			}
-
-			class FullPairProvider extends PairProvider {
-				constructor(n) {
-					super(n);
-					this.pairs = this.generatePairs(n);
-					this.shuffle(this.pairs);
-				}
-				getNextPair(state) {
-					return this.pairs[state.progress];
-				}
-				getTotal() {
-					return this.pairs.length;
-				}
-				generatePairs(n) {
-					const pairs = [];
-					for (let i = 0; i < n - 1; i++) {
-						for (let j = i + 1; j < n; j++) {
-							pairs.push([i, j]);
-						}
-					}
-					return pairs;
-				}
-			}
-
-			class QuickPairProvider extends PairProvider {
-				constructor(n) {
-					super(n);
-					this.comparedPairs = new Set();
-				}
-
-				getNextPair(state) {
-					const { scores } = state;
-					const n = this.n;
-
-					const sortedIndices = Array.from({ length: n }, (_, i) => i)
-						.sort((a, b) => scores[b] - scores[a]);
-
-					for (let i = 0; i < n - 1; i++) {
-						const p1 = sortedIndices[i];
-						const p2 = sortedIndices[i + 1];
-						const pair = [Math.min(p1, p2), Math.max(p1, p2)];
-						const pairKey = `${pair[0]}-${pair[1]}`;
-						if (!this.comparedPairs.has(pairKey)) {
-							return pair;
-						}
-					}
-
-					return null;
-				}
-
-				markAsCompared(pair) {
-					this.comparedPairs.add(`${pair[0]}-${pair[1]}`);
-				}
-
-				unmarkAsCompared(pair) {
-					this.comparedPairs.delete(`${pair[0]}-${pair[1]}`);
-				}
-			}
-
-			const translations = {
+			const $ = id=>document.getElementById(id);
+			const trans = {
 				en: {
 					title: "PreferenceRank",
 					autoTheme: "Auto Theme",
@@ -421,7 +329,7 @@
 					darkTheme: "Dark",
 					itemInputLabel: "Enter items, one per line:",
 					allowTiesLabel: "Allow Ties",
-					quickRankModeLabel: "Use Quick Rank (fewer comparisons)",
+					quickRankLabel: "Use Quick Rank (fewer comparisons)",
 					alert: "Please enter at least two items.",
 					duplicateAlert: "{count} duplicate item(s) were found and have been removed.",
 					startButton: "Start Ranking",
@@ -437,7 +345,7 @@
 					item: "Item",
 					score: "Score",
 					restartBattleButton: "Restart Battle",
-					restartNewItemsButton: "Start with New Items",
+					restartNewButton: "Start with New Items"
 				},
 				id: {
 					title: "PreferenceRank",
@@ -446,7 +354,7 @@
 					darkTheme: "Gelap",
 					itemInputLabel: "Masukkan pilihan, satu per baris:",
 					allowTiesLabel: "Izinkan Seri",
-					quickRankModeLabel: "Gunakan Peringkat Cepat (lebih sedikit perbandingan)",
+					quickRankLabel: "Gunakan Peringkat Cepat (lebih sedikit perbandingan)",
 					alert: "Harap masukkan setidaknya dua pilihan.",
 					duplicateAlert: "{count} item duplikat ditemukan dan telah dihapus.",
 					startButton: "Mulai Peringkat",
@@ -462,22 +370,71 @@
 					item: "Nama",
 					score: "Skor",
 					restartBattleButton: "Mulai Ulang Pertarungan",
-					restartNewItemsButton: "Mulai dengan Pilihan Baru",
-				},
+					restartNewButton: "Mulai dengan Pilihan Baru"
+				}
 			};
 
-			class PreferenceRank {
-				constructor(translations) {
-					this.INITIAL_RATING = 1000;
-					this.K_FACTOR = 32;
-					this.TEXT_CONTENT_KEYS = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
-					this.state = this.getInitialState();
-					this.translations = translations;
-					this.init();
+			class PairProvider {
+				constructor(n) {
+					this.n = n
 				}
+				shuffle(arr) {
+					for (let i = arr.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[arr[i],arr[j]] = [arr[j], arr[i]]
+					}
+				}
+				markAsCompared() {}
+				unmarkAsCompared() {}
+			}
 
-				getInitialState() {
-					return {
+			class FullPairProvider extends PairProvider {
+				constructor(n) {
+					super(n);
+					this.pairs = [];
+					for (let i = 0; i < n - 1; i++)
+						for (let j = i + 1; j < n; j++)
+							this.pairs.push([i, j]);
+					this.shuffle(this.pairs)
+				}
+				getNextPair(state) {
+					return this.pairs[state.progress]
+				}
+				getTotal() {
+					return this.pairs.length
+				}
+			}
+
+			class QuickPairProvider extends PairProvider {
+				constructor(n) {
+					super(n);
+					this.compared = new Set()
+				}
+				getNextPair(state) {
+					const sorted = Array.from({
+						length: this.n
+					}, (_,i)=>i).sort((a,b)=>state.scores[b] - state.scores[a]);
+					for (let i = 0; i < this.n - 1; i++) {
+						const p1 = sorted[i]
+						  , p2 = sorted[i + 1]
+						  , pair = [Math.min(p1, p2), Math.max(p1, p2)]
+						  , key = `${pair[0]}-${pair[1]}`;
+						if (!this.compared.has(key))
+							return pair
+					}
+					return null
+				}
+				markAsCompared(pair) {
+					this.compared.add(`${pair[0]}-${pair[1]}`)
+				}
+				unmarkAsCompared(pair) {
+					this.compared.delete(`${pair[0]}-${pair[1]}`)
+				}
+			}
+
+			class PreferenceRank {
+				constructor() {
+					this.state = {
 						items: [],
 						scores: [],
 						currentPair: null,
@@ -485,267 +442,243 @@
 						progress: 0,
 						total: 0,
 						allowTies: false,
-						language: navigator.language?.startsWith("id") ? "id" : "en",
+						lang: navigator.language?.startsWith("id") ? "id" : "en",
 						theme: "auto",
 						history: [],
 						keyboardEnabled: false,
-						isChoosing: false,
+						isChoosing: false
 					};
+					this.init()
 				}
-
-				t(key, replacements = {}) {
-					let translation = this.translations[this.state.language][key] || key;
-					Object.entries(replacements).forEach(([placeholder, value]) => {
-						translation = translation.replace(`{${placeholder}}`, value);
-					});
-					return translation;
+				t(key, replacements={}) {
+					let text = trans[this.state.lang][key] || key;
+					Object.entries(replacements).forEach(([p,v])=>text = text.replace(`{${p}}`, v));
+					return text
 				}
-
 				init() {
-					const uiElements = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
-					this.ui = Object.fromEntries(uiElements.map(id => [id, $(id)]));
-
-					const listeners = {
-						languageSelect: ['change', () => this.updateLanguage()],
-						themeSelect: ['change', e => this.handleThemeChange(e.target.value)],
-						allowTies: ['change', e => this.handleAllowTiesChange(e.target.checked)],
-						startButton: ['click', () => this.startRank()],
-						leftItem: ['click', e => this.choose("left", e)],
-						rightItem: ['click', e => this.choose("right", e)],
-						tieButton: ['click', e => this.choose("tie", e)],
-						restartBattleButton: ['click', () => this.restartBattle()],
-						restartNewItemsButton: ['click', () => this.restartNewItems()],
-						undoButton: ['click', () => this.undo()],
-						keyboardTipToggle: ['click', () => this.toggleKeyboardTip()],
+					this.ui = {
+						langSelect: $("langSelect"),
+						themeSelect: $("themeSelect"),
+						allowTies: $("allowTies"),
+						quickRank: $("quickRank"),
+						startButton: $("startButton"),
+						leftItem: $("leftItem"),
+						rightItem: $("rightItem"),
+						tieButton: $("tieButton"),
+						restartBattleButton: $("restartBattleButton"),
+						restartNewButton: $("restartNewButton"),
+						undoButton: $("undoButton"),
+						keyboardTipToggle: $("keyboardTipToggle"),
+						inputSection: $("inputSection"),
+						battleSection: $("battleSection"),
+						results: $("results"),
+						restartButtons: $("restartButtons"),
+						tieButtons: $("tieButtons"),
+						keyboardTip: $("keyboardTip"),
+						progress: $("progress"),
+						itemInput: $("itemInput"),
+						title: $("title"),
+						autoTheme: $("autoTheme"),
+						lightTheme: $("lightTheme"),
+						darkTheme: $("darkTheme"),
+						itemInputLabel: $("itemInputLabel"),
+						allowTiesLabel: $("allowTiesLabel"),
+						quickRankLabel: $("quickRankLabel")
 					};
-
-					Object.entries(listeners).forEach(([id, [event, handler]]) => {
-						this.ui[id]?.addEventListener(event, handler);
-					});
-
-					document.addEventListener("keydown", e => this.handleKeyDown(e));
-
-					this.ui.languageSelect.value = this.state.language;
-					this.applyTheme();
-					this.updateLanguage();
-				}
-
-				handleThemeChange(theme) {
-					this.state.theme = theme;
-					this.applyTheme();
-				}
-
-				handleAllowTiesChange(checked) {
-					this.state.allowTies = checked;
-					if (!this.ui.battleSection.classList.contains("hidden")) {
-						this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
-						this.updateKeyboardTipContent();
+					this.ui.langSelect.addEventListener("change", ()=>this.updateLang());
+					this.ui.themeSelect.addEventListener("change", e=>{
+						this.state.theme = e.target.value;
+						this.applyTheme()
 					}
-				}
-
-				handleKeyDown(e) {
-					if (!this.state.keyboardEnabled || ["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
-
-					const keyMap = {
-						ArrowLeft: () => this.ui.leftItem.click(),
-						ArrowRight: () => this.ui.rightItem.click(),
-						ArrowUp: () => this.state.allowTies && this.ui.tieButton.click(),
-						ArrowDown: () => this.state.allowTies && this.ui.tieButton.click(),
-						"z": () => (e.ctrlKey || e.metaKey) && this.ui.undoButton.click(),
-					};
-
-					if (keyMap[e.key]) {
-						e.preventDefault();
-						keyMap[e.key]();
+					);
+					this.ui.allowTies.addEventListener("change", e=>{
+						this.state.allowTies = e.target.checked;
+						if (!this.ui.battleSection.classList.contains("hidden")) {
+							this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
+							this.updateKeyboardTip()
+						}
 					}
+					);
+					this.ui.startButton.addEventListener("click", ()=>this.start());
+					this.ui.leftItem.addEventListener("click", ()=>this.choose("left"));
+					this.ui.rightItem.addEventListener("click", ()=>this.choose("right"));
+					this.ui.tieButton.addEventListener("click", ()=>this.choose("tie"));
+					this.ui.restartBattleButton.addEventListener("click", ()=>this.restartBattle());
+					this.ui.restartNewButton.addEventListener("click", ()=>this.restartNew());
+					this.ui.undoButton.addEventListener("click", ()=>this.undo());
+					this.ui.keyboardTipToggle.addEventListener("click", ()=>this.toggleKeyboardTip());
+					document.addEventListener("keydown", e=>this.handleKeyDown(e));
+					this.ui.langSelect.value = this.state.lang;
+					this.applyTheme();
+					this.updateLang()
 				}
-
 				applyTheme() {
-					document.documentElement.classList.remove("light-theme", "dark-theme");
-					if (this.state.theme !== 'auto') {
-						document.documentElement.classList.add(`${this.state.theme}-theme`);
-					}
+					document.documentElement.classList.remove("light", "dark");
+					if (this.state.theme !== "auto")
+						document.documentElement.classList.add(this.state.theme)
 				}
-
-				updateLanguage() {
-					this.state.language = this.ui.languageSelect.value;
-					this.TEXT_CONTENT_KEYS.forEach(key => {
-						this.ui[key].textContent = this.t(key);
-					});
-					this.updateKeyboardTipContent();
-					const isHidden = this.ui.keyboardTip.classList.contains("hidden");
-					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
+				updateLang() {
+					this.state.lang = this.ui.langSelect.value;
+					["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewButton"].forEach(key=>this.ui[key].textContent = this.t(key));
+					this.updateKeyboardTip();
+					this.ui.keyboardTipToggle.textContent = this.t(this.ui.keyboardTip.classList.contains("hidden") ? "keyboardTipToggle" : "keyboardTipHide");
 					this.updateProgress();
-					if (!this.ui.results.classList.contains("hidden")) this.showResults();
+					if (!this.ui.results.classList.contains("hidden"))
+						this.showResults()
 				}
-
-				updateKeyboardTipContent() {
-					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies");
+				updateKeyboardTip() {
+					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies")
 				}
-
-				startRank() {
-					const rawItems = this.ui.itemInput.value.split("\n").map(s => s.trim()).filter(Boolean);
-					const items = [...new Set(rawItems)];
-					const removedCount = rawItems.length - items.length;
-					if (removedCount > 0) {
-						alert(this.t("duplicateAlert", { count: removedCount }));
-					}
-					if (items.length < 2) return alert(this.t("alert"));
-
+				start() {
+					const raw = this.ui.itemInput.value.split("\n").map(s=>s.trim()).filter(Boolean)
+					  , items = [...new Set(raw)]
+					  , removed = raw.length - items.length;
+					if (removed > 0)
+						alert(this.t("duplicateAlert", {
+							count: removed
+						}));
+					if (items.length < 2)
+						return alert(this.t("alert"));
 					this.state.items = items;
 					this.state.allowTies = this.ui.allowTies.checked;
-					this.resetBattleState();
+					this.resetBattle();
 					this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
 					this.toggleKeyboardTip(true);
-					this.updateKeyboardTipContent();
+					this.updateKeyboardTip();
 					this.showSection("battleSection");
-					this.nextBattle();
+					this.nextBattle()
 				}
-
-				resetBattleState() {
+				resetBattle() {
 					const n = this.state.items.length;
-					this.state.scores = Array(n).fill(this.INITIAL_RATING);
+					this.state.scores = Array(n).fill(1000);
 					this.state.progress = 0;
 					this.state.history = [];
 					this.ui.undoButton.disabled = true;
-					this.state.pairProvider = this.ui.quickRankMode.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
-					this.state.total = this.ui.quickRankMode.checked ? 0 : this.state.pairProvider.getTotal();
+					this.state.pairProvider = this.ui.quickRank.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
+					this.state.total = this.ui.quickRank.checked ? 0 : this.state.pairProvider.getTotal()
 				}
-
-				updateScores(result) {
-					const [idx1, idx2] = this.state.currentPair;
-					const [score1, score2] = [this.state.scores[idx1], this.state.scores[idx2]];
-					const expected1 = 1 / (1 + 10 ** ((score2 - score1) / 400));
-					this.state.scores[idx1] += this.K_FACTOR * (result - expected1);
-					this.state.scores[idx2] += this.K_FACTOR * (expected1 - result);
-				}
-
-				choose(winner, e) {
-					if (this.state.isChoosing) return;
+				choose(winner) {
+					if (this.state.isChoosing)
+						return;
 					this.state.isChoosing = true;
-
-					const p1_wins = (winner === 'left' && !this.state.isSwapped) || (winner === 'right' && this.state.isSwapped);
-					const result = winner === 'tie' ? 0.5 : (p1_wins ? 1 : 0);
-
-					this.state.history.push({ pair: this.state.currentPair, scores: [...this.state.scores], progressBefore: this.state.progress });
+					const p1Wins = (winner === "left" && !this.state.isSwapped) || (winner === "right" && this.state.isSwapped)
+					  , result = winner === "tie" ? .5 : p1Wins ? 1 : 0;
+					this.state.history.push({
+						pair: this.state.currentPair,
+						scores: [...this.state.scores],
+						progressBefore: this.state.progress
+					});
 					this.state.pairProvider.markAsCompared(this.state.currentPair);
-					this.updateScores(result);
-
+					const [i1,i2] = this.state.currentPair
+					  , [s1,s2] = [this.state.scores[i1], this.state.scores[i2]]
+					  , expected1 = 1 / (1 + 10 ** ((s2 - s1) / 400));
+					this.state.scores[i1] += 32 * (result - expected1);
+					this.state.scores[i2] += 32 * (expected1 - result);
 					this.state.progress++;
 					this.ui.undoButton.disabled = false;
 					this.updateProgress();
-
 					this.clearSelections();
-					const targetButton = winner === "tie" ? this.ui.tieButton : this.ui[`${winner}Item`];
-					targetButton.classList.add("selected");
-
-					setTimeout(() => {
+					(winner === "tie" ? this.ui.tieButton : this.ui[`${winner}Item`]).classList.add("selected");
+					setTimeout(()=>{
 						this.state.isChoosing = false;
-						this.nextBattle();
-					}, 300);
+						this.nextBattle()
+					}
+					, 300)
 				}
-
 				nextBattle() {
 					this.clearSelections();
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
-
-					if (!nextPair || (!this.ui.quickRankMode.checked && this.state.progress >= this.state.total)) {
+					if (!nextPair || (!this.ui.quickRank.checked && this.state.progress >= this.state.total))
 						return this.showResults();
-					}
-
 					this.state.currentPair = nextPair;
-					let [idx1, idx2] = nextPair;
-					this.state.isSwapped = Math.random() < 0.5;
-					if (this.state.isSwapped) {
-						[idx1, idx2] = [idx2, idx1];
-					}
-					this.ui.leftItem.textContent = this.state.items[idx1];
-					this.ui.rightItem.textContent = this.state.items[idx2];
-					this.updateProgress();
+					let[i1,i2] = nextPair;
+					this.state.isSwapped = Math.random() < .5;
+					if (this.state.isSwapped)
+						[i1,i2] = [i2, i1];
+					this.ui.leftItem.textContent = this.state.items[i1];
+					this.ui.rightItem.textContent = this.state.items[i2];
+					this.updateProgress()
 				}
-
 				updateProgress() {
-					const progressText = this.ui.quickRankMode.checked
-						? `${this.t("progress")}: ${this.state.progress}`
-						: `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
-					this.ui.progress.textContent = progressText;
+					const text = this.ui.quickRank.checked ? `${this.t("progress")}: ${this.state.progress}` : `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
+					this.ui.progress.textContent = text
 				}
-
 				clearSelections() {
-					["leftItem", "rightItem", "tieButton"].forEach(id => this.ui[id].classList.remove("selected"));
+					["leftItem", "rightItem", "tieButton"].forEach(id=>this.ui[id].classList.remove("selected"))
 				}
-
 				showResults() {
-					const sortedItems = this.state.items
-						.map((item, i) => ({ item, score: this.state.scores[i] }))
-						.sort((a, b) => b.score - a.score);
-
-					this.ui.results.innerHTML = `
-						<h2>${this.t("results")}</h2>
-						<table>
-							<thead>
-								<tr>
-									<th style="width: 20%">${this.t("rank")}</th>
-									<th style="width: 60%">${this.t("item")}</th>
-									<th style="width: 20%">${this.t("score")}</th>
-								</tr>
-							</thead>
-							<tbody>
-								${sortedItems.map(({ item, score }, i) => `
-									<tr>
-										<td>${i + 1}</td>
-										<td>${item}</td>
-										<td>${Math.round(score)}</td>
-									</tr>`).join("")}
-							</tbody>
-						</table>
-					`;
-					this.showSection("results");
+					const sorted = this.state.items.map((item,i)=>({
+						item,
+						score: this.state.scores[i]
+					})).sort((a,b)=>b.score - a.score);
+					this.ui.results.innerHTML = `<h2>${this.t("results")}</h2><table><thead><tr><th style="width:20%">${this.t("rank")}</th><th style="width:60%">${this.t("item")}</th><th style="width:20%">${this.t("score")}</th></tr></thead><tbody>${sorted.map(({item, score},i)=>`<tr><td>${i + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join("")}</tbody></table>`;
+					this.showSection("results")
 				}
-
-				showSection(sectionId) {
-					["inputSection", "battleSection", "results"].forEach(id => {
-						this.ui[id].classList.toggle("hidden", id !== sectionId);
-					});
-					this.ui.restartButtons.classList.toggle("hidden", sectionId !== "results");
-					this.state.keyboardEnabled = sectionId === "battleSection";
+				showSection(section) {
+					["inputSection", "battleSection", "results"].forEach(id=>this.ui[id].classList.toggle("hidden", id !== section));
+					this.ui.restartButtons.classList.toggle("hidden", section !== "results");
+					this.state.keyboardEnabled = section === "battleSection"
 				}
-
 				undo() {
-					if (this.state.isChoosing || this.state.history.length === 0) return;
-
+					if (this.state.isChoosing || !this.state.history.length)
+						return;
 					const last = this.state.history.pop();
 					this.state.scores = last.scores;
 					this.state.progress = last.progressBefore;
 					this.state.pairProvider.unmarkAsCompared(last.pair);
 					this.nextBattle();
-					this.ui.undoButton.disabled = this.state.history.length === 0;
+					this.ui.undoButton.disabled = !this.state.history.length
 				}
-
 				restartBattle() {
-					this.resetBattleState();
+					this.resetBattle();
 					this.showSection("battleSection");
-					this.nextBattle();
+					this.nextBattle()
 				}
-
-				restartNewItems() {
-					const { language, theme } = this.state;
-					Object.assign(this.state, this.getInitialState(), { language, theme });
-					this.ui.languageSelect.value = language;
+				restartNew() {
+					const {lang, theme} = this.state;
+					this.state = {
+						items: [],
+						scores: [],
+						currentPair: null,
+						isSwapped: false,
+						progress: 0,
+						total: 0,
+						allowTies: false,
+						lang,
+						theme,
+						history: [],
+						keyboardEnabled: false,
+						isChoosing: false
+					};
+					this.ui.langSelect.value = lang;
 					this.ui.itemInput.value = "";
 					this.ui.allowTies.checked = false;
-					this.ui.quickRankMode.checked = false;
+					this.ui.quickRank.checked = false;
 					this.showSection("inputSection");
-					this.updateLanguage();
+					this.updateLang()
 				}
-
-				toggleKeyboardTip(forceHidden) {
-					const isHidden = this.ui.keyboardTip.classList.toggle("hidden", forceHidden);
-					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
+				toggleKeyboardTip(forceHide) {
+					const hidden = this.ui.keyboardTip.classList.toggle("hidden", forceHide);
+					this.ui.keyboardTipToggle.textContent = this.t(hidden ? "keyboardTipToggle" : "keyboardTipHide")
+				}
+				handleKeyDown(e) {
+					if (!this.state.keyboardEnabled || ["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement.tagName))
+						return;
+					const keyMap = {
+						ArrowLeft: ()=>this.ui.leftItem.click(),
+						ArrowRight: ()=>this.ui.rightItem.click(),
+						ArrowUp: ()=>this.state.allowTies && this.ui.tieButton.click(),
+						ArrowDown: ()=>this.state.allowTies && this.ui.tieButton.click(),
+						z: ()=>(e.ctrlKey || e.metaKey) && this.ui.undoButton.click()
+					};
+					if (keyMap[e.key]) {
+						e.preventDefault();
+						keyMap[e.key]()
+					}
 				}
 			}
 
-			new PreferenceRank(translations);
+			new PreferenceRank();
 		</script>
 	</body>
 </html>
