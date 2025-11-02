@@ -31,10 +31,6 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Keyboard Shortcuts**: Use keyboard shortcuts for quicker selections during ranking.
 - **Multi-language Support**: Available in English and Bahasa Indonesia.
 
-## What's New?
-- **Smarter, Cleaner Code**: The entire codebase has been refactored to be more concise and maintainable, following modern JavaScript best practices.
-- **Improved User Experience**: Replaced disruptive browser alerts with a sleek, non-blocking notification system for a smoother ranking experience.
-
 ## Customization
 PreferenceRank is open source, allowing you to modify and adapt it as needed. Tweak the algorithm, redesign the UI, or add new functionality—it's all up to you.
 
