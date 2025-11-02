@@ -655,6 +655,8 @@
 					this.ui.allowTies.checked = false;
 					this.ui.quickRank.checked = false;
 					this.showSection("inputSection");
+					this.ui.themeSelect.value = this.state.theme;
+					this.applyTheme();
 					this.updateLang()
 				}
 				toggleKeyboardTip(forceHide) {
