@@ -423,7 +423,8 @@
 					allowTiesLabel: "Allow Ties",
 					quickRankModeLabel: "Use Quick Rank (fewer comparisons)",
 					alert: "Please enter at least two items.",
-					duplicateAlert: "{count} duplicate item(s) were found and have been removed.",
+					duplicateAlert: "{count} duplicate items were found and have been removed.",
+					duplicateAlertSingular: "1 duplicate item was found and has been removed.",
 					startButton: "Start Ranking",
 					tieButton: "It's a Tie",
 					undoButton: "Undo",
@@ -449,6 +450,7 @@
 					quickRankModeLabel: "Gunakan Peringkat Cepat (lebih sedikit perbandingan)",
 					alert: "Harap masukkan setidaknya dua pilihan.",
 					duplicateAlert: "{count} item duplikat ditemukan dan telah dihapus.",
+					duplicateAlertSingular: "1 item duplikat ditemukan dan telah dihapus.",
 					startButton: "Mulai Peringkat",
 					tieButton: "Seri",
 					undoButton: "Urungkan",
@@ -588,7 +590,8 @@
 					const items = [...new Set(rawItems)];
 					const removedCount = rawItems.length - items.length;
 					if (removedCount > 0) {
-						alert(this.t("duplicateAlert", { count: removedCount }));
+						const alertKey = removedCount === 1 ? "duplicateAlertSingular" : "duplicateAlert";
+						alert(this.t(alertKey, { count: removedCount }));
 					}
 					if (items.length < 2) return alert(this.t("alert"));
 
