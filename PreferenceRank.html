@@ -467,16 +467,24 @@
 			};
 
 			class PreferenceRank {
+				static INITIAL_RATING = 1000;
+				static K_FACTOR = 32;
+				static ELO_DIVISOR = 400;
+				static ANIMATION_TIMEOUT = 300;
+				static HIDDEN_CLASS = "hidden";
+				static SELECTED_CLASS = "selected";
+				static LIGHT_THEME_CLASS = "light-theme";
+				static DARK_THEME_CLASS = "dark-theme";
+				static UI_ELEMENT_IDS = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
+				static TEXT_CONTENT_KEYS = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
+
 				constructor(translations) {
-					this.INITIAL_RATING = 1000;
-					this.K_FACTOR = 32;
-					this.TEXT_CONTENT_KEYS = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
-					this.state = this.getInitialState();
 					this.translations = translations;
-					this.init();
+					this.state = this.#getInitialState();
+					this.#init();
 				}
 
-				getInitialState() {
+				#getInitialState() {
 					return {
 						items: [],
 						scores: [],
@@ -501,49 +509,53 @@
 					return translation;
 				}
 
-				init() {
-					const uiElements = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
-					this.ui = Object.fromEntries(uiElements.map(id => [id, $(id)]));
+				#init() {
+					this.ui = PreferenceRank.UI_ELEMENT_IDS.reduce((acc, id) => {
+						acc[id] = $(id);
+						return acc;
+					}, {});
 
 					const listeners = {
-						languageSelect: ['change', () => this.updateLanguage()],
-						themeSelect: ['change', e => this.handleThemeChange(e.target.value)],
-						allowTies: ['change', e => this.handleAllowTiesChange(e.target.checked)],
-						startButton: ['click', () => this.startRank()],
-						leftItem: ['click', e => this.choose("left", e)],
-						rightItem: ['click', e => this.choose("right", e)],
-						tieButton: ['click', e => this.choose("tie", e)],
-						restartBattleButton: ['click', () => this.restartBattle()],
-						restartNewItemsButton: ['click', () => this.restartNewItems()],
-						undoButton: ['click', () => this.undo()],
-						keyboardTipToggle: ['click', () => this.toggleKeyboardTip()],
+						languageSelect: ["change", () => this.#updateLanguage()],
+						themeSelect: ["change", (e) => this.#handleThemeChange(e.target.value)],
+						allowTies: ["change", (e) => this.#handleAllowTiesChange(e.target.checked)],
+						startButton: ["click", () => this.startRank()],
+						leftItem: ["click", (e) => this.choose("left", e)],
+						rightItem: ["click", (e) => this.choose("right", e)],
+						tieButton: ["click", (e) => this.choose("tie", e)],
+						restartBattleButton: ["click", () => this.restartBattle()],
+						restartNewItemsButton: ["click", () => this.restartNewItems()],
+						undoButton: ["click", () => this.undo()],
+						keyboardTipToggle: ["click", () => this.toggleKeyboardTip()],
 					};
 
 					Object.entries(listeners).forEach(([id, [event, handler]]) => {
 						this.ui[id]?.addEventListener(event, handler);
 					});
 
-					document.addEventListener("keydown", e => this.handleKeyDown(e));
+					document.addEventListener("keydown", (e) => this.#handleKeyDown(e));
 
 					this.ui.languageSelect.value = this.state.language;
-					this.applyTheme();
-					this.updateLanguage();
+					this.#applyTheme();
+					this.#updateLanguage();
 				}
 
-				handleThemeChange(theme) {
+				#handleThemeChange(theme) {
 					this.state.theme = theme;
-					this.applyTheme();
+					this.#applyTheme();
 				}
 
-				handleAllowTiesChange(checked) {
+
+
+				#handleAllowTiesChange(checked) {
 					this.state.allowTies = checked;
-					if (!this.ui.battleSection.classList.contains("hidden")) {
-						this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
-						this.updateKeyboardTipContent();
+					if (!this.ui.battleSection.classList.contains(PreferenceRank.HIDDEN_CLASS)) {
+						this.ui.tieButtons.classList.toggle(PreferenceRank.HIDDEN_CLASS, !this.state.allowTies);
+						this.#updateKeyboardTipContent();
 					}
 				}
 
-				handleKeyDown(e) {
+				#handleKeyDown(e) {
 					if (!this.state.keyboardEnabled || ["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
 
 					const keyMap = {
@@ -560,31 +572,31 @@
 					}
 				}
 
-				applyTheme() {
-					document.documentElement.classList.remove("light-theme", "dark-theme");
-					if (this.state.theme !== 'auto') {
+				#applyTheme() {
+					document.documentElement.classList.remove(PreferenceRank.LIGHT_THEME_CLASS, PreferenceRank.DARK_THEME_CLASS);
+					if (this.state.theme !== "auto") {
 						document.documentElement.classList.add(`${this.state.theme}-theme`);
 					}
 				}
 
-				updateLanguage() {
+				#updateLanguage() {
 					this.state.language = this.ui.languageSelect.value;
-					this.TEXT_CONTENT_KEYS.forEach(key => {
+					PreferenceRank.TEXT_CONTENT_KEYS.forEach((key) => {
 						this.ui[key].textContent = this.t(key);
 					});
-					this.updateKeyboardTipContent();
-					const isHidden = this.ui.keyboardTip.classList.contains("hidden");
+					this.#updateKeyboardTipContent();
+					const isHidden = this.ui.keyboardTip.classList.contains(PreferenceRank.HIDDEN_CLASS);
 					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
-					this.updateProgress();
-					if (!this.ui.results.classList.contains("hidden")) this.showResults();
+					this.#updateProgress();
+					if (!this.ui.results.classList.contains(PreferenceRank.HIDDEN_CLASS)) this.showResults();
 				}
 
-				updateKeyboardTipContent() {
+				#updateKeyboardTipContent() {
 					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies");
 				}
 
 				startRank() {
-					const rawItems = this.ui.itemInput.value.split("\n").map(s => s.trim()).filter(Boolean);
+					const rawItems = this.ui.itemInput.value.split("\n").map((s) => s.trim()).filter(Boolean);
 					const items = [...new Set(rawItems)];
 					const removedCount = rawItems.length - items.length;
 					if (removedCount > 0) {
@@ -594,17 +606,17 @@
 
 					this.state.items = items;
 					this.state.allowTies = this.ui.allowTies.checked;
-					this.resetBattleState();
-					this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
+					this.#resetBattleState();
+					this.ui.tieButtons.classList.toggle(PreferenceRank.HIDDEN_CLASS, !this.state.allowTies);
 					this.toggleKeyboardTip(true);
-					this.updateKeyboardTipContent();
-					this.showSection("battleSection");
+					this.#updateKeyboardTipContent();
+					this.#showSection("battleSection");
 					this.nextBattle();
 				}
 
-				resetBattleState() {
+				#resetBattleState() {
 					const n = this.state.items.length;
-					this.state.scores = Array(n).fill(this.INITIAL_RATING);
+					this.state.scores = Array(n).fill(PreferenceRank.INITIAL_RATING);
 					this.state.progress = 0;
 					this.state.history = [];
 					this.ui.undoButton.disabled = true;
@@ -612,41 +624,41 @@
 					this.state.total = this.ui.quickRankMode.checked ? 0 : this.state.pairProvider.getTotal();
 				}
 
-				updateScores(result) {
+				#updateScores(result) {
 					const [idx1, idx2] = this.state.currentPair;
 					const [score1, score2] = [this.state.scores[idx1], this.state.scores[idx2]];
-					const expected1 = 1 / (1 + 10 ** ((score2 - score1) / 400));
-					this.state.scores[idx1] += this.K_FACTOR * (result - expected1);
-					this.state.scores[idx2] += this.K_FACTOR * (expected1 - result);
+					const expected1 = 1 / (1 + 10 ** ((score2 - score1) / PreferenceRank.ELO_DIVISOR));
+					this.state.scores[idx1] += PreferenceRank.K_FACTOR * (result - expected1);
+					this.state.scores[idx2] += PreferenceRank.K_FACTOR * (expected1 - result);
 				}
 
 				choose(winner, e) {
 					if (this.state.isChoosing) return;
 					this.state.isChoosing = true;
 
-					const p1_wins = (winner === 'left' && !this.state.isSwapped) || (winner === 'right' && this.state.isSwapped);
-					const result = winner === 'tie' ? 0.5 : (p1_wins ? 1 : 0);
+					const p1_wins = (winner === "left" && !this.state.isSwapped) || (winner === "right" && this.state.isSwapped);
+					const result = winner === "tie" ? 0.5 : p1_wins ? 1 : 0;
 
 					this.state.history.push({ pair: this.state.currentPair, scores: [...this.state.scores], progressBefore: this.state.progress });
 					this.state.pairProvider.markAsCompared(this.state.currentPair);
-					this.updateScores(result);
+					this.#updateScores(result);
 
 					this.state.progress++;
 					this.ui.undoButton.disabled = false;
-					this.updateProgress();
+					this.#updateProgress();
 
-					this.clearSelections();
+					this.#clearSelections();
 					const targetButton = winner === "tie" ? this.ui.tieButton : this.ui[`${winner}Item`];
-					targetButton.classList.add("selected");
+					targetButton.classList.add(PreferenceRank.SELECTED_CLASS);
 
 					setTimeout(() => {
 						this.state.isChoosing = false;
 						this.nextBattle();
-					}, 300);
+					}, PreferenceRank.ANIMATION_TIMEOUT);
 				}
 
 				nextBattle() {
-					this.clearSelections();
+					this.#clearSelections();
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
 
 					if (!nextPair || (!this.ui.quickRankMode.checked && this.state.progress >= this.state.total)) {
@@ -661,18 +673,16 @@
 					}
 					this.ui.leftItem.textContent = this.state.items[idx1];
 					this.ui.rightItem.textContent = this.state.items[idx2];
-					this.updateProgress();
+					this.#updateProgress();
 				}
 
-				updateProgress() {
-					const progressText = this.ui.quickRankMode.checked
-						? `${this.t("progress")}: ${this.state.progress}`
-						: `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
+				#updateProgress() {
+					const progressText = this.ui.quickRankMode.checked ? `${this.t("progress")}: ${this.state.progress}` : `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
 					this.ui.progress.textContent = progressText;
 				}
 
-				clearSelections() {
-					["leftItem", "rightItem", "tieButton"].forEach(id => this.ui[id].classList.remove("selected"));
+				#clearSelections() {
+					["leftItem", "rightItem", "tieButton"].forEach((id) => this.ui[id].classList.remove(PreferenceRank.SELECTED_CLASS));
 				}
 
 				showResults() {
@@ -700,14 +710,14 @@
 							</tbody>
 						</table>
 					`;
-					this.showSection("results");
+					this.#showSection("results");
 				}
 
-				showSection(sectionId) {
-					["inputSection", "battleSection", "results"].forEach(id => {
-						this.ui[id].classList.toggle("hidden", id !== sectionId);
+				#showSection(sectionId) {
+					["inputSection", "battleSection", "results"].forEach((id) => {
+						this.ui[id].classList.toggle(PreferenceRank.HIDDEN_CLASS, id !== sectionId);
 					});
-					this.ui.restartButtons.classList.toggle("hidden", sectionId !== "results");
+					this.ui.restartButtons.classList.toggle(PreferenceRank.HIDDEN_CLASS, sectionId !== "results");
 					this.state.keyboardEnabled = sectionId === "battleSection";
 				}
 
@@ -723,24 +733,24 @@
 				}
 
 				restartBattle() {
-					this.resetBattleState();
-					this.showSection("battleSection");
+					this.#resetBattleState();
+					this.#showSection("battleSection");
 					this.nextBattle();
 				}
 
 				restartNewItems() {
 					const { language, theme } = this.state;
-					Object.assign(this.state, this.getInitialState(), { language, theme });
+					Object.assign(this.state, this.#getInitialState(), { language, theme });
 					this.ui.languageSelect.value = language;
 					this.ui.itemInput.value = "";
 					this.ui.allowTies.checked = false;
 					this.ui.quickRankMode.checked = false;
-					this.showSection("inputSection");
-					this.updateLanguage();
+					this.#showSection("inputSection");
+					this.#updateLanguage();
 				}
 
 				toggleKeyboardTip(forceHidden) {
-					const isHidden = this.ui.keyboardTip.classList.toggle("hidden", forceHidden);
+					const isHidden = this.ui.keyboardTip.classList.toggle(PreferenceRank.HIDDEN_CLASS, forceHidden);
 					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
 				}
 			}
