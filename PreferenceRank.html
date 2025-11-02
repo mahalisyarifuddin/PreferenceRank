@@ -71,7 +71,7 @@
 				width: 100%;
 			}
 
-			.container:has(#inputSection:not(.hidden)) {
+			.container:has(#input-section:not(.hidden)) {
 				padding-top: 3rem;
 			}
 
@@ -133,23 +133,23 @@
 				background-color: var(--btn-hover);
 			}
 
-			#battle, #restartButtons, #tieButtons {
+			#battle, #restart-buttons, #tie-buttons {
 				display: flex;
 				gap: var(--space-sm);
 				margin-top: var(--space-sm);
 			}
 
-			#battle button, #tieButtons button, #restartButtons button {
+			#battle button, #tie-buttons button, #restart-buttons button {
 				flex: 1;
 			}
 
-			#battle button, #tieButtons button {
+			#battle button, #tie-buttons button {
 				font-size: 1.2rem;
 				min-height: 100px;
 				min-width: 200px;
 			}
 
-			#restartButtons button {
+			#restart-buttons button {
 				font-size: 1rem;
 			}
 
@@ -159,7 +159,7 @@
 				text-align: center;
 			}
 
-			#keyboardTip {
+			#keyboard-tip {
 				background-color: var(--bg);
 				border: 1px solid var(--border);
 				border-radius: var(--radius-sm);
@@ -171,7 +171,7 @@
 				text-align: center;
 			}
 
-			#keyboardTip kbd {
+			#keyboard-tip kbd {
 				background-color: var(--bg-container);
 				border: 1px solid var(--border);
 				border-radius: 3px;
@@ -183,7 +183,7 @@
 				padding: 2px 5px;
 			}
 
-			#keyboardTipToggle {
+			#keyboard-tip-toggle {
 				background: none;
 				border: none;
 				color: var(--primary);
@@ -243,13 +243,13 @@
 				color: #fff;
 			}
 
-			#undoButton {
+			#undo-button {
 				font-size: 1rem;
 				margin-top: var(--space-sm);
 				width: auto;
 			}
 
-			#undoButton:disabled {
+			#undo-button:disabled {
 				background-color: var(--btn-hover);
 				cursor: not-allowed;
 			}
@@ -264,7 +264,7 @@
 					padding: var(--space-md);
 				}
 
-				.container:has(#inputSection:not(.hidden)) {
+				.container:has(#input-section:not(.hidden)) {
 					padding-top: calc(var(--space-sm) + var(--space-md) + var(--space-xs));
 				}
 
@@ -279,11 +279,11 @@
 					padding: 4px;
 				}
 
-				#battle, #tieButtons, #restartButtons {
+				#battle, #tie-buttons, #restart-buttons {
 					flex-direction: column;
 				}
 
-				#battle button, #tieButtons button {
+				#battle button, #tie-buttons button {
 					min-width: auto;
 					width: 100%;
 				}
@@ -292,56 +292,56 @@
 	</head>
 	<body>
 		<div class="container">
-			<div id="inputSection">
+			<div id="input-section">
 				<h1 id="title"></h1>
 				<div class="selectors-container">
-					<select id="languageSelect" class="selector" aria-label="Language">
+					<select id="language-select" class="selector" aria-label="Language">
 						<option value="en">English</option>
 						<option value="id">Bahasa Indonesia</option>
 					</select>
-					<select id="themeSelect" class="selector" aria-label="Theme">
-						<option value="auto" id="autoTheme"></option>
-						<option value="light" id="lightTheme"></option>
-						<option value="dark" id="darkTheme"></option>
+					<select id="theme-select" class="selector" aria-label="Theme">
+						<option value="auto" id="auto-theme"></option>
+						<option value="light" id="light-theme"></option>
+						<option value="dark" id="dark-theme"></option>
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="itemInput" id="itemInputLabel"></label>
-					<textarea id="itemInput" rows="5" spellcheck="false"></textarea>
+					<label for="item-input" id="item-input-label"></label>
+					<textarea id="item-input" rows="5" spellcheck="false"></textarea>
 				</div>
 				<div class="checkbox-container">
-					<input type="checkbox" id="allowTies"/>
-					<label for="allowTies" id="allowTiesLabel"></label>
+					<input type="checkbox" id="allow-ties"/>
+					<label for="allow-ties" id="allow-ties-label"></label>
 				</div>
 				<div class="checkbox-container">
-					<input type="checkbox" id="quickRankMode"/>
-					<label for="quickRankMode" id="quickRankModeLabel"></label>
+					<input type="checkbox" id="quick-rank-mode"/>
+					<label for="quick-rank-mode" id="quick-rank-mode-label"></label>
 				</div>
-				<button id="startButton" class="btn-primary"></button>
+				<button id="start-button" class="btn-primary"></button>
 			</div>
-			<div id="battleSection" class="hidden" aria-live="polite">
-				<button id="undoButton" class="btn-secondary" disabled></button>
+			<div id="battle-section" class="hidden" aria-live="polite">
+				<button id="undo-button" class="btn-secondary" disabled></button>
 				<div id="battle">
-					<button id="leftItem" class="btn-secondary" aria-label="Left choice"></button>
-					<button id="rightItem" class="btn-secondary" aria-label="Right choice"></button>
+					<button id="left-item" class="btn-secondary" aria-label="Left choice"></button>
+					<button id="right-item" class="btn-secondary" aria-label="Right choice"></button>
 				</div>
-				<div id="tieButtons" class="hidden">
-					<button id="tieButton" class="btn-secondary"></button>
+				<div id="tie-buttons" class="hidden">
+					<button id="tie-button" class="btn-secondary"></button>
 				</div>
 				<div id="progress" aria-live="polite"></div>
-				<button id="keyboardTipToggle"></button>
-				<div id="keyboardTip" class="hidden"></div>
+				<button id="keyboard-tip-toggle"></button>
+				<div id="keyboard-tip" class="hidden"></div>
 			</div>
 			<div id="results" class="hidden"></div>
-			<div id="restartButtons" class="hidden">
-				<button id="restartBattleButton" class="btn-primary"></button>
-				<button id="restartNewItemsButton" class="btn-primary"></button>
+			<div id="restart-buttons" class="hidden">
+				<button id="restart-battle-button" class="btn-primary"></button>
+				<button id="restart-new-items-button" class="btn-primary"></button>
 			</div>
 		</div>
 		<script>
 			const $ = (id) => document.getElementById(id);
 
-			class PairProvider {
+			class PairingStrategy {
 				constructor(n) {
 					this.n = n;
 				}
@@ -355,7 +355,7 @@
 				unmarkAsCompared(pair) {}
 			}
 
-			class FullPairProvider extends PairProvider {
+			class FullPairing extends PairingStrategy {
 				constructor(n) {
 					super(n);
 					this.pairs = this.generatePairs(n);
@@ -378,7 +378,7 @@
 				}
 			}
 
-			class QuickPairProvider extends PairProvider {
+			class QuickPairing extends PairingStrategy {
 				constructor(n) {
 					super(n);
 					this.comparedPairs = new Set();
@@ -466,11 +466,11 @@
 				},
 			};
 
-			class PreferenceRank {
+			class PreferenceRanker {
 				constructor(translations) {
 					this.INITIAL_RATING = 1000;
 					this.K_FACTOR = 32;
-					this.TEXT_CONTENT_KEYS = ["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewItemsButton"];
+					this.TEXT_CONTENT_KEYS = ["title", "auto-theme", "light-theme", "dark-theme", "item-input-label", "allow-ties-label", "quick-rank-mode-label", "start-button", "tie-button", "undo-button", "restart-battle-button", "restart-new-items-button"];
 					this.state = this.getInitialState();
 					this.translations = translations;
 					this.init();
@@ -494,7 +494,8 @@
 				}
 
 				t(key, replacements = {}) {
-					let translation = this.translations[this.state.language][key] || key;
+					const camelKey = key.replace(/-([a-z])/g, g => g[1].toUpperCase());
+					let translation = this.translations[this.state.language][camelKey] || key;
 					Object.entries(replacements).forEach(([placeholder, value]) => {
 						translation = translation.replace(`{${placeholder}}`, value);
 					});
@@ -502,8 +503,8 @@
 				}
 
 				init() {
-					const uiElements = ["languageSelect", "themeSelect", "allowTies", "quickRankMode", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewItemsButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankModeLabel"];
-					this.ui = Object.fromEntries(uiElements.map(id => [id, $(id)]));
+					const uiElements = ["language-select", "theme-select", "allow-ties", "quick-rank-mode", "start-button", "left-item", "right-item", "tie-button", "restart-battle-button", "restart-new-items-button", "undo-button", "keyboard-tip-toggle", "input-section", "battle-section", "results", "restart-buttons", "tie-buttons", "keyboard-tip", "progress", "item-input", "title", "auto-theme", "light-theme", "dark-theme", "item-input-label", "allow-ties-label", "quick-rank-mode-label"];
+					this.ui = Object.fromEntries(uiElements.map(id => [id.replace(/-([a-z])/g, g => g[1].toUpperCase()), $(id)]));
 
 					const listeners = {
 						languageSelect: ['change', () => this.updateLanguage()],
@@ -570,11 +571,13 @@
 				updateLanguage() {
 					this.state.language = this.ui.languageSelect.value;
 					this.TEXT_CONTENT_KEYS.forEach(key => {
-						this.ui[key].textContent = this.t(key);
+						const camelKey = key.replace(/-([a-z])/g, g => g[1].toUpperCase());
+						this.ui[camelKey].textContent = this.t(key);
 					});
 					this.updateKeyboardTipContent();
 					const isHidden = this.ui.keyboardTip.classList.contains("hidden");
-					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
+					const isHiddenString = isHidden ? "keyboardTipToggle" : "keyboardTipHide";
+					this.ui.keyboardTipToggle.textContent = this.t(isHiddenString);
 					this.updateProgress();
 					if (!this.ui.results.classList.contains("hidden")) this.showResults();
 				}
@@ -598,7 +601,7 @@
 					this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
 					this.toggleKeyboardTip(true);
 					this.updateKeyboardTipContent();
-					this.showSection("battleSection");
+					this.showSection("battle-section");
 					this.nextBattle();
 				}
 
@@ -608,8 +611,8 @@
 					this.state.progress = 0;
 					this.state.history = [];
 					this.ui.undoButton.disabled = true;
-					this.state.pairProvider = this.ui.quickRankMode.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
-					this.state.total = this.ui.quickRankMode.checked ? 0 : this.state.pairProvider.getTotal();
+					this.state.pairingStrategy = this.ui.quickRankMode.checked ? new QuickPairing(n) : new FullPairing(n);
+					this.state.total = this.ui.quickRankMode.checked ? 0 : this.state.pairingStrategy.getTotal();
 				}
 
 				updateScores(result) {
@@ -628,7 +631,7 @@
 					const result = winner === 'tie' ? 0.5 : (p1_wins ? 1 : 0);
 
 					this.state.history.push({ pair: this.state.currentPair, scores: [...this.state.scores], progressBefore: this.state.progress });
-					this.state.pairProvider.markAsCompared(this.state.currentPair);
+					this.state.pairingStrategy.markAsCompared(this.state.currentPair);
 					this.updateScores(result);
 
 					this.state.progress++;
@@ -647,7 +650,7 @@
 
 				nextBattle() {
 					this.clearSelections();
-					const nextPair = this.state.pairProvider.getNextPair(this.state);
+					const nextPair = this.state.pairingStrategy.getNextPair(this.state);
 
 					if (!nextPair || (!this.ui.quickRankMode.checked && this.state.progress >= this.state.total)) {
 						return this.showResults();
@@ -704,11 +707,11 @@
 				}
 
 				showSection(sectionId) {
-					["inputSection", "battleSection", "results"].forEach(id => {
-						this.ui[id].classList.toggle("hidden", id !== sectionId);
+					["input-section", "battle-section", "results"].forEach(id => {
+						this.ui[id.replace(/-([a-z])/g, g => g[1].toUpperCase())].classList.toggle("hidden", id !== sectionId);
 					});
 					this.ui.restartButtons.classList.toggle("hidden", sectionId !== "results");
-					this.state.keyboardEnabled = sectionId === "battleSection";
+					this.state.keyboardEnabled = sectionId === "battle-section";
 				}
 
 				undo() {
@@ -717,14 +720,14 @@
 					const last = this.state.history.pop();
 					this.state.scores = last.scores;
 					this.state.progress = last.progressBefore;
-					this.state.pairProvider.unmarkAsCompared(last.pair);
+					this.state.pairingStrategy.unmarkAsCompared(last.pair);
 					this.nextBattle();
 					this.ui.undoButton.disabled = this.state.history.length === 0;
 				}
 
 				restartBattle() {
 					this.resetBattleState();
-					this.showSection("battleSection");
+					this.showSection("battle-section");
 					this.nextBattle();
 				}
 
@@ -735,17 +738,18 @@
 					this.ui.itemInput.value = "";
 					this.ui.allowTies.checked = false;
 					this.ui.quickRankMode.checked = false;
-					this.showSection("inputSection");
+					this.showSection("input-section");
 					this.updateLanguage();
 				}
 
 				toggleKeyboardTip(forceHidden) {
 					const isHidden = this.ui.keyboardTip.classList.toggle("hidden", forceHidden);
-					this.ui.keyboardTipToggle.textContent = this.t(isHidden ? "keyboardTipToggle" : "keyboardTipHide");
+					const isHiddenString = isHidden ? "keyboardTipToggle" : "keyboardTipHide";
+					this.ui.keyboardTipToggle.textContent = this.t(isHiddenString);
 				}
 			}
 
-			new PreferenceRank(translations);
+			new PreferenceRanker(translations);
 		</script>
 	</body>
 </html>
