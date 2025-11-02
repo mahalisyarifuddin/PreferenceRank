@@ -7,7 +7,7 @@ Sorting made better, powered by science.
 PreferenceRank is a versatile and scientific tool for ranking anything you like, inspired by viral character/bias sorters but enhanced with a more rigorous approach. Rank your favorite characters, foods, movies, or travel destinations with precision and fun.
 
 ## How It Works
-PreferenceRank sorts your items by comparing them in pairs. It uses the **Bradley-Terry Elo rating system** to assign a score to each item based on your choices, providing a transparent and relative ranking. See the "Ranking Modes" section for more details on the comparison methods.
+PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rating system**, inspired by the Bradley-Terry model, to assign a score to each item based on your choices. This provides a transparent and relative ranking that adapts with every decision you make. See the "Ranking Modes" section for more details on the comparison methods.
 
 ## Ranking Modes
 PreferenceRank offers two distinct modes to sort your items:
@@ -30,6 +30,10 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Theme Options**: Choose between light, dark, or auto themes for a personalized experience.
 - **Keyboard Shortcuts**: Use keyboard shortcuts for quicker selections during ranking.
 - **Multi-language Support**: Available in English and Bahasa Indonesia.
+
+## What's New?
+- **Smarter, Cleaner Code**: The entire codebase has been refactored to be more concise and maintainable, following modern JavaScript best practices.
+- **Improved User Experience**: Replaced disruptive browser alerts with a sleek, non-blocking notification system for a smoother ranking experience.
 
 ## Customization
 PreferenceRank is open source, allowing you to modify and adapt it as needed. Tweak the algorithm, redesign the UI, or add new functionality—it's all up to you.
