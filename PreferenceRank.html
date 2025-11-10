@@ -525,14 +525,13 @@
 				}
 				updateLang() {
 					this.state.lang = this.ui.langSelect.value;
-					["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewButton"].forEach(key=>this.ui[key].textContent = this.t(key));
-					this.updateKeyboardTip();
+					for (const key of["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewButton"]) {
+						this.ui[key].textContent = this.t(key)
+					}
+					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies");
 					this.ui.keyboardTipToggle.textContent = this.t(this.ui.keyboardTip.classList.contains("hidden") ? "keyboardTipToggle" : "keyboardTipHide");
 					this.updateProgress();
 					if (!this.ui.results.classList.contains("hidden")) this.showResults()
-				}
-				updateKeyboardTip() {
-					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies")
 				}
 				showNotification(message, duration=3e3) {
 					this.ui.notification.textContent = message;
