@@ -6,29 +6,29 @@
 		<title>PreferenceRank</title>
 		<style>
 			:root {
-				--primary: #0070ea;
+				--primary-color: #0070ea;
 				--primary-hover: #005bc0;
-				--bg: #f9f9ff;
+				--background: #f9f9ff;
 				--bg-container: #fff;
-				--text: #414754;
+				--text-color: #414754;
 				--border: #c1c6d7;
 				--btn-hover: #d7d9e5
 			}
 
 			@media(prefers-color-scheme: dark) {
 				:root:not(.light) {
-					--bg:#10131b;
+					--background:#10131b;
 					--bg-container: #181c23;
-					--text: #c1c6d7;
+					--text-color: #c1c6d7;
 					--border: #414754;
 					--btn-hover: #10131b
 				}
 			}
 
 			:root.dark {
-				--bg: #10131b;
+				--background: #10131b;
 				--bg-container: #181c23;
-				--text: #c1c6d7;
+				--text-color: #c1c6d7;
 				--border: #414754;
 				--btn-hover: #10131b
 			}
@@ -40,8 +40,8 @@
 			}
 
 			body {
-				background: var(--bg);
-				color: var(--text);
+				background: var(--background);
+				color: var(--text-color);
 				display: flex;
 				align-items: center;
 				justify-content: center;
@@ -73,7 +73,7 @@
 				text-align: left
 			}
 
-			.form-group {
+			.form-field {
 				margin-bottom: 1rem
 			}
 
@@ -87,7 +87,7 @@
 				background: var(--bg-container);
 				border: 1px solid var(--border);
 				border-radius: 4px;
-				color: var(--text);
+				color: var(--text-color);
 				font-size: 1rem;
 				padding: .5rem;
 				width: 100%
@@ -104,7 +104,7 @@
 			}
 
 			.btn-primary {
-				background: var(--primary);
+				background: var(--primary-color);
 				border: none;
 				color: #fff
 			}
@@ -115,7 +115,7 @@
 
 			.btn-secondary {
 				background: var(--bg-container);
-				color: var(--text)
+				color: var(--text-color)
 			}
 
 			.btn-secondary:hover {
@@ -144,7 +144,7 @@
 			}
 
 			#keyboardTip {
-				background: var(--bg);
+				background: var(--background);
 				border: 1px solid var(--border);
 				border-radius: 4px;
 				font-size: .85rem;
@@ -170,7 +170,7 @@
 			#keyboardTipToggle {
 				background: none;
 				border: none;
-				color: var(--primary);
+				color: var(--primary-color);
 				cursor: pointer;
 				display: block;
 				font-size: .85rem;
@@ -222,7 +222,7 @@
 			}
 
 			#results th {
-				background: var(--primary);
+				background: var(--primary-color);
 				color: #fff
 			}
 
@@ -237,12 +237,12 @@
 			}
 
 			.selected {
-				background: var(--primary)!important;
+				background: var(--primary-color)!important;
 				color: #fff!important
 			}
 
 			#notification {
-				background: var(--primary);
+				background: var(--primary-color);
 				color: #fff;
 				padding: 1rem;
 				border-radius: 4px;
@@ -296,7 +296,7 @@
 						<option value="dark" id="darkTheme"></option>
 					</select>
 				</div>
-				<div class="form-group">
+				<div class="form-field">
 					<label for="itemInput" id="itemInputLabel"></label>
 					<textarea id="itemInput" rows="5" spellcheck="false"></textarea>
 				</div>
@@ -486,7 +486,6 @@
 								this.state.allowTies = e.target.checked;
 								if (!this.ui.battleSection.classList.contains("hidden")) {
 									this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
-									this.updateKeyboardTip()
 								}
 							}
 						},
@@ -525,13 +524,14 @@
 				}
 				updateLang() {
 					this.state.lang = this.ui.langSelect.value;
-					for (const key of["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewButton"]) {
-						this.ui[key].textContent = this.t(key)
-					}
-					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies");
+					["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewButton"].forEach(key=>this.ui[key].textContent = this.t(key));
+					this.updateKeyboardTip();
 					this.ui.keyboardTipToggle.textContent = this.t(this.ui.keyboardTip.classList.contains("hidden") ? "keyboardTipToggle" : "keyboardTipHide");
 					this.updateProgress();
 					if (!this.ui.results.classList.contains("hidden")) this.showResults()
+				}
+				updateKeyboardTip() {
+					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies")
 				}
 				showNotification(message, duration=3e3) {
 					this.ui.notification.textContent = message;
@@ -555,7 +555,6 @@
 					this.resetBattle();
 					this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
 					this.toggleKeyboardTip(true);
-					this.updateKeyboardTip();
 					this.showSection("battleSection");
 					this.nextBattle()
 				}
