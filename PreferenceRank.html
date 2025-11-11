@@ -6,31 +6,31 @@
 		<title>PreferenceRank</title>
 		<style>
 			:root {
-				--primary-color: #0070ea;
+				--primary: #0070ea;
 				--primary-hover: #005bc0;
-				--background: #f9f9ff;
-				--bg-container: #fff;
+				--page-background: #f9f9ff;
+				--container-background: #fff;
 				--text-color: #414754;
 				--border: #c1c6d7;
-				--btn-hover: #d7d9e5
+				--button-hover: #d7d9e5
 			}
 
 			@media(prefers-color-scheme: dark) {
 				:root:not(.light) {
-					--background:#10131b;
-					--bg-container: #181c23;
+					--page-background:#10131b;
+					--container-background: #181c23;
 					--text-color: #c1c6d7;
 					--border: #414754;
-					--btn-hover: #10131b
+					--button-hover: #10131b
 				}
 			}
 
 			:root.dark {
-				--background: #10131b;
-				--bg-container: #181c23;
+				--page-background: #10131b;
+				--container-background: #181c23;
 				--text-color: #c1c6d7;
 				--border: #414754;
-				--btn-hover: #10131b
+				--button-hover: #10131b
 			}
 
 			* {
@@ -40,7 +40,7 @@
 			}
 
 			body {
-				background: var(--background);
+				background: var(--page-background);
 				color: var(--text-color);
 				display: flex;
 				align-items: center;
@@ -51,7 +51,7 @@
 			}
 
 			.container {
-				background: var(--bg-container);
+				background: var(--container-background);
 				border-radius: 8px;
 				box-shadow: 0 2px 10px rgba(0,0,0,.1);
 				max-width: 720px;
@@ -84,7 +84,7 @@
 			}
 
 			input,select,textarea,button {
-				background: var(--bg-container);
+				background: var(--container-background);
 				border: 1px solid var(--border);
 				border-radius: 4px;
 				color: var(--text-color);
@@ -104,7 +104,7 @@
 			}
 
 			.btn-primary {
-				background: var(--primary-color);
+				background: var(--primary);
 				border: none;
 				color: #fff
 			}
@@ -114,12 +114,12 @@
 			}
 
 			.btn-secondary {
-				background: var(--bg-container);
+				background: var(--container-background);
 				color: var(--text-color)
 			}
 
 			.btn-secondary:hover {
-				background: var(--btn-hover)
+				background: var(--button-hover)
 			}
 
 			#battle,#restartButtons,#tieButtons {
@@ -144,7 +144,7 @@
 			}
 
 			#keyboardTip {
-				background: var(--background);
+				background: var(--page-background);
 				border: 1px solid var(--border);
 				border-radius: 4px;
 				font-size: .85rem;
@@ -156,7 +156,7 @@
 			}
 
 			#keyboardTip kbd {
-				background: var(--bg-container);
+				background: var(--container-background);
 				border: 1px solid var(--border);
 				border-radius: 3px;
 				box-shadow: 0 1px 1px rgba(0,0,0,.2);
@@ -170,7 +170,7 @@
 			#keyboardTipToggle {
 				background: none;
 				border: none;
-				color: var(--primary-color);
+				color: var(--primary);
 				cursor: pointer;
 				display: block;
 				font-size: .85rem;
@@ -222,7 +222,7 @@
 			}
 
 			#results th {
-				background: var(--primary-color);
+				background: var(--primary);
 				color: #fff
 			}
 
@@ -232,17 +232,17 @@
 			}
 
 			#undoButton:disabled {
-				background: var(--btn-hover);
+				background: var(--button-hover);
 				cursor: not-allowed
 			}
 
 			.selected {
-				background: var(--primary-color)!important;
+				background: var(--primary)!important;
 				color: #fff!important
 			}
 
 			#notification {
-				background: var(--primary-color);
+				background: var(--primary);
 				color: #fff;
 				padding: 1rem;
 				border-radius: 4px;
@@ -296,7 +296,7 @@
 						<option value="dark" id="darkTheme"></option>
 					</select>
 				</div>
-				<div class="form-field">
+				<div class="form-group">
 					<label for="itemInput" id="itemInputLabel"></label>
 					<textarea id="itemInput" rows="5" spellcheck="false"></textarea>
 				</div>
@@ -330,8 +330,8 @@
 			</div>
 		</div>
 		<script>
-			const $ = id=>document.getElementById(id);
-			const trans = {
+			const getElement = id=>document.getElementById(id);
+			const translations = {
 				en: {
 					title: "PreferenceRank",
 					autoTheme: "Auto Theme",
@@ -439,7 +439,7 @@
 			class PreferenceRank {
 				constructor() {
 					this.state = this.getInitialState();
-					this.init()
+					this.initialize()
 				}
 				getInitialState(preserve={}) {
 					return {
@@ -457,104 +457,80 @@
 						theme: preserve.theme || "auto"
 					}
 				}
-				t(key, replacements={}) {
-					let text = trans[this.state.lang][key] || key;
+				translate(key, replacements={}) {
+					let text = translations[this.state.lang][key] || key;
 					Object.entries(replacements).forEach(([p,v])=>text = text.replace(`{${p}}`, v));
 					return text
 				}
-				init() {
-					this.ui = {};
-					["langSelect", "themeSelect", "allowTies", "quickRank", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "notification"].forEach(id=>this.ui[id] = $(id));
+				initialize() {
+					this.elements = {};
+					["langSelect", "themeSelect", "allowTies", "quickRank", "startButton", "leftItem", "rightItem", "tieButton", "restartBattleButton", "restartNewButton", "undoButton", "keyboardTipToggle", "inputSection", "battleSection", "results", "restartButtons", "tieButtons", "keyboardTip", "progress", "itemInput", "title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "notification"].forEach(id=>this.elements[id] = getElement(id));
 					this.bindEventListeners();
-					this.ui.langSelect.value = this.state.lang;
+					this.elements.langSelect.value = this.state.lang;
 					this.applyTheme();
 					this.updateLang()
 				}
 				bindEventListeners() {
-					const listeners = {
-						langSelect: {
-							change: ()=>this.updateLang()
-						},
-						themeSelect: {
-							change: e=>{
-								this.state.theme = e.target.value;
-								this.applyTheme()
-							}
-						},
-						allowTies: {
-							change: e=>{
-								this.state.allowTies = e.target.checked;
-								if (!this.ui.battleSection.classList.contains("hidden")) {
-									this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
-								}
-							}
-						},
-						startButton: {
-							click: ()=>this.start()
-						},
-						leftItem: {
-							click: ()=>this.choose("left")
-						},
-						rightItem: {
-							click: ()=>this.choose("right")
-						},
-						tieButton: {
-							click: ()=>this.choose("tie")
-						},
-						restartBattleButton: {
-							click: ()=>this.restartBattle()
-						},
-						restartNewButton: {
-							click: ()=>this.restartNew()
-						},
-						undoButton: {
-							click: ()=>this.undo()
-						},
-						keyboardTipToggle: {
-							click: ()=>this.toggleKeyboardTip()
+					this.elements.langSelect.onchange = ()=>this.updateLang();
+					this.elements.themeSelect.onchange = e=>{
+						this.state.theme = e.target.value;
+						this.applyTheme()
+					};
+					this.elements.allowTies.onchange = e=>{
+						this.state.allowTies = e.target.checked;
+						if (!this.elements.battleSection.classList.contains("hidden")) {
+							this.elements.tieButtons.classList.toggle("hidden", !this.state.allowTies);
+							this.updateKeyboardTip()
 						}
 					};
-					for (const elementId in listeners)
-						for (const event in listeners[elementId]) this.ui[elementId].addEventListener(event, listeners[elementId][event]);
-					document.addEventListener("keydown", e=>this.handleKeyDown(e))
+					this.elements.startButton.onclick = ()=>this.startRanking();
+					this.elements.leftItem.onclick = ()=>this.choose("left");
+					this.elements.rightItem.onclick = ()=>this.choose("right");
+					this.elements.tieButton.onclick = ()=>this.choose("tie");
+					this.elements.restartBattleButton.onclick = ()=>this.restartBattle();
+					this.elements.restartNewButton.onclick = ()=>this.restartNew();
+					this.elements.undoButton.onclick = ()=>this.undo();
+					this.elements.keyboardTipToggle.onclick = ()=>this.toggleKeyboardTip();
+					document.onkeydown = e=>this.handleKeyDown(e)
 				}
 				applyTheme() {
 					document.documentElement.classList.remove("light", "dark");
 					if (this.state.theme !== "auto") document.documentElement.classList.add(this.state.theme)
 				}
 				updateLang() {
-					this.state.lang = this.ui.langSelect.value;
-					["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewButton"].forEach(key=>this.ui[key].textContent = this.t(key));
+					this.state.lang = this.elements.langSelect.value;
+					["title", "autoTheme", "lightTheme", "darkTheme", "itemInputLabel", "allowTiesLabel", "quickRankLabel", "startButton", "tieButton", "undoButton", "restartBattleButton", "restartNewButton"].forEach(key=>this.elements[key].textContent = this.translate(key));
 					this.updateKeyboardTip();
-					this.ui.keyboardTipToggle.textContent = this.t(this.ui.keyboardTip.classList.contains("hidden") ? "keyboardTipToggle" : "keyboardTipHide");
+					this.elements.keyboardTipToggle.textContent = this.translate(this.elements.keyboardTip.classList.contains("hidden") ? "keyboardTipToggle" : "keyboardTipHide");
 					this.updateProgress();
-					if (!this.ui.results.classList.contains("hidden")) this.showResults()
+					if (!this.elements.results.classList.contains("hidden")) this.showResults()
 				}
 				updateKeyboardTip() {
-					this.ui.keyboardTip.innerHTML = this.t(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies")
+					this.elements.keyboardTip.innerHTML = this.translate(this.state.allowTies ? "keyboardTipWithTies" : "keyboardTipNoTies")
 				}
 				showNotification(message, duration=3e3) {
-					this.ui.notification.textContent = message;
-					this.ui.notification.classList.remove("hidden");
-					setTimeout(()=>this.ui.notification.classList.add("hidden"), duration)
+					this.elements.notification.textContent = message;
+					this.elements.notification.classList.remove("hidden");
+					setTimeout(()=>this.elements.notification.classList.add("hidden"), duration)
 				}
 				parseItems() {
-					const raw = this.ui.itemInput.value.split("\n").map(s=>s.trim()).filter(Boolean),
+					const raw = this.elements.itemInput.value.split("\n").map(s=>s.trim()).filter(Boolean),
 						items = [...new Set(raw)],
 						removedCount = raw.length - items.length;
-					if (removedCount > 0) this.showNotification(this.t("duplicateAlert", {
+					if (removedCount > 0) this.showNotification(this.translate("duplicateAlert", {
 						count: removedCount
 					}));
 					return items
 				}
-				start() {
+				startRanking() {
 					const items = this.parseItems();
-					if (items.length < 2) return this.showNotification(this.t("alert"));
+					if (items.length < 2) return this.showNotification(this.translate("alert"));
 					this.state.items = items;
-					this.state.allowTies = this.ui.allowTies.checked;
+					this.state.allowTies = this.elements.allowTies.checked;
 					this.resetBattle();
-					this.ui.tieButtons.classList.toggle("hidden", !this.state.allowTies);
+					this.elements.tieButtons.classList.toggle("hidden", !this.state.allowTies);
 					this.toggleKeyboardTip(true);
+					this.updateKeyboardTip();
 					this.showSection("battleSection");
 					this.nextBattle()
 				}
@@ -563,9 +539,9 @@
 					this.state.scores = Array(n).fill(1e3);
 					this.state.progress = 0;
 					this.state.history = [];
-					this.ui.undoButton.disabled = true;
-					this.state.pairProvider = this.ui.quickRank.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
-					this.state.total = this.ui.quickRank.checked ? 0 : this.state.pairProvider.getTotal()
+					this.elements.undoButton.disabled = true;
+					this.state.pairProvider = this.elements.quickRank.checked ? new QuickPairProvider(n) : new FullPairProvider(n);
+					this.state.total = this.elements.quickRank.checked ? 0 : this.state.pairProvider.getTotal()
 				}
 				updateScores(winner) {
 					const {
@@ -587,13 +563,13 @@
 					this.state.pairProvider.markAsCompared(this.state.currentPair);
 					this.updateScores(winner);
 					this.state.progress++;
-					this.ui.undoButton.disabled = false;
+					this.elements.undoButton.disabled = false;
 					this.updateProgress();
 					this.animateChoice(winner)
 				}
 				animateChoice(winner) {
 					this.clearSelections();
-					const targetButton = winner === "tie" ? this.ui.tieButton : this.ui[`${winner}Item`];
+					const targetButton = winner === "tie" ? this.elements.tieButton : this.elements[`${winner}Item`];
 					targetButton.classList.add("selected");
 					setTimeout(()=>{
 						this.state.isChoosing = false;
@@ -603,33 +579,33 @@
 				nextBattle() {
 					this.clearSelections();
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
-					if (!nextPair || !this.ui.quickRank.checked && this.state.progress >= this.state.total) return this.showResults();
+					if (!nextPair || !this.elements.quickRank.checked && this.state.progress >= this.state.total) return this.showResults();
 					this.state.currentPair = nextPair;
 					let [i1,i2] = nextPair;
 					this.state.isSwapped = Math.random() < .5;
 					if (this.state.isSwapped)[i1,i2] = [i2, i1];
-					this.ui.leftItem.textContent = this.state.items[i1];
-					this.ui.rightItem.textContent = this.state.items[i2];
+					this.elements.leftItem.textContent = this.state.items[i1];
+					this.elements.rightItem.textContent = this.state.items[i2];
 					this.updateProgress()
 				}
 				updateProgress() {
-					const text = this.ui.quickRank.checked ? `${this.t("progress")}: ${this.state.progress}` : `${this.t("progress")}: ${this.state.progress}/${this.state.total}`;
-					this.ui.progress.textContent = text
+					const text = this.elements.quickRank.checked ? `${this.translate("progress")}: ${this.state.progress}` : `${this.translate("progress")}: ${this.state.progress}/${this.state.total}`;
+					this.elements.progress.textContent = text
 				}
 				clearSelections() {
-					["leftItem", "rightItem", "tieButton"].forEach(id=>this.ui[id].classList.remove("selected"))
+					["leftItem", "rightItem", "tieButton"].forEach(id=>this.elements[id].classList.remove("selected"))
 				}
 				showResults() {
 					const sorted = this.state.items.map((item,i)=>({
 						item,
 						score: this.state.scores[i]
 					})).sort((a,b)=>b.score - a.score);
-					this.ui.results.innerHTML = `<h2>${this.t("results")}</h2><table><thead><tr><th style="width:20%">${this.t("rank")}</th><th style="width:60%">${this.t("item")}</th><th style="width:20%">${this.t("score")}</th></tr></thead><tbody>${sorted.map(({item,score},i)=>`<tr><td>${i+1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join("")}</tbody></table>`;
+					this.elements.results.innerHTML = `<h2>${this.translate("results")}</h2><table><thead><tr><th style="width:20%">${this.translate("rank")}</th><th style="width:60%">${this.translate("item")}</th><th style="width:20%">${this.translate("score")}</th></tr></thead><tbody>${sorted.map(({item,score},i)=>`<tr><td>${i+1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join("")}</tbody></table>`;
 					this.showSection("results")
 				}
 				showSection(section) {
-					["inputSection", "battleSection", "results"].forEach(id=>this.ui[id].classList.toggle("hidden", id !== section));
-					this.ui.restartButtons.classList.toggle("hidden", section !== "results");
+					["inputSection", "battleSection", "results"].forEach(id=>this.elements[id].classList.toggle("hidden", id !== section));
+					this.elements.restartButtons.classList.toggle("hidden", section !== "results");
 					this.state.keyboardEnabled = section === "battleSection"
 				}
 				undo() {
@@ -639,7 +615,7 @@
 					this.state.progress = last.progressBefore;
 					this.state.pairProvider.unmarkAsCompared(last.pair);
 					this.nextBattle();
-					this.ui.undoButton.disabled = !this.state.history.length
+					this.elements.undoButton.disabled = !this.state.history.length
 				}
 				restartBattle() {
 					this.resetBattle();
@@ -651,25 +627,25 @@
 						lang: this.state.lang,
 						theme: this.state.theme
 					});
-					this.ui.langSelect.value = this.state.lang;
-					this.ui.itemInput.value = "";
-					this.ui.allowTies.checked = false;
-					this.ui.quickRank.checked = false;
+					this.elements.langSelect.value = this.state.lang;
+					this.elements.itemInput.value = "";
+					this.elements.allowTies.checked = false;
+					this.elements.quickRank.checked = false;
 					this.showSection("inputSection");
 					this.updateLang()
 				}
 				toggleKeyboardTip(forceHide) {
-					const hidden = this.ui.keyboardTip.classList.toggle("hidden", forceHide);
-					this.ui.keyboardTipToggle.textContent = this.t(hidden ? "keyboardTipToggle" : "keyboardTipHide")
+					const hidden = this.elements.keyboardTip.classList.toggle("hidden", forceHide);
+					this.elements.keyboardTipToggle.textContent = this.translate(hidden ? "keyboardTipToggle" : "keyboardTipHide")
 				}
 				handleKeyDown(e) {
 					if (!this.state.keyboardEnabled || ["SELECT", "INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
 					const keyMap = {
-						ArrowLeft: ()=>this.ui.leftItem.click(),
-						ArrowRight: ()=>this.ui.rightItem.click(),
-						ArrowUp: ()=>this.state.allowTies && this.ui.tieButton.click(),
-						ArrowDown: ()=>this.state.allowTies && this.ui.tieButton.click(),
-						z: ()=>(e.ctrlKey || e.metaKey) && this.ui.undoButton.click()
+						ArrowLeft: ()=>this.elements.leftItem.click(),
+						ArrowRight: ()=>this.elements.rightItem.click(),
+						ArrowUp: ()=>this.state.allowTies && this.elements.tieButton.click(),
+						ArrowDown: ()=>this.state.allowTies && this.elements.tieButton.click(),
+						z: ()=>(e.ctrlKey || e.metaKey) && this.elements.undoButton.click()
 					};
 					if (keyMap[e.key]) {
 						e.preventDefault();
