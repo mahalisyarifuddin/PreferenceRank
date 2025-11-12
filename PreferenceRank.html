@@ -198,7 +198,7 @@
 				display: flex;
 				align-items: center;
 				gap: 10px;
-				margin-bottom: 1rem
+				margin: 1rem 0
 			}
 
 			.checkbox input {
@@ -463,7 +463,7 @@
 					this.initializeElements();
 					this.bindEventListeners();
 					this.applyTheme();
-					this.updateLanguage();
+					this.updateLanguage(this.state.lang);
 				}
 
 				createInitialState(preserve={}) {
@@ -493,24 +493,29 @@
 				}
 
 				initializeElements() {
-					const elementIds = ['langSelect', 'themeSelect', 'allowTies', 'quickRank', 'startButton', 'leftItem', 'rightItem', 'tieButton', 'restartBattleButton', 'restartNewButton', 'undoButton', 'keyboardTipToggle', 'inputSection', 'battleSection', 'results', 'restartButtons', 'tieButtons', 'keyboardTip', 'progress', 'itemInput', 'title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'notification'];
-
-					this.elements = Object.fromEntries(elementIds.map(elementId=>[elementId, getElement(elementId)]));
+					this.elements = Object.fromEntries(Array.from(document.querySelectorAll('[id]')).map(element=>[element.id, element]));
 				}
 
 				bindEventListeners() {
-					this.elements.langSelect.onchange = ()=>this.updateLanguage();
-					this.elements.themeSelect.onchange = event=>this.handleThemeChange(event.target.value);
-					this.elements.allowTies.onchange = event=>this.handleAllowTiesChange(event.target.checked);
-					this.elements.startButton.onclick = ()=>this.startRanking();
-					this.elements.leftItem.onclick = ()=>this.handleChoice('left');
-					this.elements.rightItem.onclick = ()=>this.handleChoice('right');
-					this.elements.tieButton.onclick = ()=>this.handleChoice('tie');
-					this.elements.restartBattleButton.onclick = ()=>this.restartBattle();
-					this.elements.restartNewButton.onclick = ()=>this.restartWithNewItems();
-					this.elements.undoButton.onclick = ()=>this.undoLastChoice();
-					this.elements.keyboardTipToggle.onclick = ()=>this.toggleKeyboardTip();
-					document.onkeydown = event=>this.handleKeyboardInput(event);
+					const listeners = {
+						langSelect: {event: 'onchange', handler: ()=>this.updateLanguage()},
+						themeSelect: {event: 'onchange', handler: event=>this.handleThemeChange(event.target.value)},
+						allowTies: {event: 'onchange', handler: event=>this.handleAllowTiesChange(event.target.checked)},
+						startButton: {event: 'onclick', handler: ()=>this.startRanking()},
+						leftItem: {event: 'onclick', handler: ()=>this.handleChoice('left')},
+						rightItem: {event: 'onclick', handler: ()=>this.handleChoice('right')},
+						tieButton: {event: 'onclick', handler: ()=>this.handleChoice('tie')},
+						restartBattleButton: {event: 'onclick', handler: ()=>this.restartBattle()},
+						restartNewButton: {event: 'onclick', handler: ()=>this.restartWithNewItems()},
+						undoButton: {event: 'onclick', handler: ()=>this.undoLastChoice()},
+						keyboardTipToggle: {event: 'onclick', handler: ()=>this.toggleKeyboardTip()},
+						document: {event: 'onkeydown', handler: event=>this.handleKeyboardInput(event)}
+					};
+
+					Object.entries(listeners).forEach(([elementId, {event, handler}])=>{
+						const element = elementId === 'document' ? document : this.elements[elementId];
+						element[event] = handler;
+					});
 				}
 
 				handleThemeChange(theme) {
@@ -533,8 +538,9 @@
 					}
 				}
 
-				updateLanguage() {
-					this.state.lang = this.elements.langSelect.value;
+				updateLanguage(lang) {
+					this.state.lang = lang || this.elements.langSelect.value;
+					this.elements.langSelect.value = this.state.lang;
 
 					const textElements = ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton'];
 
