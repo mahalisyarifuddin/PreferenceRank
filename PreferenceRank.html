@@ -734,12 +734,12 @@
 				}
 
 				showSection(sectionName) {
-					const sections = ['inputSection', 'battleSection', 'results'];
-					sections.forEach(section=>{
-						this.elements[section].classList.toggle('hidden', section !== sectionName);
+					['inputSection', 'battleSection', 'results'].forEach(sectionId=>{
+						this.elements[sectionId].classList.add('hidden');
 					}
 					);
 
+					this.elements[sectionName].classList.remove('hidden');
 					this.elements.restartButtons.classList.toggle('hidden', sectionName !== 'results');
 					this.state.keyboardEnabled = sectionName === 'battleSection';
 				}
