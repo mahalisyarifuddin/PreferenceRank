@@ -198,7 +198,7 @@
 				display: flex;
 				align-items: center;
 				gap: 10px;
-				margin: 1rem 0
+				margin: .75rem 0
 			}
 
 			.checkbox input {
@@ -284,40 +284,40 @@
 		<div class="container">
 			<div id="notification" class="hidden"></div>
 			<div id="inputSection">
-				<h1 id="title"></h1>
+				<h1 id="title" data-translate="title"></h1>
 				<div class="selectors">
 					<select id="langSelect">
 						<option value="en">English</option>
 						<option value="id">Bahasa Indonesia</option>
 					</select>
 					<select id="themeSelect">
-						<option value="auto" id="autoTheme"></option>
-						<option value="light" id="lightTheme"></option>
-						<option value="dark" id="darkTheme"></option>
+						<option value="auto" id="autoTheme" data-translate="autoTheme"></option>
+						<option value="light" id="lightTheme" data-translate="lightTheme"></option>
+						<option value="dark" id="darkTheme" data-translate="darkTheme"></option>
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="itemInput" id="itemInputLabel"></label>
+					<label for="itemInput" id="itemInputLabel" data-translate="itemInputLabel"></label>
 					<textarea id="itemInput" rows="5" spellcheck="false"></textarea>
 				</div>
 				<div class="checkbox">
 					<input type="checkbox" id="allowTies"/>
-					<label for="allowTies" id="allowTiesLabel"></label>
+					<label for="allowTies" id="allowTiesLabel" data-translate="allowTiesLabel"></label>
 				</div>
 				<div class="checkbox">
 					<input type="checkbox" id="quickRank"/>
-					<label for="quickRank" id="quickRankLabel"></label>
+					<label for="quickRank" id="quickRankLabel" data-translate="quickRankLabel"></label>
 				</div>
-				<button id="startButton" class="button-primary"></button>
+				<button id="startButton" class="button-primary" data-translate="startButton"></button>
 			</div>
 			<div id="battleSection" class="hidden">
-				<button id="undoButton" class="button-secondary" disabled></button>
+				<button id="undoButton" class="button-secondary" data-translate="undoButton" disabled></button>
 				<div id="battle">
 					<button id="leftItem" class="button-secondary"></button>
 					<button id="rightItem" class="button-secondary"></button>
 				</div>
 				<div id="tieButtons" class="hidden">
-					<button id="tieButton" class="button-secondary"></button>
+					<button id="tieButton" class="button-secondary" data-translate="tieButton"></button>
 				</div>
 				<div id="progress"></div>
 				<button id="keyboardTipToggle"></button>
@@ -325,8 +325,8 @@
 			</div>
 			<div id="results" class="hidden"></div>
 			<div id="restartButtons" class="hidden">
-				<button id="restartBattleButton" class="button-primary"></button>
-				<button id="restartNewButton" class="button-primary"></button>
+				<button id="restartBattleButton" class="button-primary" data-translate="restartBattleButton"></button>
+				<button id="restartNewButton" class="button-primary" data-translate="restartNewButton"></button>
 			</div>
 		</div>
 		<script>
@@ -461,9 +461,10 @@
 				constructor() {
 					this.state = this.createInitialState();
 					this.initializeElements();
+					this.elements.langSelect.value = this.state.lang;
 					this.bindEventListeners();
 					this.applyTheme();
-					this.updateLanguage(this.state.lang);
+					this.updateLanguage();
 				}
 
 				createInitialState(preserve={}) {
@@ -498,23 +499,23 @@
 
 				bindEventListeners() {
 					const listeners = {
-						langSelect: {event: 'onchange', handler: ()=>this.updateLanguage()},
-						themeSelect: {event: 'onchange', handler: event=>this.handleThemeChange(event.target.value)},
-						allowTies: {event: 'onchange', handler: event=>this.handleAllowTiesChange(event.target.checked)},
-						startButton: {event: 'onclick', handler: ()=>this.startRanking()},
-						leftItem: {event: 'onclick', handler: ()=>this.handleChoice('left')},
-						rightItem: {event: 'onclick', handler: ()=>this.handleChoice('right')},
-						tieButton: {event: 'onclick', handler: ()=>this.handleChoice('tie')},
-						restartBattleButton: {event: 'onclick', handler: ()=>this.restartBattle()},
-						restartNewButton: {event: 'onclick', handler: ()=>this.restartWithNewItems()},
-						undoButton: {event: 'onclick', handler: ()=>this.undoLastChoice()},
-						keyboardTipToggle: {event: 'onclick', handler: ()=>this.toggleKeyboardTip()},
-						document: {event: 'onkeydown', handler: event=>this.handleKeyboardInput(event)}
+						langSelect: {event: 'change', handler: ()=>this.updateLanguage()},
+						themeSelect: {event: 'change', handler: event=>this.handleThemeChange(event.target.value)},
+						allowTies: {event: 'change', handler: event=>this.handleAllowTiesChange(event.target.checked)},
+						startButton: {event: 'click', handler: ()=>this.startRanking()},
+						leftItem: {event: 'click', handler: ()=>this.handleChoice('left')},
+						rightItem: {event: 'click', handler: ()=>this.handleChoice('right')},
+						tieButton: {event: 'click', handler: ()=>this.handleChoice('tie')},
+						restartBattleButton: {event: 'click', handler: ()=>this.restartBattle()},
+						restartNewButton: {event: 'click', handler: ()=>this.restartWithNewItems()},
+						undoButton: {event: 'click', handler: ()=>this.undoLastChoice()},
+						keyboardTipToggle: {event: 'click', handler: ()=>this.toggleKeyboardTip()},
+						document: {event: 'keydown', handler: event=>this.handleKeyboardInput(event)}
 					};
 
 					Object.entries(listeners).forEach(([elementId, {event, handler}])=>{
 						const element = elementId === 'document' ? document : this.elements[elementId];
-						element[event] = handler;
+						element.addEventListener(event, handler);
 					});
 				}
 
@@ -538,16 +539,12 @@
 					}
 				}
 
-				updateLanguage(lang) {
-					this.state.lang = lang || this.elements.langSelect.value;
-					this.elements.langSelect.value = this.state.lang;
+				updateLanguage() {
+					this.state.lang = this.elements.langSelect.value;
 
-					const textElements = ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton'];
-
-					textElements.forEach(key=>{
-						this.elements[key].textContent = this.translate(key);
-					}
-					);
+					document.querySelectorAll('[data-translate]').forEach(element=>{
+						element.textContent = this.translate(element.dataset.translate);
+					});
 
 					this.updateKeyboardTipContent();
 					this.updateKeyboardTipToggleText();
