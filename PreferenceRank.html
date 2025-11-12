@@ -198,7 +198,8 @@
 				display: flex;
 				align-items: center;
 				gap: 10px;
-				margin-bottom: 1rem
+				margin-bottom: 1rem;
+				margin-top: 1.5rem
 			}
 
 			.checkbox input {
@@ -734,12 +735,12 @@
 				}
 
 				showSection(sectionName) {
-					['inputSection', 'battleSection', 'results'].forEach(sectionId=>{
-						this.elements[sectionId].classList.add('hidden');
+					const sections = ['inputSection', 'battleSection', 'results'];
+					sections.forEach(section=>{
+						this.elements[section].classList.toggle('hidden', section !== sectionName);
 					}
 					);
 
-					this.elements[sectionName].classList.remove('hidden');
 					this.elements.restartButtons.classList.toggle('hidden', sectionName !== 'results');
 					this.state.keyboardEnabled = sectionName === 'battleSection';
 				}
