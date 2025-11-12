@@ -284,40 +284,40 @@
 		<div class="container">
 			<div id="notification" class="hidden"></div>
 			<div id="inputSection">
-				<h1 id="title" data-translate="title"></h1>
+				<h1 id="title"></h1>
 				<div class="selectors">
 					<select id="langSelect">
 						<option value="en">English</option>
 						<option value="id">Bahasa Indonesia</option>
 					</select>
 					<select id="themeSelect">
-						<option value="auto" id="autoTheme" data-translate="autoTheme"></option>
-						<option value="light" id="lightTheme" data-translate="lightTheme"></option>
-						<option value="dark" id="darkTheme" data-translate="darkTheme"></option>
+						<option value="auto" id="autoTheme"></option>
+						<option value="light" id="lightTheme"></option>
+						<option value="dark" id="darkTheme"></option>
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="itemInput" id="itemInputLabel" data-translate="itemInputLabel"></label>
+					<label for="itemInput" id="itemInputLabel"></label>
 					<textarea id="itemInput" rows="5" spellcheck="false"></textarea>
 				</div>
 				<div class="checkbox">
 					<input type="checkbox" id="allowTies"/>
-					<label for="allowTies" id="allowTiesLabel" data-translate="allowTiesLabel"></label>
+					<label for="allowTies" id="allowTiesLabel"></label>
 				</div>
 				<div class="checkbox">
 					<input type="checkbox" id="quickRank"/>
-					<label for="quickRank" id="quickRankLabel" data-translate="quickRankLabel"></label>
+					<label for="quickRank" id="quickRankLabel"></label>
 				</div>
-				<button id="startButton" class="button-primary" data-translate="startButton"></button>
+				<button id="startButton" class="button-primary"></button>
 			</div>
 			<div id="battleSection" class="hidden">
-				<button id="undoButton" class="button-secondary" data-translate="undoButton" disabled></button>
+				<button id="undoButton" class="button-secondary" disabled></button>
 				<div id="battle">
 					<button id="leftItem" class="button-secondary"></button>
 					<button id="rightItem" class="button-secondary"></button>
 				</div>
 				<div id="tieButtons" class="hidden">
-					<button id="tieButton" class="button-secondary" data-translate="tieButton"></button>
+					<button id="tieButton" class="button-secondary"></button>
 				</div>
 				<div id="progress"></div>
 				<button id="keyboardTipToggle"></button>
@@ -325,8 +325,8 @@
 			</div>
 			<div id="results" class="hidden"></div>
 			<div id="restartButtons" class="hidden">
-				<button id="restartBattleButton" class="button-primary" data-translate="restartBattleButton"></button>
-				<button id="restartNewButton" class="button-primary" data-translate="restartNewButton"></button>
+				<button id="restartBattleButton" class="button-primary"></button>
+				<button id="restartNewButton" class="button-primary"></button>
 			</div>
 		</div>
 		<script>
@@ -391,9 +391,9 @@
 				}
 
 				static shuffleArray(array) {
-					for (let index = array.length - 1; index > 0; index--) {
-						const randomIndex = Math.floor(Math.random() * (index + 1));
-						[array[index],array[randomIndex]] = [array[randomIndex], array[index]];
+					for (let i = array.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[array[i],array[j]] = [array[j], array[i]];
 					}
 				}
 
@@ -406,9 +406,9 @@
 					super(itemCount);
 					this.pairs = [];
 
-					for (let firstIndex = 0; firstIndex < itemCount - 1; firstIndex++) {
-						for (let secondIndex = firstIndex + 1; secondIndex < itemCount; secondIndex++) {
-							this.pairs.push([firstIndex, secondIndex]);
+					for (let i = 0; i < itemCount - 1; i++) {
+						for (let j = i + 1; j < itemCount; j++) {
+							this.pairs.push([i, j]);
 						}
 					}
 
@@ -433,12 +433,12 @@
 				getNextPair(state) {
 					const sortedIndices = Array.from({
 						length: this.itemCount
-					}, (_,index)=>index).sort((firstItem,secondItem)=>state.scores[secondItem] - state.scores[firstItem]);
+					}, (_,i)=>i).sort((a,b)=>state.scores[b] - state.scores[a]);
 
-					for (let position = 0; position < this.itemCount - 1; position++) {
-						const firstIndex = sortedIndices[position];
-						const secondIndex = sortedIndices[position + 1];
-						const pair = [Math.min(firstIndex, secondIndex), Math.max(firstIndex, secondIndex)];
+					for (let i = 0; i < this.itemCount - 1; i++) {
+						const i1 = sortedIndices[i];
+						const i2 = sortedIndices[i + 1];
+						const pair = [Math.min(i1, i2), Math.max(i1, i2)];
 						const pairKey = `${pair[0]}-${pair[1]}`;
 
 						if (!this.comparedPairs.has(pairKey))
@@ -486,8 +486,8 @@
 
 				translate(key, replacements={}) {
 					let text = translations[this.state.lang][key] || key;
-					Object.entries(replacements).forEach(([placeholder,value])=>{
-						text = text.replace(`{${placeholder}}`, value);
+					Object.entries(replacements).forEach(([p,v])=>{
+						text = text.replace(`{${p}}`, v);
 					}
 					);
 					return text;
@@ -542,9 +542,12 @@
 				updateLanguage() {
 					this.state.lang = this.elements.langSelect.value;
 
-					document.querySelectorAll('[data-translate]').forEach(element=>{
-						element.textContent = this.translate(element.dataset.translate);
-					});
+					const textElements = ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton'];
+
+					textElements.forEach(key=>{
+						this.elements[key].textContent = this.translate(key);
+					}
+					);
 
 					this.updateKeyboardTipContent();
 					this.updateKeyboardTipToggleText();
@@ -623,15 +626,15 @@
 
 				calculateNewScores(winner) {
 					const {currentPair, isSwapped, scores} = this.state;
-					const isFirstItemWinner = (winner === 'left' && !isSwapped) || (winner === 'right' && isSwapped);
-					const result = winner === 'tie' ? 0.5 : (isFirstItemWinner ? 1 : 0);
-					const [firstIndex,secondIndex] = currentPair;
-					const [firstScore,secondScore] = [scores[firstIndex], scores[secondIndex]];
-					const expectedFirstScore = 1 / (1 + 10 ** ((secondScore - firstScore) / 400));
-					const adjustmentFactor = 32;
+					const isWinner = (winner === 'left' && !isSwapped) || (winner === 'right' && isSwapped);
+					const result = winner === 'tie' ? .5 : (isWinner ? 1 : 0);
+					const [i1,i2] = currentPair;
+					const [s1,s2] = [scores[i1], scores[i2]];
+					const e1 = 1 / (1 + 10 ** ((s2 - s1) / 400));
+					const k = 32;
 
-					scores[firstIndex] += adjustmentFactor * (result - expectedFirstScore);
-					scores[secondIndex] += adjustmentFactor * (expectedFirstScore - result);
+					scores[i1] += k * (result - e1);
+					scores[i2] += k * (e1 - result);
 				}
 
 				handleChoice(winner) {
@@ -670,23 +673,23 @@
 				showNextBattle() {
 					this.clearButtonSelections();
 
-					const nextPair = this.state.pairProvider.getNextPair(this.state);
+					const pair = this.state.pairProvider.getNextPair(this.state);
 					const isQuickRank = this.elements.quickRank.checked;
-					const isComplete = !nextPair || (!isQuickRank && this.state.progress >= this.state.totalPairs);
+					const isComplete = !pair || (!isQuickRank && this.state.progress >= this.state.totalPairs);
 
 					if (isComplete)
 						return this.displayResults();
 
-					this.state.currentPair = nextPair;
-					let[firstIndex,secondIndex] = nextPair;
+					this.state.currentPair = pair;
+					let[i1,i2] = pair;
 
 					this.state.isSwapped = Math.random() < 0.5;
 					if (this.state.isSwapped) {
-						[firstIndex,secondIndex] = [secondIndex, firstIndex];
+						[i1,i2] = [i2, i1];
 					}
 
-					this.elements.leftItem.textContent = this.state.items[firstIndex];
-					this.elements.rightItem.textContent = this.state.items[secondIndex];
+					this.elements.leftItem.textContent = this.state.items[i1];
+					this.elements.rightItem.textContent = this.state.items[i2];
 					this.updateProgressDisplay();
 				}
 
@@ -706,14 +709,14 @@
 				}
 
 				displayResults() {
-					const sortedResults = this.state.items.map((item,index)=>({
+					const sortedResults = this.state.items.map((item,i)=>({
 						item,
-						score: this.state.scores[index]
-					})).sort((firstItem,secondItem)=>secondItem.score - firstItem.score);
+						score: this.state.scores[i]
+					})).sort((a,b)=>b.score - a.score);
 
-					const tableRows = sortedResults.map(({item, score},index)=>`
+					const tableRows = sortedResults.map(({item, score},i)=>`
 							<tr>
-								<td>${index + 1}</td>
+								<td>${i + 1}</td>
 								<td>${item}</td>
 								<td>${Math.round(score)}</td>
 							</tr>
@@ -736,15 +739,15 @@
 					this.showSection('results');
 				}
 
-				showSection(sectionName) {
+				showSection(sectionId) {
 					const sections = ['inputSection', 'battleSection', 'results'];
-					sections.forEach(section=>{
-						this.elements[section].classList.toggle('hidden', section !== sectionName);
+					sections.forEach(id=>{
+						this.elements[id].classList.toggle('hidden', id !== sectionId);
 					}
 					);
 
-					this.elements.restartButtons.classList.toggle('hidden', sectionName !== 'results');
-					this.state.keyboardEnabled = sectionName === 'battleSection';
+					this.elements.restartButtons.classList.toggle('hidden', sectionId !== 'results');
+					this.state.keyboardEnabled = sectionId === 'battleSection';
 				}
 
 				undoLastChoice() {
