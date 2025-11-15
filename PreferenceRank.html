@@ -450,54 +450,27 @@
 
 				bindEventListeners() {
 					const listeners = {
-						langSelect: {
-							event: 'onchange',
-							handler: ()=>this.updateLanguage()
+						onclick: {
+							startButton: ()=>this.startRanking(),
+							leftItem: ()=>this.handleChoice('left'),
+							rightItem: ()=>this.handleChoice('right'),
+							tieButton: ()=>this.handleChoice('tie'),
+							restartBattleButton: ()=>this.restartBattle(),
+							restartNewButton: ()=>this.restartWithNewItems(),
+							undoButton: ()=>this.undoLastChoice(),
+							keyboardTipToggle: ()=>this.toggleKeyboardTip()
 						},
-						themeSelect: {
-							event: 'onchange',
-							handler: event=>this.applyTheme(event.target.value)
-						},
-						allowTies: {
-							event: 'onchange',
-							handler: event=>this.handleAllowTiesChange(event.target.checked)
-						},
-						startButton: {
-							event: 'onclick',
-							handler: ()=>this.startRanking()
-						},
-						leftItem: {
-							event: 'onclick',
-							handler: ()=>this.handleChoice('left')
-						},
-						rightItem: {
-							event: 'onclick',
-							handler: ()=>this.handleChoice('right')
-						},
-						tieButton: {
-							event: 'onclick',
-							handler: ()=>this.handleChoice('tie')
-						},
-						restartBattleButton: {
-							event: 'onclick',
-							handler: ()=>this.restartBattle()
-						},
-						restartNewButton: {
-							event: 'onclick',
-							handler: ()=>this.restartWithNewItems()
-						},
-						undoButton: {
-							event: 'onclick',
-							handler: ()=>this.undoLastChoice()
-						},
-						keyboardTipToggle: {
-							event: 'onclick',
-							handler: ()=>this.toggleKeyboardTip()
+						onchange: {
+							langSelect: ()=>this.updateLanguage(),
+							themeSelect: event=>this.applyTheme(event.target.value),
+							allowTies: event=>this.handleAllowTiesChange(event.target.checked)
 						}
 					};
 
-					for (const[elementId, {event, handler}] of Object.entries(listeners)) {
-						this.elements[elementId][event] = handler;
+					for (const[event, handlers] of Object.entries(listeners)) {
+						for (const[elementId, handler] of Object.entries(handlers)) {
+							this.elements[elementId][event] = handler;
+						}
 					}
 
 					document.onkeydown = event=>this.handleKeyboardInput(event);
