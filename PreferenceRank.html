@@ -158,6 +158,7 @@
 				border: none;
 				color: var(--primary);
 				cursor: pointer;
+				display: block;
 				font-size: .85rem;
 				margin: 10px auto 0;
 				text-decoration: underline;
@@ -537,32 +538,35 @@
 					this.elements.keyboardTip.innerHTML = this.translate(this.state.allowTies ? 'keyboardTipWithTies' : 'keyboardTipNoTies');
 				}
 
+				resetBattleState() {
+					const itemCount = this.state.items.length;
+					Object.assign(this.state, {
+						scores: Array(itemCount).fill(1000),
+						progress: 0,
+						history: []
+					});
+					this.elements.undoButton.disabled = true;
+
+					const isQuickRank = this.elements.quickRank.checked;
+					this.state.pairProvider = isQuickRank ? new QuickPairProvider(itemCount) : new FullPairProvider(itemCount);
+					this.state.totalPairs = isQuickRank ? 0 : this.state.pairProvider.getTotalPairs();
+				}
+
 				startRanking() {
-					const rawItems = this.elements.itemInput.value.split('\n').map(line=>line.trim()).filter(Boolean);
+					const rawItems = this.elements.itemInput.value.split('\n').map(line => line.trim()).filter(Boolean);
 					const items = [...new Set(rawItems)];
 					const duplicateCount = rawItems.length - items.length;
-
 					if (duplicateCount > 0) {
 						alert(this.translate('duplicateAlert', {
 							count: duplicateCount
 						}));
 					}
-
 					if (items.length < 2) {
 						return alert(this.translate('alert'));
 					}
-
 					this.state.items = items;
 					this.state.allowTies = this.elements.allowTies.checked;
-					this.state.scores = Array(items.length).fill(1000);
-					this.state.progress = 0;
-					this.state.history = [];
-					this.elements.undoButton.disabled = true;
-
-					const isQuickRank = this.elements.quickRank.checked;
-					this.state.pairProvider = isQuickRank ? new QuickPairProvider(items.length) : new FullPairProvider(items.length);
-					this.state.totalPairs = isQuickRank ? 0 : this.state.pairProvider.getTotalPairs();
-
+					this.resetBattleState();
 					this.elements.tieButtons.classList.toggle('hidden', !this.state.allowTies);
 					this.toggleKeyboardTip(true);
 					this.updateKeyboardTip();
@@ -622,11 +626,9 @@
 
 					this.state.currentPair = nextPair;
 					let[first,second] = nextPair;
-					if (Math.random() < 0.5) {
+					this.state.isSwapped = Math.random() < 0.5;
+					if (this.state.isSwapped) {
 						[first,second] = [second, first];
-						this.state.isSwapped = true;
-					} else {
-						this.state.isSwapped = false;
 					}
 
 					this.elements.leftItem.textContent = this.state.items[first];
@@ -650,7 +652,11 @@
 					})).sort((a,b)=>b.score - a.score);
 
 					const tableRows = sortedResults.map(({item, score},index)=>`<tr><td>${index + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('');
-					const tableHeaders = ['rank', 'item', 'score'].map(key=>`<th>${this.translate(key)}</th>`).join('');
+					const tableHeaders = [
+						{ key: 'rank', width: '20%' },
+						{ key: 'item', width: '60%' },
+						{ key: 'score', width: '20%' }
+					].map(({ key, width })=>`<th style="width:${width}">${this.translate(key)}</th>`).join('');
 
 					this.elements.results.innerHTML = `
 						<h2>${this.translate('results')}</h2>
@@ -683,7 +689,9 @@
 				}
 
 				restartBattle() {
-					this.startRanking(this.state.items);
+					this.resetBattleState();
+					this.showSection('battleSection');
+					this.showNextBattle();
 				}
 
 				restartWithNewItems() {
