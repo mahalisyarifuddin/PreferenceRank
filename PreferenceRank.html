@@ -17,7 +17,7 @@
 
 			@media(prefers-color-scheme: dark) {
 				:root:not(.light) {
-					--page-background:#10131b;
+					--page-background: #10131b;
 					--container-background: #181c23;
 					--text-color: #c1c6d7;
 					--border: #414754;
@@ -65,12 +65,7 @@
 			}
 
 			h1,h2 {
-				margin: .5rem 0;
-				text-align: left
-			}
-
-			.form-field {
-				margin-bottom: 1rem
+				margin: .5rem 0
 			}
 
 			label {
@@ -107,11 +102,6 @@
 
 			.button-primary:hover {
 				background: var(--primary-hover)
-			}
-
-			.button-secondary {
-				background: var(--container-background);
-				color: var(--text-color)
 			}
 
 			.button-secondary:hover {
@@ -171,7 +161,6 @@
 				display: block;
 				font-size: .85rem;
 				margin: 10px auto 0;
-				padding: 0;
 				text-decoration: underline;
 				width: auto
 			}
@@ -223,7 +212,6 @@
 			}
 
 			#undoButton {
-				margin-top: 1rem;
 				width: auto
 			}
 
@@ -370,79 +358,66 @@
 			class PairProvider {
 				constructor(itemCount) {
 					this.itemCount = itemCount;
+					this.comparedPairs = new Set();
 				}
-
-				static shuffleArray(array) {
-					for (let index = array.length - 1; index > 0; index--) {
-						const randomIndex = Math.floor(Math.random() * (index + 1));
-						[array[index],array[randomIndex]] = [array[randomIndex], array[index]];
-					}
+				markAsCompared(pair) {
+					this.comparedPairs.add(`${Math.min(...pair)}-${Math.max(...pair)}`);
 				}
-
-				markAsCompared() {}
-				unmarkAsCompared() {}
+				unmarkAsCompared(pair) {
+					this.comparedPairs.delete(`${Math.min(...pair)}-${Math.max(...pair)}`);
+				}
+				isCompared(pair) {
+					return this.comparedPairs.has(`${Math.min(...pair)}-${Math.max(...pair)}`);
+				}
 			}
 
 			class FullPairProvider extends PairProvider {
 				constructor(itemCount) {
 					super(itemCount);
-					this.pairs = [];
-
-					for (let first = 0; first < itemCount - 1; first++) {
-						for (let second = first + 1; second < itemCount; second++) {
-							this.pairs.push([first, second]);
+					this.pairs = this.generatePairs();
+					this.shuffleArray(this.pairs);
+				}
+				generatePairs() {
+					const pairs = [];
+					for (let i = 0; i < this.itemCount - 1; i++) {
+						for (let j = i + 1; j < this.itemCount; j++) {
+							pairs.push([i, j]);
 						}
 					}
-
-					PairProvider.shuffleArray(this.pairs);
+					return pairs;
 				}
-
+				shuffleArray(array) {
+					for (let i = array.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[array[i],array[j]] = [array[j], array[i]];
+					}
+				}
 				getNextPair(state) {
 					return this.pairs[state.progress];
 				}
-
 				getTotalPairs() {
 					return this.pairs.length;
 				}
 			}
 
 			class QuickPairProvider extends PairProvider {
-				constructor(itemCount) {
-					super(itemCount);
-					this.comparedPairs = new Set();
-				}
-
 				getNextPair(state) {
 					const sortedIndices = Array.from({
 						length: this.itemCount
-					}, (_,index)=>index).sort((first,second)=>state.scores[second] - state.scores[first]);
-
-					for (let position = 0; position < this.itemCount - 1; position++) {
-						const first = sortedIndices[position];
-						const second = sortedIndices[position + 1];
-						const pair = [Math.min(first, second), Math.max(first, second)];
-						const pairKey = `${pair[0]}-${pair[1]}`;
-
-						if (!this.comparedPairs.has(pairKey))
+					}, (_,i)=>i).sort((a,b)=>state.scores[b] - state.scores[a]);
+					for (let i = 0; i < this.itemCount - 1; i++) {
+						const pair = [sortedIndices[i], sortedIndices[i + 1]];
+						if (!this.isCompared(pair))
 							return pair;
 					}
-
 					return null;
-				}
-
-				markAsCompared(pair) {
-					this.comparedPairs.add(`${pair[0]}-${pair[1]}`);
-				}
-
-				unmarkAsCompared(pair) {
-					this.comparedPairs.delete(`${pair[0]}-${pair[1]}`);
 				}
 			}
 
 			class PreferenceRank {
 				constructor() {
+					this.elements = Object.fromEntries(Array.from(document.querySelectorAll('[id]')).map(element=>[element.id, element]));
 					this.state = this.createInitialState();
-					this.initializeElements();
 					this.bindEventListeners();
 					this.applyTheme();
 					this.updateLanguage(this.state.language);
@@ -465,67 +440,52 @@
 					};
 				}
 
-				translate(textKey, replacements={}) {
-					let text = translations[this.state.language][textKey] || textKey;
-					Object.entries(replacements).forEach(([placeholder,value])=>{
+				translate(key, replacements={}) {
+					let text = translations[this.state.language][key] || key;
+					for (const[placeholder,value] of Object.entries(replacements)) {
 						text = text.replace(`{${placeholder}}`, value);
 					}
-					);
 					return text;
 				}
 
-				initializeElements() {
-					this.elements = Object.fromEntries(Array.from(document.querySelectorAll('[id]')).map(element=>[element.id, element]));
-				}
-
 				bindEventListeners() {
-					const changeListeners = {
-						langSelect: ()=>this.updateLanguage(),
-						themeSelect: event=>this.handleThemeChange(event.target.value),
-						allowTies: event=>this.handleAllowTiesChange(event.target.checked)
+					const listeners = {
+						onclick: {
+							startButton: ()=>this.startRanking(),
+							leftItem: ()=>this.handleChoice('left'),
+							rightItem: ()=>this.handleChoice('right'),
+							tieButton: ()=>this.handleChoice('tie'),
+							restartBattleButton: ()=>this.restartBattle(),
+							restartNewButton: ()=>this.restartWithNewItems(),
+							undoButton: ()=>this.undoLastChoice(),
+							keyboardTipToggle: ()=>this.toggleKeyboardTip()
+						},
+						onchange: {
+							langSelect: ()=>this.updateLanguage(),
+							themeSelect: event=>this.applyTheme(event.target.value),
+							allowTies: event=>this.handleAllowTiesChange(event.target.checked)
+						}
 					};
 
-					const clickListeners = {
-						startButton: ()=>this.startRanking(),
-						leftItem: ()=>this.handleChoice('left'),
-						rightItem: ()=>this.handleChoice('right'),
-						tieButton: ()=>this.handleChoice('tie'),
-						restartBattleButton: ()=>this.restartBattle(),
-						restartNewButton: ()=>this.restartWithNewItems(),
-						undoButton: ()=>this.undoLastChoice(),
-						keyboardTipToggle: ()=>this.toggleKeyboardTip()
-					};
-
-					Object.entries(changeListeners).forEach(([name,handler])=>{
-						this.elements[name].onchange = handler;
+					for (const[event, handlers] of Object.entries(listeners)) {
+						for (const[elementId, handler] of Object.entries(handlers)) {
+							this.elements[elementId][event] = handler;
+						}
 					}
-					);
-
-					Object.entries(clickListeners).forEach(([name,handler])=>{
-						this.elements[name].onclick = handler;
-					}
-					);
 
 					document.onkeydown = event=>this.handleKeyboardInput(event);
 				}
 
-				handleThemeChange(theme) {
-					this.state.theme = theme;
-					this.applyTheme();
-				}
-
-				applyTheme() {
-					document.documentElement.classList.remove('light', 'dark');
-					if (this.state.theme !== 'auto') {
-						document.documentElement.classList.add(this.state.theme);
-					}
+				applyTheme(theme) {
+					this.state.theme = theme || this.state.theme;
+					document.documentElement.className = this.state.theme === 'auto' ? '' : this.state.theme;
 				}
 
 				handleAllowTiesChange(checked) {
 					this.state.allowTies = checked;
 					if (!this.elements.battleSection.classList.contains('hidden')) {
 						this.elements.tieButtons.classList.toggle('hidden', !checked);
-						this.updateKeyboardTipContent();
+						this.updateKeyboardTip();
 					}
 				}
 
@@ -533,15 +493,11 @@
 					this.state.language = language || this.elements.langSelect.value;
 					this.elements.langSelect.value = this.state.language;
 
-					const textElements = ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton'];
-
-					textElements.forEach(elementName=>{
-						this.elements[elementName].textContent = this.translate(elementName);
+					for (const key of ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton']) {
+						this.elements[key].textContent = this.translate(key);
 					}
-					);
 
-					this.updateKeyboardTipContent();
-					this.updateKeyboardTipToggleText();
+					this.updateKeyboardTip();
 					this.updateProgressDisplay();
 
 					if (!this.elements.results.classList.contains('hidden')) {
@@ -549,61 +505,46 @@
 					}
 				}
 
-				updateKeyboardTipContent() {
-					const tooltipKey = this.state.allowTies ? 'keyboardTipWithTies' : 'keyboardTipNoTies';
-					this.elements.keyboardTip.innerHTML = this.translate(tooltipKey);
-				}
-
-				updateKeyboardTipToggleText() {
+				updateKeyboardTip() {
 					const isHidden = this.elements.keyboardTip.classList.contains('hidden');
-					const toggleKey = isHidden ? 'keyboardTipToggle' : 'keyboardTipHide';
-					this.elements.keyboardTipToggle.textContent = this.translate(toggleKey);
+					this.elements.keyboardTipToggle.textContent = this.translate(isHidden ? 'keyboardTipToggle' : 'keyboardTipHide');
+					this.elements.keyboardTip.innerHTML = this.translate(this.state.allowTies ? 'keyboardTipWithTies' : 'keyboardTipNoTies');
 				}
 
-				parseInputItems() {
-					const rawItems = this.elements.itemInput.value.split('\n').map(line=>line.trim()).filter(Boolean);
+				resetBattleState() {
+					const itemCount = this.state.items.length;
+					Object.assign(this.state, {
+						scores: Array(itemCount).fill(1000),
+						progress: 0,
+						history: []
+					});
+					this.elements.undoButton.disabled = true;
 
-					const uniqueItems = [...new Set(rawItems)];
-					const duplicateCount = rawItems.length - uniqueItems.length;
+					const isQuickRank = this.elements.quickRank.checked;
+					this.state.pairProvider = isQuickRank ? new QuickPairProvider(itemCount) : new FullPairProvider(itemCount);
+					this.state.totalPairs = isQuickRank ? 0 : this.state.pairProvider.getTotalPairs();
+				}
 
+				startRanking() {
+					const rawItems = this.elements.itemInput.value.split('\n').map(line => line.trim()).filter(Boolean);
+					const items = [...new Set(rawItems)];
+					const duplicateCount = rawItems.length - items.length;
 					if (duplicateCount > 0) {
 						alert(this.translate('duplicateAlert', {
 							count: duplicateCount
 						}));
 					}
-
-					return uniqueItems;
-				}
-
-				startRanking() {
-					const items = this.parseInputItems();
-
 					if (items.length < 2) {
 						return alert(this.translate('alert'));
 					}
-
 					this.state.items = items;
 					this.state.allowTies = this.elements.allowTies.checked;
 					this.resetBattleState();
 					this.elements.tieButtons.classList.toggle('hidden', !this.state.allowTies);
 					this.toggleKeyboardTip(true);
-					this.updateKeyboardTipContent();
+					this.updateKeyboardTip();
 					this.showSection('battleSection');
 					this.showNextBattle();
-				}
-
-				resetBattleState() {
-					const itemCount = this.state.items.length;
-
-					this.state.scores = Array(itemCount).fill(1000);
-					this.state.progress = 0;
-					this.state.history = [];
-					this.elements.undoButton.disabled = true;
-
-					const isQuickRank = this.elements.quickRank.checked;
-					this.state.pairProvider = isQuickRank ? new QuickPairProvider(itemCount) : new FullPairProvider(itemCount);
-
-					this.state.totalPairs = isQuickRank ? 0 : this.state.pairProvider.getTotalPairs();
 				}
 
 				calculateNewScores(winner) {
@@ -635,14 +576,9 @@
 					this.state.progress++;
 					this.elements.undoButton.disabled = false;
 					this.updateProgressDisplay();
-					this.animateChoice(winner);
-				}
 
-				animateChoice(winner) {
 					this.clearButtonSelections();
-
 					const targetButton = winner === 'tie' ? this.elements.tieButton : this.elements[`${winner}Item`];
-
 					targetButton.classList.add('selected');
 
 					setTimeout(()=>{
@@ -654,17 +590,15 @@
 
 				showNextBattle() {
 					this.clearButtonSelections();
-
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
 					const isQuickRank = this.elements.quickRank.checked;
-					const isComplete = !nextPair || (!isQuickRank && this.state.progress >= this.state.totalPairs);
 
-					if (isComplete)
+					if (!nextPair || (!isQuickRank && this.state.progress >= this.state.totalPairs)) {
 						return this.displayResults();
+					}
 
 					this.state.currentPair = nextPair;
 					let[first,second] = nextPair;
-
 					this.state.isSwapped = Math.random() < 0.5;
 					if (this.state.isSwapped) {
 						[first,second] = [second, first];
@@ -676,58 +610,38 @@
 				}
 
 				updateProgressDisplay() {
-					const isQuickRank = this.elements.quickRank.checked;
 					const progressLabel = this.translate('progress');
-					const text = isQuickRank ? `${progressLabel}: ${this.state.progress}` : `${progressLabel}: ${this.state.progress}/${this.state.totalPairs}`;
-
-					this.elements.progress.textContent = text;
+					this.elements.progress.textContent = this.elements.quickRank.checked ? `${progressLabel}: ${this.state.progress}` : `${progressLabel}: ${this.state.progress}/${this.state.totalPairs}`;
 				}
 
 				clearButtonSelections() {
-					['leftItem', 'rightItem', 'tieButton'].forEach(name=>{
-						this.elements[name].classList.remove('selected');
-					}
-					);
+					['leftItem', 'rightItem', 'tieButton'].forEach(id=>this.elements[id].classList.remove('selected'));
 				}
 
 				displayResults() {
 					const sortedResults = this.state.items.map((item,index)=>({
 						item,
 						score: this.state.scores[index]
-					})).sort((first,second)=>second.score - first.score);
+					})).sort((a,b)=>b.score - a.score);
 
-					const tableRows = sortedResults.map(({item, score},index)=>`
-							<tr>
-								<td>${index + 1}</td>
-								<td>${item}</td>
-								<td>${Math.round(score)}</td>
-							</tr>
-						`).join('');
+					const tableRows = sortedResults.map(({item, score},index)=>`<tr><td>${index + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('');
+					const tableHeaders = [
+						{ key: 'rank', width: '20%' },
+						{ key: 'item', width: '60%' },
+						{ key: 'score', width: '20%' }
+					].map(({ key, width })=>`<th style="width:${width}">${this.translate(key)}</th>`).join('');
 
 					this.elements.results.innerHTML = `
 						<h2>${this.translate('results')}</h2>
 						<table>
-							<thead>
-								<tr>
-									<th style="width:20%">${this.translate('rank')}</th>
-									<th style="width:60%">${this.translate('item')}</th>
-									<th style="width:20%">${this.translate('score')}</th>
-								</tr>
-							</thead>
+							<thead><tr>${tableHeaders}</tr></thead>
 							<tbody>${tableRows}</tbody>
-						</table>
-					`;
-
+						</table>`;
 					this.showSection('results');
 				}
 
 				showSection(sectionName) {
-					const sections = ['inputSection', 'battleSection', 'results'];
-					sections.forEach(section=>{
-						this.elements[section].classList.toggle('hidden', section !== sectionName);
-					}
-					);
-
+					['inputSection', 'battleSection', 'results'].forEach(id=>this.elements[id].classList.toggle('hidden', id !== sectionName));
 					this.elements.restartButtons.classList.toggle('hidden', sectionName !== 'results');
 					this.state.keyboardEnabled = sectionName === 'battleSection';
 				}
@@ -737,8 +651,11 @@
 						return;
 
 					const lastState = this.state.history.pop();
-					this.state.scores = lastState.scores;
-					this.state.progress = lastState.progressBefore;
+					Object.assign(this.state, {
+						scores: lastState.scores,
+						progress: lastState.progressBefore
+					});
+
 					this.state.pairProvider.unmarkAsCompared(lastState.pair);
 					this.showNextBattle();
 					this.elements.undoButton.disabled = !this.state.history.length;
@@ -755,39 +672,39 @@
 						language: this.state.language,
 						theme: this.state.theme
 					});
-
-					this.elements.langSelect.value = this.state.language;
 					this.elements.itemInput.value = '';
-					this.elements.allowTies.checked = false;
-					this.elements.quickRank.checked = false;
+					['allowTies', 'quickRank'].forEach(id=>this.elements[id].checked = false);
 					this.showSection('inputSection');
 					this.updateLanguage();
 				}
 
 				toggleKeyboardTip(forceHide) {
-					const isHidden = this.elements.keyboardTip.classList.toggle('hidden', forceHide);
-					this.updateKeyboardTipToggleText();
+					this.elements.keyboardTip.classList.toggle('hidden', forceHide);
+					this.updateKeyboardTip();
 				}
 
 				handleKeyboardInput(event) {
-					const isInputFocused = ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
-
-					if (!this.state.keyboardEnabled || isInputFocused)
+					if (!this.state.keyboardEnabled || ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement.tagName))
 						return;
 
-					const keyActions = {
-						ArrowLeft: ()=>this.elements.leftItem.click(),
-						ArrowRight: ()=>this.elements.rightItem.click(),
-						ArrowUp: ()=>this.state.allowTies && this.elements.tieButton.click(),
-						ArrowDown: ()=>this.state.allowTies && this.elements.tieButton.click(),
-						z: ()=>(event.ctrlKey || event.metaKey) && this.elements.undoButton.click()
+					const keyMap = {
+						ArrowLeft: 'leftItem',
+						ArrowRight: 'rightItem',
+						ArrowUp: 'tieButton',
+						ArrowDown: 'tieButton',
+						z: 'undoButton'
 					};
 
-					const action = keyActions[event.key];
-					if (action) {
-						event.preventDefault();
-						action();
-					}
+					const elementId = keyMap[event.key];
+					if (!elementId)
+						return;
+					if (event.key === 'z' && !(event.ctrlKey || event.metaKey))
+						return;
+					if (['ArrowUp', 'ArrowDown'].includes(event.key) && !this.state.allowTies)
+						return;
+
+					event.preventDefault();
+					this.elements[elementId].click();
 				}
 			}
 
