@@ -60,10 +60,6 @@
 				position: relative
 			}
 
-			.container:has(#inputSection:not(.hidden)) {
-				padding-top: 3rem
-			}
-
 			.hidden {
 				display: none!important
 			}
@@ -198,7 +194,7 @@
 				display: flex;
 				align-items: center;
 				gap: 10px;
-				margin: 1rem 0
+				margin: 0.75rem 0
 			}
 
 			.checkbox input {
@@ -241,22 +237,9 @@
 				color: #fff!important
 			}
 
-			#notification {
-				background: var(--primary);
-				color: #fff;
-				padding: 1rem;
-				border-radius: 4px;
-				margin-bottom: 1rem;
-				text-align: center
-			}
-
 			@media(max-width: 768px) {
 				.container {
 					padding:1.5rem
-				}
-
-				.container:has(#inputSection:not(.hidden)) {
-					padding-top: calc(1.5rem + 1rem)
 				}
 
 				.selectors {
@@ -282,7 +265,6 @@
 	</head>
 	<body>
 		<div class="container">
-			<div id="notification" class="hidden"></div>
 			<div id="inputSection">
 				<h1 id="title"></h1>
 				<div class="selectors">
@@ -330,7 +312,7 @@
 			</div>
 		</div>
 		<script>
-			const getElement = elementId=>document.getElementById(elementId);
+			const getElement = name=>document.getElementById(name);
 
 			const translations = {
 				en: {
@@ -406,9 +388,9 @@
 					super(itemCount);
 					this.pairs = [];
 
-					for (let firstIndex = 0; firstIndex < itemCount - 1; firstIndex++) {
-						for (let secondIndex = firstIndex + 1; secondIndex < itemCount; secondIndex++) {
-							this.pairs.push([firstIndex, secondIndex]);
+					for (let first = 0; first < itemCount - 1; first++) {
+						for (let second = first + 1; second < itemCount; second++) {
+							this.pairs.push([first, second]);
 						}
 					}
 
@@ -433,12 +415,12 @@
 				getNextPair(state) {
 					const sortedIndices = Array.from({
 						length: this.itemCount
-					}, (_,index)=>index).sort((firstItem,secondItem)=>state.scores[secondItem] - state.scores[firstItem]);
+					}, (_,index)=>index).sort((first,second)=>state.scores[second] - state.scores[first]);
 
 					for (let position = 0; position < this.itemCount - 1; position++) {
-						const firstIndex = sortedIndices[position];
-						const secondIndex = sortedIndices[position + 1];
-						const pair = [Math.min(firstIndex, secondIndex), Math.max(firstIndex, secondIndex)];
+						const first = sortedIndices[position];
+						const second = sortedIndices[position + 1];
+						const pair = [Math.min(first, second), Math.max(first, second)];
 						const pairKey = `${pair[0]}-${pair[1]}`;
 
 						if (!this.comparedPairs.has(pairKey))
@@ -463,7 +445,7 @@
 					this.initializeElements();
 					this.bindEventListeners();
 					this.applyTheme();
-					this.updateLanguage(this.state.lang);
+					this.updateLanguage(this.state.language);
 				}
 
 				createInitialState(preserve={}) {
@@ -478,13 +460,13 @@
 						history: [],
 						keyboardEnabled: false,
 						isChoosing: false,
-						lang: preserve.lang || (navigator.language?.startsWith('id') ? 'id' : 'en'),
+						language: preserve.language || (navigator.language?.startsWith('id') ? 'id' : 'en'),
 						theme: preserve.theme || 'auto'
 					};
 				}
 
-				translate(key, replacements={}) {
-					let text = translations[this.state.lang][key] || key;
+				translate(textKey, replacements={}) {
+					let text = translations[this.state.language][textKey] || textKey;
 					Object.entries(replacements).forEach(([placeholder,value])=>{
 						text = text.replace(`{${placeholder}}`, value);
 					}
@@ -497,25 +479,34 @@
 				}
 
 				bindEventListeners() {
-					const listeners = {
-						langSelect: {event: 'onchange', handler: ()=>this.updateLanguage()},
-						themeSelect: {event: 'onchange', handler: event=>this.handleThemeChange(event.target.value)},
-						allowTies: {event: 'onchange', handler: event=>this.handleAllowTiesChange(event.target.checked)},
-						startButton: {event: 'onclick', handler: ()=>this.startRanking()},
-						leftItem: {event: 'onclick', handler: ()=>this.handleChoice('left')},
-						rightItem: {event: 'onclick', handler: ()=>this.handleChoice('right')},
-						tieButton: {event: 'onclick', handler: ()=>this.handleChoice('tie')},
-						restartBattleButton: {event: 'onclick', handler: ()=>this.restartBattle()},
-						restartNewButton: {event: 'onclick', handler: ()=>this.restartWithNewItems()},
-						undoButton: {event: 'onclick', handler: ()=>this.undoLastChoice()},
-						keyboardTipToggle: {event: 'onclick', handler: ()=>this.toggleKeyboardTip()},
-						document: {event: 'onkeydown', handler: event=>this.handleKeyboardInput(event)}
+					const changeListeners = {
+						langSelect: ()=>this.updateLanguage(),
+						themeSelect: event=>this.handleThemeChange(event.target.value),
+						allowTies: event=>this.handleAllowTiesChange(event.target.checked)
 					};
 
-					Object.entries(listeners).forEach(([elementId, {event, handler}])=>{
-						const element = elementId === 'document' ? document : this.elements[elementId];
-						element[event] = handler;
-					});
+					const clickListeners = {
+						startButton: ()=>this.startRanking(),
+						leftItem: ()=>this.handleChoice('left'),
+						rightItem: ()=>this.handleChoice('right'),
+						tieButton: ()=>this.handleChoice('tie'),
+						restartBattleButton: ()=>this.restartBattle(),
+						restartNewButton: ()=>this.restartWithNewItems(),
+						undoButton: ()=>this.undoLastChoice(),
+						keyboardTipToggle: ()=>this.toggleKeyboardTip()
+					};
+
+					Object.entries(changeListeners).forEach(([name,handler])=>{
+						this.elements[name].onchange = handler;
+					}
+					);
+
+					Object.entries(clickListeners).forEach(([name,handler])=>{
+						this.elements[name].onclick = handler;
+					}
+					);
+
+					document.onkeydown = event=>this.handleKeyboardInput(event);
 				}
 
 				handleThemeChange(theme) {
@@ -538,14 +529,14 @@
 					}
 				}
 
-				updateLanguage(lang) {
-					this.state.lang = lang || this.elements.langSelect.value;
-					this.elements.langSelect.value = this.state.lang;
+				updateLanguage(language) {
+					this.state.language = language || this.elements.langSelect.value;
+					this.elements.langSelect.value = this.state.language;
 
 					const textElements = ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton'];
 
-					textElements.forEach(key=>{
-						this.elements[key].textContent = this.translate(key);
+					textElements.forEach(elementName=>{
+						this.elements[elementName].textContent = this.translate(elementName);
 					}
 					);
 
@@ -569,15 +560,6 @@
 					this.elements.keyboardTipToggle.textContent = this.translate(toggleKey);
 				}
 
-				showNotification(message, duration=3000) {
-					this.elements.notification.textContent = message;
-					this.elements.notification.classList.remove('hidden');
-					setTimeout(()=>{
-						this.elements.notification.classList.add('hidden');
-					}
-					, duration);
-				}
-
 				parseInputItems() {
 					const rawItems = this.elements.itemInput.value.split('\n').map(line=>line.trim()).filter(Boolean);
 
@@ -585,7 +567,7 @@
 					const duplicateCount = rawItems.length - uniqueItems.length;
 
 					if (duplicateCount > 0) {
-						this.showNotification(this.translate('duplicateAlert', {
+						alert(this.translate('duplicateAlert', {
 							count: duplicateCount
 						}));
 					}
@@ -597,7 +579,7 @@
 					const items = this.parseInputItems();
 
 					if (items.length < 2) {
-						return this.showNotification(this.translate('alert'));
+						return alert(this.translate('alert'));
 					}
 
 					this.state.items = items;
@@ -628,13 +610,13 @@
 					const {currentPair, isSwapped, scores} = this.state;
 					const isFirstItemWinner = (winner === 'left' && !isSwapped) || (winner === 'right' && isSwapped);
 					const result = winner === 'tie' ? 0.5 : (isFirstItemWinner ? 1 : 0);
-					const [firstIndex,secondIndex] = currentPair;
-					const [firstScore,secondScore] = [scores[firstIndex], scores[secondIndex]];
+					const [first,second] = currentPair;
+					const [firstScore,secondScore] = [scores[first], scores[second]];
 					const expectedFirstScore = 1 / (1 + 10 ** ((secondScore - firstScore) / 400));
 					const adjustmentFactor = 32;
 
-					scores[firstIndex] += adjustmentFactor * (result - expectedFirstScore);
-					scores[secondIndex] += adjustmentFactor * (expectedFirstScore - result);
+					scores[first] += adjustmentFactor * (result - expectedFirstScore);
+					scores[second] += adjustmentFactor * (expectedFirstScore - result);
 				}
 
 				handleChoice(winner) {
@@ -681,15 +663,15 @@
 						return this.displayResults();
 
 					this.state.currentPair = nextPair;
-					let[firstIndex,secondIndex] = nextPair;
+					let[first,second] = nextPair;
 
 					this.state.isSwapped = Math.random() < 0.5;
 					if (this.state.isSwapped) {
-						[firstIndex,secondIndex] = [secondIndex, firstIndex];
+						[first,second] = [second, first];
 					}
 
-					this.elements.leftItem.textContent = this.state.items[firstIndex];
-					this.elements.rightItem.textContent = this.state.items[secondIndex];
+					this.elements.leftItem.textContent = this.state.items[first];
+					this.elements.rightItem.textContent = this.state.items[second];
 					this.updateProgressDisplay();
 				}
 
@@ -702,8 +684,8 @@
 				}
 
 				clearButtonSelections() {
-					['leftItem', 'rightItem', 'tieButton'].forEach(elementId=>{
-						this.elements[elementId].classList.remove('selected');
+					['leftItem', 'rightItem', 'tieButton'].forEach(name=>{
+						this.elements[name].classList.remove('selected');
 					}
 					);
 				}
@@ -712,7 +694,7 @@
 					const sortedResults = this.state.items.map((item,index)=>({
 						item,
 						score: this.state.scores[index]
-					})).sort((firstItem,secondItem)=>secondItem.score - firstItem.score);
+					})).sort((first,second)=>second.score - first.score);
 
 					const tableRows = sortedResults.map(({item, score},index)=>`
 							<tr>
@@ -770,11 +752,11 @@
 
 				restartWithNewItems() {
 					this.state = this.createInitialState({
-						lang: this.state.lang,
+						language: this.state.language,
 						theme: this.state.theme
 					});
 
-					this.elements.langSelect.value = this.state.lang;
+					this.elements.langSelect.value = this.state.language;
 					this.elements.itemInput.value = '';
 					this.elements.allowTies.checked = false;
 					this.elements.quickRank.checked = false;
