@@ -12,16 +12,16 @@
 				--container-background: #fff;
 				--text-color: #414754;
 				--border: #c1c6d7;
-				--button-hover: #d7d9e5
+				--button-hover: #d7d9e5;
 			}
 
-			@media(prefers-color-scheme: dark) {
+			@media (prefers-color-scheme: dark) {
 				:root:not(.light) {
 					--page-background: #10131b;
 					--container-background: #181c23;
 					--text-color: #c1c6d7;
 					--border: #414754;
-					--button-hover: #10131b
+					--button-hover: #10131b;
 				}
 			}
 
@@ -30,13 +30,13 @@
 				--container-background: #181c23;
 				--text-color: #c1c6d7;
 				--border: #414754;
-				--button-hover: #10131b
+				--button-hover: #10131b;
 			}
 
 			* {
 				box-sizing: border-box;
 				margin: 0;
-				padding: 0
+				padding: 0;
 			}
 
 			body {
@@ -47,110 +47,110 @@
 				justify-content: center;
 				min-height: 100vh;
 				padding: 1rem;
-				font-family: sans-serif
+				font-family: sans-serif;
 			}
 
 			.container {
 				background: var(--container-background);
 				border-radius: 8px;
-				box-shadow: 0 2px 10px rgba(0,0,0,.1);
+				box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 				max-width: 720px;
 				padding: 2rem;
 				width: 100%;
-				position: relative
+				position: relative;
 			}
 
 			.hidden {
-				display: none!important
+				display: none !important;
 			}
 
-			h1,h2 {
-				margin: .5rem 0
+			h1, h2 {
+				margin: 0.5rem 0;
 			}
 
 			label {
 				display: block;
 				font-weight: 700;
-				margin-bottom: .5rem
+				margin-bottom: 0.5rem;
 			}
 
-			input,select,textarea,button {
+			input, select, textarea, button {
 				background: var(--container-background);
 				border: 1px solid var(--border);
 				border-radius: 4px;
 				color: var(--text-color);
 				font-size: 1rem;
-				padding: .5rem;
-				width: 100%
+				padding: 0.5rem;
+				width: 100%;
 			}
 
 			textarea {
 				min-height: 80px;
-				resize: vertical
+				resize: vertical;
 			}
 
 			button {
 				cursor: pointer;
-				transition: background .2s
+				transition: background 0.2s;
 			}
 
 			.button-primary {
 				background: var(--primary);
 				border: none;
-				color: #fff
+				color: #fff;
 			}
 
 			.button-primary:hover {
-				background: var(--primary-hover)
+				background: var(--primary-hover);
 			}
 
 			.button-secondary:hover {
-				background: var(--button-hover)
+				background: var(--button-hover);
 			}
 
-			#battle,#restartButtons,#tieButtons {
+			#battle, #restartButtons, #tieButtons {
 				display: flex;
 				gap: 1rem;
-				margin-top: 1rem
+				margin-top: 1rem;
 			}
 
-			#battle button,#tieButtons button,#restartButtons button {
-				flex: 1
+			#battle button, #tieButtons button, #restartButtons button {
+				flex: 1;
 			}
 
-			#battle button,#tieButtons button {
+			#battle button, #tieButtons button {
 				font-size: 1.2rem;
-				min-height: 100px
+				min-height: 100px;
 			}
 
 			#progress {
 				font-size: 1.1rem;
 				margin-top: 1rem;
-				text-align: center
+				text-align: center;
 			}
 
 			#keyboardTip {
 				background: var(--page-background);
 				border: 1px solid var(--border);
 				border-radius: 4px;
-				font-size: .85rem;
+				font-size: 0.85rem;
 				line-height: 1.5;
 				margin-top: 15px;
-				opacity: .9;
+				opacity: 0.9;
 				padding: 8px;
-				text-align: center
+				text-align: center;
 			}
 
 			#keyboardTip kbd {
 				background: var(--container-background);
 				border: 1px solid var(--border);
 				border-radius: 3px;
-				box-shadow: 0 1px 1px rgba(0,0,0,.2);
+				box-shadow: 0 1px 1px rgba(0,0,0,0.2);
 				display: inline-block;
 				font-family: monospace;
-				font-size: .9em;
+				font-size: 0.9em;
 				margin: 0 3px;
-				padding: 2px 5px
+				padding: 2px 5px;
 			}
 
 			#keyboardTipToggle {
@@ -159,10 +159,10 @@
 				color: var(--primary);
 				cursor: pointer;
 				display: block;
-				font-size: .85rem;
+				font-size: 0.85rem;
 				margin: 10px auto 0;
 				text-decoration: underline;
-				width: auto
+				width: auto;
 			}
 
 			.selectors {
@@ -170,83 +170,83 @@
 				right: 2rem;
 				top: 1rem;
 				display: flex;
-				gap: 8px
+				gap: 8px;
 			}
 
 			.selectors select {
-				font-size: .9rem;
+				font-size: 0.9rem;
 				padding: 5px;
-				width: auto
+				width: auto;
 			}
 
 			.checkbox {
 				display: flex;
 				align-items: center;
 				gap: 10px;
-				margin: 0.75rem 0
+				margin: 0.75rem 0;
 			}
 
 			.checkbox input {
-				width: auto
+				width: auto;
 			}
 
 			.checkbox label {
-				margin: 0
+				margin: 0;
 			}
 
 			#results table {
 				border-collapse: collapse;
 				margin-top: 1rem;
-				width: 100%
+				width: 100%;
 			}
 
-			#results th,#results td {
+			#results th, #results td {
 				border: 1px solid var(--border);
-				padding: .5rem;
-				text-align: left
+				padding: 0.5rem;
+				text-align: left;
 			}
 
 			#results th {
 				background: var(--primary);
-				color: #fff
+				color: #fff;
 			}
 
 			#undoButton {
-				width: auto
+				width: auto;
 			}
 
 			#undoButton:disabled {
 				background: var(--button-hover);
-				cursor: not-allowed
+				cursor: not-allowed;
 			}
 
 			.selected {
-				background: var(--primary)!important;
-				color: #fff!important
+				background: var(--primary) !important;
+				color: #fff !important;
 			}
 
-			@media(max-width: 768px) {
+			@media (max-width: 768px) {
 				.container {
-					padding:1.5rem
+					padding: 1.5rem;
 				}
 
 				.selectors {
 					gap: 4px;
-					right: .5rem;
-					top: .5rem
+					right: 0.5rem;
+					top: 0.5rem;
 				}
 
 				.selectors select {
-					font-size: .8rem;
-					padding: 4px
+					font-size: 0.8rem;
+					padding: 4px;
 				}
 
-				#battle,#tieButtons,#restartButtons {
-					flex-direction: column
+				#battle, #tieButtons, #restartButtons {
+					flex-direction: column;
 				}
 
-				#battle button,#tieButtons button {
-					width: 100%
+				#battle button, #tieButtons button {
+					width: 100%;
 				}
 			}
 		</style>
@@ -300,84 +300,85 @@
 			</div>
 		</div>
 		<script>
-			const getElement = name=>document.getElementById(name);
-
 			const translations = {
 				en: {
-					title: "PreferenceRank",
-					autoTheme: "Auto Theme",
-					lightTheme: "Light",
-					darkTheme: "Dark",
-					itemInputLabel: "Enter items, one per line:",
-					allowTiesLabel: "Allow Ties",
-					quickRankLabel: "Use Quick Rank (fewer comparisons)",
-					alert: "Please enter at least two items.",
-					duplicateAlert: "{count} duplicate item(s) were found and have been removed.",
-					startButton: "Start Ranking",
+					title: 'PreferenceRank',
+					autoTheme: 'Auto Theme',
+					lightTheme: 'Light',
+					darkTheme: 'Dark',
+					itemInputLabel: 'Enter items, one per line:',
+					allowTiesLabel: 'Allow Ties',
+					quickRankLabel: 'Use Quick Rank (fewer comparisons)',
+					alert: 'Please enter at least two items.',
+					duplicateAlert: '{count} duplicate item(s) were found and have been removed.',
+					startButton: 'Start Ranking',
 					tieButton: "It's a Tie",
-					undoButton: "Undo",
-					progress: "Progress",
-					keyboardTipToggle: "Show keyboard shortcuts",
-					keyboardTipHide: "Hide keyboard shortcuts",
-					keyboardTipWithTies: "Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> or <kbd>↓</kbd> It's a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice",
+					undoButton: 'Undo',
+					progress: 'Progress',
+					keyboardTipToggle: 'Show keyboard shortcuts',
+					keyboardTipHide: 'Hide keyboard shortcuts',
+					keyboardTipWithTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> or <kbd>↓</kbd> It\'s a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
 					keyboardTipNoTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
-					results: "Results",
-					rank: "Rank",
-					item: "Item",
-					score: "Score",
-					restartBattleButton: "Restart Battle",
-					restartNewButton: "Start with New Items"
+					results: 'Results',
+					rank: 'Rank',
+					item: 'Item',
+					score: 'Score',
+					restartBattleButton: 'Restart Battle',
+					restartNewButton: 'Start with New Items'
 				},
 				id: {
-					title: "PreferenceRank",
-					autoTheme: "Tema Otomatis",
-					lightTheme: "Terang",
-					darkTheme: "Gelap",
-					itemInputLabel: "Masukkan pilihan, satu per baris:",
-					allowTiesLabel: "Izinkan Seri",
-					quickRankLabel: "Gunakan Peringkat Cepat (lebih sedikit perbandingan)",
-					alert: "Harap masukkan setidaknya dua pilihan.",
-					duplicateAlert: "{count} item duplikat ditemukan dan telah dihapus.",
-					startButton: "Mulai Peringkat",
-					tieButton: "Seri",
-					undoButton: "Urungkan",
-					progress: "Kemajuan",
-					keyboardTipToggle: "Tampilkan pintasan papan ketik",
-					keyboardTipHide: "Sembunyikan pintasan papan ketik",
-					keyboardTipWithTies: "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> atau <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
-					keyboardTipNoTies: "Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir",
-					results: "Hasil",
-					rank: "Peringkat",
-					item: "Nama",
-					score: "Skor",
-					restartBattleButton: "Mulai Ulang Pertarungan",
-					restartNewButton: "Mulai dengan Pilihan Baru"
+					title: 'PreferenceRank',
+					autoTheme: 'Tema Otomatis',
+					lightTheme: 'Terang',
+					darkTheme: 'Gelap',
+					itemInputLabel: 'Masukkan pilihan, satu per baris:',
+					allowTiesLabel: 'Izinkan Seri',
+					quickRankLabel: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
+					alert: 'Harap masukkan setidaknya dua pilihan.',
+					duplicateAlert: '{count} item duplikat ditemukan dan telah dihapus.',
+					startButton: 'Mulai Peringkat',
+					tieButton: 'Seri',
+					undoButton: 'Urungkan',
+					progress: 'Kemajuan',
+					keyboardTipToggle: 'Tampilkan pintasan papan ketik',
+					keyboardTipHide: 'Sembunyikan pintasan papan ketik',
+					keyboardTipWithTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> atau <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
+					keyboardTipNoTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
+					results: 'Hasil',
+					rank: 'Peringkat',
+					item: 'Nama',
+					score: 'Skor',
+					restartBattleButton: 'Mulai Ulang Pertarungan',
+					restartNewButton: 'Mulai dengan Pilihan Baru'
 				}
 			};
 
 			class PairProvider {
 				constructor(itemCount) {
 					this.itemCount = itemCount;
-					this.comparedPairs = new Set();
+					this.comparedPairKeys = new Set();
 				}
-				markAsCompared(pair) {
-					this.comparedPairs.add(`${Math.min(...pair)}-${Math.max(...pair)}`);
+				toKey([a,b]) {
+					return `${Math.min(a, b)}-${Math.max(a, b)}`;
 				}
-				unmarkAsCompared(pair) {
-					this.comparedPairs.delete(`${Math.min(...pair)}-${Math.max(...pair)}`);
+				markCompared(pair) {
+					this.comparedPairKeys.add(this.toKey(pair));
 				}
-				isCompared(pair) {
-					return this.comparedPairs.has(`${Math.min(...pair)}-${Math.max(...pair)}`);
+				unmarkCompared(pair) {
+					this.comparedPairKeys.delete(this.toKey(pair));
+				}
+				hasBeenCompared(pair) {
+					return this.comparedPairKeys.has(this.toKey(pair));
 				}
 			}
 
 			class FullPairProvider extends PairProvider {
 				constructor(itemCount) {
 					super(itemCount);
-					this.pairs = this.generatePairs();
-					this.shuffleArray(this.pairs);
+					this.pairs = this.generateAllPairs();
+					this.shuffle(this.pairs);
 				}
-				generatePairs() {
+				generateAllPairs() {
 					const pairs = [];
 					for (let i = 0; i < this.itemCount - 1; i++) {
 						for (let j = i + 1; j < this.itemCount; j++) {
@@ -386,7 +387,7 @@
 					}
 					return pairs;
 				}
-				shuffleArray(array) {
+				shuffle(array) {
 					for (let i = array.length - 1; i > 0; i--) {
 						const j = Math.floor(Math.random() * (i + 1));
 						[array[i],array[j]] = [array[j], array[i]];
@@ -407,7 +408,7 @@
 					}, (_,i)=>i).sort((a,b)=>state.scores[b] - state.scores[a]);
 					for (let i = 0; i < this.itemCount - 1; i++) {
 						const pair = [sortedIndices[i], sortedIndices[i + 1]];
-						if (!this.isCompared(pair))
+						if (!this.hasBeenCompared(pair))
 							return pair;
 					}
 					return null;
@@ -436,73 +437,73 @@
 						keyboardEnabled: false,
 						isChoosing: false,
 						language: preserve.language || (navigator.language?.startsWith('id') ? 'id' : 'en'),
-						theme: preserve.theme || 'auto'
+						theme: preserve.theme || 'auto',
+						pairProvider: null,
+						pairSwapStates: new Map()
 					};
 				}
 
 				translate(key, replacements={}) {
 					let text = translations[this.state.language][key] || key;
-					for (const[placeholder,value] of Object.entries(replacements)) {
+					for (const [placeholder,value] of Object.entries(replacements)) {
 						text = text.replace(`{${placeholder}}`, value);
 					}
 					return text;
 				}
 
 				bindEventListeners() {
-					const listeners = {
-						onclick: {
-							startButton: ()=>this.startRanking(),
-							leftItem: ()=>this.handleChoice('left'),
-							rightItem: ()=>this.handleChoice('right'),
-							tieButton: ()=>this.handleChoice('tie'),
-							restartBattleButton: ()=>this.restartBattle(),
-							restartNewButton: ()=>this.restartWithNewItems(),
-							undoButton: ()=>this.undoLastChoice(),
-							keyboardTipToggle: ()=>this.toggleKeyboardTip()
-						},
-						onchange: {
-							langSelect: ()=>this.updateLanguage(),
-							themeSelect: event=>this.applyTheme(event.target.value),
-							allowTies: event=>this.handleAllowTiesChange(event.target.checked)
-						}
-					};
+					const {startButton, leftItem, rightItem, tieButton, restartBattleButton, restartNewButton, undoButton, keyboardTipToggle, langSelect, themeSelect, allowTies} = this.elements;
 
-					for (const[event, handlers] of Object.entries(listeners)) {
-						for (const[elementId, handler] of Object.entries(handlers)) {
-							this.elements[elementId][event] = handler;
-						}
-					}
+					startButton.addEventListener('click', ()=>this.startRanking());
+					leftItem.addEventListener('click', ()=>this.handleChoice('left'));
+					rightItem.addEventListener('click', ()=>this.handleChoice('right'));
+					tieButton.addEventListener('click', ()=>this.handleChoice('tie'));
+					restartBattleButton.addEventListener('click', ()=>this.restartBattle());
+					restartNewButton.addEventListener('click', ()=>this.restartWithNewItems());
+					undoButton.addEventListener('click', ()=>this.undoLastChoice());
+					keyboardTipToggle.addEventListener('click', ()=>this.toggleKeyboardTip());
 
-					document.onkeydown = event=>this.handleKeyboardInput(event);
+					langSelect.addEventListener('change', ()=>this.updateLanguage(langSelect.value));
+					themeSelect.addEventListener('change', event=>this.setTheme(event.target.value));
+					allowTies.addEventListener('change', event=>this.handleAllowTiesChange(event.target.checked));
+
+					document.addEventListener('keydown', event=>this.handleKeyboardInput(event));
 				}
 
-				applyTheme(theme) {
+				setTheme(theme) {
 					this.state.theme = theme || this.state.theme;
-					document.documentElement.className = this.state.theme === 'auto' ? '' : this.state.theme;
+					this.applyTheme();
+				}
+
+				applyTheme() {
+					const html = document.documentElement;
+					html.classList.remove('light', 'dark');
+					this.state.theme !== 'auto' && html.classList.add(this.state.theme);
+					this.elements.themeSelect.value = this.state.theme;
 				}
 
 				handleAllowTiesChange(checked) {
 					this.state.allowTies = checked;
-					if (!this.elements.battleSection.classList.contains('hidden')) {
-						this.elements.tieButtons.classList.toggle('hidden', !checked);
-						this.updateKeyboardTip();
-					}
+					const battleHidden = this.elements.battleSection.classList.contains('hidden');
+					!battleHidden && this.elements.tieButtons.classList.toggle('hidden', !checked);
+					this.updateKeyboardTip();
 				}
 
 				updateLanguage(language) {
 					this.state.language = language || this.elements.langSelect.value;
 					this.elements.langSelect.value = this.state.language;
 
-					for (const key of ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton']) {
+					const textElementKeys = ['title', 'autoTheme', 'lightTheme', 'darkTheme', 'itemInputLabel', 'allowTiesLabel', 'quickRankLabel', 'startButton', 'tieButton', 'undoButton', 'restartBattleButton', 'restartNewButton'];
+
+					textElementKeys.forEach(key=>{
 						this.elements[key].textContent = this.translate(key);
 					}
+					);
 
 					this.updateKeyboardTip();
 					this.updateProgressDisplay();
-
-					if (!this.elements.results.classList.contains('hidden')) {
-						this.displayResults();
-					}
+					const resultsHidden = this.elements.results.classList.contains('hidden');
+					!resultsHidden && this.displayResults();
 				}
 
 				updateKeyboardTip() {
@@ -513,11 +514,10 @@
 
 				resetBattleState() {
 					const itemCount = this.state.items.length;
-					Object.assign(this.state, {
-						scores: Array(itemCount).fill(1000),
-						progress: 0,
-						history: []
-					});
+					this.state.scores = Array(itemCount).fill(1000);
+					this.state.progress = 0;
+					this.state.history = [];
+					this.state.pairSwapStates = new Map();
 					this.elements.undoButton.disabled = true;
 
 					const isQuickRank = this.elements.quickRank.checked;
@@ -526,19 +526,21 @@
 				}
 
 				startRanking() {
-					const rawItems = this.elements.itemInput.value.split('\n').map(line => line.trim()).filter(Boolean);
-					const items = [...new Set(rawItems)];
-					const duplicateCount = rawItems.length - items.length;
-					if (duplicateCount > 0) {
-						alert(this.translate('duplicateAlert', {
-							count: duplicateCount
-						}));
+					const rawItems = this.elements.itemInput.value.split('\n').map(line=>line.trim()).filter(Boolean);
+					const uniqueItems = [...new Set(rawItems)];
+					const duplicateCount = rawItems.length - uniqueItems.length;
+
+					duplicateCount > 0 && alert(this.translate('duplicateAlert', {
+						count: duplicateCount
+					}));
+					if (uniqueItems.length < 2) {
+						alert(this.translate('alert'));
+						return;
 					}
-					if (items.length < 2) {
-						return alert(this.translate('alert'));
-					}
-					this.state.items = items;
+
+					this.state.items = uniqueItems;
 					this.state.allowTies = this.elements.allowTies.checked;
+
 					this.resetBattleState();
 					this.elements.tieButtons.classList.toggle('hidden', !this.state.allowTies);
 					this.toggleKeyboardTip(true);
@@ -550,14 +552,17 @@
 				calculateNewScores(winner) {
 					const {currentPair, isSwapped, scores} = this.state;
 					const isFirstItemWinner = (winner === 'left' && !isSwapped) || (winner === 'right' && isSwapped);
-					const result = winner === 'tie' ? 0.5 : (isFirstItemWinner ? 1 : 0);
-					const [first,second] = currentPair;
-					const [firstScore,secondScore] = [scores[first], scores[second]];
-					const expectedFirstScore = 1 / (1 + 10 ** ((secondScore - firstScore) / 400));
-					const adjustmentFactor = 32;
+					const result = winner === 'tie' ? 0.5 : isFirstItemWinner ? 1 : 0;
 
-					scores[first] += adjustmentFactor * (result - expectedFirstScore);
-					scores[second] += adjustmentFactor * (expectedFirstScore - result);
+					const [firstIndex,secondIndex] = currentPair;
+					const firstScore = scores[firstIndex];
+					const secondScore = scores[secondIndex];
+
+					const expectedFirstScore = 1 / (1 + 10 ** ((secondScore - firstScore) / 400));
+					const adjustment = 32;
+
+					scores[firstIndex] += adjustment * (result - expectedFirstScore);
+					scores[secondIndex] += adjustment * (expectedFirstScore - result);
 				}
 
 				handleChoice(winner) {
@@ -568,10 +573,11 @@
 					this.state.history.push({
 						pair: this.state.currentPair,
 						scores: [...this.state.scores],
-						progressBefore: this.state.progress
+						progressBefore: this.state.progress,
+						isSwapped: this.state.isSwapped
 					});
 
-					this.state.pairProvider.markAsCompared(this.state.currentPair);
+					this.state.pairProvider.markCompared(this.state.currentPair);
 					this.calculateNewScores(winner);
 					this.state.progress++;
 					this.elements.undoButton.disabled = false;
@@ -588,30 +594,41 @@
 					, 300);
 				}
 
+				displayCurrentBattle() {
+					this.clearButtonSelections();
+
+					let[firstIndex,secondIndex] = this.state.currentPair;
+					if (this.state.isSwapped) {
+						[firstIndex,secondIndex] = [secondIndex, firstIndex];
+					}
+
+					this.elements.leftItem.textContent = this.state.items[firstIndex];
+					this.elements.rightItem.textContent = this.state.items[secondIndex];
+					this.updateProgressDisplay();
+				}
+
 				showNextBattle() {
 					this.clearButtonSelections();
 					const nextPair = this.state.pairProvider.getNextPair(this.state);
 					const isQuickRank = this.elements.quickRank.checked;
 
 					if (!nextPair || (!isQuickRank && this.state.progress >= this.state.totalPairs)) {
-						return this.displayResults();
+						this.displayResults();
+						return;
 					}
 
 					this.state.currentPair = nextPair;
-					let[first,second] = nextPair;
-					this.state.isSwapped = Math.random() < 0.5;
-					if (this.state.isSwapped) {
-						[first,second] = [second, first];
-					}
 
-					this.elements.leftItem.textContent = this.state.items[first];
-					this.elements.rightItem.textContent = this.state.items[second];
-					this.updateProgressDisplay();
+					const pairKey = this.state.pairProvider.toKey(nextPair);
+					this.state.pairSwapStates.has(pairKey) || this.state.pairSwapStates.set(pairKey, Math.random() < 0.5);
+					this.state.isSwapped = this.state.pairSwapStates.get(pairKey);
+
+					this.displayCurrentBattle();
 				}
 
 				updateProgressDisplay() {
-					const progressLabel = this.translate('progress');
-					this.elements.progress.textContent = this.elements.quickRank.checked ? `${progressLabel}: ${this.state.progress}` : `${progressLabel}: ${this.state.progress}/${this.state.totalPairs}`;
+					const label = this.translate('progress');
+					this.elements.progress.textContent = this.elements.quickRank.checked ? `${label}: ${this.state.progress}` : `${label}: ${this.state.progress}/${this.state.totalPairs}`;
 				}
 
 				clearButtonSelections() {
@@ -624,26 +641,36 @@
 						score: this.state.scores[index]
 					})).sort((a,b)=>b.score - a.score);
 
-					const tableRows = sortedResults.map(({item, score},index)=>`<tr><td>${index + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('');
-					const tableHeaders = [
-						{ key: 'rank', width: '20%' },
-						{ key: 'item', width: '60%' },
-						{ key: 'score', width: '20%' }
-					].map(({ key, width })=>`<th style="width:${width}">${this.translate(key)}</th>`).join('');
+					const headers = [{
+						key: 'rank',
+						width: '20%'
+					}, {
+						key: 'item',
+						width: '60%'
+					}, {
+						key: 'score',
+						width: '20%'
+					}].map(({key, width})=>`<th style="width:${width}">${this.translate(key)}</th>`).join('');
+
+					const rows = sortedResults.map(({item, score},index)=>`<tr><td>${index + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('');
 
 					this.elements.results.innerHTML = `
-						<h2>${this.translate('results')}</h2>
-						<table>
-							<thead><tr>${tableHeaders}</tr></thead>
-							<tbody>${tableRows}</tbody>
-						</table>`;
+					<h2>${this.translate('results')}</h2>
+					<table>
+						<thead><tr>${headers}</tr></thead>
+						<tbody>${rows}</tbody>
+					</table>
+				`;
 					this.showSection('results');
 				}
 
-				showSection(sectionName) {
-					['inputSection', 'battleSection', 'results'].forEach(id=>this.elements[id].classList.toggle('hidden', id !== sectionName));
-					this.elements.restartButtons.classList.toggle('hidden', sectionName !== 'results');
-					this.state.keyboardEnabled = sectionName === 'battleSection';
+				showSection(sectionId) {
+					['inputSection', 'battleSection', 'results'].forEach(id=>{
+						this.elements[id].classList.toggle('hidden', id !== sectionId);
+					}
+					);
+					this.elements.restartButtons.classList.toggle('hidden', sectionId !== 'results');
+					this.state.keyboardEnabled = sectionId === 'battleSection';
 				}
 
 				undoLastChoice() {
@@ -651,13 +678,14 @@
 						return;
 
 					const lastState = this.state.history.pop();
-					Object.assign(this.state, {
-						scores: lastState.scores,
-						progress: lastState.progressBefore
-					});
+					this.state.scores = lastState.scores;
+					this.state.progress = lastState.progressBefore;
+					this.state.currentPair = lastState.pair;
+					this.state.isSwapped = lastState.isSwapped;
+					this.state.pairProvider.unmarkCompared(lastState.pair);
 
-					this.state.pairProvider.unmarkAsCompared(lastState.pair);
-					this.showNextBattle();
+					this.displayCurrentBattle();
+
 					this.elements.undoButton.disabled = !this.state.history.length;
 				}
 
@@ -673,18 +701,25 @@
 						theme: this.state.theme
 					});
 					this.elements.itemInput.value = '';
-					['allowTies', 'quickRank'].forEach(id=>this.elements[id].checked = false);
+					this.elements.allowTies.checked = false;
+					this.elements.quickRank.checked = false;
 					this.showSection('inputSection');
-					this.updateLanguage();
+					this.updateLanguage(this.state.language);
+					this.applyTheme();
 				}
 
-				toggleKeyboardTip(forceHide) {
-					this.elements.keyboardTip.classList.toggle('hidden', forceHide);
+				toggleKeyboardTip(forceHidden) {
+					const tipElement = this.elements.keyboardTip;
+					const explicit = typeof forceHidden === 'boolean';
+					const shouldHide = explicit ? forceHidden : !tipElement.classList.contains('hidden');
+					tipElement.classList.toggle('hidden', shouldHide);
 					this.updateKeyboardTip();
 				}
 
 				handleKeyboardInput(event) {
-					if (!this.state.keyboardEnabled || ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement.tagName))
+					const activeTag = document.activeElement.tagName;
+					const blockedTag = ['SELECT', 'INPUT', 'TEXTAREA'].includes(activeTag);
+					if (!this.state.keyboardEnabled || blockedTag)
 						return;
 
 					const keyMap = {
@@ -698,9 +733,13 @@
 					const elementId = keyMap[event.key];
 					if (!elementId)
 						return;
-					if (event.key === 'z' && !(event.ctrlKey || event.metaKey))
+
+					const isUndoKey = event.key === 'z';
+					const isArrowUpDown = event.key === 'ArrowUp' || event.key === 'ArrowDown';
+
+					if (isUndoKey && !(event.ctrlKey || event.metaKey))
 						return;
-					if (['ArrowUp', 'ArrowDown'].includes(event.key) && !this.state.allowTies)
+					if (isArrowUpDown && !this.state.allowTies)
 						return;
 
 					event.preventDefault();
