@@ -317,7 +317,7 @@
 					progress: 'Progress',
 					keyboardTipToggle: 'Show keyboard shortcuts',
 					keyboardTipHide: 'Hide keyboard shortcuts',
-					keyboardTipWithTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> or <kbd>↓</kbd> It\'s a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
+					keyboardTipWithTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> / <kbd>↓</kbd> It\'s a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
 					keyboardTipNoTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
 					results: 'Results',
 					rank: 'Rank',
@@ -342,7 +342,7 @@
 					progress: 'Kemajuan',
 					keyboardTipToggle: 'Tampilkan pintasan papan ketik',
 					keyboardTipHide: 'Sembunyikan pintasan papan ketik',
-					keyboardTipWithTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> atau <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
+					keyboardTipWithTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> / <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
 					keyboardTipNoTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
 					results: 'Hasil',
 					rank: 'Peringkat',
@@ -652,7 +652,7 @@
 						width: '20%'
 					}].map(({key, width})=>`<th style="width:${width}">${this.translate(key)}</th>`).join('');
 
-					const rows = sortedResults.map(({item, score},index)=>`<tr><td>${index + 1}</td><td>${item}</td><td>${Math.round(score)}</td></tr>`).join('');
+					const rows = sortedResults.map(({item, score},index)=>`<tr><td>${index + 1}</td><td>${this.escapeHTML(item)}</td><td>${Math.round(score)}</td></tr>`).join('');
 
 					this.elements.results.innerHTML = `
 					<h2>${this.translate('results')}</h2>
@@ -671,6 +671,12 @@
 					);
 					this.elements.restartButtons.classList.toggle('hidden', sectionId !== 'results');
 					this.state.keyboardEnabled = sectionId === 'battleSection';
+				}
+
+				escapeHTML(str) {
+					const p = document.createElement('p');
+					p.appendChild(document.createTextNode(str));
+					return p.innerHTML;
 				}
 
 				undoLastChoice() {
