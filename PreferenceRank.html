@@ -809,17 +809,20 @@
 						ArrowRight: 'rightItemButton',
 						ArrowUp: 'tieButton',
 						ArrowDown: 'tieButton',
-						z: 'undoButton'
+						z: 'undoButton',
+						Z: 'undoButton'
 					};
 
 					const targetElementId = keyToElementIdMap[event.key];
 					if (!targetElementId)
 						return;
 
-					const isUndo = event.key === 'z';
+					const isUndo = event.key === 'z' || event.key === 'Z';
 					const isArrowUpOrDown = event.key === 'ArrowUp' || event.key === 'ArrowDown';
 
 					if (isUndo && !(event.ctrlKey || event.metaKey))
+						return;
+					if (isUndo && event.shiftKey)
 						return;
 					if (isArrowUpOrDown && !this.state.allowTies)
 						return;
