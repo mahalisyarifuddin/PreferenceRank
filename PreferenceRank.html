@@ -235,9 +235,10 @@
 				}
 
 				.selectors {
+					position: static;
+					justify-content: flex-end;
+					margin-bottom: 0.5rem;
 					gap: 4px;
-					right: 0.5rem;
-					top: 0.5rem;
 				}
 
 				.selectors select {
@@ -258,7 +259,6 @@
 	<body>
 		<div class="container">
 			<div id="inputSection">
-				<h1 id="mainTitle"></h1>
 				<div class="selectors">
 					<select id="languageSelection">
 						<option value="en">English</option>
@@ -270,6 +270,7 @@
 						<option value="dark"></option>
 					</select>
 				</div>
+				<h1 id="mainTitle"></h1>
 				<div class="form-group">
 					<label for="itemInputArea" id="itemInputLabel"></label>
 					<textarea id="itemInputArea" rows="5" spellcheck="false"></textarea>
