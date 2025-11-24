@@ -285,8 +285,8 @@
 				</div>
 				<button id="startRankingButton" class="primary"></button>
 			</div>
+			<button id="undoButton" class="secondary hidden" disabled></button>
 			<div id="battleSection" class="hidden">
-				<button id="undoButton" class="secondary" disabled></button>
 				<div id="battleContainer">
 					<button id="leftItemButton" class="secondary"></button>
 					<button id="rightItemButton" class="secondary"></button>
@@ -716,7 +716,8 @@
 					}
 					);
 					this.elements.restartButtonContainer.classList.toggle('hidden', sectionId !== 'resultsContainer');
-					this.state.keyboardEnabled = sectionId === 'battleSection';
+				this.elements.undoButton.classList.toggle('hidden', sectionId !== 'battleSection' && sectionId !== 'resultsContainer');
+				this.state.keyboardEnabled = sectionId === 'battleSection' || sectionId === 'resultsContainer';
 				}
 
 				undoLastChoice() {
@@ -731,6 +732,7 @@
 					this.state.pairProvider.unmarkCompared(lastState.pair);
 
 					this.displayCurrentBattle();
+				this.showSection('battleSection');
 					this.elements.undoButton.disabled = !this.state.history.length;
 				}
 
