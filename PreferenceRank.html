@@ -143,7 +143,7 @@
 				margin-top: 1rem;
 			}
 
-			#battle button, #tieContainer button, #restartContainer button {
+			#battle button, #tieContainer button, #restartContainer .primary {
 				flex: 1;
 			}
 
@@ -438,6 +438,8 @@
 					this.bind();
 					this.setTheme('auto');
 					this.setLanguage(this.lang);
+					this.undoOriginalParent = this.el.undo.parentNode;
+					this.undoOriginalNextSibling = this.el.battleSection;
 				}
 
 				bind() {
@@ -637,6 +639,10 @@
 					this.el.restartContainer.classList.toggle('hidden', section !== 'results');
 					this.el.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
 					this.keyboard = section === 'battleSection' || section === 'results';
+					if (section === 'results')
+						this.el.restartContainer.appendChild(this.el.undo);
+					else if (section === 'battleSection')
+						this.undoOriginalParent.insertBefore(this.el.undo, this.undoOriginalNextSibling);
 				}
 
 				undoChoice() {
