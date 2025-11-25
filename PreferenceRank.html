@@ -211,6 +211,12 @@
 				color: #fff;
 			}
 
+			.results-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
 			#undo {
 				width: auto;
 			}
@@ -438,6 +444,8 @@
 					this.bind();
 					this.setTheme('auto');
 					this.setLanguage(this.lang);
+					this.undoOriginalParent = this.el.undo.parentNode;
+					this.undoOriginalNextSibling = this.el.battleSection;
 				}
 
 				bind() {
@@ -626,7 +634,7 @@
 						item,
 						score: this.scores[i]
 					})).sort((a,b)=>b.score - a.score);
-					this.el.results.innerHTML = `<h2>${this.t('resultsTitle')}</h2>
+					this.el.results.innerHTML = `<div class="results-header"><h2>${this.t('resultsTitle')}</h2></div>
 					<table><thead><tr><th style="width:20%">${this.t('rank')}</th><th style="width:60%">${this.t('item')}</th><th style="width:20%">${this.t('score')}</th></tr></thead>
 					<tbody>${results.map((r,i)=>`<tr><td>${i + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
@@ -637,6 +645,11 @@
 					this.el.restartContainer.classList.toggle('hidden', section !== 'results');
 					this.el.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
 					this.keyboard = section === 'battleSection' || section === 'results';
+					const undoActions = {
+						battleSection: ()=>this.undoOriginalParent.insertBefore(this.el.undo, this.undoOriginalNextSibling),
+						results: ()=>this.el.results.firstElementChild.appendChild(this.el.undo)
+					};
+					undoActions[section]?.();
 				}
 
 				undoChoice() {
