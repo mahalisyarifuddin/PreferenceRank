@@ -137,28 +137,28 @@
 				margin: 0;
 			}
 
-			#battleContainer, #tieButtonContainer, #restartButtonContainer {
+			#battle, #tieContainer, #restartContainer {
 				display: flex;
 				gap: 1rem;
 				margin-top: 1rem;
 			}
 
-			#battleContainer button, #tieButtonContainer button, #restartButtonContainer button {
+			#battle button, #tieContainer button, #restartContainer button {
 				flex: 1;
 			}
 
-			#battleContainer button, #tieButtonContainer button {
+			#battle button, #tieContainer button {
 				font-size: 1.2rem;
 				min-height: 100px;
 			}
 
-			#progressDisplay {
+			#progress {
 				font-size: 1.1rem;
 				margin-top: 1rem;
 				text-align: center;
 			}
 
-			#keyboardShortcutTip {
+			#shortcutTip {
 				background: var(--background);
 				border: 1px solid var(--border);
 				border-radius: 4px;
@@ -170,7 +170,7 @@
 				text-align: center;
 			}
 
-			#keyboardShortcutTip kbd {
+			#shortcutTip kbd {
 				background: var(--surface);
 				border: 1px solid var(--border);
 				border-radius: 3px;
@@ -182,7 +182,7 @@
 				padding: 2px 5px;
 			}
 
-			#keyboardShortcutToggle {
+			#shortcutToggle {
 				background: none;
 				border: none;
 				color: var(--primary);
@@ -194,28 +194,28 @@
 				width: auto;
 			}
 
-			#resultsContainer table {
+			#results table {
 				border-collapse: collapse;
 				margin-top: 1rem;
 				width: 100%;
 			}
 
-			#resultsContainer th, #resultsContainer td {
+			#results th, #results td {
 				border: 1px solid var(--border);
 				padding: 0.5rem;
 				text-align: left;
 			}
 
-			#resultsContainer th {
+			#results th {
 				background: var(--primary);
 				color: #fff;
 			}
 
-			#undoButton {
+			#undo {
 				width: auto;
 			}
 
-			#undoButton:disabled {
+			#undo:disabled {
 				background: var(--hover);
 				cursor: not-allowed;
 			}
@@ -246,11 +246,11 @@
 					padding: 4px;
 				}
 
-				#battleContainer, #tieButtonContainer, #restartButtonContainer {
+				#battle, #tieContainer, #restartContainer {
 					flex-direction: column;
 				}
 
-				#battleContainer button, #tieButtonContainer button {
+				#battle button, #tieContainer button {
 					width: 100%;
 				}
 			}
@@ -258,169 +258,157 @@
 	</head>
 	<body>
 		<div class="container">
-			<div id="inputSection">
+			<div id="input">
 				<div class="selectors">
-					<select id="languageSelection">
+					<select id="language">
 						<option value="en">English</option>
 						<option value="id">Bahasa Indonesia</option>
 					</select>
-					<select id="themeSelection">
+					<select id="theme">
 						<option value="auto"></option>
 						<option value="light"></option>
 						<option value="dark"></option>
 					</select>
 				</div>
-				<h1 id="mainTitle"></h1>
+				<h1 id="title"></h1>
 				<div class="group">
-					<label for="itemInputArea" id="itemInputLabel"></label>
-					<textarea id="itemInputArea" rows="5" spellcheck="false"></textarea>
+					<label for="items" id="itemsLabel"></label>
+					<textarea id="items" rows="5" spellcheck="false"></textarea>
 				</div>
 				<div class="checkbox-container">
-					<input type="checkbox" id="allowTiesCheckbox">
-					<label for="allowTiesCheckbox" id="allowTiesLabel"></label>
+					<input type="checkbox" id="allowTies">
+					<label for="allowTies" id="allowTiesLabel"></label>
 				</div>
 				<div class="checkbox-container">
-					<input type="checkbox" id="quickRankCheckbox">
-					<label for="quickRankCheckbox" id="quickRankLabel"></label>
+					<input type="checkbox" id="quickRank">
+					<label for="quickRank" id="quickRankLabel"></label>
 				</div>
-				<button id="startRankingButton" class="primary"></button>
+				<button id="start" class="primary"></button>
 			</div>
-			<button id="undoButton" class="secondary hidden" disabled></button>
+			<button id="undo" class="secondary hidden" disabled></button>
 			<div id="battleSection" class="hidden">
-				<div id="battleContainer">
-					<button id="leftItemButton" class="secondary"></button>
-					<button id="rightItemButton" class="secondary"></button>
+				<div id="battle">
+					<button id="left" class="secondary"></button>
+					<button id="right" class="secondary"></button>
 				</div>
-				<div id="tieButtonContainer" class="hidden">
-					<button id="tieButton" class="secondary"></button>
+				<div id="tieContainer" class="hidden">
+					<button id="tie" class="secondary"></button>
 				</div>
-				<div id="progressDisplay"></div>
-				<button id="keyboardShortcutToggle"></button>
-				<div id="keyboardShortcutTip" class="hidden"></div>
+				<div id="progress"></div>
+				<button id="shortcutToggle"></button>
+				<div id="shortcutTip" class="hidden"></div>
 			</div>
-			<div id="resultsContainer" class="hidden"></div>
-			<div id="restartButtonContainer" class="hidden">
-				<button id="restartBattleButton" class="primary"></button>
-				<button id="restartNewButton" class="primary"></button>
+			<div id="results" class="hidden"></div>
+			<div id="restartContainer" class="hidden">
+				<button id="restartBattle" class="primary"></button>
+				<button id="restartNew" class="primary"></button>
 			</div>
 		</div>
 		<script>
 			const strings = {
 				en: {
 					title: 'PreferenceRank',
-					automaticTheme: 'Auto Theme',
+					autoTheme: 'Auto Theme',
 					lightTheme: 'Light',
 					darkTheme: 'Dark',
-					itemInputLabel: 'Enter items, one per line:',
+					itemsLabel: 'Enter items, one per line:',
 					allowTiesLabel: 'Allow Ties',
 					quickRankLabel: 'Use Quick Rank (fewer comparisons)',
-					alertMessage: 'Please enter at least two items.',
-					duplicateAlertMessage: '{count} duplicate item(s) were found and have been removed.',
-					startRankingButton: 'Start Ranking',
-					tieButton: "It's a Tie",
-					undoButton: 'Undo',
-					progressLabel: 'Progress',
-					keyboardShortcutToggle: 'Show keyboard shortcuts',
-					keyboardShortcutHide: 'Hide keyboard shortcuts',
-					keyboardShortcutTipWithTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> / <kbd>↓</kbd> It\'s a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
-					keyboardShortcutTipNoTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
+					alert: 'Please enter at least two items.',
+					duplicateAlert: '{count} duplicate item(s) were found and have been removed.',
+					start: 'Start Ranking',
+					tie: "It's a Tie",
+					undo: 'Undo',
+					progress: 'Progress',
+					shortcutToggle: 'Show keyboard shortcuts',
+					shortcutHide: 'Hide keyboard shortcuts',
+					shortcutWithTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>↑</kbd> / <kbd>↓</kbd> It\'s a Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
+					shortcutNoTies: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left item<br><kbd>→</kbd> Choose right item<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo last choice',
 					resultsTitle: 'Results',
-					rankColumn: 'Rank',
-					itemColumn: 'Item',
-					scoreColumn: 'Score',
-					restartBattleButton: 'Restart Battle',
-					restartNewButton: 'Start with New Items'
+					rank: 'Rank',
+					item: 'Item',
+					score: 'Score',
+					restartBattle: 'Restart Battle',
+					restartNew: 'Start with New Items'
 				},
 				id: {
 					title: 'PreferenceRank',
-					automaticTheme: 'Tema Otomatis',
+					autoTheme: 'Tema Otomatis',
 					lightTheme: 'Terang',
 					darkTheme: 'Gelap',
-					itemInputLabel: 'Masukkan pilihan, satu per baris:',
+					itemsLabel: 'Masukkan pilihan, satu per baris:',
 					allowTiesLabel: 'Izinkan Seri',
 					quickRankLabel: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
-					alertMessage: 'Harap masukkan setidaknya dua pilihan.',
-					duplicateAlertMessage: '{count} item duplikat ditemukan dan telah dihapus.',
-					startRankingButton: 'Mulai Peringkat',
-					tieButton: 'Seri',
-					undoButton: 'Urungkan',
-					progressLabel: 'Kemajuan',
-					keyboardShortcutToggle: 'Tampilkan pintasan papan ketik',
-					keyboardShortcutHide: 'Sembunyikan pintasan papan ketik',
-					keyboardShortcutTipWithTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> / <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
-					keyboardShortcutTipNoTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
+					alert: 'Harap masukkan setidaknya dua pilihan.',
+					duplicateAlert: '{count} item duplikat ditemukan dan telah dihapus.',
+					start: 'Mulai Peringkat',
+					tie: 'Seri',
+					undo: 'Urungkan',
+					progress: 'Kemajuan',
+					shortcutToggle: 'Tampilkan pintasan papan ketik',
+					shortcutHide: 'Sembunyikan pintasan papan ketik',
+					shortcutWithTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>↑</kbd> / <kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
+					shortcutNoTies: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih pilihan kiri<br><kbd>→</kbd> Pilih pilihan kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan pilihan terakhir',
 					resultsTitle: 'Hasil',
-					rankColumn: 'Peringkat',
-					itemColumn: 'Nama',
-					scoreColumn: 'Skor',
-					restartBattleButton: 'Mulai Ulang Pertarungan',
-					restartNewButton: 'Mulai dengan Pilihan Baru'
+					rank: 'Peringkat',
+					item: 'Nama',
+					score: 'Skor',
+					restartBattle: 'Mulai Ulang Pertarungan',
+					restartNew: 'Mulai dengan Pilihan Baru'
 				}
 			};
 
-			const escapeHtml = text=>{
-				const element = document.createElement('p');
-				element.textContent = text;
-				return element.innerHTML;
-			}
-			;
+			const escape = text=>Object.assign(document.createElement('p'), {
+				textContent: text
+			}).innerHTML;
 
 			class PairProvider {
-				constructor(itemCount) {
-					this.itemCount = itemCount;
-					this.comparedPairKeys = new Set();
+				constructor(count) {
+					this.count = count;
+					this.compared = new Set();
 				}
-
-				createPairKey([firstIndex,secondIndex]) {
-					return `${Math.min(firstIndex, secondIndex)}-${Math.max(firstIndex, secondIndex)}`;
+				key([a,b]) {
+					return `${Math.min(a, b)}-${Math.max(a, b)}`;
 				}
-
-				markCompared(pair) {
-					this.comparedPairKeys.add(this.createPairKey(pair));
+				mark(pair) {
+					this.compared.add(this.key(pair));
 				}
-
-				unmarkCompared(pair) {
-					this.comparedPairKeys.delete(this.createPairKey(pair));
+				unmark(pair) {
+					this.compared.delete(this.key(pair));
 				}
-
-				hasBeenCompared(pair) {
-					return this.comparedPairKeys.has(this.createPairKey(pair));
+				has(pair) {
+					return this.compared.has(this.key(pair));
 				}
 			}
 
 			class FullPairProvider extends PairProvider {
-				constructor(itemCount) {
-					super(itemCount);
+				constructor(count) {
+					super(count);
 					this.pairs = [];
-					for (let i = 0; i < itemCount - 1; i++) {
-						for (let j = i + 1; j < itemCount; j++) {
+					for (let i = 0; i < count - 1; i++)
+						for (let j = i + 1; j < count; j++)
 							this.pairs.push([i, j]);
-						}
-					}
 					for (let i = this.pairs.length - 1; i > 0; i--) {
 						const j = Math.floor(Math.random() * (i + 1));
 						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
 					}
 				}
-
-				getNextPair(state) {
-					return this.pairs[state.progress];
+				next(state) {
+					return this.pairs[state.step];
 				}
-
-				getTotalPairs() {
+				total() {
 					return this.pairs.length;
 				}
 			}
 
 			class QuickPairProvider extends PairProvider {
-				getNextPair(state) {
-					const sortedIndices = Array.from({
-						length: this.itemCount
-					}, (_,index)=>index).sort((a,b)=>state.scores[b] - state.scores[a]);
-
-					for (let i = 0; i < this.itemCount - 1; i++) {
-						const pair = [sortedIndices[i], sortedIndices[i + 1]];
-						if (!this.hasBeenCompared(pair))
+				next(state) {
+					const sorted = Array.from({
+						length: this.count
+					}, (_,i)=>i).sort((a,b)=>state.scores[b] - state.scores[a]);
+					for (let i = 0; i < this.count - 1; i++) {
+						const pair = [sorted[i], sorted[i + 1]];
+						if (!this.has(pair))
 							return pair;
 					}
 					return null;
@@ -429,390 +417,297 @@
 
 			class PreferenceRank {
 				constructor() {
-					this.elements = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
-
-					this.state = {
-						items: [],
-						scores: [],
-						currentPair: null,
-						isSwapped: false,
-						progress: 0,
-						totalPairs: 0,
-						allowTies: false,
-						history: [],
-						keyboardEnabled: false,
-						isChoosing: false,
-						language: navigator.language?.startsWith('id') ? 'id' : 'en',
-						theme: 'auto',
-						pairProvider: null,
-						pairSwaps: new Map()
-					};
-
-					this.initialize();
+					this.el = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
+					this.items = [];
+					this.scores = [];
+					this.pair = null;
+					this.swapped = false;
+					this.step = 0;
+					this.total = 0;
+					this.ties = false;
+					this.history = [];
+					this.keyboard = false;
+					this.choosing = false;
+					this.lang = navigator.language?.startsWith('id') ? 'id' : 'en';
+					this.provider = null;
+					this.swaps = new Map();
+					this.init();
 				}
 
-				initialize() {
-					this.bindEvents();
+				init() {
+					this.bind();
 					this.setTheme('auto');
-					this.updateLanguage(this.state.language);
+					this.setLanguage(this.lang);
 				}
 
-				bindEvents() {
-					const {elements} = this;
-
-					elements.startRankingButton.onclick = ()=>this.startRanking();
-					elements.leftItemButton.onclick = ()=>this.handleChoice('left');
-					elements.rightItemButton.onclick = ()=>this.handleChoice('right');
-					elements.tieButton.onclick = ()=>this.handleChoice('tie');
-					elements.restartBattleButton.onclick = ()=>this.restartBattle();
-					elements.restartNewButton.onclick = ()=>this.restartWithNewItems();
-					elements.undoButton.onclick = ()=>this.undoLastChoice();
-					elements.keyboardShortcutToggle.onclick = ()=>this.toggleKeyboardTip();
-					elements.languageSelection.onchange = event=>this.updateLanguage(event.target.value);
-					elements.themeSelection.onchange = event=>this.setTheme(event.target.value);
-					elements.allowTiesCheckbox.onchange = event=>this.handleAllowTiesChange(event.target.checked);
-					document.onkeydown = event=>this.handleKeyboard(event);
+				bind() {
+					const {el} = this;
+					el.start.onclick = ()=>this.startRanking();
+					el.left.onclick = ()=>this.choose('left');
+					el.right.onclick = ()=>this.choose('right');
+					el.tie.onclick = ()=>this.choose('tie');
+					el.restartBattle.onclick = ()=>this.restart();
+					el.restartNew.onclick = ()=>this.reset();
+					el.undo.onclick = ()=>this.undoChoice();
+					el.shortcutToggle.onclick = ()=>this.toggleShortcuts();
+					el.language.onchange = e=>this.setLanguage(e.target.value);
+					el.theme.onchange = e=>this.setTheme(e.target.value);
+					el.allowTies.onchange = e=>this.setTies(e.target.checked);
+					document.onkeydown = e=>this.handleKey(e);
 				}
 
-				translate(key) {
-					return strings[this.state.language][key];
+				t(key) {
+					return strings[this.lang][key];
 				}
-
-				formatString(key, replacements) {
-					let text = this.translate(key);
-					if (replacements) {
-						for (const [placeholder,value] of Object.entries(replacements)) {
-							text = text.replace(`{${placeholder}}`, value);
-						}
-					}
+				fmt(key, values) {
+					let text = this.t(key);
+					for (const [k,v] of Object.entries(values || {}))
+						text = text.replace(`{${k}}`, v);
 					return text;
 				}
 
 				setTheme(theme) {
 					document.documentElement.classList.remove('light', 'dark');
-					if (theme !== 'auto') {
+					if (theme !== 'auto')
 						document.documentElement.classList.add(theme);
+					this.el.theme.value = theme;
+				}
+
+				setLanguage(lang) {
+					this.lang = lang;
+					this.el.language.value = lang;
+					document.documentElement.lang = lang;
+					const {el} = this;
+					const s = strings[lang];
+					el.title.textContent = s.title;
+					el.theme.options[0].textContent = s.autoTheme;
+					el.theme.options[1].textContent = s.lightTheme;
+					el.theme.options[2].textContent = s.darkTheme;
+					el.itemsLabel.textContent = s.itemsLabel;
+					el.allowTiesLabel.textContent = s.allowTiesLabel;
+					el.quickRankLabel.textContent = s.quickRankLabel;
+					el.start.textContent = s.start;
+					el.tie.textContent = s.tie;
+					el.undo.textContent = s.undo;
+					el.restartBattle.textContent = s.restartBattle;
+					el.restartNew.textContent = s.restartNew;
+					this.updateShortcuts();
+					this.updateProgress();
+					if (!el.results.classList.contains('hidden'))
+						this.showResults();
+				}
+
+				setTies(enabled) {
+					this.ties = enabled;
+					if (!this.el.battleSection.classList.contains('hidden')) {
+						this.el.tieContainer.classList.toggle('hidden', !enabled);
 					}
-					this.elements.themeSelection.value = theme;
-					this.state.theme = theme;
+					this.updateShortcuts();
 				}
 
-				updateLanguage(language) {
-					this.state.language = language;
-					this.elements.languageSelection.value = language;
-					document.documentElement.lang = language;
-
-					const {elements} = this;
-					const text = strings[language];
-
-					elements.mainTitle.textContent = text.title;
-
-					const themeOptions = elements.themeSelection.options;
-					themeOptions[0].textContent = text.automaticTheme;
-					themeOptions[1].textContent = text.lightTheme;
-					themeOptions[2].textContent = text.darkTheme;
-
-					elements.itemInputLabel.textContent = text.itemInputLabel;
-					elements.allowTiesLabel.textContent = text.allowTiesLabel;
-					elements.quickRankLabel.textContent = text.quickRankLabel;
-					elements.startRankingButton.textContent = text.startRankingButton;
-					elements.tieButton.textContent = text.tieButton;
-					elements.undoButton.textContent = text.undoButton;
-					elements.restartBattleButton.textContent = text.restartBattleButton;
-					elements.restartNewButton.textContent = text.restartNewButton;
-
-					this.updateKeyboardTip();
-					this.updateProgressDisplay();
-
-					if (!elements.resultsContainer.classList.contains('hidden')) {
-						this.displayResults();
-					}
+				updateShortcuts() {
+					const hidden = this.el.shortcutTip.classList.contains('hidden');
+					this.el.shortcutToggle.textContent = hidden ? this.t('shortcutToggle') : this.t('shortcutHide');
+					this.el.shortcutTip.innerHTML = this.t(this.ties ? 'shortcutWithTies' : 'shortcutNoTies');
 				}
 
-				updateKeyboardTip() {
-					const keyboardShortcutTipElement = this.elements.keyboardShortcutTip;
-					const keyboardShortcutToggleElement = this.elements.keyboardShortcutToggle;
-					const isHidden = keyboardShortcutTipElement.classList.contains('hidden');
-
-					keyboardShortcutToggleElement.textContent = isHidden ? this.translate('keyboardShortcutToggle') : this.translate('keyboardShortcutHide');
-
-					keyboardShortcutTipElement.innerHTML = this.translate(this.state.allowTies ? 'keyboardShortcutTipWithTies' : 'keyboardShortcutTipNoTies');
+				toggleShortcuts(forceHide) {
+					const hide = typeof forceHide === 'boolean' ? forceHide : !this.el.shortcutTip.classList.contains('hidden');
+					this.el.shortcutTip.classList.toggle('hidden', hide);
+					this.updateShortcuts();
 				}
 
-				handleAllowTiesChange(checked) {
-					this.state.allowTies = checked;
-					if (!this.elements.battleSection.classList.contains('hidden')) {
-						this.elements.tieButtonContainer.classList.toggle('hidden', !checked);
-					}
-					this.updateKeyboardTip();
-				}
-
-				resetBattleState() {
-					const itemCount = this.state.items.length;
-					const isQuickRank = this.elements.quickRankCheckbox.checked;
-
-					this.state.scores = Array(itemCount).fill(1000);
-					this.state.progress = 0;
-					this.state.history = [];
-					this.state.pairSwaps = new Map();
-					this.elements.undoButton.disabled = true;
-
-					this.state.pairProvider = isQuickRank ? new QuickPairProvider(itemCount) : new FullPairProvider(itemCount);
-
-					this.state.totalPairs = isQuickRank ? 0 : this.state.pairProvider.getTotalPairs();
+				initBattle() {
+					const count = this.items.length;
+					const quick = this.el.quickRank.checked;
+					this.scores = Array(count).fill(1000);
+					this.step = 0;
+					this.history = [];
+					this.swaps = new Map();
+					this.el.undo.disabled = true;
+					this.provider = quick ? new QuickPairProvider(count) : new FullPairProvider(count);
+					this.total = quick ? 0 : this.provider.total();
 				}
 
 				startRanking() {
-					const rawItems = this.elements.itemInputArea.value.split('\n').map(line=>line.trim()).filter(Boolean);
-
-					const uniqueItems = [...new Set(rawItems)];
-					const duplicateCount = rawItems.length - uniqueItems.length;
-
-					if (duplicateCount > 0) {
-						alert(this.formatString('duplicateAlertMessage', {
-							count: duplicateCount
+					const raw = this.el.items.value.split('\n').map(s=>s.trim()).filter(Boolean);
+					const unique = [...new Set(raw)];
+					const dupes = raw.length - unique.length;
+					if (dupes > 0)
+						alert(this.fmt('duplicateAlert', {
+							count: dupes
 						}));
-					}
-					if (uniqueItems.length < 2) {
-						alert(this.translate('alertMessage'));
-						return;
-					}
+					if (unique.length < 2)
+						return alert(this.t('alert'));
 
-					this.state.items = uniqueItems;
-					this.state.allowTies = this.elements.allowTiesCheckbox.checked;
-
-					this.resetBattleState();
-					this.elements.tieButtonContainer.classList.toggle('hidden', !this.state.allowTies);
-					this.toggleKeyboardTip(true);
-					this.updateKeyboardTip();
-					this.showSection('battleSection');
-					this.showNextBattle();
+					this.items = unique;
+					this.ties = this.el.allowTies.checked;
+					this.initBattle();
+					this.el.tieContainer.classList.toggle('hidden', !this.ties);
+					this.toggleShortcuts(true);
+					this.updateShortcuts();
+					this.show('battleSection');
+					this.nextBattle();
 				}
 
-				calculateScores(winner) {
-					const {currentPair, isSwapped, scores} = this.state;
-					const isFirstWinner = (winner === 'left' && !isSwapped) || (winner === 'right' && isSwapped);
-					const resultScore = winner === 'tie' ? 0.5 : isFirstWinner ? 1 : 0;
-
-					const [firstIndex,secondIndex] = currentPair;
-					const firstScore = scores[firstIndex];
-					const secondScore = scores[secondIndex];
-
-					const expectedFirst = 1 / (1 + 10 ** ((secondScore - firstScore) / 400));
-					const adjustment = 32;
-
-					scores[firstIndex] += adjustment * (resultScore - expectedFirst);
-					scores[secondIndex] += adjustment * (expectedFirst - resultScore);
+				calcScores(winner) {
+					const [first,second] = this.pair;
+					const isFirst = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
+					const result = winner === 'tie' ? 0.5 : isFirst ? 1 : 0;
+					const expected = 1 / (1 + 10 ** ((this.scores[second] - this.scores[first]) / 400));
+					this.scores[first] += 32 * (result - expected);
+					this.scores[second] += 32 * (expected - result);
 				}
 
-				handleChoice(winner) {
-					if (this.state.isChoosing)
+				choose(winner) {
+					if (this.choosing)
 						return;
-					this.state.isChoosing = true;
+					this.choosing = true;
 
-					this.state.history.push({
-						pair: this.state.currentPair,
-						scores: [...this.state.scores],
-						progress: this.state.progress,
-						isSwapped: this.state.isSwapped
+					this.history.push({
+						pair: this.pair,
+						scores: [...this.scores],
+						step: this.step,
+						swapped: this.swapped
 					});
-
-					this.state.pairProvider.markCompared(this.state.currentPair);
-					this.calculateScores(winner);
-					this.state.progress++;
-					this.elements.undoButton.disabled = false;
-					this.updateProgressDisplay();
+					this.provider.mark(this.pair);
+					this.calcScores(winner);
+					this.step++;
+					this.el.undo.disabled = false;
+					this.updateProgress();
 					this.clearSelections();
 
-					const targetButton = winner === 'tie' ? this.elements.tieButton : this.elements[`${winner}ItemButton`];
-
-					targetButton.classList.add('selected');
+					const btn = winner === 'tie' ? this.el.tie : this.el[winner];
+					btn.classList.add('selected');
 
 					setTimeout(()=>{
-						this.state.isChoosing = false;
-						this.showNextBattle();
+						this.choosing = false;
+						this.nextBattle();
 					}
 					, 300);
 				}
 
-				displayCurrentBattle() {
+				displayBattle() {
 					this.clearSelections();
-					let[firstIndex,secondIndex] = this.state.currentPair;
-					if (this.state.isSwapped) {
-						[firstIndex,secondIndex] = [secondIndex, firstIndex];
-					}
-
-					this.elements.leftItemButton.textContent = this.state.items[firstIndex];
-					this.elements.rightItemButton.textContent = this.state.items[secondIndex];
-					this.updateProgressDisplay();
+					let[first,second] = this.pair;
+					if (this.swapped)
+						[first,second] = [second, first];
+					this.el.left.textContent = this.items[first];
+					this.el.right.textContent = this.items[second];
+					this.updateProgress();
 				}
 
-				showNextBattle() {
+				nextBattle() {
 					this.clearSelections();
+					const next = this.provider.next(this);
+					const quick = this.el.quickRank.checked;
+					if (!next || (!quick && this.step >= this.total))
+						return this.showResults();
 
-					const nextPair = this.state.pairProvider.getNextPair(this.state);
-					const isQuickRank = this.elements.quickRankCheckbox.checked;
-
-					if (!nextPair || (!isQuickRank && this.state.progress >= this.state.totalPairs)) {
-						this.displayResults();
-						return;
-					}
-
-					this.state.currentPair = nextPair;
-					const pairKey = this.state.pairProvider.createPairKey(nextPair);
-
-					if (!this.state.pairSwaps.has(pairKey)) {
-						this.state.pairSwaps.set(pairKey, Math.random() < 0.5);
-					}
-					this.state.isSwapped = this.state.pairSwaps.get(pairKey);
-
-					this.displayCurrentBattle();
+					this.pair = next;
+					const key = this.provider.key(next);
+					if (!this.swaps.has(key))
+						this.swaps.set(key, Math.random() < 0.5);
+					this.swapped = this.swaps.get(key);
+					this.displayBattle();
 				}
 
-				updateProgressDisplay() {
-					const label = this.translate('progressLabel');
-					const isQuickRank = this.elements.quickRankCheckbox.checked;
-					const progress = this.state.progress;
-					const totalPairs = this.state.totalPairs;
-
-					this.elements.progressDisplay.textContent = isQuickRank ? `${label}: ${progress}` : `${label}: ${progress}/${totalPairs || 0}`;
+				updateProgress() {
+					const quick = this.el.quickRank.checked;
+					this.el.progress.textContent = `${this.t('progress')}: ${this.step}${quick ? '' : `/${this.total || 0}`}`;
 				}
 
 				clearSelections() {
-					['leftItemButton', 'rightItemButton', 'tieButton'].forEach(id=>{
-						this.elements[id].classList.remove('selected');
-					}
-					);
+					['left', 'right', 'tie'].forEach(id=>this.el[id].classList.remove('selected'));
 				}
 
-				displayResults() {
-					const results = this.state.items.map((item,index)=>({
+				showResults() {
+					const results = this.items.map((item,i)=>({
 						item,
-						score: this.state.scores[index]
+						score: this.scores[i]
 					})).sort((a,b)=>b.score - a.score);
-
-					const headerRowHtml = `
-					<th style="width:20%">${this.translate('rankColumn')}</th>
-					<th style="width:60%">${this.translate('itemColumn')}</th>
-					<th style="width:20%">${this.translate('scoreColumn')}</th>
-				`;
-
-					const bodyRowsHtml = results.map((result,index)=>`<tr><td>${index + 1}</td><td>${escapeHtml(result.item)}</td><td>${Math.round(result.score)}</td></tr>`).join('');
-
-					this.elements.resultsContainer.innerHTML = `
-					<h2>${this.translate('resultsTitle')}</h2>
-					<table>
-						<thead><tr>${headerRowHtml}</tr></thead>
-						<tbody>${bodyRowsHtml}</tbody>
-					</table>
-				`;
-
-					this.showSection('resultsContainer');
+					this.el.results.innerHTML = `<h2>${this.t('resultsTitle')}</h2>
+					<table><thead><tr><th style="width:20%">${this.t('rank')}</th><th style="width:60%">${this.t('item')}</th><th style="width:20%">${this.t('score')}</th></tr></thead>
+					<tbody>${results.map((r,i)=>`<tr><td>${i + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
+					this.show('results');
 				}
 
-				showSection(sectionId) {
-					['inputSection', 'battleSection', 'resultsContainer'].forEach(id=>{
-						this.elements[id].classList.toggle('hidden', id !== sectionId);
-					}
-					);
-					this.elements.restartButtonContainer.classList.toggle('hidden', sectionId !== 'resultsContainer');
-				this.elements.undoButton.classList.toggle('hidden', sectionId !== 'battleSection' && sectionId !== 'resultsContainer');
-				this.state.keyboardEnabled = sectionId === 'battleSection' || sectionId === 'resultsContainer';
+				show(section) {
+					['input', 'battleSection', 'results'].forEach(id=>this.el[id].classList.toggle('hidden', id !== section));
+					this.el.restartContainer.classList.toggle('hidden', section !== 'results');
+					this.el.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
+					this.keyboard = section === 'battleSection' || section === 'results';
 				}
 
-				undoLastChoice() {
-					if (this.state.isChoosing || !this.state.history.length)
+				undoChoice() {
+					if (this.choosing || !this.history.length)
+						return;
+					const last = this.history.pop();
+					this.scores = last.scores;
+					this.step = last.step;
+					this.pair = last.pair;
+					this.swapped = last.swapped;
+					this.provider.unmark(last.pair);
+					this.displayBattle();
+					this.show('battleSection');
+					this.el.undo.disabled = !this.history.length;
+				}
+
+				restart() {
+					this.initBattle();
+					this.show('battleSection');
+					this.nextBattle();
+				}
+
+				reset() {
+					this.items = [];
+					this.scores = [];
+					this.pair = null;
+					this.swapped = false;
+					this.step = 0;
+					this.total = 0;
+					this.ties = false;
+					this.history = [];
+					this.keyboard = false;
+					this.choosing = false;
+					this.provider = null;
+					this.swaps = new Map();
+					this.el.items.value = '';
+					this.el.allowTies.checked = false;
+					this.el.quickRank.checked = false;
+					this.show('input');
+					this.toggleShortcuts(true);
+					this.updateProgress();
+				}
+
+				handleKey(event) {
+					const tag = document.activeElement.tagName;
+					if (!this.keyboard || ['SELECT', 'INPUT', 'TEXTAREA'].includes(tag))
 						return;
 
-					const lastState = this.state.history.pop();
-					this.state.scores = lastState.scores;
-					this.state.progress = lastState.progress;
-					this.state.currentPair = lastState.pair;
-					this.state.isSwapped = lastState.isSwapped;
-					this.state.pairProvider.unmarkCompared(lastState.pair);
-
-					this.displayCurrentBattle();
-				this.showSection('battleSection');
-					this.elements.undoButton.disabled = !this.state.history.length;
-				}
-
-				restartBattle() {
-					this.resetBattleState();
-					this.showSection('battleSection');
-					this.showNextBattle();
-				}
-
-				restartWithNewItems() {
-					const language = this.state.language;
-					const theme = this.state.theme;
-
-					this.state = {
-						items: [],
-						scores: [],
-						currentPair: null,
-						isSwapped: false,
-						progress: 0,
-						totalPairs: 0,
-						allowTies: false,
-						history: [],
-						keyboardEnabled: false,
-						isChoosing: false,
-						language,
-						theme,
-						pairProvider: null,
-						pairSwaps: new Map()
+					const map = {
+						ArrowLeft: 'left',
+						ArrowRight: 'right',
+						ArrowUp: 'tie',
+						ArrowDown: 'tie',
+						z: 'undo',
+						Z: 'undo'
 					};
-
-					this.elements.itemInputArea.value = '';
-					this.elements.allowTiesCheckbox.checked = false;
-					this.elements.quickRankCheckbox.checked = false;
-
-					this.showSection('inputSection');
-					this.updateLanguage(language);
-					this.setTheme(theme);
-					this.toggleKeyboardTip(true);
-					this.updateProgressDisplay();
-				}
-
-				toggleKeyboardTip(forceHidden) {
-					const keyboardShortcutTipElement = this.elements.keyboardShortcutTip;
-					const shouldHide = typeof forceHidden === 'boolean' ? forceHidden : !keyboardShortcutTipElement.classList.contains('hidden');
-
-					keyboardShortcutTipElement.classList.toggle('hidden', shouldHide);
-					this.updateKeyboardTip();
-				}
-
-				handleKeyboard(event) {
-					const activeTagName = document.activeElement.tagName;
-					if (!this.state.keyboardEnabled || ['SELECT', 'INPUT', 'TEXTAREA'].includes(activeTagName)) {
-						return;
-					}
-
-					const keyToElementIdMap = {
-						ArrowLeft: 'leftItemButton',
-						ArrowRight: 'rightItemButton',
-						ArrowUp: 'tieButton',
-						ArrowDown: 'tieButton',
-						z: 'undoButton',
-						Z: 'undoButton'
-					};
-
-					const targetElementId = keyToElementIdMap[event.key];
-					if (!targetElementId)
+					const target = map[event.key];
+					if (!target)
 						return;
 
 					const isUndo = event.key === 'z' || event.key === 'Z';
-					const isArrowUpOrDown = event.key === 'ArrowUp' || event.key === 'ArrowDown';
-
+					const isArrow = event.key === 'ArrowUp' || event.key === 'ArrowDown';
 					if (isUndo && !(event.ctrlKey || event.metaKey))
 						return;
 					if (isUndo && event.shiftKey)
 						return;
-					if (isArrowUpOrDown && !this.state.allowTies)
+					if (isArrow && !this.ties)
 						return;
 
 					event.preventDefault();
-					this.elements[targetElementId].click();
+					this.el[target].click();
 				}
 			}
 
