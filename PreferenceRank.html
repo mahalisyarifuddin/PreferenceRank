@@ -661,10 +661,7 @@
 					this.pair = last.pair;
 					this.swapped = last.swapped;
 
-					this.provider.compared.clear();
-					for (const h of this.history) {
-						this.provider.mark(h.pair);
-					}
+					this.provider.unmark(last.pair);
 
 					this.displayBattle();
 					this.show('battleSection');
