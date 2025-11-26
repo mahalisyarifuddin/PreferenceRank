@@ -660,7 +660,13 @@
 					this.step = last.step;
 					this.pair = last.pair;
 					this.swapped = last.swapped;
-					this.provider.unmark(last.pair);
+
+					// Rebuild the compared set from the remaining history.
+					this.provider.compared.clear();
+					for (const h of this.history) {
+						this.provider.mark(h.pair);
+					}
+
 					this.displayBattle();
 					this.show('battleSection');
 					this.el.undo.disabled = !this.history.length;
