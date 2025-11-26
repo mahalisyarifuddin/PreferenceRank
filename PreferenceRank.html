@@ -661,7 +661,6 @@
 					this.pair = last.pair;
 					this.swapped = last.swapped;
 
-					// Rebuild the compared set from the remaining history.
 					this.provider.compared.clear();
 					for (const h of this.history) {
 						this.provider.mark(h.pair);
