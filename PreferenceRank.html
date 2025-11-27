@@ -636,7 +636,7 @@
 					})).sort((a,b)=>b.score - a.score);
 					this.el.results.innerHTML = `<div class="results-header"><h2>${this.t('resultsTitle')}</h2></div>
 					<table><thead><tr><th style="width:20%">${this.t('rank')}</th><th style="width:60%">${this.t('item')}</th><th style="width:20%">${this.t('score')}</th></tr></thead>
-					<tbody>${results.map((r,i)=>`<tr><td>${i + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
+					<tbody>${results.map((r,i)=>`<tr><td>${results.findIndex(x => Math.round(x.score) === Math.round(r.score)) + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 				}
 
