@@ -552,7 +552,6 @@
 					this.ties = this.dom.allowTies.checked;
 					this.initBattle();
 					this.dom.tieContainer.classList.toggle('hidden', !this.ties);
-					this.toggleShortcuts(true);
 					this.updateShortcuts();
 					this.show('battleSection');
 					this.nextBattle();
@@ -689,7 +688,7 @@
 					this.dom.allowTies.checked = false;
 					this.dom.quickRank.checked = false;
 					this.show('input');
-					this.toggleShortcuts(true);
+					this.updateShortcuts();
 					this.updateProgress();
 				}
 
