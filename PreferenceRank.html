@@ -182,6 +182,22 @@
 				padding: 2px 5px
 			}
 
+			#cancel {
+				background: none;
+				border: 1px solid var(--border);
+				color: var(--text);
+				cursor: pointer;
+				display: block;
+				font-size: .9rem;
+				margin: 1rem auto;
+				padding: 5px 15px;
+				width: auto
+			}
+
+			#cancel:hover {
+				background: var(--hover)
+			}
+
 			#shortcutToggle {
 				background: none;
 				border: none;
@@ -301,6 +317,7 @@
 					<button id="tie" class="secondary"></button>
 				</div>
 				<div id="progress"></div>
+				<button id="cancel"></button>
 				<button id="shortcutToggle"></button>
 				<div id="shortcutTip" class="hidden"></div>
 			</div>
@@ -323,6 +340,7 @@
 					alert: 'Please enter at least two items.',
 					duplicateAlert: '{count} duplicate item(s) were found and have been removed.',
 					start: 'Start Ranking',
+					cancel: 'Cancel',
 					tie: "It's a Tie",
 					undo: 'Undo',
 					progress: 'Progress',
@@ -348,6 +366,7 @@
 					alert: 'Harap masukkan setidaknya dua pilihan.',
 					duplicateAlert: '{count} item duplikat ditemukan dan telah dihapus.',
 					start: 'Mulai Peringkat',
+					cancel: 'Batal',
 					tie: 'Seri',
 					undo: 'Urungkan',
 					progress: 'Kemajuan',
@@ -580,6 +599,7 @@
 				bind() {
 					const {dom} = this;
 					dom.start.onclick = ()=>this.startRanking();
+					dom.cancel.onclick = ()=>this.cancel();
 					dom.left.onclick = ()=>this.choose('left');
 					dom.right.onclick = ()=>this.choose('right');
 					dom.tie.onclick = ()=>this.choose('tie');
@@ -622,6 +642,7 @@
 					dom.allowTiesLabel.textContent = source.allowTiesLabel;
 					dom.quickRankLabel.textContent = source.quickRankLabel;
 					dom.start.textContent = source.start;
+					dom.cancel.textContent = source.cancel;
 					dom.tie.textContent = source.tie;
 					dom.undo.textContent = source.undo;
 					dom.restartBattle.textContent = source.restartBattle;
@@ -659,6 +680,10 @@
 					this.swaps = new Map();
 					this.dom.undo.disabled = true;
 					this.provider = this.dom.quickRank.checked ? new QuickPairProvider(count) : new FullPairProvider(count);
+				}
+
+				cancel() {
+					this.show('input');
 				}
 
 				startRanking() {
@@ -761,10 +786,13 @@
 					this.dom.restartContainer.classList.toggle('hidden', section !== 'results');
 					this.dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
 					this.keyboard = section === 'battleSection' || section === 'results';
-					if (section === 'battleSection')
-						this.undoParent.insertBefore(this.dom.undo, this.undoSibling);
-					else if (section === 'results')
-						this.dom.results.firstElementChild.appendChild(this.dom.undo);
+
+					const undoPlacement = {
+						battleSection: ()=>this.undoParent.insertBefore(this.dom.undo, this.undoSibling),
+						results: ()=>this.dom.results.firstElementChild.prepend(this.dom.undo),
+						input: ()=>{}
+					};
+					(undoPlacement[section] || (()=>{}))();
 				}
 
 				undoChoice() {
