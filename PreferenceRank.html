@@ -718,6 +718,10 @@
 					if (isArrow && !this.ties)
 						return;
 
+					const isBattle = target === 'left' || target === 'right' || target === 'tie';
+					if (isBattle && this.dom.battleSection.classList.contains('hidden'))
+						return;
+
 					event.preventDefault();
 					this.dom[target].click();
 				}
