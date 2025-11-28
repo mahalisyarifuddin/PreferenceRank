@@ -391,6 +391,9 @@
 						score: scores[i]
 					})).sort((a,b)=>b.score - a.score);
 				}
+				getProgressText(step) {
+					return `${step}`;
+				}
 			}
 
 			class FullPairProvider extends PairProvider {
@@ -411,6 +414,9 @@
 				total() {
 					return this.pairs.length;
 				}
+				getProgressText(step) {
+					return `${step}/${this.total()}`;
+				}
 			}
 
 			class QuickPairProvider extends PairProvider {
@@ -428,6 +434,7 @@
 					this.historyStack = [];
 					this.pendingPair = null;
 					this.previousScores = null;
+					this.finalResult = null;
 				}
 				snapshot() {
 					return JSON.stringify({
@@ -661,8 +668,8 @@
 					this.history = [];
 					this.swaps = new Map();
 					this.dom.undo.disabled = true;
-					this.provider = quick ? new QuickPairProvider(count) : new FullPairProvider(count);
-					this.total = quick ? 0 : this.provider.total();
+					const Provider = quick ? QuickPairProvider : FullPairProvider;
+					this.provider = new Provider(count);
 				}
 
 				startRanking() {
@@ -735,8 +742,7 @@
 				nextBattle() {
 					this.clearSelections();
 					const next = this.provider.next(this);
-					const quick = this.dom.quickRank.checked;
-					if (!next || (!quick && this.step >= this.total))
+					if (!next)
 						return this.showResults();
 
 					this.pair = next;
@@ -748,8 +754,8 @@
 				}
 
 				updateProgress() {
-					const quick = this.dom.quickRank.checked;
-					this.dom.progress.textContent = `${this.string('progress')}: ${this.step}${quick ? '' : `/${this.total || 0}`}`;
+					const text = this.provider ? this.provider.getProgressText(this.step) : '0';
+					this.dom.progress.textContent = `${this.string('progress')}: ${text}`;
 				}
 
 				clearSelections() {
@@ -841,10 +847,6 @@
 					if (isUndo && event.shiftKey)
 						return;
 					if (isArrow && !this.ties)
-						return;
-
-					const isBattle = target === 'left' || target === 'right' || target === 'tie';
-					if (isBattle && this.dom.battleSection.classList.contains('hidden'))
 						return;
 
 					event.preventDefault();
