@@ -311,7 +311,7 @@
 			</div>
 		</div>
 		<script>
-			const text = {
+			const strings = {
 				en: {
 					title: 'PreferenceRank',
 					autoTheme: 'Auto Theme',
@@ -436,6 +436,7 @@
 					this.previousScores = null;
 					this.finalResult = null;
 				}
+
 				snapshot() {
 					return JSON.stringify({
 						stack: this.stack,
@@ -444,6 +445,7 @@
 						compared: Array.from(this.compared)
 					});
 				}
+
 				restore(json) {
 					const data = JSON.parse(json);
 					this.stack = data.stack;
@@ -451,11 +453,13 @@
 					this.previousScores = data.previousScores;
 					this.compared = new Set(data.compared);
 				}
+
 				unmark(pair) {
 					if (this.historyStack.length > 0)
 						this.restore(this.historyStack.pop());
 					super.unmark(pair);
 				}
+
 				next(state) {
 					if (!this.previousScores)
 						this.previousScores = [...state.scores];
@@ -464,13 +468,7 @@
 						const change = state.scores[a] - this.previousScores[a];
 						const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
 						const result = (change / 32) + expected;
-						let winnerId;
-						if (Math.abs(result - 0.5) < 0.01)
-							winnerId = b;
-						else if (result > 0.75)
-							winnerId = a;
-						else
-							winnerId = b;
+						const winnerId = Math.abs(result - 0.5) < 0.01 ? b : result > 0.75 ? a : b;
 						const frame = this.stack[this.stack.length - 1];
 						if (winnerId === a)
 							frame.mergeResult.push(frame.left.shift());
@@ -479,6 +477,7 @@
 						this.pendingPair = null;
 						this.previousScores = [...state.scores];
 					}
+
 					while (this.stack.length > 0) {
 						const frame = this.stack[this.stack.length - 1];
 						if (frame.stage === 0) {
@@ -488,14 +487,12 @@
 								continue;
 							}
 							const mid = Math.floor(frame.items.length / 2);
-							const leftItems = frame.items.slice(0, mid);
-							const rightItems = frame.items.slice(mid);
 							frame.stage = 1;
-							frame.leftItems = leftItems;
-							frame.rightItems = rightItems;
+							frame.leftItems = frame.items.slice(0, mid);
+							frame.rightItems = frame.items.slice(mid);
 							this.stack.push({
 								stage: 0,
-								items: leftItems,
+								items: frame.leftItems,
 								left: null,
 								right: null
 							});
@@ -518,21 +515,19 @@
 								frame.right = [...frame.rightResult];
 							}
 							while (frame.left.length > 0 && frame.right.length > 0) {
-								const a = frame.left[0];
-								const b = frame.right[0];
-								const pair = [a, b];
+								const pair = [frame.left[0], frame.right[0]];
 								this.historyStack.push(this.snapshot());
 								this.pendingPair = pair;
 								return pair;
 							}
-							frame.mergeResult.push(...frame.left);
-							frame.mergeResult.push(...frame.right);
+							frame.mergeResult.push(...frame.left, ...frame.right);
 							this.popAndPass(frame.mergeResult);
 							continue;
 						}
 					}
 					return null;
 				}
+
 				popAndPass(result) {
 					this.stack.pop();
 					if (this.stack.length > 0) {
@@ -541,10 +536,10 @@
 							parent.leftResult = result;
 						else if (parent.stage === 2)
 							parent.rightResult = result;
-					} else {
+					} else
 						this.finalResult = result;
-					}
 				}
+
 				getResults(items, scores) {
 					if (!this.finalResult)
 						return super.getResults(items, scores);
@@ -564,7 +559,6 @@
 					this.pair = null;
 					this.swapped = false;
 					this.step = 0;
-					this.total = 0;
 					this.ties = false;
 					this.history = [];
 					this.keyboard = false;
@@ -600,14 +594,11 @@
 				}
 
 				string(key) {
-					return text[this.language][key];
+					return strings[this.language][key];
 				}
 
 				template(key, values) {
-					let result = this.string(key);
-					for (const [k,v] of Object.entries(values || {}))
-						result = result.replace(`{${k}}`, v);
-					return result;
+					return Object.entries(values || {}).reduce((result,[k,v])=>result.replace(`{${k}}`, v), this.string(key));
 				}
 
 				setTheme(theme) {
@@ -622,7 +613,7 @@
 					this.dom.language.value = language;
 					document.documentElement.lang = language;
 					const {dom} = this
-					  , source = text[language];
+					  , source = strings[language];
 					dom.title.textContent = source.title;
 					dom.theme.options[0].textContent = source.autoTheme;
 					dom.theme.options[1].textContent = source.lightTheme;
@@ -662,14 +653,12 @@
 
 				initBattle() {
 					const count = this.items.length;
-					const quick = this.dom.quickRank.checked;
 					this.scores = Array(count).fill(1000);
 					this.step = 0;
 					this.history = [];
 					this.swaps = new Map();
 					this.dom.undo.disabled = true;
-					const Provider = quick ? QuickPairProvider : FullPairProvider;
-					this.provider = new Provider(count);
+					this.provider = this.dom.quickRank.checked ? new QuickPairProvider(count) : new FullPairProvider(count);
 				}
 
 				startRanking() {
@@ -705,7 +694,6 @@
 					if (this.choosing)
 						return;
 					this.choosing = true;
-
 					this.history.push({
 						pair: this.pair,
 						scores: [...this.scores],
@@ -721,7 +709,6 @@
 
 					const button = winner === 'tie' ? this.dom.tie : this.dom[winner];
 					button.classList.add('selected');
-
 					setTimeout(()=>{
 						this.choosing = false;
 						this.nextBattle();
@@ -744,7 +731,6 @@
 					const next = this.provider.next(this);
 					if (!next)
 						return this.showResults();
-
 					this.pair = next;
 					const key = this.provider.key(next);
 					if (!this.swaps.has(key))
@@ -765,8 +751,8 @@
 				showResults() {
 					const results = this.provider.getResults(this.items, this.scores);
 					this.dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>
-					<table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>
-					<tbody>${results.map(r=>`<tr><td>${results.findIndex(x=>Math.round(x.score) === Math.round(r.score)) + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
+			<table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>
+			<tbody>${results.map(r=>`<tr><td>${results.findIndex(x=>Math.round(x.score) === Math.round(r.score)) + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 				}
 
@@ -775,11 +761,10 @@
 					this.dom.restartContainer.classList.toggle('hidden', section !== 'results');
 					this.dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
 					this.keyboard = section === 'battleSection' || section === 'results';
-					const undoActions = {
-						battleSection: ()=>this.undoParent.insertBefore(this.dom.undo, this.undoSibling),
-						results: ()=>this.dom.results.firstElementChild.appendChild(this.dom.undo)
-					};
-					undoActions[section]?.();
+					if (section === 'battleSection')
+						this.undoParent.insertBefore(this.dom.undo, this.undoSibling);
+					else if (section === 'results')
+						this.dom.results.firstElementChild.appendChild(this.dom.undo);
 				}
 
 				undoChoice() {
@@ -808,7 +793,6 @@
 					this.pair = null;
 					this.swapped = false;
 					this.step = 0;
-					this.total = 0;
 					this.ties = false;
 					this.history = [];
 					this.keyboard = false;
