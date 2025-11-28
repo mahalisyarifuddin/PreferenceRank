@@ -408,16 +408,129 @@
 			}
 
 			class QuickPairProvider extends PairProvider {
+				constructor(count) {
+					super(count);
+					this.items = Array.from({
+						length: count
+					}, (_,i)=>i);
+					this.stack = [{
+						stage: 0,
+						items: [...this.items],
+						left: null,
+						right: null
+					}];
+					this.historyStack = [];
+					this.pendingPair = null;
+					this.previousScores = null;
+				}
+				snapshot() {
+					return JSON.stringify({
+						stack: this.stack,
+						pendingPair: this.pendingPair,
+						previousScores: this.previousScores,
+						compared: Array.from(this.compared)
+					});
+				}
+				restore(json) {
+					const data = JSON.parse(json);
+					this.stack = data.stack;
+					this.pendingPair = data.pendingPair;
+					this.previousScores = data.previousScores;
+					this.compared = new Set(data.compared);
+				}
+				unmark(pair) {
+					if (this.historyStack.length > 0)
+						this.restore(this.historyStack.pop());
+					super.unmark(pair);
+				}
 				next(state) {
-					const sorted = Array.from({
-						length: this.count
-					}, (_,i)=>i).sort((a,b)=>state.scores[b] - state.scores[a]);
-					for (let i = 0; i < this.count - 1; i++) {
-						const pair = [sorted[i], sorted[i + 1]];
-						if (!this.has(pair))
-							return pair;
+					if (!this.previousScores)
+						this.previousScores = [...state.scores];
+					if (this.pendingPair) {
+						const [a,b] = this.pendingPair;
+						const change = state.scores[a] - this.previousScores[a];
+						const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
+						const result = (change / 32) + expected;
+						let winnerId;
+						if (Math.abs(result - 0.5) < 0.01)
+							winnerId = b;
+						else if (result > 0.75)
+							winnerId = a;
+						else
+							winnerId = b;
+						const frame = this.stack[this.stack.length - 1];
+						if (winnerId === a)
+							frame.mergeResult.push(frame.left.shift());
+						else
+							frame.mergeResult.push(frame.right.shift());
+						this.pendingPair = null;
+						this.previousScores = [...state.scores];
+					}
+					while (this.stack.length > 0) {
+						const frame = this.stack[this.stack.length - 1];
+						if (frame.stage === 0) {
+							if (frame.items.length <= 1) {
+								frame.result = frame.items;
+								this.popAndPass(frame.result);
+								continue;
+							}
+							const mid = Math.floor(frame.items.length / 2);
+							const leftItems = frame.items.slice(0, mid);
+							const rightItems = frame.items.slice(mid);
+							frame.stage = 1;
+							frame.leftItems = leftItems;
+							frame.rightItems = rightItems;
+							this.stack.push({
+								stage: 0,
+								items: leftItems,
+								left: null,
+								right: null
+							});
+							continue;
+						}
+						if (frame.stage === 1) {
+							frame.stage = 2;
+							this.stack.push({
+								stage: 0,
+								items: frame.rightItems,
+								left: null,
+								right: null
+							});
+							continue;
+						}
+						if (frame.stage === 2) {
+							if (!frame.mergeResult) {
+								frame.mergeResult = [];
+								frame.left = [...frame.leftResult];
+								frame.right = [...frame.rightResult];
+							}
+							while (frame.left.length > 0 && frame.right.length > 0) {
+								const a = frame.left[0];
+								const b = frame.right[0];
+								const pair = [a, b];
+								this.historyStack.push(this.snapshot());
+								this.pendingPair = pair;
+								return pair;
+							}
+							frame.mergeResult.push(...frame.left);
+							frame.mergeResult.push(...frame.right);
+							this.popAndPass(frame.mergeResult);
+							continue;
+						}
 					}
 					return null;
+				}
+				popAndPass(result) {
+					this.stack.pop();
+					if (this.stack.length > 0) {
+						const parent = this.stack[this.stack.length - 1];
+						if (parent.stage === 1)
+							parent.leftResult = result;
+						else if (parent.stage === 2)
+							parent.rightResult = result;
+					} else {
+						this.finalResult = result;
+					}
 				}
 			}
 
@@ -629,10 +742,22 @@
 				}
 
 				showResults() {
-					const results = this.items.map((item,i)=>({
-						item,
-						score: this.scores[i]
-					})).sort((a,b)=>b.score - a.score);
+					let results;
+					if (this.dom.quickRank.checked && this.provider.finalResult) {
+						// For Quick Rank, use the explicit sort order from Merge Sort.
+						// To ensure scores look consistent, we map the sorted Elo scores to the sorted items.
+						const sortedScores = [...this.scores].sort((a,b)=>b - a);
+						results = this.provider.finalResult.map((index, i)=>({
+							item: this.items[index],
+							score: sortedScores[i]
+						}));
+					} else {
+						results = this.items.map((item,i)=>({
+							item,
+							score: this.scores[i]
+						})).sort((a,b)=>b.score - a.score);
+					}
+
 					this.dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>
 					<table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>
 					<tbody>${results.map(r=>`<tr><td>${results.findIndex(x=>Math.round(x.score) === Math.round(r.score)) + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
@@ -716,6 +841,10 @@
 					if (isUndo && event.shiftKey)
 						return;
 					if (isArrow && !this.ties)
+						return;
+
+					const isBattle = target === 'left' || target === 'right' || target === 'tie';
+					if (isBattle && this.dom.battleSection.classList.contains('hidden'))
 						return;
 
 					event.preventDefault();
