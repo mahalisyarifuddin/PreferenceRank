@@ -229,8 +229,22 @@
 
 			.results-header {
 				display: flex;
-				justify-content: space-between;
-				align-items: center
+				justify-content: center;
+				align-items: center;
+				position: relative;
+				min-height: 40px;
+				margin-bottom: 1rem
+			}
+
+			.results-header h2 {
+				margin: 0
+			}
+
+			.results-header #undo {
+				position: absolute;
+				left: 0;
+				top: 50%;
+				transform: translateY(-50%)
 			}
 
 			#undo {
