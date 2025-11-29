@@ -501,8 +501,9 @@
 
 				unmark(pair) {
 					if (this.historyStack.length > 0)
-						this.restore(this.historyStack.pop());
-					this.pendingPair = pair;
+						this.historyStack.pop();
+					if (this.historyStack.length > 0)
+						this.restore(this.historyStack[this.historyStack.length - 1]);
 					super.unmark(pair);
 				}
 
@@ -576,12 +577,16 @@
 
 					if (this.finalResult) {
 						while (true) {
-							if (this.refinePass >= this.maxRefinePasses)
+							if (this.refinePass >= this.maxRefinePasses) {
+								this.historyStack.push(this.snapshot());
 								return null;
+							}
 
 							if (this.refineIndex >= this.finalResult.length - 1) {
-								if (!this.refineSwapped)
+								if (!this.refineSwapped) {
+									this.historyStack.push(this.snapshot());
 									return null;
+								}
 								this.refinePass++;
 								this.refineIndex = 0;
 								this.refineSwapped = false;
@@ -596,6 +601,7 @@
 						}
 					}
 
+					this.historyStack.push(this.snapshot());
 					return null;
 				}
 
