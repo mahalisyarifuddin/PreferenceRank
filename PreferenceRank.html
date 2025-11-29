@@ -517,11 +517,11 @@
 
 						if (this.stack.length > 0) {
 							const frame = this.stack[this.stack.length - 1];
-							if (winnerId === a)
-								frame.mergeResult.push(frame.left.shift());
-							else
-								frame.mergeResult.push(frame.right.shift());
-						} else if (this.finalResult) {
+							const source = winnerId === a ? frame.left : frame.right;
+							frame.mergeResult.push(source.shift());
+						}
+
+						if (this.finalResult) {
 							if (winnerId === b) {
 								const idxA = this.refineIndex;
 								const idxB = this.refineIndex + 1;
@@ -588,13 +588,7 @@
 							if (this.refinePass >= this.maxRefinePasses)
 								return null;
 
-							if (this.refineIndex < this.finalResult.length - 1) {
-								const a = this.finalResult[this.refineIndex];
-								const b = this.finalResult[this.refineIndex + 1];
-								this.historyStack.push(this.snapshot());
-								this.pendingPair = [a, b];
-								return [a, b];
-							} else {
+							if (this.refineIndex >= this.finalResult.length - 1) {
 								if (!this.refineSwapped)
 									return null;
 								this.refinePass++;
@@ -602,6 +596,12 @@
 								this.refineSwapped = false;
 								continue;
 							}
+
+							const a = this.finalResult[this.refineIndex];
+							const b = this.finalResult[this.refineIndex + 1];
+							this.historyStack.push(this.snapshot());
+							this.pendingPair = [a, b];
+							return [a, b];
 						}
 					}
 
