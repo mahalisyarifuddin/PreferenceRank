@@ -503,7 +503,7 @@
 					if (this.historyStack.length > 0)
 						this.historyStack.pop();
 					if (this.historyStack.length > 0) {
-						const previous = this.historyStack.pop();
+						const previous = this.historyStack[this.historyStack.length - 1];
 						this.restore(previous);
 					}
 					super.unmark(pair);
