@@ -500,9 +500,13 @@
 				}
 
 				unmark(pair) {
+					if (this.pendingPair && this.historyStack.length > 0)
+						this.historyStack.pop();
+
 					if (this.historyStack.length > 0) {
-						const last = this.historyStack.pop();
+						const last = this.historyStack[this.historyStack.length - 1];
 						this.restore(last);
+						this.pendingPair = pair;
 					}
 					super.unmark(pair);
 				}
