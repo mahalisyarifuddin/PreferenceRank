@@ -500,11 +500,9 @@
 				}
 
 				unmark(pair) {
-					if (this.historyStack.length > 0)
-						this.historyStack.pop();
 					if (this.historyStack.length > 0) {
-						const previous = this.historyStack[this.historyStack.length - 1];
-						this.restore(previous);
+						const last = this.historyStack.pop();
+						this.restore(last);
 					}
 					super.unmark(pair);
 				}
@@ -517,7 +515,7 @@
 						const change = state.scores[a] - this.previousScores[a];
 						const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
 						const result = (change / 32) + expected;
-						const winnerId = result > 0.75 ? a : result < 0.25 ? b : a;
+						const winnerId = Math.abs(result - 0.5) < 0.01 ? b : result > 0.75 ? a : b;
 
 						this.stack.length > 0 && this.stack[this.stack.length - 1].mergeResult.push((winnerId === a ? this.stack[this.stack.length - 1].left : this.stack[this.stack.length - 1].right).shift());
 
@@ -567,8 +565,8 @@
 							}
 							while (frame.left.length > 0 && frame.right.length > 0) {
 								const pair = [frame.left[0], frame.right[0]];
-								this.pendingPair = pair;
 								this.historyStack.push(this.snapshot());
+								this.pendingPair = pair;
 								return pair;
 							}
 							frame.mergeResult.push(...frame.left, ...frame.right);
@@ -579,16 +577,12 @@
 
 					if (this.finalResult) {
 						while (true) {
-							if (this.refinePass >= this.maxRefinePasses) {
-								this.historyStack.push(this.snapshot());
+							if (this.refinePass >= this.maxRefinePasses)
 								return null;
-							}
 
 							if (this.refineIndex >= this.finalResult.length - 1) {
-								if (!this.refineSwapped) {
-									this.historyStack.push(this.snapshot());
+								if (!this.refineSwapped)
 									return null;
-								}
 								this.refinePass++;
 								this.refineIndex = 0;
 								this.refineSwapped = false;
@@ -597,13 +591,12 @@
 
 							const a = this.finalResult[this.refineIndex];
 							const b = this.finalResult[this.refineIndex + 1];
-							this.pendingPair = [a, b];
 							this.historyStack.push(this.snapshot());
+							this.pendingPair = [a, b];
 							return [a, b];
 						}
 					}
 
-					this.historyStack.push(this.snapshot());
 					return null;
 				}
 
@@ -616,9 +609,10 @@
 				getResults(items, scores) {
 					if (!this.finalResult)
 						return super.getResults(items, scores);
-					return this.finalResult.map(index=>({
+					const sortedScores = [...scores].sort((a,b)=>b - a);
+					return this.finalResult.map((index,i)=>({
 						item: items[index],
-						score: scores[index]
+						score: sortedScores[i]
 					}));
 				}
 			}
@@ -743,12 +737,10 @@
 					const raw = this.dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
 					const unique = [...new Set(raw)];
 					const duplicates = raw.length - unique.length;
-					if (duplicates > 0) {
+					if (duplicates > 0)
 						alert(this.template('duplicateAlert', {
 							count: duplicates
 						}));
-						this.dom.items.value = unique.join('\n');
-					}
 					if (unique.length < 2)
 						return alert(this.string('alert'));
 
