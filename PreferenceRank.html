@@ -515,7 +515,7 @@
 						const change = state.scores[a] - this.previousScores[a];
 						const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
 						const result = (change / 32) + expected;
-						const winnerId = Math.abs(result - 0.5) < 0.01 ? b : result > 0.75 ? a : b;
+						const winnerId = Math.abs(result - 0.5) < 0.01 ? a : result > 0.75 ? a : b;
 
 						this.stack.length > 0 && this.stack[this.stack.length - 1].mergeResult.push((winnerId === a ? this.stack[this.stack.length - 1].left : this.stack[this.stack.length - 1].right).shift());
 
