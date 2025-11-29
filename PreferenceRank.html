@@ -342,7 +342,7 @@
 			</div>
 		</div>
 		<script>
-			const strings = {
+			const text = {
 				en: {
 					title: 'PreferenceRank',
 					autoTheme: 'Auto Theme',
@@ -628,7 +628,7 @@
 				}
 
 				string(key) {
-					return strings[this.language][key];
+					return text[this.language][key];
 				}
 
 				template(key, values) {
@@ -647,7 +647,7 @@
 					this.dom.language.value = language;
 					document.documentElement.lang = language;
 					const {dom} = this
-					  , source = strings[language];
+					  , source = text[language];
 					dom.title.textContent = source.title;
 					dom.theme.options[0].textContent = source.autoTheme;
 					dom.theme.options[1].textContent = source.lightTheme;
@@ -779,8 +779,8 @@
 				}
 
 				updateProgress() {
-					const text = this.provider ? this.provider.getProgressText(this.step) : '0';
-					this.dom.progress.textContent = `${this.string('progress')}: ${text}`;
+					const value = this.provider ? this.provider.getProgressText(this.step) : '0';
+					this.dom.progress.textContent = `${this.string('progress')}: ${value}`;
 				}
 
 				clearSelections() {
@@ -790,8 +790,8 @@
 				showResults() {
 					const results = this.provider.getResults(this.items, this.scores);
 					this.dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>
-			<table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>
-			<tbody>${results.map(r=>`<tr><td>${results.findIndex(x=>Math.round(x.score) === Math.round(r.score)) + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
+					<table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>
+					<tbody>${results.map(r=>`<tr><td>${results.findIndex(x=>Math.round(x.score) === Math.round(r.score)) + 1}</td><td>${escape(r.item)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 				}
 
@@ -806,7 +806,8 @@
 						results: ()=>this.dom.results.firstElementChild.prepend(this.dom.undo),
 						input: ()=>{}
 					};
-					(undoPlacement[section] || (()=>{}))();
+					(undoPlacement[section] || (()=>{}
+					))();
 				}
 
 				undoChoice() {
