@@ -490,7 +490,7 @@
 				restore(json) {
 					const data = JSON.parse(json);
 					this.stack = data.stack;
-					this.pendingPair = data.pendingPair;
+					this.pendingPair = null;
 					this.previousScores = data.previousScores;
 					this.compared = new Set(data.compared);
 					this.finalResult = data.finalResult || null;
@@ -502,8 +502,10 @@
 				unmark(pair) {
 					if (this.historyStack.length > 0)
 						this.historyStack.pop();
-					if (this.historyStack.length > 0)
-						this.restore(this.historyStack[this.historyStack.length - 1]);
+					if (this.historyStack.length > 0) {
+						const previous = this.historyStack.pop();
+						this.restore(previous);
+					}
 					super.unmark(pair);
 				}
 
