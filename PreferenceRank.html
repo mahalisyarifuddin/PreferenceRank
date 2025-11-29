@@ -741,10 +741,12 @@
 					const raw = this.dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
 					const unique = [...new Set(raw)];
 					const duplicates = raw.length - unique.length;
-					if (duplicates > 0)
+					if (duplicates > 0) {
 						alert(this.template('duplicateAlert', {
 							count: duplicates
 						}));
+						this.dom.items.value = unique.join('\n');
+					}
 					if (unique.length < 2)
 						return alert(this.string('alert'));
 
