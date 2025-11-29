@@ -502,6 +502,7 @@
 				unmark(pair) {
 					if (this.historyStack.length > 0)
 						this.restore(this.historyStack.pop());
+					this.pendingPair = pair;
 					super.unmark(pair);
 				}
 
