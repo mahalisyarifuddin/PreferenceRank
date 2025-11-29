@@ -468,6 +468,10 @@
 					this.pendingPair = null;
 					this.previousScores = null;
 					this.finalResult = null;
+					this.refinePass = 0;
+					this.refineIndex = 0;
+					this.refineSwapped = false;
+					this.maxRefinePasses = 3;
 				}
 
 				snapshot() {
@@ -475,7 +479,11 @@
 						stack: this.stack,
 						pendingPair: this.pendingPair,
 						previousScores: this.previousScores,
-						compared: Array.from(this.compared)
+						compared: Array.from(this.compared),
+						finalResult: this.finalResult,
+						refinePass: this.refinePass,
+						refineIndex: this.refineIndex,
+						refineSwapped: this.refineSwapped
 					});
 				}
 
@@ -485,11 +493,16 @@
 					this.pendingPair = data.pendingPair;
 					this.previousScores = data.previousScores;
 					this.compared = new Set(data.compared);
+					this.finalResult = data.finalResult || null;
+					this.refinePass = data.refinePass || 0;
+					this.refineIndex = data.refineIndex || 0;
+					this.refineSwapped = data.refineSwapped || false;
 				}
 
 				unmark(pair) {
 					if (this.historyStack.length > 0)
 						this.restore(this.historyStack.pop());
+					this.pendingPair = pair;
 					super.unmark(pair);
 				}
 
@@ -502,11 +515,13 @@
 						const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
 						const result = (change / 32) + expected;
 						const winnerId = Math.abs(result - 0.5) < 0.01 ? b : result > 0.75 ? a : b;
-						const frame = this.stack[this.stack.length - 1];
-						if (winnerId === a)
-							frame.mergeResult.push(frame.left.shift());
-						else
-							frame.mergeResult.push(frame.right.shift());
+
+						this.stack.length > 0 && this.stack[this.stack.length - 1].mergeResult.push((winnerId === a ? this.stack[this.stack.length - 1].left : this.stack[this.stack.length - 1].right).shift());
+
+						this.finalResult && winnerId === b && ([this.finalResult[this.refineIndex],this.finalResult[this.refineIndex + 1]] = [this.finalResult[this.refineIndex + 1], this.finalResult[this.refineIndex]],
+						this.refineSwapped = true);
+						this.finalResult && this.refineIndex++;
+
 						this.pendingPair = null;
 						this.previousScores = [...state.scores];
 					}
@@ -558,19 +573,36 @@
 							continue;
 						}
 					}
+
+					if (this.finalResult) {
+						while (true) {
+							if (this.refinePass >= this.maxRefinePasses)
+								return null;
+
+							if (this.refineIndex >= this.finalResult.length - 1) {
+								if (!this.refineSwapped)
+									return null;
+								this.refinePass++;
+								this.refineIndex = 0;
+								this.refineSwapped = false;
+								continue;
+							}
+
+							const a = this.finalResult[this.refineIndex];
+							const b = this.finalResult[this.refineIndex + 1];
+							this.historyStack.push(this.snapshot());
+							this.pendingPair = [a, b];
+							return [a, b];
+						}
+					}
+
 					return null;
 				}
 
 				popAndPass(result) {
 					this.stack.pop();
-					if (this.stack.length > 0) {
-						const parent = this.stack[this.stack.length - 1];
-						if (parent.stage === 1)
-							parent.leftResult = result;
-						else if (parent.stage === 2)
-							parent.rightResult = result;
-					} else
-						this.finalResult = result;
+					const parent = this.stack[this.stack.length - 1];
+					this.stack.length > 0 ? (parent.stage === 1 ? parent.leftResult = result : parent.rightResult = result) : this.finalResult = result;
 				}
 
 				getResults(items, scores) {
