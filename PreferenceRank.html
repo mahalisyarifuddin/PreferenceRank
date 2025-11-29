@@ -490,7 +490,7 @@
 				restore(json) {
 					const data = JSON.parse(json);
 					this.stack = data.stack;
-					this.pendingPair = null;
+					this.pendingPair = data.pendingPair;
 					this.previousScores = data.previousScores;
 					this.compared = new Set(data.compared);
 					this.finalResult = data.finalResult || null;
