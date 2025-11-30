@@ -619,10 +619,9 @@
 				getResults(items, scores) {
 					if (!this.finalResult)
 						return super.getResults(items, scores);
-					const sortedScores = [...scores].sort((a,b)=>b - a);
-					return this.finalResult.map((index,i)=>({
+					return this.finalResult.map(index=>({
 						item: items[index],
-						score: sortedScores[i]
+						score: scores[index]
 					}));
 				}
 			}
