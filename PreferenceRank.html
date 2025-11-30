@@ -774,7 +774,7 @@
                     dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
                     this.keyboardEnabled = section === 'battleSection' || section === 'results';
                     if (section === 'battleSection')
-                        dom.undo.parentNode.insertBefore(dom.undo, dom.battleSection);
+                        dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
                     else if (section === 'results')
                         dom.results.firstElementChild.prepend(dom.undo);
                 }
