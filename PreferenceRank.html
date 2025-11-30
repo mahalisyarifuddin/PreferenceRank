@@ -773,7 +773,7 @@
 				}
 
 				choose(winner) {
-					if (this.choosing)
+					if (this.choosing || this.dom.battleSection.classList.contains('hidden'))
 						return;
 					this.choosing = true;
 					this.history.push({
