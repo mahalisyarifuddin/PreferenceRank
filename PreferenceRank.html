@@ -595,6 +595,12 @@
 
 							const a = this.finalResult[this.refineIndex];
 							const b = this.finalResult[this.refineIndex + 1];
+
+							if (this.has([a, b])) {
+								this.refineIndex++;
+								continue;
+							}
+
 							this.historyStack.push(this.snapshot());
 							this.pendingPair = [a, b];
 							return [a, b];
