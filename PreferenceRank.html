@@ -911,12 +911,14 @@
 						return;
 
 					const isUndo = event.key === 'z' || event.key === 'Z';
-					const isArrow = event.key === 'ArrowUp' || event.key === 'ArrowDown';
+					const isArrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key);
 					if (isUndo && !(event.ctrlKey || event.metaKey))
 						return;
 					if (isUndo && event.shiftKey)
 						return;
-					if (isArrow && !this.ties)
+					if (isArrow && !this.ties && (event.key === 'ArrowUp' || event.key === 'ArrowDown'))
+						return;
+					if (isArrow && this.dom.battleSection.classList.contains('hidden'))
 						return;
 
 					event.preventDefault();
