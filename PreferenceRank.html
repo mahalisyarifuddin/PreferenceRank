@@ -596,6 +596,7 @@
 							const a = this.finalResult[this.refineIndex];
 							const b = this.finalResult[this.refineIndex + 1];
 
+							// FIX: Check for duplicate comparison
 							if (this.has([a, b])) {
 								this.refineIndex++;
 								continue;

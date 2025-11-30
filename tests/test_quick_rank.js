@@ -270,4 +270,56 @@ try {
     process.exit(1);
 }
 
+// Test 3: Verify cycle (A > B > C > A) behavior
+try {
+    const count = 3;
+    const provider = new QuickPairProvider(count);
+    const state = {
+        scores: Array(count).fill(1000)
+    };
+
+    // Cycle preferences: 0 > 1, 1 > 2, 2 > 0
+    // We must track pairs consistently
+    const preferences = (a, b) => {
+        if (a === 0 && b === 1) return a;
+        if (a === 1 && b === 0) return a; // 0 beats 1
+
+        if (a === 1 && b === 2) return a;
+        if (a === 2 && b === 1) return a; // 1 beats 2
+
+        if (a === 2 && b === 0) return a;
+        if (a === 0 && b === 2) return a; // 2 beats 0
+
+        return a < b ? a : b; // Fallback
+    };
+
+    let step = 0;
+    let pair;
+    const maxSteps = 100;
+
+    while (pair = provider.next(state)) {
+        step++;
+        if (step > maxSteps) {
+             throw new Error("Test 3 Failed: Infinite loop detected.");
+        }
+
+        const [a, b] = pair;
+        provider.mark(pair);
+
+        const winner = preferences(a, b);
+        const change = 16;
+        if (winner === a) {
+            state.scores[a] += change;
+            state.scores[b] -= change;
+        } else {
+            state.scores[a] -= change;
+            state.scores[b] += change;
+        }
+    }
+    console.log('Test 3 Passed: Cycle handled.');
+} catch (e) {
+    console.error(e.message);
+    process.exit(1);
+}
+
 console.log('All tests passed.');
