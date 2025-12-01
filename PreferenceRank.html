@@ -675,7 +675,8 @@
 						scores: Array(unique.length).fill(1000),
 						step: 0,
 						history: [],
-						swaps: new Map()
+						swaps: new Map(),
+						busy: false
 					});
 					dom.undo.disabled = true;
 					this.provider = dom.quickRank.checked ? new QuickPairProvider(unique.length) : new FullPairProvider(unique.length);
