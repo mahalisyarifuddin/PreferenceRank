@@ -726,6 +726,8 @@
                     this.clearSelections();
                     (winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
                     setTimeout(()=>{
+                        if (dom.battleSection.classList.contains('hidden'))
+                            return;
                         this.busy = false;
                         this.next();
                     }
