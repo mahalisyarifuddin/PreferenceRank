@@ -572,9 +572,9 @@
 					this.stack.length ? (this.stack[this.stack.length - 1].stage === 1 ? this.stack[this.stack.length - 1].leftResult = result : this.stack[this.stack.length - 1].rightResult = result) : this.final = result;
 				}
 				getResults(items, scores) {
-					return this.final ? [...scores].sort((a,b)=>b - a).map((score,rank)=>({
-						text: items[this.final[rank]],
-						score
+					return this.final ? this.final.map(index => ({
+						text: items[index],
+						score: scores[index]
 					})) : super.getResults(items, scores);
 				}
 			}
