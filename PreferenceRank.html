@@ -483,8 +483,7 @@
 
 				unmark(pair) {
 					this.pending && this.history.length && this.history.pop();
-					this.history.length && (this.restore(this.history[this.history.length - 1]),
-					this.pending = pair);
+					this.history.length && this.restore(this.history[this.history.length - 1]);
 					super.unmark(pair);
 				}
 
