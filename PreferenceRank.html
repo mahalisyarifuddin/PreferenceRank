@@ -532,8 +532,8 @@
 							frame.right = [...frame.rightResult],
 							[]);
 							while (frame.left.length && frame.right.length) {
-								this.history.push(this.snapshot());
 								this.pending = [frame.left[0], frame.right[0]];
+								this.history.push(this.snapshot());
 								return this.pending;
 							}
 							frame.mergeResult.push(...frame.left, ...frame.right);
@@ -558,8 +558,8 @@
 								this.refineIndex++;
 								continue;
 							}
-							this.history.push(this.snapshot());
 							this.pending = [a, b];
+							this.history.push(this.snapshot());
 							return this.pending;
 						}
 					}
