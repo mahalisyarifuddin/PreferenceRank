@@ -14,7 +14,7 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 
 - **Peringkat Penuh (Default):** Mode ini menggunakan sistem turnamen round-robin yang komprehensif, di mana setiap item akan dibandingkan dengan semua item lainnya. Metode ini menyeluruh dan menjamin representasi preferensi Anda yang paling akurat, tetapi bisa memakan waktu untuk daftar yang panjang.
 
-- **Peringkat Cepat:** Mode ini menggunakan algoritma **Merge Sort** deterministik untuk mengurutkan item Anda dengan kompleksitas O(N log N). Mode ini menjamin akurasi pengurutan 100% (asalkan preferensi konsisten) sambil secara drastis mengurangi jumlah perbandingan yang diperlukan dibandingkan dengan Peringkat Penuh. Sebagai contoh, mengurutkan 50 item memerlukan sekitar 90% lebih sedikit perbandingan dibandingkan Peringkat Penuh. Mode ini direkomendasikan untuk daftar yang panjang.
+- **Peringkat Cepat:** Mode ini menggunakan algoritma **Merge Sort** deterministik untuk mengurutkan item Anda dengan kompleksitas O(N log N). Mode ini menjamin akurasi pengurutan 100% (asalkan preferensi konsisten) sambil secara drastis mengurangi jumlah perbandingan yang diperlukan dibandingkan dengan Peringkat Penuh. Sebagai contoh, mengurutkan 50 item memerlukan sekitar 75% lebih sedikit perbandingan dibandingkan Peringkat Penuh. Mode ini direkomendasikan untuk daftar yang panjang.
 
 ## Cara Menggunakan
 1. Unduh berkas `PreferenceRank.html` dari repositori.
