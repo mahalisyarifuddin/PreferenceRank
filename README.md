@@ -14,7 +14,7 @@ PreferenceRank offers two distinct modes to sort your items:
 
 - **Full Rank (Default):** This mode uses a comprehensive round-robin tournament system where every item is compared against every other item. This method is thorough and guarantees the most accurate representation of your preferences but can be time-consuming for large lists.
 
-- **Quick Rank:** This mode uses a deterministic **Merge Sort** algorithm to sort your items with O(N log N) complexity. It guarantees 100% sorting accuracy (assuming consistent preferences) while drastically reducing the number of comparisons required compared to Full Rank. For example, sorting 50 items requires about 90% fewer comparisons than Full Rank. This is the recommended mode for large lists.
+- **Quick Rank:** This mode uses a deterministic **Merge Sort** algorithm to sort your items with O(N log N) complexity. It guarantees 100% sorting accuracy (assuming consistent preferences) while drastically reducing the number of comparisons required compared to Full Rank. For example, sorting 50 items requires about 75% fewer comparisons than Full Rank. This is the recommended mode for large lists.
 
 ## Quick Start
 1. Download the `PreferenceRank.html` file from the repository.
