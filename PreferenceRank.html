@@ -140,17 +140,17 @@
 				margin: 0
 			}
 
-			#battle,#tieContainer,#restartContainer {
+			#battle,#tieWrap,#restartWrap {
 				display: flex;
 				gap: 1rem;
 				margin-top: 1rem
 			}
 
-			#battle button,#tieContainer button,#restartContainer button {
+			#battle button,#tieWrap button,#restartWrap button {
 				flex: 1
 			}
 
-			#battle button,#tieContainer button {
+			#battle button,#tieWrap button {
 				font-size: 1.2rem;
 				min-height: 100px
 			}
@@ -161,7 +161,7 @@
 				text-align: center
 			}
 
-			#shortcutTip {
+			#tips {
 				background: var(--background);
 				border: 1px solid var(--border);
 				border-radius: 4px;
@@ -185,7 +185,7 @@
 				padding: 2px 5px
 			}
 
-			#cancel,#shortcutToggle {
+			#cancel,#toggle {
 				background: none;
 				border: 1px solid var(--border);
 				color: var(--text);
@@ -201,7 +201,7 @@
 				background: var(--dim)
 			}
 
-			#shortcutToggle {
+			#toggle {
 				border: none;
 				color: var(--primary);
 				font-size: .85rem;
@@ -281,11 +281,11 @@
 					padding: 4px
 				}
 
-				#battle,#tieContainer,#restartContainer {
+				#battle,#tieWrap,#restartWrap {
 					flex-direction: column
 				}
 
-				#battle button,#tieContainer button {
+				#battle button,#tieWrap button {
 					width: 100%
 				}
 			}
@@ -326,16 +326,16 @@
 					<button id="left" class="secondary"></button>
 					<button id="right" class="secondary"></button>
 				</div>
-				<div id="tieContainer" class="hidden">
+				<div id="tieWrap" class="hidden">
 					<button id="tie" class="secondary"></button>
 				</div>
 				<div id="progress"></div>
 				<button id="cancel"></button>
-				<button id="shortcutToggle"></button>
-				<div id="shortcutTip" class="hidden"></div>
+				<button id="toggle"></button>
+				<div id="tips" class="hidden"></div>
 			</div>
 			<div id="results" class="hidden"></div>
-			<div id="restartContainer" class="hidden">
+			<div id="restartWrap" class="hidden">
 				<button id="restartBattle" class="primary"></button>
 				<button id="restartNew" class="primary"></button>
 			</div>
@@ -396,7 +396,7 @@
 				}
 			};
 
-			const escape = text=>Object.assign(document.createElement('p'), {
+			const escape = text=>Object.assign(document.createElement('span'), {
 				textContent: text
 			}).innerHTML;
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
@@ -495,7 +495,8 @@
 						const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
 						const result = (change / 32) + expected;
 						const winner = Math.abs(result - 0.5) < 0.01 ? a : result > 0.75 ? a : b;
-						this.stack.length && this.stack[this.stack.length - 1].mergeResult.push((winner === a ? this.stack[this.stack.length - 1].left : this.stack[this.stack.length - 1].right).shift());
+						const frame = this.stack[this.stack.length - 1];
+						frame && frame.mergeResult.push((winner === a ? frame.left : frame.right).shift());
 						this.final && winner === b && ([this.final[this.refineIndex],this.final[this.refineIndex + 1]] = [this.final[this.refineIndex + 1], this.final[this.refineIndex]],
 						this.refineSwapped = true);
 						this.final && this.refineIndex++;
@@ -568,10 +569,11 @@
 
 				pop(result) {
 					this.stack.pop();
-					this.stack.length ? (this.stack[this.stack.length - 1].stage === 1 ? this.stack[this.stack.length - 1].leftResult = result : this.stack[this.stack.length - 1].rightResult = result) : this.final = result;
+					const frame = this.stack[this.stack.length - 1];
+					frame ? (frame.stage === 1 ? frame.leftResult = result : frame.rightResult = result) : this.final = result;
 				}
 				getResults(items, scores) {
-					return this.final ? this.final.map(index => ({
+					return this.final ? this.final.map(index=>({
 						text: items[index],
 						score: scores[index]
 					})) : super.getResults(items, scores);
@@ -604,19 +606,15 @@
 				}
 
 				bind() {
-					const click = (id,handler)=>{
-						dom[id].onclick = handler;
-					}
-					;
-					click('start', ()=>this.start());
-					click('cancel', ()=>this.show('inputSection'));
-					click('left', ()=>this.choose('left'));
-					click('right', ()=>this.choose('right'));
-					click('tie', ()=>this.choose('tie'));
-					click('restartBattle', ()=>this.start());
-					click('restartNew', ()=>this.reset());
-					click('undo', ()=>this.undo());
-					click('shortcutToggle', ()=>this.toggleHelp());
+					dom.start.onclick = ()=>this.start();
+					dom.cancel.onclick = ()=>this.show('inputSection');
+					dom.left.onclick = ()=>this.choose('left');
+					dom.right.onclick = ()=>this.choose('right');
+					dom.tie.onclick = ()=>this.choose('tie');
+					dom.restartBattle.onclick = ()=>this.start();
+					dom.restartNew.onclick = ()=>this.reset();
+					dom.undo.onclick = ()=>this.undo();
+					dom.toggle.onclick = ()=>this.toggleHelp();
 					dom.language.onchange = event=>{
 						this.language = event.target.value;
 						this.updateText();
@@ -634,15 +632,9 @@
 
 				updateText() {
 					dom.language.value = this.language;
-					'title labelItems labelTies labelQuick start cancel tie undo restartBattle restartNew'.split(' ').forEach(key=>{
-						dom[key].textContent = this.text(key);
-					}
-					);
-					dom.shortcutToggle.textContent = this.text(dom.shortcutTip.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
-					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>{
-						dom.theme.options[index].textContent = this.text(key);
-					}
-					);
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.text(key));
+					dom.toggle.textContent = this.text(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
+					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>dom.theme.options[index].textContent = this.text(key));
 					this.updateHelp();
 					this.updateProgress();
 					!dom.results.classList.contains('hidden') && this.renderResults();
@@ -650,15 +642,15 @@
 
 				setTies(enabled) {
 					this.allowTies = enabled;
-					!dom.battleSection.classList.contains('hidden') && dom.tieContainer.classList.toggle('hidden', !enabled);
+					!dom.battleSection.classList.contains('hidden') && dom.tieWrap.classList.toggle('hidden', !enabled);
 					this.updateHelp();
 				}
 				updateHelp() {
-					dom.shortcutToggle.textContent = this.text(dom.shortcutTip.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
-					dom.shortcutTip.innerHTML = this.text(this.allowTies ? 'tipTie' : 'tipNoTie');
+					dom.toggle.textContent = this.text(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
+					dom.tips.innerHTML = this.text(this.allowTies ? 'tipTie' : 'tipNoTie');
 				}
 				toggleHelp() {
-					dom.shortcutTip.classList.toggle('hidden');
+					dom.tips.classList.toggle('hidden');
 					this.updateHelp();
 				}
 
@@ -679,7 +671,7 @@
 					});
 					dom.undo.disabled = true;
 					this.provider = dom.quickRank.checked ? new QuickPairProvider(unique.length) : new FullPairProvider(unique.length);
-					dom.tieContainer.classList.toggle('hidden', !this.allowTies);
+					dom.tieWrap.classList.toggle('hidden', !this.allowTies);
 					this.updateHelp();
 					this.show('battleSection');
 					this.next();
@@ -747,7 +739,7 @@
 
 				show(section) {
 					['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
-					dom.restartContainer.classList.toggle('hidden', section !== 'results');
+					dom.restartWrap.classList.toggle('hidden', section !== 'results');
 					dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
 					this.keyboardEnabled = section === 'battleSection' || section === 'results';
 					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
