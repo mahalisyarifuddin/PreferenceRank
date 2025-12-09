@@ -733,7 +733,7 @@
 
 				renderResults() {
 					const results = this.provider.getResults(this.items, this.scores);
-					dom.results.innerHTML = `<div class="results-header"><h2>${this.text('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.text('rank')}</th><th style="width:60%">${this.text('item')}</th><th style="width:20%">${this.text('score')}</th></tr></thead><tbody>${results.map(result=>`<tr><td>${results.findIndex(x=>Math.round(x.score) === Math.round(result.score)) + 1}</td><td>${escape(result.text)}</td><td>${Math.round(result.score)}</td></tr>`).join('')}</tbody></table>`;
+					dom.results.innerHTML = `<div class="results-header"><h2>${this.text('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.text('rank')}</th><th style="width:60%">${this.text('item')}</th><th style="width:20%">${this.text('score')}</th></tr></thead><tbody>${results.map((result,index)=>`<tr><td>${index + 1}</td><td>${escape(result.text)}</td><td>${Math.round(result.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 				}
 
