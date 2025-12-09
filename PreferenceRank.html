@@ -708,8 +708,10 @@
 					this.clearSelections();
 					(winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
 					setTimeout(()=>{
-						dom.battleSection.classList.contains('hidden') || (this.busy = false,
-						this.next());
+						if (dom.battleSection.classList.contains('hidden') || !this.busy)
+							return;
+						this.busy = false;
+						this.next();
 					}
 					, 300);
 				}
