@@ -666,12 +666,9 @@
 
 				returnResult(result) {
 					this.stack.pop();
-					if (this.stack.length) {
-						const frame = this.stack[this.stack.length - 1];
-						frame.subResult = result;
-					} else {
-						this.final = result.reverse();
-					}
+					this.stack.length ?
+						(this.stack[this.stack.length - 1].subResult = result) :
+						(this.final = result.reverse());
 				}
 
 				getResults(items, scores) {
