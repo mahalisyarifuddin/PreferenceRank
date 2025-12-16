@@ -542,55 +542,41 @@
 				}
 
 				handleInit(frame) {
-					if (frame.items.length < 2) {
-						this.returnResult(frame.items);
-						return;
-					}
-					frame.pairs = [];
-					frame.straggler = null;
-					for (let i = 0; i < Math.floor(frame.items.length / 2); i++)
-						frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
-					frame.items.length % 2 && (frame.straggler = frame.items[frame.items.length - 1]);
-
-					frame.winners = [];
-					frame.losers = [];
-					frame.pairIdx = 0;
-					frame.stage = 'comparing';
+					return frame.items.length < 2 ? this.returnResult(frame.items) : (
+						frame.pairs = [],
+						frame.straggler = null,
+						[...Array(Math.floor(frame.items.length / 2))].forEach((_, i) => frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]])),
+						frame.items.length % 2 && (frame.straggler = frame.items[frame.items.length - 1]),
+						Object.assign(frame, { winners: [], losers: [], pairIdx: 0, stage: 'comparing' }),
+						null
+					);
 				}
 
 				handleComparing(frame) {
-					if (frame.pairIdx >= frame.pairs.length) {
-						frame.stage = 'recursion';
-						this.stack.push({
-							stage: 'init',
-							items: [...frame.winners]
-						});
-						return;
-					}
-
-					const pair = frame.pairs[frame.pairIdx];
-					if (frame.lastWinner !== undefined) {
-						const winner = frame.lastWinner;
-						const loser = winner === pair[0] ? pair[1] : pair[0];
-						frame.winners.push(winner);
-						frame.losers.push(loser);
-						delete frame.lastWinner;
-						frame.pairIdx++;
-						return;
-					}
-					this.pending = pair;
-					this.history.push(this.snapshot());
-					return this.pending;
+					return frame.pairIdx >= frame.pairs.length ? (
+						frame.stage = 'recursion',
+						this.stack.push({ stage: 'init', items: [...frame.winners] }),
+						null
+					) : frame.lastWinner !== undefined ? (
+						frame.winners.push(frame.lastWinner),
+						frame.losers.push(frame.lastWinner === frame.pairs[frame.pairIdx][0] ? frame.pairs[frame.pairIdx][1] : frame.pairs[frame.pairIdx][0]),
+						delete frame.lastWinner,
+						frame.pairIdx++,
+						null
+					) : (
+						this.pending = frame.pairs[frame.pairIdx],
+						this.history.push(this.snapshot()),
+						this.pending
+					);
 				}
 
 				handleRecursion(frame) {
-					if (!frame.subResult) return null; // Wait for recursion
+					if (!frame.subResult) return null;
 
 					frame.mainChain = frame.subResult;
 					delete frame.subResult;
 					frame.pairMap = {};
-					for (let i = 0; i < frame.winners.length; i++)
-						frame.pairMap[frame.winners[i]] = frame.losers[i];
+					frame.winners.forEach((w, i) => frame.pairMap[w] = frame.losers[i]);
 
 					const firstWinner = frame.mainChain[0];
 					const b1 = frame.pairMap[firstWinner];
@@ -598,14 +584,10 @@
 
 					const sortedWinners = frame.mainChain.slice(1);
 					frame.insertions = [];
-					for (let i = 0; i < sortedWinners.length; i++) {
-						const winner = sortedWinners[i];
-						const loser = frame.pairMap[winner];
-						i > 0 && frame.insertions.push({
-							item: loser,
-							boundItem: winner
-						});
-					}
+					sortedWinners.forEach((winner, i) => i > 0 && frame.insertions.push({
+						item: frame.pairMap[winner],
+						boundItem: winner
+					}));
 					frame.straggler !== null && frame.insertions.push({
 						item: frame.straggler,
 						boundItem: null
@@ -617,55 +599,45 @@
 				}
 
 				handleGrouping(frame) {
-					if (frame.currentGroup.length === 0) {
-						const prevJ = this.jacobsthal[frame.jacobIdx - 1];
-						const currJ = this.jacobsthal[frame.jacobIdx];
-						const minIdx = prevJ - 1;
-						const maxIdx = currJ - 2;
+					frame.currentGroup.length === 0 && (
+						(this.jacobsthal[frame.jacobIdx - 1] - 1 >= frame.insertions.length) ? (
+							this.returnResult(frame.mainChain)
+						) : (
+							[...Array(Math.min(this.jacobsthal[frame.jacobIdx] - 2, frame.insertions.length - 1) - (this.jacobsthal[frame.jacobIdx - 1] - 1) + 1)].forEach((_, i) =>
+								frame.currentGroup.push(frame.insertions[Math.min(this.jacobsthal[frame.jacobIdx] - 2, frame.insertions.length - 1) - i])
+							),
+							frame.jacobIdx++
+						)
+					);
 
-						if (minIdx >= frame.insertions.length) {
-							this.returnResult(frame.mainChain);
-							return;
-						}
-						for (let i = Math.min(maxIdx, frame.insertions.length - 1); i >= minIdx; i--)
-							frame.currentGroup.push(frame.insertions[i]);
-						frame.jacobIdx++;
-					}
-
-					if (frame.currentGroup.length > 0) {
-						frame.currentItem = frame.currentGroup.shift();
-						frame.stage = 'inserting';
-						const boundItem = frame.currentItem.boundItem;
-						let max = frame.mainChain.length;
-						boundItem !== null && (max = frame.mainChain.indexOf(boundItem));
+					return frame.mainChain === this.final ? null : frame.currentGroup.length > 0 && (
+						frame.currentItem = frame.currentGroup.shift(),
+						frame.stage = 'inserting',
 						frame.bs = {
 							min: 0,
-							max: max,
+							max: frame.currentItem.boundItem !== null ? frame.mainChain.indexOf(frame.currentItem.boundItem) : frame.mainChain.length,
 							target: frame.currentItem.item
-						};
-					}
+						},
+						null
+					);
 				}
 
 				handleInserting(frame) {
 					const {min, max, target} = frame.bs;
-					if (min >= max) {
-						frame.mainChain.splice(min, 0, target);
-						frame.stage = 'grouping';
-						return;
-					}
-					const mid = Math.floor((min + max) / 2);
-					frame.bs.mid = mid;
-					const compareItem = frame.mainChain[mid];
-
-					if (frame.lastWinner !== undefined) {
-						const winner = frame.lastWinner;
-						delete frame.lastWinner;
-						winner === target ? (frame.bs.min = mid + 1) : (frame.bs.max = mid);
-						return;
-					}
-					this.pending = [target, compareItem];
-					this.history.push(this.snapshot());
-					return this.pending;
+					return min >= max ? (
+						frame.mainChain.splice(min, 0, target),
+						frame.stage = 'grouping',
+						null
+					) : frame.lastWinner !== undefined ? (
+						frame.lastWinner === target ? (frame.bs.min = frame.bs.mid + 1) : (frame.bs.max = frame.bs.mid),
+						delete frame.lastWinner,
+						null
+					) : (
+						frame.bs.mid = Math.floor((min + max) / 2),
+						this.pending = [target, frame.mainChain[frame.bs.mid]],
+						this.history.push(this.snapshot()),
+						this.pending
+					);
 				}
 
 				handleRefinement() {
