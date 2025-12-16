@@ -449,19 +449,23 @@
 			class QuickPairProvider extends PairProvider {
 				constructor(count) {
 					super(count);
-					Object.assign(this, {
-						stack: [{
-							stage: 0,
-							items: [...Array(count).keys()]
-						}],
-						history: [],
-						pending: null,
-						previousScores: null,
-						final: null,
-						refinePass: 0,
-						refineIndex: 0,
-						refineSwapped: false
-					});
+					this.stack = [{
+						stage: 'init',
+						items: [...Array(count).keys()]
+					}];
+					this.history = [];
+					this.pending = null;
+					this.previousScores = null;
+					this.final = null;
+					this.refinePass = 0;
+					this.refineIndex = 0;
+					this.refineSwapped = false;
+
+					this.jacobsthal = [0, 1];
+					while (this.jacobsthal[this.jacobsthal.length - 1] < count) {
+						const len = this.jacobsthal.length;
+						this.jacobsthal.push(this.jacobsthal[len - 1] + 2 * this.jacobsthal[len - 2]);
+					}
 				}
 
 				snapshot() {
@@ -476,6 +480,7 @@
 						refineSwapped: this.refineSwapped
 					});
 				}
+
 				restore(json) {
 					Object.assign(this, JSON.parse(json));
 					this.compared = new Set(this.compared);
@@ -489,62 +494,173 @@
 
 				next(state) {
 					this.previousScores ??= [...state.scores];
+
 					if (this.pending) {
 						const [a,b] = this.pending;
 						const change = state.scores[a] - this.previousScores[a];
 						const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
 						const result = (change / 32) + expected;
 						const winner = Math.abs(result - 0.5) < 0.01 ? a : result > 0.75 ? a : b;
+
 						const frame = this.stack[this.stack.length - 1];
-						frame && frame.mergeResult.push((winner === a ? frame.left : frame.right).shift());
-						this.final && winner === b && ([this.final[this.refineIndex],this.final[this.refineIndex + 1]] = [this.final[this.refineIndex + 1], this.final[this.refineIndex]],
-						this.refineSwapped = true);
-						this.final && this.refineIndex++;
+						frame && (frame.lastWinner = winner);
+
+						if (this.final) {
+							if (winner === b) {
+								const idx = this.final.indexOf(a);
+								if (this.final[idx + 1] === b) {
+									[this.final[idx],this.final[idx + 1]] = [this.final[idx + 1], this.final[idx]];
+									this.refineSwapped = true;
+								}
+							}
+							this.refineIndex++;
+						}
 						this.pending = null;
 						this.previousScores = [...state.scores];
 					}
 
 					while (this.stack.length) {
 						const frame = this.stack[this.stack.length - 1];
-						if (frame.stage === 0) {
-							if (frame.items.length <= 1) {
-								this.pop(frame.items);
+
+						if (frame.stage === 'init') {
+							if (frame.items.length < 2) {
+								this.returnResult(frame.items);
 								continue;
 							}
-							frame.stage = 1;
-							frame.leftItems = frame.items.slice(0, frame.items.length >> 1);
-							frame.rightItems = frame.items.slice(frame.items.length >> 1);
-							this.stack.push({
-								stage: 0,
-								items: frame.leftItems
-							});
-							continue;
+							frame.pairs = [];
+							frame.straggler = null;
+							for (let i = 0; i < Math.floor(frame.items.length / 2); i++)
+								frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
+							if (frame.items.length % 2)
+								frame.straggler = frame.items[frame.items.length - 1];
+
+							frame.winners = [];
+							frame.losers = [];
+							frame.pairIdx = 0;
+							frame.stage = 'comparing';
 						}
-						if (frame.stage === 1) {
-							frame.stage = 2;
-							this.stack.push({
-								stage: 0,
-								items: frame.rightItems
-							});
-							continue;
-						}
-						if (frame.stage === 2) {
-							frame.mergeResult ??= (frame.left = [...frame.leftResult],
-							frame.right = [...frame.rightResult],
-							[]);
-							while (frame.left.length && frame.right.length) {
-								this.pending = [frame.left[0], frame.right[0]];
+
+						if (frame.stage === 'comparing') {
+							if (frame.pairIdx < frame.pairs.length) {
+								const pair = frame.pairs[frame.pairIdx];
+								if (frame.lastWinner !== undefined) {
+									const winner = frame.lastWinner;
+									const loser = winner === pair[0] ? pair[1] : pair[0];
+									frame.winners.push(winner);
+									frame.losers.push(loser);
+									delete frame.lastWinner;
+									frame.pairIdx++;
+									continue;
+								}
+								this.pending = pair;
 								this.history.push(this.snapshot());
 								return this.pending;
 							}
-							frame.mergeResult.push(...frame.left, ...frame.right);
-							this.pop(frame.mergeResult);
+							frame.stage = 'recursion';
+							this.stack.push({
+								stage: 'init',
+								items: [...frame.winners]
+							});
+							continue;
+						}
+
+						if (frame.stage === 'recursion') {
+							if (frame.subResult) {
+								frame.mainChain = frame.subResult;
+								delete frame.subResult;
+								frame.pairMap = {};
+								for (let i = 0; i < frame.winners.length; i++)
+									frame.pairMap[frame.winners[i]] = frame.losers[i];
+
+								const firstWinner = frame.mainChain[0];
+								const b1 = frame.pairMap[firstWinner];
+								frame.mainChain.unshift(b1);
+
+								const sortedWinners = frame.mainChain.slice(1);
+								frame.insertions = [];
+								for (let i = 0; i < sortedWinners.length; i++) {
+									const winner = sortedWinners[i];
+									const loser = frame.pairMap[winner];
+									if (i > 0)
+										frame.insertions.push({
+											item: loser,
+											boundItem: winner
+										});
+								}
+								if (frame.straggler !== null)
+									frame.insertions.push({
+										item: frame.straggler,
+										boundItem: null
+									});
+
+								frame.jacobIdx = 2;
+								frame.currentGroup = [];
+								frame.stage = 'grouping';
+							} else {
+								return null;
+							}
+						}
+
+						if (frame.stage === 'grouping') {
+							if (frame.currentGroup.length === 0) {
+								const prevJ = this.jacobsthal[frame.jacobIdx - 1];
+								const currJ = this.jacobsthal[frame.jacobIdx];
+								const minIdx = prevJ - 1;
+								const maxIdx = currJ - 2;
+
+								if (minIdx >= frame.insertions.length) {
+									this.returnResult(frame.mainChain);
+									continue;
+								}
+								for (let i = Math.min(maxIdx, frame.insertions.length - 1); i >= minIdx; i--)
+									frame.currentGroup.push(frame.insertions[i]);
+								frame.jacobIdx++;
+							}
+
+							if (frame.currentGroup.length > 0) {
+								frame.currentItem = frame.currentGroup.shift();
+								frame.stage = 'inserting';
+								const boundItem = frame.currentItem.boundItem;
+								let max = frame.mainChain.length;
+								if (boundItem !== null)
+									max = frame.mainChain.indexOf(boundItem);
+								frame.bs = {
+									min: 0,
+									max: max,
+									target: frame.currentItem.item
+								};
+							}
+						}
+
+						if (frame.stage === 'inserting') {
+							const {min, max, target} = frame.bs;
+							if (min >= max) {
+								frame.mainChain.splice(min, 0, target);
+								frame.stage = 'grouping';
+								continue;
+							}
+							const mid = Math.floor((min + max) / 2);
+							frame.bs.mid = mid;
+							const compareItem = frame.mainChain[mid];
+
+							if (frame.lastWinner !== undefined) {
+								const winner = frame.lastWinner;
+								delete frame.lastWinner;
+								if (winner === target)
+									frame.bs.min = mid + 1;
+								else
+									frame.bs.max = mid;
+								continue;
+							}
+							this.pending = [target, compareItem];
+							this.history.push(this.snapshot());
+							return this.pending;
 						}
 					}
 
 					if (this.final) {
 						while (true) {
-							if (this.refinePass >= 3)
+							if (this.refinePass >= 2)
 								return null;
 							if (this.refineIndex >= this.final.length - 1) {
 								if (!this.refineSwapped)
@@ -567,11 +683,16 @@
 					return null;
 				}
 
-				pop(result) {
+				returnResult(result) {
 					this.stack.pop();
-					const frame = this.stack[this.stack.length - 1];
-					frame ? (frame.stage === 1 ? frame.leftResult = result : frame.rightResult = result) : this.final = result;
+					if (this.stack.length) {
+						const frame = this.stack[this.stack.length - 1];
+						frame.subResult = result;
+					} else {
+						this.final = result.reverse();
+					}
 				}
+
 				getResults(items, scores) {
 					return this.final ? this.final.map(index=>({
 						text: items[index],
