@@ -523,13 +523,22 @@
 					const frame = this.stack[this.stack.length - 1];
 					frame && (frame.lastWinner = winner);
 
-					this.final && (winner === b && this.final.indexOf(a) !== -1 && this.final[this.final.indexOf(a) + 1] === b &&
-						([this.final[this.final.indexOf(a)],this.final[this.final.indexOf(a) + 1]] = [this.final[this.final.indexOf(a) + 1], this.final[this.final.indexOf(a)]],
-						this.refineSwapped = true),
-					this.refineIndex++);
+					this.final && this.handleRefinementSwap(a, b, winner);
 
 					this.pending = null;
 					this.previousScores = [...state.scores];
+				}
+
+				handleRefinementSwap(a, b, winner) {
+					const idx = this.final.indexOf(a);
+					const adjacent = idx !== -1 && this.final[idx + 1] === b;
+
+					winner === b && adjacent && (
+						[this.final[idx],this.final[idx + 1]] = [this.final[idx + 1], this.final[idx]],
+						this.refineSwapped = true
+					);
+
+					this.refineIndex++;
 				}
 
 				handleInit(frame) {
