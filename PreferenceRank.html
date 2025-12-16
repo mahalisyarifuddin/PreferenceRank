@@ -671,21 +671,24 @@
 				handleRefinement() {
 					while (true) {
 						if (this.refinePass >= 2) return null;
+
 						if (this.refineIndex >= this.final.length - 1) {
 							if (!this.refineSwapped) return null;
+
 							this.refinePass++;
 							this.refineIndex = 0;
 							this.refineSwapped = false;
 							continue;
 						}
+
 						const [a,b] = [this.final[this.refineIndex], this.final[this.refineIndex + 1]];
-						if (this.compared.has(this.key([a, b]))) {
-							this.refineIndex++;
-							continue;
+						if (!this.compared.has(this.key([a, b]))) {
+							this.pending = [a, b];
+							this.history.push(this.snapshot());
+							return this.pending;
 						}
-						this.pending = [a, b];
-						this.history.push(this.snapshot());
-						return this.pending;
+
+						this.refineIndex++;
 					}
 				}
 
