@@ -341,7 +341,7 @@
 			</div>
 		</div>
 		<script>
-			const strings = {
+			const text = {
 				en: {
 					title: 'PreferenceRank',
 					auto: 'Auto Theme',
@@ -396,8 +396,8 @@
 				}
 			};
 
-			const escape = text=>Object.assign(document.createElement('span'), {
-				textContent: text
+			const escape = value=>Object.assign(document.createElement('span'), {
+				textContent: value
 			}).innerHTML;
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
 
@@ -416,8 +416,8 @@
 					this.compared.delete(this.key(pair));
 				}
 				getResults(items, scores) {
-					return items.map((text,index)=>({
-						text,
+					return items.map((value,index)=>({
+						text: value,
 						score: scores[index]
 					})).sort((a,b)=>b.score - a.score);
 				}
@@ -460,11 +460,10 @@
 					this.refinePass = 0;
 					this.refineIndex = 0;
 					this.refineSwapped = false;
-
 					this.jacobsthal = [0, 1];
 					while (this.jacobsthal[this.jacobsthal.length - 1] < count) {
-						const len = this.jacobsthal.length;
-						this.jacobsthal.push(this.jacobsthal[len - 1] + 2 * this.jacobsthal[len - 2]);
+						const length = this.jacobsthal.length;
+						this.jacobsthal.push(this.jacobsthal[length - 1] + 2 * this.jacobsthal[length - 2]);
 					}
 				}
 
@@ -480,12 +479,10 @@
 						refineSwapped: this.refineSwapped
 					});
 				}
-
 				restore(json) {
 					Object.assign(this, JSON.parse(json));
 					this.compared = new Set(this.compared);
 				}
-
 				unmark(pair) {
 					this.pending && this.history.length && this.history.pop();
 					this.history.length && this.restore(this.history[this.history.length - 1]);
@@ -495,21 +492,19 @@
 				next(state) {
 					this.previousScores ??= [...state.scores];
 					this.pending && this.handlePending(state);
-
 					const handlers = {
-						init: frame => this.handleInit(frame),
-						comparing: frame => this.handleComparing(frame),
-						recursion: frame => this.handleRecursion(frame),
-						grouping: frame => this.handleGrouping(frame),
-						inserting: frame => this.handleInserting(frame)
+						init: frame=>this.handleInit(frame),
+						comparing: frame=>this.handleComparing(frame),
+						recursion: frame=>this.handleRecursion(frame),
+						grouping: frame=>this.handleGrouping(frame),
+						inserting: frame=>this.handleInserting(frame)
 					};
-
 					while (this.stack.length) {
 						const frame = this.stack[this.stack.length - 1];
 						const result = handlers[frame.stage](frame);
-						if (result) return result;
+						if (result)
+							return result;
 					}
-
 					return this.final ? this.handleRefinement() : null;
 				}
 
@@ -519,72 +514,62 @@
 					const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
 					const result = (change / 32) + expected;
 					const winner = Math.abs(result - 0.5) < 0.01 ? (state.swapped ? b : a) : result > 0.75 ? a : b;
-
 					const frame = this.stack[this.stack.length - 1];
 					frame && (frame.lastWinner = winner);
-
 					this.final && this.handleRefinementSwap(a, b, winner);
-
 					this.pending = null;
 					this.previousScores = [...state.scores];
 				}
 
 				handleRefinementSwap(a, b, winner) {
-					const idx = this.final.indexOf(a);
-					const adjacent = idx !== -1 && this.final[idx + 1] === b;
-
-					winner === b && adjacent && (
-						[this.final[idx],this.final[idx + 1]] = [this.final[idx + 1], this.final[idx]],
-						this.refineSwapped = true
-					);
-
+					const index = this.final.indexOf(a);
+					const adjacent = index !== -1 && this.final[index + 1] === b;
+					winner === b && adjacent && ([this.final[index],this.final[index + 1]] = [this.final[index + 1], this.final[index]],
+					this.refineSwapped = true);
 					this.refineIndex++;
 				}
 
 				handleInit(frame) {
-					return frame.items.length < 2 ? this.returnResult(frame.items) : (
-						frame.pairs = [],
-						frame.straggler = null,
-						[...Array(Math.floor(frame.items.length / 2))].forEach((_, i) => frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]])),
-						frame.items.length % 2 && (frame.straggler = frame.items[frame.items.length - 1]),
-						Object.assign(frame, { winners: [], losers: [], pairIdx: 0, stage: 'comparing' }),
-						null
-					);
+					return frame.items.length < 2 ? this.returnResult(frame.items) : (frame.pairs = [],
+					frame.straggler = null,
+					[...Array(Math.floor(frame.items.length / 2))].forEach((_,i)=>frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]])),
+					frame.items.length % 2 && (frame.straggler = frame.items[frame.items.length - 1]),
+					Object.assign(frame, {
+						winners: [],
+						losers: [],
+						pairIndex: 0,
+						stage: 'comparing'
+					}),
+					null);
 				}
 
 				handleComparing(frame) {
-					return frame.pairIdx >= frame.pairs.length ? (
-						frame.stage = 'recursion',
-						this.stack.push({ stage: 'init', items: [...frame.winners] }),
-						null
-					) : frame.lastWinner !== undefined ? (
-						frame.winners.push(frame.lastWinner),
-						frame.losers.push(frame.lastWinner === frame.pairs[frame.pairIdx][0] ? frame.pairs[frame.pairIdx][1] : frame.pairs[frame.pairIdx][0]),
-						delete frame.lastWinner,
-						frame.pairIdx++,
-						null
-					) : (
-						this.pending = frame.pairs[frame.pairIdx],
-						this.history.push(this.snapshot()),
-						this.pending
-					);
+					return frame.pairIndex >= frame.pairs.length ? (frame.stage = 'recursion',
+					this.stack.push({
+						stage: 'init',
+						items: [...frame.winners]
+					}),
+					null) : frame.lastWinner !== undefined ? (frame.winners.push(frame.lastWinner),
+					frame.losers.push(frame.lastWinner === frame.pairs[frame.pairIndex][0] ? frame.pairs[frame.pairIndex][1] : frame.pairs[frame.pairIndex][0]),
+					delete frame.lastWinner,
+					frame.pairIndex++,
+					null) : (this.pending = frame.pairs[frame.pairIndex],
+					this.history.push(this.snapshot()),
+					this.pending);
 				}
 
 				handleRecursion(frame) {
-					if (!frame.subResult) return null;
-
+					if (!frame.subResult)
+						return null;
 					frame.mainChain = frame.subResult;
 					delete frame.subResult;
 					frame.pairMap = {};
-					frame.winners.forEach((w, i) => frame.pairMap[w] = frame.losers[i]);
-
+					frame.winners.forEach((winner,i)=>frame.pairMap[winner] = frame.losers[i]);
 					const firstWinner = frame.mainChain[0];
-					const b1 = frame.pairMap[firstWinner];
-					frame.mainChain.unshift(b1);
-
+					frame.mainChain.unshift(frame.pairMap[firstWinner]);
 					const sortedWinners = frame.mainChain.slice(1);
 					frame.insertions = [];
-					sortedWinners.forEach((winner, i) => i > 0 && frame.insertions.push({
+					sortedWinners.forEach((winner,i)=>i > 0 && frame.insertions.push({
 						item: frame.pairMap[winner],
 						boundItem: winner
 					}));
@@ -592,85 +577,62 @@
 						item: frame.straggler,
 						boundItem: null
 					});
-
-					frame.jacobIdx = 2;
+					frame.jacobIndex = 2;
 					frame.currentGroup = [];
 					frame.stage = 'grouping';
 				}
 
 				handleGrouping(frame) {
-					frame.currentGroup.length === 0 && (
-						(this.jacobsthal[frame.jacobIdx - 1] - 1 >= frame.insertions.length) ? (
-							this.returnResult(frame.mainChain)
-						) : (
-							[...Array(Math.min(this.jacobsthal[frame.jacobIdx] - 2, frame.insertions.length - 1) - (this.jacobsthal[frame.jacobIdx - 1] - 1) + 1)].forEach((_, i) =>
-								frame.currentGroup.push(frame.insertions[Math.min(this.jacobsthal[frame.jacobIdx] - 2, frame.insertions.length - 1) - i])
-							),
-							frame.jacobIdx++
-						)
-					);
-
-					return frame.mainChain === this.final ? null : frame.currentGroup.length > 0 && (
-						frame.currentItem = frame.currentGroup.shift(),
-						frame.stage = 'inserting',
-						frame.bs = {
-							min: 0,
-							max: frame.currentItem.boundItem !== null ? frame.mainChain.indexOf(frame.currentItem.boundItem) : frame.mainChain.length,
-							target: frame.currentItem.item
-						},
-						null
-					);
+					frame.currentGroup.length === 0 && ((this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) ? this.returnResult(frame.mainChain) : ([...Array(Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1) - (this.jacobsthal[frame.jacobIndex - 1] - 1) + 1)].forEach((_,i)=>frame.currentGroup.push(frame.insertions[Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1) - i])),
+					frame.jacobIndex++));
+					return frame.mainChain === this.final ? null : frame.currentGroup.length > 0 && (frame.currentItem = frame.currentGroup.shift(),
+					frame.stage = 'inserting',
+					frame.binarySearch = {
+						min: 0,
+						max: frame.currentItem.boundItem !== null ? frame.mainChain.indexOf(frame.currentItem.boundItem) : frame.mainChain.length,
+						target: frame.currentItem.item
+					},
+					null);
 				}
 
 				handleInserting(frame) {
-					const {min, max, target} = frame.bs;
-					return min >= max ? (
-						frame.mainChain.splice(min, 0, target),
-						frame.stage = 'grouping',
-						null
-					) : frame.lastWinner !== undefined ? (
-						frame.lastWinner === target ? (frame.bs.min = frame.bs.mid + 1) : (frame.bs.max = frame.bs.mid),
-						delete frame.lastWinner,
-						null
-					) : (
-						frame.bs.mid = Math.floor((min + max) / 2),
-						this.pending = [target, frame.mainChain[frame.bs.mid]],
-						this.history.push(this.snapshot()),
-						this.pending
-					);
+					const {min, max, target} = frame.binarySearch;
+					return min >= max ? (frame.mainChain.splice(min, 0, target),
+					frame.stage = 'grouping',
+					null) : frame.lastWinner !== undefined ? (frame.lastWinner === target ? (frame.binarySearch.min = frame.binarySearch.mid + 1) : (frame.binarySearch.max = frame.binarySearch.mid),
+					delete frame.lastWinner,
+					null) : (frame.binarySearch.mid = Math.floor((min + max) / 2),
+					this.pending = [target, frame.mainChain[frame.binarySearch.mid]],
+					this.history.push(this.snapshot()),
+					this.pending);
 				}
 
 				handleRefinement() {
 					while (true) {
-						if (this.refinePass >= 2) return null;
-
+						if (this.refinePass >= 2)
+							return null;
 						if (this.refineIndex >= this.final.length - 1) {
-							if (!this.refineSwapped) return null;
-
+							if (!this.refineSwapped)
+								return null;
 							this.refinePass++;
 							this.refineIndex = 0;
 							this.refineSwapped = false;
 							continue;
 						}
-
 						const [a,b] = [this.final[this.refineIndex], this.final[this.refineIndex + 1]];
 						if (!this.compared.has(this.key([a, b]))) {
 							this.pending = [a, b];
 							this.history.push(this.snapshot());
 							return this.pending;
 						}
-
 						this.refineIndex++;
 					}
 				}
 
 				returnResult(result) {
 					this.stack.pop();
-					this.stack.length ?
-						(this.stack[this.stack.length - 1].subResult = result) :
-						(this.final = result.reverse());
+					this.stack.length ? (this.stack[this.stack.length - 1].subResult = result) : (this.final = result.reverse());
 				}
-
 				getResults(items, scores) {
 					return this.final ? this.final.map(index=>({
 						text: items[index],
@@ -700,8 +662,8 @@
 					this.updateText();
 				}
 
-				text(key) {
-					return strings[this.language]?.[key] ?? key;
+				string(key) {
+					return text[this.language]?.[key] ?? key;
 				}
 
 				bind() {
@@ -731,9 +693,9 @@
 
 				updateText() {
 					dom.language.value = this.language;
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.text(key));
-					dom.toggle.textContent = this.text(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
-					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>dom.theme.options[index].textContent = this.text(key));
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
+					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
+					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>dom.theme.options[index].textContent = this.string(key));
 					this.updateHelp();
 					this.updateProgress();
 					!dom.results.classList.contains('hidden') && this.renderResults();
@@ -745,8 +707,8 @@
 					this.updateHelp();
 				}
 				updateHelp() {
-					dom.toggle.textContent = this.text(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
-					dom.tips.innerHTML = this.text(this.allowTies ? 'tipTie' : 'tipNoTie');
+					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
+					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
 				}
 				toggleHelp() {
 					dom.tips.classList.toggle('hidden');
@@ -756,9 +718,9 @@
 				start() {
 					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
 					const unique = [...new Set(raw)];
-					raw.length > unique.length && alert(this.text('duplicate').replace('{count}', raw.length - unique.length));
+					raw.length > unique.length && alert(this.string('duplicate').replace('{count}', raw.length - unique.length));
 					if (unique.length < 2)
-						return alert(this.text('alert'));
+						return alert(this.string('alert'));
 					Object.assign(this, {
 						items: unique,
 						allowTies: dom.allowTies.checked,
@@ -824,7 +786,7 @@
 				}
 
 				updateProgress() {
-					dom.progress.textContent = `${this.text('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`;
+					dom.progress.textContent = `${this.string('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`;
 				}
 				clearSelections() {
 					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
@@ -832,7 +794,7 @@
 
 				renderResults() {
 					const results = this.provider.getResults(this.items, this.scores);
-					dom.results.innerHTML = `<div class="results-header"><h2>${this.text('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.text('rank')}</th><th style="width:60%">${this.text('item')}</th><th style="width:20%">${this.text('score')}</th></tr></thead><tbody>${results.map((result,index)=>`<tr><td>${index + 1}</td><td>${escape(result.text)}</td><td>${Math.round(result.score)}</td></tr>`).join('')}</tbody></table>`;
+					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${results.map((result,index)=>`<tr><td>${index + 1}</td><td>${escape(result.text)}</td><td>${Math.round(result.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 				}
 
