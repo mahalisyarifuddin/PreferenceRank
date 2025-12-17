@@ -396,9 +396,7 @@
 				}
 			};
 
-			const escape = value=>Object.assign(document.createElement('span'), {
-				textContent: value
-			}).innerHTML;
+			const escape = text=>text.replace(/[&<>"']/g, m=>({'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'}[m]));
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
 
 			class PairProvider {
@@ -438,7 +436,7 @@
 						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
 					}
 				}
-				next(state) {
+				next(state, result) {
 					return this.pairs[state.step];
 				}
 				getProgress(step) {
@@ -455,7 +453,6 @@
 					}];
 					this.history = [];
 					this.pending = null;
-					this.previousScores = null;
 					this.final = null;
 					this.refinePass = 0;
 					this.refineIndex = 0;
@@ -471,7 +468,6 @@
 					return JSON.stringify({
 						stack: this.stack,
 						pending: this.pending,
-						previousScores: this.previousScores,
 						compared: [...this.compared],
 						final: this.final,
 						refinePass: this.refinePass,
@@ -489,9 +485,8 @@
 					super.unmark(pair);
 				}
 
-				next(state) {
-					this.previousScores ??= [...state.scores];
-					this.pending && this.handlePending(state);
+				next(state, result) {
+					this.pending && this.handlePending(state, result);
 					const handlers = {
 						init: frame=>this.handleInit(frame),
 						comparing: frame=>this.handleComparing(frame),
@@ -508,17 +503,13 @@
 					return this.final ? this.handleRefinement() : null;
 				}
 
-				handlePending(state) {
+				handlePending(state, result) {
 					const [a,b] = this.pending;
-					const change = state.scores[a] - this.previousScores[a];
-					const expected = 1 / (1 + 10 ** ((this.previousScores[b] - this.previousScores[a]) / 400));
-					const result = (change / 32) + expected;
-					const winner = Math.abs(result - 0.5) < 0.01 ? (state.swapped ? b : a) : result > 0.75 ? a : b;
+					const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
 					const frame = this.stack[this.stack.length - 1];
 					frame && (frame.lastWinner = winner);
 					this.final && this.handleRefinementSwap(a, b, winner);
 					this.pending = null;
-					this.previousScores = [...state.scores];
 				}
 
 				handleRefinementSwap(a, b, winner) {
@@ -764,14 +755,14 @@
 						if (dom.battleSection.classList.contains('hidden') || !this.busy)
 							return;
 						this.busy = false;
-						this.next();
+						this.next(result);
 					}
 					, 300);
 				}
 
-				next() {
+				next(result) {
 					this.clearSelections();
-					const nextPair = this.provider.next(this);
+					const nextPair = this.provider.next(this, result);
 					if (!nextPair)
 						return this.renderResults();
 					this.pair = nextPair;
