@@ -295,11 +295,11 @@
 		<div class="container">
 			<div id="inputSection">
 				<div class="selectors">
-					<select id="language">
+					<select id="language" aria-label="Language">
 						<option value="en">English</option>
 						<option value="id">Bahasa Indonesia</option>
 					</select>
-					<select id="theme">
+					<select id="theme" aria-label="Theme">
 						<option value="auto"></option>
 						<option value="light"></option>
 						<option value="dark"></option>
@@ -796,6 +796,13 @@
 					this.keyboardEnabled = section === 'battleSection' || section === 'results';
 					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
 					section === 'results' && dom.results.firstElementChild.prepend(dom.undo);
+
+					const focusTarget = {
+						battleSection: dom.left,
+						results: dom.restartBattle,
+						inputSection: dom.items
+					}[section];
+					focusTarget && setTimeout(() => focusTarget.focus(), 50);
 				}
 
 				undo() {
