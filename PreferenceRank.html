@@ -94,7 +94,7 @@
 
 			button {
 				cursor: pointer;
-				transition: background .2s
+				transition: background .1s
 			}
 
 			.primary {
@@ -400,7 +400,8 @@
 				}
 			};
 
-			const escape = text=>text.replace(/[&<>"']/g, m=>({'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'}[m]));
+			const escapes = {'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'};
+			const escape = text=>text.replace(/[&<>"']/g, m=>escapes[m]);
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
 
 			class PairProvider {
@@ -763,7 +764,7 @@
 						this.busy = false;
 						this.next(result);
 					}
-					, 300);
+					, 150);
 				}
 
 				next(result) {
