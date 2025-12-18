@@ -344,6 +344,8 @@
 			const text = {
 				en: {
 					title: 'PreferenceRank',
+					languageLabel: 'Language',
+					themeLabel: 'Theme',
 					auto: 'Auto Theme',
 					light: 'Light',
 					dark: 'Dark',
@@ -370,6 +372,8 @@
 				},
 				id: {
 					title: 'PreferenceRank',
+					languageLabel: 'Bahasa',
+					themeLabel: 'Tema',
 					auto: 'Tema Otomatis',
 					light: 'Terang',
 					dark: 'Gelap',
@@ -684,6 +688,8 @@
 
 				updateText() {
 					dom.language.value = this.language;
+					dom.language.setAttribute('aria-label', this.string('languageLabel'));
+					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
 					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
 					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>dom.theme.options[index].textContent = this.string(key));
