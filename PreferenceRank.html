@@ -107,6 +107,17 @@
 				background: var(--hover)
 			}
 
+			.error {
+				color: #d32f2f;
+				font-size: .9rem;
+				margin-top: .5rem;
+				display: block
+			}
+
+			.error.hidden {
+				display: none!important
+			}
+
 			.secondary:hover {
 				background: var(--dim)
 			}
@@ -309,6 +320,7 @@
 				<div class="group">
 					<label for="items" id="labelItems"></label>
 					<textarea id="items" rows="5" spellcheck="false"></textarea>
+					<span id="error" class="error hidden" aria-live="polite"></span>
 				</div>
 				<div class="checkbox-row">
 					<input type="checkbox" id="allowTies">
@@ -714,11 +726,17 @@
 				}
 
 				start() {
+					dom.error.classList.add('hidden');
 					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
 					const unique = [...new Set(raw)];
-					raw.length > unique.length && alert(this.string('duplicate').replace('{count}', raw.length - unique.length));
-					if (unique.length < 2)
-						return alert(this.string('alert'));
+					if (unique.length < 2) {
+						dom.error.textContent = this.string('alert');
+						dom.error.classList.remove('hidden');
+						return;
+					}
+					raw.length > unique.length && (dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
+					dom.error.classList.remove('hidden'));
+
 					Object.assign(this, {
 						items: unique,
 						allowTies: dom.allowTies.checked,
