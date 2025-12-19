@@ -107,6 +107,17 @@
 				background: var(--hover)
 			}
 
+			.error {
+				color: #d32f2f;
+				font-size: .9rem;
+				margin-top: .5rem;
+				display: block
+			}
+
+			.error.hidden {
+				display: none!important
+			}
+
 			.secondary:hover {
 				background: var(--dim)
 			}
@@ -309,6 +320,7 @@
 				<div class="group">
 					<label for="items" id="labelItems"></label>
 					<textarea id="items" rows="5" spellcheck="false"></textarea>
+					<span id="error" class="error hidden" aria-live="polite"></span>
 				</div>
 				<div class="checkbox-row">
 					<input type="checkbox" id="allowTies">
@@ -368,8 +380,7 @@
 					item: 'Item',
 					score: 'Score',
 					restartBattle: 'Restart Battle',
-					restartNew: 'Start with New Items',
-					placeholderItems: 'Example:\nCoffee\nTea\nWater'
+					restartNew: 'Start with New Items'
 				},
 				id: {
 					title: 'PreferenceRank',
@@ -397,8 +408,7 @@
 					item: 'Nama',
 					score: 'Skor',
 					restartBattle: 'Mulai Ulang Pertarungan',
-					restartNew: 'Mulai dengan Pilihan Baru',
-					placeholderItems: 'Contoh:\nKopi\nTeh\nAir'
+					restartNew: 'Mulai dengan Pilihan Baru'
 				}
 			};
 
@@ -693,7 +703,6 @@
 					dom.language.value = this.language;
 					dom.language.setAttribute('aria-label', this.string('languageLabel'));
 					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
-					dom.items.placeholder = this.string('placeholderItems');
 					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
 					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>dom.theme.options[index].textContent = this.string(key));
@@ -717,11 +726,17 @@
 				}
 
 				start() {
+					dom.error.classList.add('hidden');
 					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
 					const unique = [...new Set(raw)];
-					raw.length > unique.length && alert(this.string('duplicate').replace('{count}', raw.length - unique.length));
-					if (unique.length < 2)
-						return alert(this.string('alert'));
+					if (unique.length < 2) {
+						dom.error.textContent = this.string('alert');
+						dom.error.classList.remove('hidden');
+						return;
+					}
+					raw.length > unique.length && (dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
+					dom.error.classList.remove('hidden'));
+
 					Object.assign(this, {
 						items: unique,
 						allowTies: dom.allowTies.checked,
