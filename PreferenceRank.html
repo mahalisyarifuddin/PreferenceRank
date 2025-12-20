@@ -669,7 +669,7 @@
 					return this.final ? this.final.map(i=>({
 						text: items[i],
 						score: scores[i]
-					})) : super.getResults(items, scores)
+					})).sort((a,b)=>b.score - a.score) : super.getResults(items, scores)
 				}
 			}
 
