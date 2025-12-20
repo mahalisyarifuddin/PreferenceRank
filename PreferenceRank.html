@@ -416,13 +416,14 @@
 					placeholderItems: 'Apel\nPisang\nCeri'
 				}
 			};
-			const esc = t=>t.replace(/[&<>"']/g, m=>({
+			const escapeMap = {
 				'&': '&amp;',
 				'<': '&lt;',
 				'>': '&gt;',
 				'"': '&quot;',
 				"'": '&#39;'
-			}[m]));
+			};
+			const esc = t=>t.replace(/[&<>"']/g, m=>escapeMap[m]);
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
 
 			class PairProvider {
@@ -547,17 +548,22 @@
 				}
 
 				handleInit(frame) {
-					return frame.items.length < 2 ? this.returnResult(frame.items) : (frame.pairs = [],
-					frame.straggler = null,
-					[...Array(Math.floor(frame.items.length / 2))].forEach((_,i)=>frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]])),
-					frame.items.length % 2 && (frame.straggler = frame.items[frame.items.length - 1]),
+					if (frame.items.length < 2)
+						return this.returnResult(frame.items);
+					frame.pairs = [];
+					frame.straggler = null;
+					const pairCount = Math.floor(frame.items.length / 2);
+					for (let i = 0; i < pairCount; i++)
+						frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
+					if (frame.items.length % 2)
+						frame.straggler = frame.items[frame.items.length - 1];
 					Object.assign(frame, {
 						winners: [],
 						losers: [],
 						pairIndex: 0,
 						stage: 'comparing'
-					}),
-					null);
+					});
+					return null;
 				}
 
 				handleComparing(frame) {
@@ -600,8 +606,17 @@
 				}
 
 				handleGrouping(frame) {
-					frame.currentGroup.length === 0 && ((this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) ? this.returnResult(frame.mainChain) : ([...Array(Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1) - (this.jacobsthal[frame.jacobIndex - 1] - 1) + 1)].forEach((_,i)=>frame.currentGroup.push(frame.insertions[Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1) - i])),
-					frame.jacobIndex++));
+					if (frame.currentGroup.length === 0) {
+						if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
+							this.returnResult(frame.mainChain);
+							return null;
+						}
+						const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
+						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
+						for (let i = end; i >= start; i--)
+							frame.currentGroup.push(frame.insertions[i]);
+						frame.jacobIndex++;
+					}
 					return frame.mainChain === this.final ? null : frame.currentGroup.length > 0 && (frame.currentItem = frame.currentGroup.shift(),
 					frame.stage = 'inserting',
 					frame.binarySearch = {
@@ -654,7 +669,7 @@
 					return this.final ? this.final.map(i=>({
 						text: items[i],
 						score: scores[i]
-					})) : super.getResults(items, scores)
+					})).sort((a,b)=>b.score - a.score) : super.getResults(items, scores)
 				}
 			}
 
