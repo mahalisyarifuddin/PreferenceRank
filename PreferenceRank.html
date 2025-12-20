@@ -97,6 +97,14 @@
 				transition: background .1s
 			}
 
+			button:disabled {
+				background: var(--dim)!important;
+				border-color: var(--border)!important;
+				color: var(--text)!important;
+				cursor: not-allowed;
+				opacity: .6
+			}
+
 			.primary {
 				background: var(--primary);
 				border: none;
@@ -259,11 +267,6 @@
 
 			#undo {
 				width: auto
-			}
-
-			#undo:disabled {
-				background: var(--dim);
-				cursor: not-allowed
 			}
 
 			.selected {
@@ -670,6 +673,7 @@
 					this.bind();
 					this.setTheme('auto');
 					this.updateText();
+					this.checkStartButton();
 				}
 
 				string(key) {
@@ -693,6 +697,7 @@
 					;
 					dom.theme.onchange = event=>this.setTheme(event.target.value);
 					dom.allowTies.onchange = event=>this.setTies(event.target.checked);
+					dom.items.oninput = ()=>this.checkStartButton();
 					document.onkeydown = event=>this.handleKey(event);
 				}
 
@@ -726,6 +731,14 @@
 				toggleHelp() {
 					dom.tips.classList.toggle('hidden');
 					this.updateHelp();
+				}
+
+				checkStartButton() {
+					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
+					const unique = new Set(raw);
+					const valid = unique.size >= 2;
+					dom.start.disabled = !valid;
+					valid && dom.error.classList.add('hidden');
 				}
 
 				start() {
@@ -824,6 +837,7 @@
 					this.keyboardEnabled = section === 'battleSection' || section === 'results';
 					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
 					section === 'results' && dom.results.firstElementChild.prepend(dom.undo);
+					section === 'inputSection' && this.checkStartButton();
 
 					const focusTarget = {
 						battleSection: dom.left,
