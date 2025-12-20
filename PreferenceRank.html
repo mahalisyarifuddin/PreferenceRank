@@ -678,6 +678,7 @@
 					Object.assign(this, {
 						items: [],
 						scores: [],
+				matches: [],
 						pair: null,
 						swapped: false,
 						step: 0,
@@ -780,6 +781,7 @@
 						items: unique,
 						allowTies: dom.allowTies.checked,
 						scores: Array(unique.length).fill(1000),
+				matches: [],
 						step: 0,
 						history: [],
 						swaps: new Map(),
@@ -792,6 +794,29 @@
 					this.show('battleSection');
 					this.next();
 				}
+
+		recalculateScores() {
+			const iterations = 100;
+			const totalScores = new Float64Array(this.items.length);
+			const currentScores = new Float64Array(this.items.length);
+
+			for (let i = 0; i < iterations; i++) {
+				currentScores.fill(1000);
+				const currentMatches = [...this.matches];
+				for (let j = currentMatches.length - 1; j > 0; j--) {
+					const k = Math.floor(Math.random() * (j + 1));
+					[currentMatches[j],currentMatches[k]] = [currentMatches[k], currentMatches[j]]
+				}
+				for (const {a,b,result} of currentMatches) {
+					const expected = 1 / (1 + 10 ** ((currentScores[b] - currentScores[a]) / 400));
+					currentScores[a] += 32 * (result - expected);
+					currentScores[b] += 32 * (expected - result)
+				}
+				for (let j = 0; j < this.items.length; j++)
+					totalScores[j] += currentScores[j]
+			}
+			this.scores = Array.from(totalScores).map(s=>s / iterations)
+		}
 
 				choose(winner) {
 					if (this.busy || dom.battleSection.classList.contains('hidden'))
@@ -807,9 +832,12 @@
 					const [a,b] = this.pair;
 					const isLeftWinner = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
 					const result = winner === 'tie' ? 0.5 : isLeftWinner ? 1 : 0;
-					const expected = 1 / (1 + 10 ** ((this.scores[b] - this.scores[a]) / 400));
-					this.scores[a] += 32 * (result - expected);
-					this.scores[b] += 32 * (expected - result);
+			this.matches.push({
+				a,
+				b,
+				result
+			});
+			this.recalculateScores();
 					this.step++;
 					dom.undo.disabled = false;
 					this.updateProgress();
@@ -873,8 +901,9 @@
 					if (this.busy || !this.history.length)
 						return;
 					const last = this.history.pop();
+			this.matches.pop();
+			this.recalculateScores();
 					Object.assign(this, {
-						scores: last.scores,
 						step: last.step,
 						pair: last.pair,
 						swapped: last.swapped
@@ -893,6 +922,7 @@
 					Object.assign(this, {
 						items: [],
 						scores: [],
+				matches: [],
 						pair: null,
 						swapped: false,
 						step: 0,
