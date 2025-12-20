@@ -380,7 +380,8 @@
 					item: 'Item',
 					score: 'Score',
 					restartBattle: 'Restart Battle',
-					restartNew: 'Start with New Items'
+					restartNew: 'Start with New Items',
+					placeholderItems: 'Apple\nBanana\nCherry'
 				},
 				id: {
 					title: 'PreferenceRank',
@@ -408,7 +409,8 @@
 					item: 'Nama',
 					score: 'Skor',
 					restartBattle: 'Mulai Ulang Pertarungan',
-					restartNew: 'Mulai dengan Pilihan Baru'
+					restartNew: 'Mulai dengan Pilihan Baru',
+					placeholderItems: 'Apel\nPisang\nCeri'
 				}
 			};
 
@@ -703,6 +705,7 @@
 					dom.language.value = this.language;
 					dom.language.setAttribute('aria-label', this.string('languageLabel'));
 					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
+					dom.items.placeholder = this.string('placeholderItems');
 					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
 					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>dom.theme.options[index].textContent = this.string(key));
