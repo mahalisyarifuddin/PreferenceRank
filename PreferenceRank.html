@@ -8,7 +8,7 @@
 			:root {
 				--primary: #0070ea;
 				--hover: #005bc0;
-				--background: #f9f9ff;
+				--bg: #f9f9ff;
 				--surface: #fff;
 				--text: #414754;
 				--border: #c1c6d7;
@@ -17,7 +17,7 @@
 
 			@media(prefers-color-scheme: dark) {
 				:root:not(.light) {
-					--background:#10131b;
+					--bg:#10131b;
 					--surface: #181c23;
 					--text: #c1c6d7;
 					--border: #414754;
@@ -26,7 +26,7 @@
 			}
 
 			:root.dark {
-				--background: #10131b;
+				--bg: #10131b;
 				--surface: #181c23;
 				--text: #c1c6d7;
 				--border: #414754;
@@ -39,8 +39,13 @@
 				padding: 0
 			}
 
+			*:focus-visible {
+				outline: 2px solid var(--primary);
+				outline-offset: 2px
+			}
+
 			body {
-				background: var(--background);
+				background: var(--bg);
 				color: var(--text);
 				font-family: sans-serif;
 				display: flex;
@@ -111,7 +116,7 @@
 				color: #fff
 			}
 
-			.primary:hover {
+			.primary:hover:not(:disabled) {
 				background: var(--hover)
 			}
 
@@ -120,10 +125,6 @@
 				font-size: .9rem;
 				margin-top: .5rem;
 				display: block
-			}
-
-			.error.hidden {
-				display: none!important
 			}
 
 			.secondary:hover {
@@ -181,7 +182,7 @@
 			}
 
 			#tips {
-				background: var(--background);
+				background: var(--bg);
 				border: 1px solid var(--border);
 				border-radius: 4px;
 				font-size: .85rem;
@@ -416,33 +417,37 @@
 					placeholderItems: 'Apel\nPisang\nCeri'
 				}
 			};
-
-			const escapes = {'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'};
-			const escape = text=>text.replace(/[&<>"']/g, m=>escapes[m]);
-			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
+			const esc = t=>t.replace(/[&<>"']/g, m=>({
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#39;'
+			}[m]));
+			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
 
 			class PairProvider {
 				constructor(count) {
 					this.count = count;
-					this.compared = new Set();
+					this.compared = new Set()
 				}
 				key([a,b]) {
-					return a < b ? `${a}-${b}` : `${b}-${a}`;
+					return a < b ? `${a}-${b}` : `${b}-${a}`
 				}
 				mark(pair) {
-					this.compared.add(this.key(pair));
+					this.compared.add(this.key(pair))
 				}
 				unmark(pair) {
-					this.compared.delete(this.key(pair));
+					this.compared.delete(this.key(pair))
 				}
 				getResults(items, scores) {
-					return items.map((value,index)=>({
-						text: value,
-						score: scores[index]
-					})).sort((a,b)=>b.score - a.score);
+					return items.map((v,i)=>({
+						text: v,
+						score: scores[i]
+					})).sort((a,b)=>b.score - a.score)
 				}
 				getProgress(step) {
-					return step;
+					return step
 				}
 			}
 
@@ -455,14 +460,14 @@
 							this.pairs.push([i, j]);
 					for (let i = this.pairs.length - 1; i > 0; i--) {
 						const j = Math.floor(Math.random() * (i + 1));
-						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
+						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]]
 					}
 				}
 				next(state, result) {
-					return this.pairs[state.step];
+					return this.pairs[state.step]
 				}
 				getProgress(step) {
-					return `${step}/${this.pairs.length}`;
+					return `${step}/${this.pairs.length}`
 				}
 			}
 
@@ -482,7 +487,7 @@
 					this.jacobsthal = [0, 1];
 					while (this.jacobsthal[this.jacobsthal.length - 1] < count) {
 						const length = this.jacobsthal.length;
-						this.jacobsthal.push(this.jacobsthal[length - 1] + 2 * this.jacobsthal[length - 2]);
+						this.jacobsthal.push(this.jacobsthal[length - 1] + 2 * this.jacobsthal[length - 2])
 					}
 				}
 
@@ -495,32 +500,32 @@
 						refinePass: this.refinePass,
 						refineIndex: this.refineIndex,
 						refineSwapped: this.refineSwapped
-					});
+					})
 				}
 				restore(json) {
 					Object.assign(this, JSON.parse(json));
-					this.compared = new Set(this.compared);
+					this.compared = new Set(this.compared)
 				}
 				unmark(pair) {
 					this.pending && this.history.length && this.history.pop();
 					this.history.length && this.restore(this.history[this.history.length - 1]);
-					super.unmark(pair);
+					super.unmark(pair)
 				}
 
 				next(state, result) {
 					this.pending && this.handlePending(state, result);
 					const handlers = {
-						init: frame=>this.handleInit(frame),
-						comparing: frame=>this.handleComparing(frame),
-						recursion: frame=>this.handleRecursion(frame),
-						grouping: frame=>this.handleGrouping(frame),
-						inserting: frame=>this.handleInserting(frame)
+						init: f=>this.handleInit(f),
+						comparing: f=>this.handleComparing(f),
+						recursion: f=>this.handleRecursion(f),
+						grouping: f=>this.handleGrouping(f),
+						inserting: f=>this.handleInserting(f)
 					};
 					while (this.stack.length) {
 						const frame = this.stack[this.stack.length - 1];
 						const result = handlers[frame.stage](frame);
 						if (result)
-							return result;
+							return result
 					}
 					return this.final ? this.handleRefinement() : null;
 				}
@@ -630,13 +635,13 @@
 							this.refinePass++;
 							this.refineIndex = 0;
 							this.refineSwapped = false;
-							continue;
+							continue
 						}
 						const [a,b] = [this.final[this.refineIndex], this.final[this.refineIndex + 1]];
 						if (!this.compared.has(this.key([a, b]))) {
 							this.pending = [a, b];
 							this.history.push(this.snapshot());
-							return this.pending;
+							return this.pending
 						}
 						this.refineIndex++;
 					}
@@ -644,13 +649,13 @@
 
 				returnResult(result) {
 					this.stack.pop();
-					this.stack.length ? (this.stack[this.stack.length - 1].subResult = result) : (this.final = result.reverse());
+					this.stack.length ? (this.stack[this.stack.length - 1].subResult = result) : (this.final = result.reverse())
 				}
 				getResults(items, scores) {
-					return this.final ? this.final.map(index=>({
-						text: items[index],
-						score: scores[index]
-					})) : super.getResults(items, scores);
+					return this.final ? this.final.map(i=>({
+						text: items[i],
+						score: scores[i]
+					})) : super.getResults(items, scores)
 				}
 			}
 
@@ -677,7 +682,7 @@
 				}
 
 				string(key) {
-					return text[this.language]?.[key] ?? key;
+					return text[this.language]?.[key] ?? key
 				}
 
 				bind() {
@@ -690,20 +695,20 @@
 					dom.restartNew.onclick = ()=>this.reset();
 					dom.undo.onclick = ()=>this.undo();
 					dom.toggle.onclick = ()=>this.toggleHelp();
-					dom.language.onchange = event=>{
-						this.language = event.target.value;
-						this.updateText();
+					dom.language.onchange = e=>{
+						this.language = e.target.value;
+						this.updateText()
 					}
 					;
-					dom.theme.onchange = event=>this.setTheme(event.target.value);
-					dom.allowTies.onchange = event=>this.setTies(event.target.checked);
+					dom.theme.onchange = e=>this.setTheme(e.target.value);
+					dom.allowTies.onchange = e=>this.setTies(e.target.checked);
 					dom.items.oninput = ()=>this.checkStartButton();
-					document.onkeydown = event=>this.handleKey(event);
+					document.onkeydown = e=>this.handleKey(e);
 				}
 
-				setTheme(theme) {
-					document.documentElement.className = theme === 'auto' ? '' : theme;
-					dom.theme.value = theme;
+				setTheme(t) {
+					document.documentElement.className = t === 'auto' ? '' : t;
+					dom.theme.value = t
 				}
 
 				updateText() {
@@ -713,7 +718,7 @@
 					dom.items.placeholder = this.string('placeholderItems');
 					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
-					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,index])=>dom.theme.options[index].textContent = this.string(key));
+					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,i])=>dom.theme.options[i].textContent = this.string(key));
 					this.updateHelp();
 					this.updateProgress();
 					!dom.results.classList.contains('hidden') && this.renderResults();
@@ -722,15 +727,15 @@
 				setTies(enabled) {
 					this.allowTies = enabled;
 					!dom.battleSection.classList.contains('hidden') && dom.tieWrap.classList.toggle('hidden', !enabled);
-					this.updateHelp();
+					this.updateHelp()
 				}
 				updateHelp() {
 					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
-					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
+					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie')
 				}
 				toggleHelp() {
 					dom.tips.classList.toggle('hidden');
-					this.updateHelp();
+					this.updateHelp()
 				}
 
 				checkStartButton() {
@@ -748,7 +753,7 @@
 					if (unique.length < 2) {
 						dom.error.textContent = this.string('alert');
 						dom.error.classList.remove('hidden');
-						return;
+						return
 					}
 					raw.length > unique.length && (dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
 					dom.error.classList.remove('hidden'));
@@ -796,7 +801,7 @@
 						if (dom.battleSection.classList.contains('hidden') || !this.busy)
 							return;
 						this.busy = false;
-						this.next(result);
+						this.next(result)
 					}
 					, 150);
 				}
@@ -818,15 +823,15 @@
 				}
 
 				updateProgress() {
-					dom.progress.textContent = `${this.string('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`;
+					dom.progress.textContent = `${this.string('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`
 				}
 				clearSelections() {
-					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
+					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'))
 				}
 
 				renderResults() {
 					const results = this.provider.getResults(this.items, this.scores);
-					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${results.map((result,index)=>`<tr><td>${index + 1}</td><td>${escape(result.text)}</td><td>${Math.round(result.score)}</td></tr>`).join('')}</tbody></table>`;
+					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${results.map((r,i)=>`<tr><td>${i + 1}</td><td>${esc(r.text)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 				}
 
@@ -838,13 +843,12 @@
 					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
 					section === 'results' && dom.results.firstElementChild.prepend(dom.undo);
 					section === 'inputSection' && this.checkStartButton();
-
 					const focusTarget = {
 						battleSection: dom.left,
 						results: dom.restartBattle,
 						inputSection: dom.items
 					}[section];
-					focusTarget && setTimeout(() => focusTarget.focus(), 50);
+					focusTarget && setTimeout(()=>focusTarget.focus(), 50);
 				}
 
 				undo() {
