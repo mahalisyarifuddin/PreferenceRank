@@ -755,8 +755,12 @@
 						dom.error.classList.remove('hidden');
 						return
 					}
-					raw.length > unique.length && (dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
-					dom.error.classList.remove('hidden'));
+					if (raw.length > unique.length) {
+						dom.items.value = unique.join('\n');
+						dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
+						dom.error.classList.remove('hidden');
+						return
+					}
 
 					Object.assign(this, {
 						items: unique,
