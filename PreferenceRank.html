@@ -910,6 +910,7 @@
 				}
 
 				handleKey(event) {
+					if (event.repeat) return;
 					const actions = {
 						ArrowLeft: 'left',
 						ArrowRight: 'right',
