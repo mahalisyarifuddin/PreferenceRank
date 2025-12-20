@@ -422,11 +422,7 @@
 					this.compared = new Set();
 				}
 				key([a,b]) {
-					// Performance: Map 2D pair (a,b) to unique 1D integer key using Szudzik's pairing function.
-					// Avoids string allocation/GC and dependency on 'count'.
-					const min = a < b ? a : b;
-					const max = a < b ? b : a;
-					return max * max + min;
+					return a < b ? `${a}-${b}` : `${b}-${a}`;
 				}
 				mark(pair) {
 					this.compared.add(this.key(pair));
