@@ -609,13 +609,13 @@
 					if (frame.currentGroup.length === 0) {
 						if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
 							this.returnResult(frame.mainChain);
-						} else {
-							const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
-							const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
-							for (let i = end; i >= start; i--)
-								frame.currentGroup.push(frame.insertions[i]);
-							frame.jacobIndex++;
+							return null;
 						}
+						const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
+						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
+						for (let i = end; i >= start; i--)
+							frame.currentGroup.push(frame.insertions[i]);
+						frame.jacobIndex++;
 					}
 					return frame.mainChain === this.final ? null : frame.currentGroup.length > 0 && (frame.currentItem = frame.currentGroup.shift(),
 					frame.stage = 'inserting',
