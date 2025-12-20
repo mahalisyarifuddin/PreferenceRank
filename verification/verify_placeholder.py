@@ -11,11 +11,11 @@ def verify_placeholder():
         placeholder_en = textarea.get_attribute("placeholder")
         print(f"EN Placeholder: {repr(placeholder_en)}")
 
-        expected_en = "Example:\nApple\nBanana\nCherry"
+        expected_en = "Apple\nBanana\nCherry"
         assert placeholder_en == expected_en, f"Expected {repr(expected_en)}, got {repr(placeholder_en)}"
 
         # Take screenshot of English state
-        page.screenshot(path="verification/placeholder_en.png")
+        page.screenshot(path="verification/placeholder_en_v2.png")
 
         # Change language to Indonesian
         page.locator("#language").select_option("id")
@@ -24,11 +24,11 @@ def verify_placeholder():
         placeholder_id = textarea.get_attribute("placeholder")
         print(f"ID Placeholder: {repr(placeholder_id)}")
 
-        expected_id = "Contoh:\nApel\nPisang\nCeri"
+        expected_id = "Apel\nPisang\nCeri"
         assert placeholder_id == expected_id, f"Expected {repr(expected_id)}, got {repr(placeholder_id)}"
 
         # Take screenshot of Indonesian state
-        page.screenshot(path="verification/placeholder_id.png")
+        page.screenshot(path="verification/placeholder_id_v2.png")
 
         print("Verification successful!")
         browser.close()
