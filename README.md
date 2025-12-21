@@ -12,9 +12,9 @@ PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rat
 ## Ranking Modes
 PreferenceRank offers two distinct modes to sort your items:
 
-- **Full Rank (Default):** Uses a comprehensive round-robin system ($Battles = \frac{N(N-1)}{2}$). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
+- **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
 
-- **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) to minimize comparisons ($Battles \approx N \log_2 N$). It guarantees 100% sorting accuracy while drastically reducing time.
+- **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) to minimize comparisons (Battles ≈ N log2 N). It guarantees 100% sorting accuracy while drastically reducing time.
     - *Example:* For 50 items, Quick Rank uses ~260 battles vs. 1225 for Full Rank (~78% reduction).
     - *Note:* Enabling ties increases comparisons by ~15%.
 
