@@ -14,8 +14,8 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 
 - **Peringkat Penuh (Default):** Menggunakan sistem round-robin komprehensif (Pertarungan = N(N-1)/2). Menjamin preferensi paling akurat namun meningkat secara kuadratik. Terbaik untuk daftar pendek (<20 item).
 
-- **Peringkat Cepat:** Menggunakan **Algoritma Ford-Johnson** (Merge-Insertion Sort) untuk meminimalkan perbandingan (Pertarungan ≈ 1.35 N ln N). Menjamin akurasi 100% sambil mengurangi waktu secara drastis.
-    - *Contoh:* Untuk 50 item, Peringkat Cepat menggunakan ~260 pertarungan vs. 1225 untuk Peringkat Penuh (penghematan ~78%).
+- **Peringkat Cepat:** Menggunakan **Algoritma Ford-Johnson** (Merge-Insertion Sort) untuk meminimalkan perbandingan (Pertarungan ≈ 1.2 N ln N). Menjamin akurasi 100% sambil mengurangi waktu secara drastis.
+    - *Contoh:* Untuk 50 item, Peringkat Cepat menggunakan ~235 pertarungan vs. 1225 untuk Peringkat Penuh (penghematan ~80%).
     - *Catatan:* Mengizinkan hasil seri meningkatkan jumlah perbandingan sekitar 15%.
 
 ## Cara Menggunakan
