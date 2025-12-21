@@ -824,11 +824,10 @@
 			const currentScores = new Float64Array(this.items.length);
 			const indices = new Int32Array(this.matches.length);
 			for(let k=0; k<this.matches.length; k++) indices[k] = k;
-			const inv400 = 0.0025; // 1/400
+			const inv400 = 0.0025;
 
 			for (let i = 0; i < iterations; i++) {
 				currentScores.fill(1000);
-				// Shuffle indices instead of cloning matches array (performance optimization)
 				for (let j = indices.length - 1; j > 0; j--) {
 					const k = Math.floor(Math.random() * (j + 1));
 					const temp = indices[j];
