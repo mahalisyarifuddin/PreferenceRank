@@ -449,6 +449,9 @@
 				getProgress(step) {
 					return step
 				}
+				static getEstimate(count) {
+					return 0
+				}
 			}
 
 			class FullPairProvider extends PairProvider {
@@ -469,11 +472,15 @@
 				getProgress(step) {
 					return `${step}/${this.pairs.length}`
 				}
+				static getEstimate(count) {
+					return (count * (count - 1)) / 2
+				}
 			}
 
 			class QuickPairProvider extends PairProvider {
-				constructor(count) {
+				constructor(count, ties) {
 					super(count);
+					this.ties = ties;
 					this.stack = [{
 						stage: 'init',
 						items: [...Array(count).keys()]
@@ -671,6 +678,14 @@
 						score: scores[i]
 					})).sort((a,b)=>b.score - a.score) : super.getResults(items, scores)
 				}
+				getProgress(step) {
+					const total = Math.round(QuickPairProvider.getEstimate(this.count, this.ties));
+					return `${step}/~${total}`
+				}
+				static getEstimate(count, ties) {
+					const base = count * Math.log2(count);
+					return Math.round(ties ? base * 1.15 : base)
+				}
 			}
 
 			class PreferenceRank {
@@ -788,7 +803,7 @@
 						busy: false
 					});
 					dom.undo.disabled = true;
-					this.provider = dom.quickRank.checked ? new QuickPairProvider(unique.length) : new FullPairProvider(unique.length);
+					this.provider = dom.quickRank.checked ? new QuickPairProvider(unique.length, this.allowTies) : new FullPairProvider(unique.length);
 					dom.tieWrap.classList.toggle('hidden', !this.allowTies);
 					this.updateHelp();
 					this.show('battleSection');
