@@ -346,7 +346,7 @@
 				</div>
 				<div id="progress"></div>
 				<button id="cancel"></button>
-				<button id="toggle"></button>
+				<button id="toggle" aria-controls="tips" aria-expanded="false"></button>
 				<div id="tips" class="hidden"></div>
 			</div>
 			<div id="results" class="hidden"></div>
@@ -760,7 +760,9 @@
 					this.updateHelp()
 				}
 				updateHelp() {
-					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
+					const isHidden = dom.tips.classList.contains('hidden');
+					dom.toggle.textContent = this.string(isHidden ? 'toggleShow' : 'toggleHide');
+					dom.toggle.setAttribute('aria-expanded', !isHidden);
 					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie')
 				}
 				toggleHelp() {
