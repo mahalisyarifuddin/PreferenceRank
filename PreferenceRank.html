@@ -821,16 +821,22 @@
 			const iterations = 100;
 			const totalScores = new Float64Array(this.items.length);
 			const currentScores = new Float64Array(this.items.length);
+			const indices = new Int32Array(this.matches.length);
+			for(let k=0; k<this.matches.length; k++) indices[k] = k;
+			const inv400 = 0.0025; // 1/400
 
 			for (let i = 0; i < iterations; i++) {
 				currentScores.fill(1000);
-				const currentMatches = [...this.matches];
-				for (let j = currentMatches.length - 1; j > 0; j--) {
+				// Shuffle indices instead of cloning matches array (performance optimization)
+				for (let j = indices.length - 1; j > 0; j--) {
 					const k = Math.floor(Math.random() * (j + 1));
-					[currentMatches[j],currentMatches[k]] = [currentMatches[k], currentMatches[j]]
+					const temp = indices[j];
+					indices[j] = indices[k];
+					indices[k] = temp;
 				}
-				for (const {a,b,result} of currentMatches) {
-					const expected = 1 / (1 + 10 ** ((currentScores[b] - currentScores[a]) / 400));
+				for (let j = 0; j < indices.length; j++) {
+					const {a,b,result} = this.matches[indices[j]];
+					const expected = 1 / (1 + 10 ** ((currentScores[b] - currentScores[a]) * inv400));
 					currentScores[a] += 32 * (result - expected);
 					currentScores[b] += 32 * (expected - result)
 				}
