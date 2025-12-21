@@ -17,20 +17,12 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** This mode uses the **Ford-Johnson Algorithm (Merge-Insertion Sort)** to sort your items. This algorithm is theoretically optimal for minimizing the number of comparisons required to sort a list. It guarantees 100% sorting accuracy (assuming consistent preferences) while drastically reducing the time needed compared to Full Rank. For example, sorting 50 items requires over 80% fewer comparisons than Full Rank. This is the recommended mode for large lists.
 
 ## Performance Comparison
-The number of battles (comparisons) needed to rank your list depends on the number of items and the mode you choose.
+The number of battles needed depends on your chosen mode:
 
-*   **Full Rank**: Comparisons grow quadratically ($y = \frac{x(x-1)}{2}$). Best for small lists (under 20 items).
-*   **Quick Rank**: Comparisons grow much slower, close to $y \approx x \log_2 x$. Best for medium to large lists. Enabling ties in Quick Rank slightly increases the number of battles (~15%) because ties add ambiguity that the algorithm must resolve.
-
-| Items ($x$) | Full Rank Battles | Quick Rank Battles (Strict) | Quick Rank Battles (Ties Enabled) | Savings (Quick vs Full) |
-| :--- | :--- | :--- | :--- | :--- |
-| 5 | 10 | ~11 | ~14 | -10% |
-| 10 | 45 | ~31 | ~40 | 31% |
-| 20 | 190 | ~80 | ~99 | 58% |
-| 50 | 1225 | ~264 | ~313 | 78% |
-| 100 | 4950 | ~626 | ~724 | 87% |
-
-*Note: Quick Rank battles are estimated averages based on 1000 Monte Carlo simulations. "Strict" assumes unique preferences (no ties).*
+*   **Full Rank**: $Battles = \frac{N(N-1)}{2}$. Grows quadratically. Best for small lists (<20 items).
+*   **Quick Rank**: $Battles \approx N \log_2 N$. Grows linearly-logarithmically. Best for larger lists.
+    *   *Example*: For 50 items, Quick Rank uses ~260 battles (vs. 1225 for Full Rank), a ~78% reduction.
+    *   *Note*: Enabling ties increases comparisons by ~15%.
 
 ## Quick Start
 1. Download the `PreferenceRank.html` file from the repository.
