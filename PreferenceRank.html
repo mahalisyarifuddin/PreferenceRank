@@ -688,8 +688,8 @@
 					return `${step}/~${total}`
 				}
 				static getEstimate(count, ties) {
-					const base = count * Math.log2(count);
-					return Math.round(ties ? base * 1.15 : base)
+					const factor = ties ? 1.4 : 1.2;
+					return Math.round(factor * count * Math.log(count))
 				}
 			}
 
