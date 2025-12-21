@@ -27,7 +27,7 @@ def run(playwright):
         print("Error: Progress estimation incorrect or format changed.")
         exit(1)
 
-    page.screenshot(path="verification/progress_verify_final.png")
+    page.screenshot(path="verification/progress_verify_final_clean.png")
 
     browser.close()
 
