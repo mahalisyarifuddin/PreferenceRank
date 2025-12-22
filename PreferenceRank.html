@@ -681,7 +681,7 @@
 					return this.final ? this.final.map(i=>({
 						text: items[i],
 						score: scores[i]
-					})).sort((a,b)=>b.score - a.score) : super.getResults(items, scores)
+					})) : super.getResults(items, scores)
 				}
 				getProgress(step) {
 					const total = Math.round(QuickPairProvider.getEstimate(this.count));
