@@ -486,9 +486,11 @@
 				constructor(count, ties) {
 					super(count);
 					this.ties = ties;
+					const items = [];
+					for (let i = 0; i < count; i++) items.push(i);
 					this.stack = [{
 						stage: 'init',
-						items: [...Array(count).keys()]
+						items
 					}];
 					this.history = [];
 					this.pending = null;
