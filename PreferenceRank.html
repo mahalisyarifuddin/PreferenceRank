@@ -486,9 +486,11 @@
 				constructor(count, ties) {
 					super(count);
 					this.ties = ties;
+					const items = [];
+					for (let i = 0; i < count; i++) items.push(i);
 					this.stack = [{
 						stage: 'init',
-						items: [...Array(count).keys()]
+						items
 					}];
 					this.history = [];
 					this.pending = null;
@@ -681,7 +683,7 @@
 					return this.final ? this.final.map(i=>({
 						text: items[i],
 						score: scores[i]
-					})) : super.getResults(items, scores)
+					})).sort((a,b)=>b.score - a.score) : super.getResults(items, scores)
 				}
 				getProgress(step) {
 					const total = Math.round(QuickPairProvider.getEstimate(this.count));
