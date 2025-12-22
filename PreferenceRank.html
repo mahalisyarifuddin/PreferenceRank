@@ -116,6 +116,10 @@
 				opacity: .6
 			}
 
+			#copy {
+				width: auto
+			}
+
 			.primary {
 				background: var(--primary);
 				border: none;
@@ -272,6 +276,13 @@
 				transform: translateY(-50%)
 			}
 
+			.results-header #copy {
+				position: absolute;
+				right: 0;
+				top: 50%;
+				transform: translateY(-50%)
+			}
+
 			#undo {
 				width: auto
 			}
@@ -343,6 +354,7 @@
 				<button id="start" class="primary"></button>
 			</div>
 			<button id="undo" class="secondary hidden" disabled></button>
+			<button id="copy" class="secondary hidden"></button>
 			<div id="battleSection" class="hidden">
 				<div id="battle">
 					<button id="left" class="secondary"></button>
@@ -391,7 +403,9 @@
 					score: 'Score',
 					restartBattle: 'Restart Battle',
 					restartNew: 'Start with New Items',
-					placeholderItems: 'Apple\nBanana\nCherry'
+					placeholderItems: 'Apple\nBanana\nCherry',
+					copy: 'Copy Results',
+					copied: 'Copied!'
 				},
 				id: {
 					title: 'PreferenceRank',
@@ -420,7 +434,9 @@
 					score: 'Skor',
 					restartBattle: 'Mulai Ulang Pertarungan',
 					restartNew: 'Mulai dengan Pilihan Baru',
-					placeholderItems: 'Apel\nPisang\nCeri'
+					placeholderItems: 'Apel\nPisang\nCeri',
+					copy: 'Salin Hasil',
+					copied: 'Disalin!'
 				}
 			};
 			const esc = t=>t.replace(/[&<>"']/g, m=>({
@@ -719,6 +735,7 @@
 					dom.restartBattle.onclick = ()=>this.start();
 					dom.restartNew.onclick = ()=>this.reset();
 					dom.undo.onclick = ()=>this.undo();
+					dom.copy.onclick = ()=>this.copyResults();
 					dom.toggle.onclick = ()=>this.toggleHelp();
 					dom.language.onchange = e=>{
 						this.language = e.target.value;
@@ -739,7 +756,7 @@
 					dom.language.setAttribute('aria-label', this.string('languageLabel'));
 					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
 					dom.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
 					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
 					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,i])=>dom.theme.options[i].textContent = this.string(key));
@@ -891,9 +908,11 @@
 					['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
 					dom.restartWrap.classList.toggle('hidden', section !== 'results');
 					dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
+					dom.copy.classList.toggle('hidden', section !== 'results');
 					this.keyboardEnabled = section === 'battleSection' || section === 'results';
 					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
-					section === 'results' && dom.results.firstElementChild.prepend(dom.undo);
+					section === 'results' && (dom.results.firstElementChild.prepend(dom.undo),
+					dom.results.firstElementChild.appendChild(dom.copy));
 					section === 'inputSection' && this.checkStartButton();
 					const focusTarget = {
 						battleSection: dom.left,
@@ -901,6 +920,16 @@
 						inputSection: dom.items
 					}[section];
 					focusTarget && setTimeout(()=>focusTarget.focus(), 50);
+				}
+				copyResults() {
+					const results = this.provider.getResults(this.items, this.scores);
+					const lines = results.map((r,i)=>`${i + 1}. ${r.text} (${Math.round(r.score)})`);
+					navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+						const original = dom.copy.textContent;
+						dom.copy.textContent = this.string('copied');
+						setTimeout(()=>dom.copy.textContent = original, 2000)
+					}
+					)
 				}
 				undo() {
 					if (this.busy || !this.history.length)
