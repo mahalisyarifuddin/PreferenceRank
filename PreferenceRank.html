@@ -12,7 +12,9 @@
 				--surface: #fff;
 				--text: #414754;
 				--border: #c1c6d7;
-				--dim: #d7d9e5
+				--dim: #d7d9e5;
+				--success: #28a745;
+				--danger: #dc3545
 			}
 
 			@media(prefers-color-scheme: dark) {
@@ -124,15 +126,15 @@
 				background: var(--hover)
 			}
 
+			.secondary:hover:not(:disabled) {
+				background: var(--dim)
+			}
+
 			.error {
-				color: #d32f2f;
+				color: var(--danger);
 				font-size: .9rem;
 				margin-top: .5rem;
 				display: block
-			}
-
-			.secondary:hover {
-				background: var(--dim)
 			}
 
 			.selectors {
@@ -421,14 +423,13 @@
 					placeholderItems: 'Apel\nPisang\nCeri'
 				}
 			};
-			const escapeMap = {
+			const esc = t=>t.replace(/[&<>"']/g, m=>({
 				'&': '&amp;',
 				'<': '&lt;',
 				'>': '&gt;',
 				'"': '&quot;',
 				"'": '&#39;'
-			};
-			const esc = t=>t.replace(/[&<>"']/g, m=>escapeMap[m]);
+			}[m]));
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
 
 			class PairProvider {
@@ -487,7 +488,8 @@
 					super(count);
 					this.ties = ties;
 					const items = [];
-					for (let i = 0; i < count; i++) items.push(i);
+					for (let i = 0; i < count; i++)
+						items.push(i);
 					this.stack = [{
 						stage: 'init',
 						items
@@ -504,7 +506,6 @@
 						this.jacobsthal.push(this.jacobsthal[length - 1] + 2 * this.jacobsthal[length - 2])
 					}
 				}
-
 				snapshot() {
 					return JSON.stringify({
 						stack: this.stack,
@@ -525,7 +526,6 @@
 					this.history.length && this.restore(this.history[this.history.length - 1]);
 					super.unmark(pair)
 				}
-
 				next(state, result) {
 					this.pending && this.handlePending(state, result);
 					const handlers = {
@@ -543,7 +543,6 @@
 					}
 					return this.final ? this.handleRefinement() : null;
 				}
-
 				handlePending(state, result) {
 					const [a,b] = this.pending;
 					const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
@@ -552,7 +551,6 @@
 					this.final && this.handleRefinementSwap(a, b, winner);
 					this.pending = null;
 				}
-
 				handleRefinementSwap(a, b, winner) {
 					const index = this.final.indexOf(a);
 					const adjacent = index !== -1 && this.final[index + 1] === b;
@@ -560,7 +558,6 @@
 					this.refineSwapped = true);
 					this.refineIndex++;
 				}
-
 				handleInit(frame) {
 					if (frame.items.length < 2)
 						return this.returnResult(frame.items);
@@ -579,7 +576,6 @@
 					});
 					return null;
 				}
-
 				handleComparing(frame) {
 					return frame.pairIndex >= frame.pairs.length ? (frame.stage = 'recursion',
 					this.stack.push({
@@ -594,7 +590,6 @@
 					this.history.push(this.snapshot()),
 					this.pending);
 				}
-
 				handleRecursion(frame) {
 					if (!frame.subResult)
 						return null;
@@ -618,12 +613,11 @@
 					frame.currentGroup = [];
 					frame.stage = 'grouping';
 				}
-
 				handleGrouping(frame) {
 					if (frame.currentGroup.length === 0) {
 						if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
 							this.returnResult(frame.mainChain);
-							return null;
+							return null
 						}
 						const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
 						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
@@ -640,7 +634,6 @@
 					},
 					null);
 				}
-
 				handleInserting(frame) {
 					const {min, max, target} = frame.binarySearch;
 					return min >= max ? (frame.mainChain.splice(min, 0, target),
@@ -652,7 +645,6 @@
 					this.history.push(this.snapshot()),
 					this.pending);
 				}
-
 				handleRefinement() {
 					while (true) {
 						if (this.refinePass >= 2)
@@ -674,7 +666,6 @@
 						this.refineIndex++;
 					}
 				}
-
 				returnResult(result) {
 					this.stack.pop();
 					this.stack.length ? (this.stack[this.stack.length - 1].subResult = result) : (this.final = result.reverse())
@@ -699,7 +690,7 @@
 					Object.assign(this, {
 						items: [],
 						scores: [],
-				matches: [],
+						matches: [],
 						pair: null,
 						swapped: false,
 						step: 0,
@@ -716,11 +707,9 @@
 					this.updateText();
 					this.checkStartButton();
 				}
-
 				string(key) {
 					return text[this.language]?.[key] ?? key
 				}
-
 				bind() {
 					dom.start.onclick = ()=>this.start();
 					dom.cancel.onclick = ()=>this.show('inputSection');
@@ -741,12 +730,10 @@
 					dom.items.oninput = ()=>this.checkStartButton();
 					document.onkeydown = e=>this.handleKey(e);
 				}
-
 				setTheme(t) {
 					document.documentElement.className = t === 'auto' ? '' : t;
 					dom.theme.value = t
 				}
-
 				updateText() {
 					dom.language.value = this.language;
 					dom.language.setAttribute('aria-label', this.string('languageLabel'));
@@ -760,7 +747,6 @@
 					this.updateProgress();
 					!dom.results.classList.contains('hidden') && this.renderResults();
 				}
-
 				setTies(enabled) {
 					this.allowTies = enabled;
 					!dom.battleSection.classList.contains('hidden') && dom.tieWrap.classList.toggle('hidden', !enabled);
@@ -770,13 +756,12 @@
 					const isHidden = dom.tips.classList.contains('hidden');
 					dom.toggle.textContent = this.string(isHidden ? 'toggleShow' : 'toggleHide');
 					dom.toggle.setAttribute('aria-expanded', !isHidden);
-					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie')
+					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
 				}
 				toggleHelp() {
 					dom.tips.classList.toggle('hidden');
 					this.updateHelp()
 				}
-
 				checkStartButton() {
 					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
 					const unique = new Set(raw);
@@ -784,7 +769,6 @@
 					dom.start.disabled = !valid;
 					valid && dom.error.classList.add('hidden');
 				}
-
 				start() {
 					dom.error.classList.add('hidden');
 					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
@@ -800,53 +784,50 @@
 						dom.error.classList.remove('hidden');
 						return
 					}
-
 					Object.assign(this, {
 						items: unique,
 						allowTies: dom.allowTies.checked,
 						scores: Array(unique.length).fill(1000),
-				matches: [],
+						matches: [],
 						step: 0,
 						history: [],
 						swaps: new Map(),
 						busy: false
 					});
 					dom.undo.disabled = true;
-					this.provider = dom.quickRank.checked ? new QuickPairProvider(unique.length, this.allowTies) : new FullPairProvider(unique.length);
+					this.provider = dom.quickRank.checked ? new QuickPairProvider(unique.length,this.allowTies) : new FullPairProvider(unique.length);
 					dom.tieWrap.classList.toggle('hidden', !this.allowTies);
 					this.updateHelp();
 					this.show('battleSection');
 					this.next();
 				}
-
-		recalculateScores() {
-			const iterations = 100;
-			const totalScores = new Float64Array(this.items.length);
-			const currentScores = new Float64Array(this.items.length);
-			const indices = new Int32Array(this.matches.length);
-			for(let k=0; k<this.matches.length; k++) indices[k] = k;
-			const inv400 = 0.0025;
-
-			for (let i = 0; i < iterations; i++) {
-				currentScores.fill(1000);
-				for (let j = indices.length - 1; j > 0; j--) {
-					const k = Math.floor(Math.random() * (j + 1));
-					const temp = indices[j];
-					indices[j] = indices[k];
-					indices[k] = temp;
+				recalculateScores() {
+					const iterations = 100;
+					const totalScores = new Float64Array(this.items.length);
+					const currentScores = new Float64Array(this.items.length);
+					const indices = new Int32Array(this.matches.length);
+					for (let k = 0; k < this.matches.length; k++)
+						indices[k] = k;
+					const inv400 = 0.0025;
+					for (let i = 0; i < iterations; i++) {
+						currentScores.fill(1000);
+						for (let j = indices.length - 1; j > 0; j--) {
+							const k = Math.floor(Math.random() * (j + 1));
+							const temp = indices[j];
+							indices[j] = indices[k];
+							indices[k] = temp
+						}
+						for (let j = 0; j < indices.length; j++) {
+							const {a, b, result} = this.matches[indices[j]];
+							const expected = 1 / (1 + 10 ** ((currentScores[b] - currentScores[a]) * inv400));
+							currentScores[a] += 32 * (result - expected);
+							currentScores[b] += 32 * (expected - result)
+						}
+						for (let j = 0; j < this.items.length; j++)
+							totalScores[j] += currentScores[j]
+					}
+					this.scores = Array.from(totalScores).map(s=>s / iterations);
 				}
-				for (let j = 0; j < indices.length; j++) {
-					const {a,b,result} = this.matches[indices[j]];
-					const expected = 1 / (1 + 10 ** ((currentScores[b] - currentScores[a]) * inv400));
-					currentScores[a] += 32 * (result - expected);
-					currentScores[b] += 32 * (expected - result)
-				}
-				for (let j = 0; j < this.items.length; j++)
-					totalScores[j] += currentScores[j]
-			}
-			this.scores = Array.from(totalScores).map(s=>s / iterations)
-		}
-
 				choose(winner) {
 					if (this.busy || dom.battleSection.classList.contains('hidden'))
 						return;
@@ -861,12 +842,12 @@
 					const [a,b] = this.pair;
 					const isLeftWinner = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
 					const result = winner === 'tie' ? 0.5 : isLeftWinner ? 1 : 0;
-			this.matches.push({
-				a,
-				b,
-				result
-			});
-			this.recalculateScores();
+					this.matches.push({
+						a,
+						b,
+						result
+					});
+					this.recalculateScores();
 					this.step++;
 					dom.undo.disabled = false;
 					this.updateProgress();
@@ -880,7 +861,6 @@
 					}
 					, 150);
 				}
-
 				next(result) {
 					this.clearSelections();
 					const nextPair = this.provider.next(this, result);
@@ -896,20 +876,17 @@
 					dom.right.textContent = this.items[b];
 					this.updateProgress();
 				}
-
 				updateProgress() {
 					dom.progress.textContent = `${this.string('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`
 				}
 				clearSelections() {
 					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'))
 				}
-
 				renderResults() {
 					const results = this.provider.getResults(this.items, this.scores);
 					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${results.map((r,i)=>`<tr><td>${i + 1}</td><td>${esc(r.text)}</td><td>${Math.round(r.score)}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 				}
-
 				show(section) {
 					['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
 					dom.restartWrap.classList.toggle('hidden', section !== 'results');
@@ -925,13 +902,12 @@
 					}[section];
 					focusTarget && setTimeout(()=>focusTarget.focus(), 50);
 				}
-
 				undo() {
 					if (this.busy || !this.history.length)
 						return;
 					const last = this.history.pop();
-			this.matches.pop();
-			this.recalculateScores();
+					this.matches.pop();
+					this.recalculateScores();
 					Object.assign(this, {
 						step: last.step,
 						pair: last.pair,
@@ -946,12 +922,11 @@
 					this.show('battleSection');
 					dom.undo.disabled = !this.history.length;
 				}
-
 				reset() {
 					Object.assign(this, {
 						items: [],
 						scores: [],
-				matches: [],
+						matches: [],
 						pair: null,
 						swapped: false,
 						step: 0,
@@ -967,13 +942,13 @@
 					this.updateHelp();
 					this.updateProgress();
 				}
-
 				handleKey(event) {
-					if (event.repeat) return;
+					if (event.repeat)
+						return;
 					if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
 						if (!dom.inputSection.classList.contains('hidden') && !dom.start.disabled) {
 							event.preventDefault();
-							dom.start.click();
+							dom.start.click()
 						}
 						return
 					}
@@ -993,7 +968,6 @@
 					dom[action].click());
 				}
 			}
-
 			new PreferenceRank();
 		</script>
 	</body>
