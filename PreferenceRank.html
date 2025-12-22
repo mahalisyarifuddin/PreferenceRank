@@ -327,7 +327,7 @@
 				<h1 id="title"></h1>
 				<div class="group">
 					<label for="items" id="labelItems"></label>
-					<textarea id="items" rows="5" spellcheck="false"></textarea>
+					<textarea id="items" rows="5" spellcheck="false" autofocus></textarea>
 					<span id="error" class="error hidden" aria-live="polite"></span>
 				</div>
 				<div class="checkbox-row">
@@ -751,6 +751,7 @@
 					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
 					dom.items.placeholder = this.string('placeholderItems');
 					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
+					dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
 					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
 					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,i])=>dom.theme.options[i].textContent = this.string(key));
 					this.updateHelp();
@@ -967,6 +968,13 @@
 
 				handleKey(event) {
 					if (event.repeat) return;
+					if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+						if (!dom.inputSection.classList.contains('hidden') && !dom.start.disabled) {
+							event.preventDefault();
+							dom.start.click();
+						}
+						return
+					}
 					const actions = {
 						ArrowLeft: 'left',
 						ArrowRight: 'right',
