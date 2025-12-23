@@ -526,7 +526,6 @@
 					return JSON.stringify({
 						stack: this.stack,
 						pending: this.pending,
-						compared: [...this.compared],
 						final: this.final,
 						refinePass: this.refinePass,
 						refineIndex: this.refineIndex,
@@ -534,8 +533,7 @@
 					})
 				}
 				restore(json) {
-					Object.assign(this, JSON.parse(json));
-					this.compared = new Set(this.compared)
+					Object.assign(this, JSON.parse(json))
 				}
 				unmark(pair) {
 					this.pending && this.history.length && this.history.pop();
