@@ -819,14 +819,11 @@
 					this.next();
 				}
 				recalculateScores() {
-					// Optimization: Use deterministic Euler method instead of stochastic simulation.
-					// This is faster (10 steps vs 100 iterations) and yields exact symmetry for RPS cases.
 					const steps = 10;
 					const currentScores = new Float64Array(this.items.length).fill(1000);
 					const deltas = new Float64Array(this.items.length);
-					const factor = 0.005756462732485115; // 0.0025 * Math.log(10)
-					const K = 32 / steps; // Distributed K factor
-
+					const factor = Math.log(10) / 400;
+					const K = 32 / steps;
 					for (let step = 0; step < steps; step++) {
 						deltas.fill(0);
 						for (let j = 0; j < this.matches.length; j++) {

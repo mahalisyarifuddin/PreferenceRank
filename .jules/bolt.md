@@ -7,3 +7,5 @@
 - **10x speedup**: Reduced complexity from O(100N) to O(10N).
 - **Correctness**: Guarantees perfect symmetry (all 1000) for Rock-Paper-Scissors cycles, which stochastic averaging failed to do exactly.
 - **Math**: Replaced `10 ** x` with `Math.exp(x * const)` for additional CPU-level speedup.
+## 2025-12-23 - Code Aesthetics in Math
+**Learning:** When optimizing math, prefer readable standard formulas (e.g., `Math.log(10) / 400`) over pre-calculated magic numbers. Compilers/engines handle the constant folding well enough, and it keeps the code self-documenting without comments.
