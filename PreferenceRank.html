@@ -825,7 +825,9 @@
 					const indices = new Int32Array(this.matches.length);
 					for (let k = 0; k < this.matches.length; k++)
 						indices[k] = k;
-					const inv400 = 0.0025;
+					// Optimization: Precalculate factor for Math.exp instead of using 10 ** x
+					// 0.0025 * Math.log(10) ≈ 0.005756462732485115
+					const factor = 0.005756462732485115;
 					for (let i = 0; i < iterations; i++) {
 						currentScores.fill(1000);
 						for (let j = indices.length - 1; j > 0; j--) {
@@ -836,7 +838,8 @@
 						}
 						for (let j = 0; j < indices.length; j++) {
 							const {a, b, result} = this.matches[indices[j]];
-							const expected = 1 / (1 + 10 ** ((currentScores[b] - currentScores[a]) * inv400));
+							// Optimization: Math.exp is significantly faster than Math.pow or **
+							const expected = 1 / (1 + Math.exp((currentScores[b] - currentScores[a]) * factor));
 							currentScores[a] += 32 * (result - expected);
 							currentScores[b] += 32 * (expected - result)
 						}
