@@ -819,31 +819,24 @@
 					this.next();
 				}
 				recalculateScores() {
-					const iterations = 100;
-					const totalScores = new Float64Array(this.items.length);
-					const currentScores = new Float64Array(this.items.length);
-					const indices = new Int32Array(this.matches.length);
-					for (let k = 0; k < this.matches.length; k++)
-						indices[k] = k;
-					const inv400 = 0.0025;
-					for (let i = 0; i < iterations; i++) {
-						currentScores.fill(1000);
-						for (let j = indices.length - 1; j > 0; j--) {
-							const k = Math.floor(Math.random() * (j + 1));
-							const temp = indices[j];
-							indices[j] = indices[k];
-							indices[k] = temp
+					const steps = 10;
+					const currentScores = new Float64Array(this.items.length).fill(1000);
+					const deltas = new Float64Array(this.items.length);
+					const factor = Math.log(10) / 400;
+					const K = 32 / steps;
+					for (let step = 0; step < steps; step++) {
+						deltas.fill(0);
+						for (let j = 0; j < this.matches.length; j++) {
+							const {a, b, result} = this.matches[j];
+							const expected = 1 / (1 + Math.exp((currentScores[b] - currentScores[a]) * factor));
+							const change = K * (result - expected);
+							deltas[a] += change;
+							deltas[b] -= change
 						}
-						for (let j = 0; j < indices.length; j++) {
-							const {a, b, result} = this.matches[indices[j]];
-							const expected = 1 / (1 + 10 ** ((currentScores[b] - currentScores[a]) * inv400));
-							currentScores[a] += 32 * (result - expected);
-							currentScores[b] += 32 * (expected - result)
-						}
-						for (let j = 0; j < this.items.length; j++)
-							totalScores[j] += currentScores[j]
+						for (let i = 0; i < this.items.length; i++)
+							currentScores[i] += deltas[i]
 					}
-					this.scores = Array.from(totalScores).map(s=>s / iterations);
+					this.scores = Array.from(currentScores);
 				}
 				choose(winner) {
 					if (this.busy || dom.battleSection.classList.contains('hidden'))
