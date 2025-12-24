@@ -601,18 +601,25 @@
 					return null;
 				}
 				handleComparing(frame) {
-					return frame.pairIndex >= frame.pairs.length ? (frame.stage = 'recursion',
-					this.stack.push({
-						stage: 'init',
-						items: [...frame.winners]
-					}),
-					null) : frame.lastWinner !== undefined ? (frame.winners.push(frame.lastWinner),
-					frame.losers.push(frame.lastWinner === frame.pairs[frame.pairIndex][0] ? frame.pairs[frame.pairIndex][1] : frame.pairs[frame.pairIndex][0]),
-					delete frame.lastWinner,
-					frame.pairIndex++,
-					null) : (this.pending = frame.pairs[frame.pairIndex],
-					this.history.push(this.snapshot()),
-					this.pending);
+					if (frame.pairIndex >= frame.pairs.length) {
+						frame.stage = 'recursion';
+						this.stack.push({
+							stage: 'init',
+							items: [...frame.winners]
+						});
+						return null
+					}
+					if (frame.lastWinner !== undefined) {
+						frame.winners.push(frame.lastWinner);
+						const [a, b] = frame.pairs[frame.pairIndex];
+						frame.losers.push(frame.lastWinner === a ? b : a);
+						delete frame.lastWinner;
+						frame.pairIndex++;
+						return null
+					}
+					this.pending = frame.pairs[frame.pairIndex];
+					this.history.push(this.snapshot());
+					return this.pending
 				}
 				handleRecursion(frame) {
 					if (!frame.subResult)
