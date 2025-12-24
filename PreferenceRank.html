@@ -979,30 +979,17 @@
 					this.updateHelp();
 					this.updateProgress();
 				}
-				handleKey(event) {
-					if (event.repeat)
-						return;
-					if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-						if (!dom.inputSection.classList.contains('hidden') && !dom.start.disabled) {
-							event.preventDefault();
-							dom.start.click()
-						}
+				handleKey(e) {
+					if (e.repeat) return;
+					if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+						!dom.inputSection.classList.contains('hidden') && !dom.start.disabled && (e.preventDefault(), dom.start.click());
 						return
 					}
-					const actions = {
-						ArrowLeft: 'left',
-						ArrowRight: 'right',
-						ArrowUp: 'tie',
-						ArrowDown: 'tie',
-						z: 'undo',
-						Z: 'undo'
-					};
-					const action = actions[event.key];
-					const isUndo = event.key.toLowerCase() === 'z';
-					const isTie = event.key === 'ArrowUp' || event.key === 'ArrowDown';
-					const blocked = !this.keyboardEnabled || ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || !action || (isUndo && ((!event.ctrlKey && !event.metaKey) || event.shiftKey)) || (isTie && !this.allowTies) || (!isUndo && dom.battleSection.classList.contains('hidden'));
-					blocked || (event.preventDefault(),
-					dom[action].click());
+					const action = {ArrowLeft:'left',ArrowRight:'right',ArrowUp:'tie',ArrowDown:'tie',z:'undo',Z:'undo'}[e.key];
+					if (!action || !this.keyboardEnabled || ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+					if (action === 'undo' ? ((!e.ctrlKey && !e.metaKey) || e.shiftKey) : (dom.battleSection.classList.contains('hidden') || (action === 'tie' && !this.allowTies))) return;
+					e.preventDefault();
+					dom[action].click()
 				}
 			}
 			new PreferenceRank();
