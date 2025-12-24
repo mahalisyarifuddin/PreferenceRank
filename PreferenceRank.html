@@ -817,7 +817,7 @@
 					this.next();
 				}
 				recalculateScores() {
-					const steps = 10;
+					const steps = 5;
 					const currentScores = new Float64Array(this.items.length).fill(1000);
 					const deltas = new Float64Array(this.items.length);
 					const factor = Math.log(10) / 400;
