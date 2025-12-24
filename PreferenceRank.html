@@ -522,18 +522,28 @@
 						this.jacobsthal.push(this.jacobsthal[length - 1] + 2 * this.jacobsthal[length - 2])
 					}
 				}
-				snapshot() {
-					return JSON.stringify({
-						stack: this.stack,
-						pending: this.pending,
-						final: this.final,
-						refinePass: this.refinePass,
-						refineIndex: this.refineIndex,
-						refineSwapped: this.refineSwapped
-					})
+				_clone(state) {
+					return {
+						stack: state.stack.map(frame=>Object.assign({}, frame, {
+							winners: frame.winners?.slice(),
+							losers: frame.losers?.slice(),
+							currentGroup: frame.currentGroup?.slice(),
+							mainChain: frame.mainChain?.slice(),
+							insertions: frame.insertions?.slice(),
+							binarySearch: frame.binarySearch ? Object.assign({}, frame.binarySearch) : undefined
+						})),
+						pending: state.pending,
+						final: state.final?.slice() ?? null,
+						refinePass: state.refinePass,
+						refineIndex: state.refineIndex,
+						refineSwapped: state.refineSwapped
+					}
 				}
-				restore(json) {
-					Object.assign(this, JSON.parse(json))
+				snapshot() {
+					return this._clone(this)
+				}
+				restore(state) {
+					Object.assign(this, this._clone(state))
 				}
 				unmark(pair) {
 					this.pending && this.history.length && this.history.pop();
