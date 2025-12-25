@@ -565,12 +565,9 @@
                     if (frame.items.length < 2)
                         return this.returnResult(frame.items);
                     frame.pairs = [];
-                    frame.straggler = null;
-                    const pairCount = Math.floor(frame.items.length / 2);
-                    for (let i = 0; i < pairCount; i++)
-                        frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
-                    if (frame.items.length % 2)
-                        frame.straggler = frame.items[frame.items.length - 1];
+                    for (let i = 0; i < frame.items.length - 1; i += 2)
+                        frame.pairs.push([frame.items[i], frame.items[i + 1]]);
+                    frame.straggler = frame.items.length % 2 ? frame.items[frame.items.length - 1] : null;
                     Object.assign(frame, {
                         winners: [],
                         losers: [],
