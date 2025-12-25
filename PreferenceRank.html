@@ -505,10 +505,8 @@
                     this.refineIndex = 0;
                     this.refineSwapped = false;
                     this.jacobsthal = [0, 1];
-                    while (this.jacobsthal[this.jacobsthal.length - 1] < count) {
-                        const length = this.jacobsthal.length;
-                        this.jacobsthal.push(this.jacobsthal[length - 1] + 2 * this.jacobsthal[length - 2]);
-                    }
+                    while (this.jacobsthal.at(-1) < count)
+                        this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
                 }
 
                 snapshot() {
