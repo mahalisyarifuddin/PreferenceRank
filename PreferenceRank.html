@@ -533,7 +533,7 @@
                     this.pending && this.handlePending(state, result);
                     while (this.stack.length) {
                         const frame = this.stack[this.stack.length - 1];
-                        const output = this[`handle${frame.stage[0].toUpperCase()}${frame.stage.slice(1)}`](frame);
+                        const output = this[frame.stage](frame);
                         if (output)
                             return output;
                     }
@@ -559,13 +559,11 @@
                     this.refineIndex++;
                 }
 
-                handleInit(frame) {
+                init(frame) {
                     if (frame.items.length < 2)
                         return this.returnResult(frame.items);
-                    frame.pairs = [];
-                    for (let i = 0; i < frame.items.length - 1; i += 2)
-                        frame.pairs.push([frame.items[i], frame.items[i + 1]]);
-                    frame.straggler = frame.items.length % 2 ? frame.items[frame.items.length - 1] : null;
+                    frame.pairs = Array.from({length: frame.items.length >> 1}, (_, i) => [frame.items[2*i], frame.items[2*i+1]]);
+                    frame.straggler = frame.items.length % 2 ? frame.items.at(-1) : null;
                     Object.assign(frame, {
                         winners: [],
                         losers: [],
@@ -575,7 +573,7 @@
                     return null;
                 }
 
-                handleComparing(frame) {
+                comparing(frame) {
                     if (frame.pairIndex >= frame.pairs.length) {
                         frame.stage = 'recursion';
                         this.stack.push({
@@ -597,7 +595,7 @@
                     return this.pending;
                 }
 
-                handleRecursion(frame) {
+                recursion(frame) {
                     if (!frame.subResult)
                         return null;
                     frame.mainChain = frame.subResult;
@@ -620,7 +618,7 @@
                     frame.stage = 'grouping';
                 }
 
-                handleGrouping(frame) {
+                grouping(frame) {
                     if (frame.currentGroup.length === 0) {
                         if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
                             this.returnResult(frame.mainChain);
@@ -628,8 +626,7 @@
                         }
                         const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
                         const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
-                        for (let i = end; i >= start; i--)
-                            frame.currentGroup.push(frame.insertions[i]);
+                        frame.currentGroup.push(...frame.insertions.slice(start, end + 1).reverse());
                         frame.jacobIndex++;
                     }
                     if (frame.mainChain === this.final)
@@ -646,7 +643,7 @@
                     return null;
                 }
 
-                handleInserting(frame) {
+                inserting(frame) {
                     const {min, max, target} = frame.binarySearch;
                     if (min >= max) {
                         frame.mainChain.splice(min, 0, target);
