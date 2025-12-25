@@ -231,6 +231,11 @@
                 background: var(--dim)
             }
 
+            #cancel.confirming {
+                border-color: var(--danger);
+                color: var(--danger)
+            }
+
             #toggle {
                 border: none;
                 color: var(--primary);
@@ -390,6 +395,7 @@
                     duplicate: '{count} duplicate item(s) removed.',
                     start: 'Start Ranking',
                     cancel: 'Cancel',
+                    confirmCancel: 'Confirm Cancel?',
                     tie: "It's a Tie",
                     undo: 'Undo',
                     progress: 'Progress',
@@ -421,6 +427,7 @@
                     duplicate: '{count} item duplikat dihapus.',
                     start: 'Mulai Peringkat',
                     cancel: 'Batal',
+                    confirmCancel: 'Konfirmasi Batal?',
                     tie: 'Seri',
                     undo: 'Urungkan',
                     progress: 'Kemajuan',
@@ -707,7 +714,8 @@
                         keyboardEnabled: false,
                         busy: false,
                         swaps: new Map(),
-                        provider: null
+                        provider: null,
+                        cancelTimeout: null
                     });
                 }
 
@@ -732,7 +740,7 @@
                     Object.entries({
                         start: this.start, restartBattle: this.start, restartNew: this.reset,
                         undo: this.undo, copy: this.copyResults, toggle: this.toggleHelp,
-                        cancel: () => this.show('inputSection'),
+                        cancel: this.cancel,
                         left: () => this.choose('left'), right: () => this.choose('right'), tie: () => this.choose('tie'),
                     }).forEach(([id, fn]) => dom[id].onclick = fn.bind(this));
                     dom.language.onchange = e => { this.language = e.target.value; this.updateText(); };
@@ -918,6 +926,24 @@
                         setTimeout(()=>dom.copy.textContent = original, 2000);
                     }
                     );
+                }
+
+                cancel() {
+                    if (this.cancelTimeout) {
+                        clearTimeout(this.cancelTimeout);
+                        this.cancelTimeout = null;
+                        this.show('inputSection');
+                        dom.cancel.classList.remove('confirming');
+                        dom.cancel.textContent = this.string('cancel');
+                        return;
+                    }
+                    dom.cancel.textContent = this.string('confirmCancel');
+                    dom.cancel.classList.add('confirming');
+                    this.cancelTimeout = setTimeout(() => {
+                        this.cancelTimeout = null;
+                        dom.cancel.classList.remove('confirming');
+                        dom.cancel.textContent = this.string('cancel');
+                    }, 3000);
                 }
 
                 undo() {
