@@ -440,13 +440,7 @@
                 }
             };
 
-            const escape = t=>t.replace(/[&<>"']/g, c=>({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            }[c]));
+            const escape = t=>t.replace(/[&<>"']/g, c=>'&#'+c.charCodeAt(0)+';');
             const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
 
             class PairProvider {
