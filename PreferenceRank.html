@@ -717,7 +717,7 @@
 			}
 
 			class PreferenceRank {
-				constructor() {
+				init() {
 					Object.assign(this, {
 						items: [],
 						scores: [],
@@ -730,9 +730,12 @@
 						keyboardEnabled: false,
 						busy: false,
 						swaps: new Map(),
-						language: navigator.language.startsWith('id') ? 'id' : 'en',
 						provider: null
-					});
+					})
+				}
+				constructor() {
+					this.init();
+					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
 					this.bind();
 					this.setTheme('auto');
 					this.updateText();
@@ -960,20 +963,7 @@
 					dom.undo.disabled = !this.history.length;
 				}
 				reset() {
-					Object.assign(this, {
-						items: [],
-						scores: [],
-						matches: [],
-						pair: null,
-						swapped: false,
-						step: 0,
-						allowTies: false,
-						history: [],
-						keyboardEnabled: false,
-						busy: false,
-						provider: null,
-						swaps: new Map()
-					});
+					this.init();
 					dom.items.value = '';
 					this.show('inputSection');
 					this.updateHelp();
