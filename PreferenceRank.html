@@ -729,25 +729,17 @@
                 }
 
                 bind() {
-                    dom.start.onclick = ()=>this.start();
-                    dom.cancel.onclick = ()=>this.show('inputSection');
-                    dom.left.onclick = ()=>this.choose('left');
-                    dom.right.onclick = ()=>this.choose('right');
-                    dom.tie.onclick = ()=>this.choose('tie');
-                    dom.restartBattle.onclick = ()=>this.start();
-                    dom.restartNew.onclick = ()=>this.reset();
-                    dom.undo.onclick = ()=>this.undo();
-                    dom.copy.onclick = ()=>this.copyResults();
-                    dom.toggle.onclick = ()=>this.toggleHelp();
-                    dom.language.onchange = event=>{
-                        this.language = event.target.value;
-                        this.updateText();
-                    }
-                    ;
-                    dom.theme.onchange = event=>this.setTheme(event.target.value);
-                    dom.allowTies.onchange = event=>this.setTies(event.target.checked);
-                    dom.items.oninput = ()=>this.checkStartButton();
-                    document.onkeydown = event=>this.handleKey(event);
+                    Object.entries({
+                        start: this.start, restartBattle: this.start, restartNew: this.reset,
+                        undo: this.undo, copy: this.copyResults, toggle: this.toggleHelp,
+                        cancel: () => this.show('inputSection'),
+                        left: () => this.choose('left'), right: () => this.choose('right'), tie: () => this.choose('tie'),
+                    }).forEach(([id, fn]) => dom[id].onclick = fn.bind(this));
+                    dom.language.onchange = e => { this.language = e.target.value; this.updateText(); };
+                    dom.theme.onchange = e => this.setTheme(e.target.value);
+                    dom.allowTies.onchange = e => this.setTies(e.target.checked);
+                    dom.items.oninput = () => this.checkStartButton();
+                    document.onkeydown = e => this.handleKey(e);
                 }
 
                 setTheme(theme) {
