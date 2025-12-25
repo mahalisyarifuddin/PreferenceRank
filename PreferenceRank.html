@@ -786,14 +786,8 @@
 					valid && dom.error.classList.add('hidden');
 				}
 				start() {
-					dom.error.classList.add('hidden');
 					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
 					const unique = [...new Set(raw)];
-					if (unique.length < 2) {
-						dom.error.textContent = this.string('alert');
-						dom.error.classList.remove('hidden');
-						return
-					}
 					if (raw.length > unique.length) {
 						dom.items.value = unique.join('\n');
 						dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
