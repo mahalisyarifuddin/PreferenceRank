@@ -489,9 +489,8 @@
             }
 
             class QuickPairProvider extends PairProvider {
-                constructor(count, ties) {
+                constructor(count) {
                     super(count);
-                    this.ties = ties;
                     this.stack = [{
                         stage: 'init',
                         items: Array.from({
@@ -804,7 +803,7 @@
                         busy: false
                     });
                     dom.undo.disabled = true;
-                    this.provider = dom.quickRank.checked ? new QuickPairProvider(unique.length,this.allowTies) : new FullPairProvider(unique.length);
+                    this.provider = new (dom.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
                     dom.tieWrap.classList.toggle('hidden', !this.allowTies);
                     this.updateHelp();
                     this.show('battleSection');
