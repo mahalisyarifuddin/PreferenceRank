@@ -517,32 +517,18 @@
                     }
                 }
 
-                clone(state) {
-                    return {
-                        stack: state.stack.map(frame=>({
-                            ...frame,
-                            winners: frame.winners?.slice(),
-                            losers: frame.losers?.slice(),
-                            currentGroup: frame.currentGroup?.slice(),
-                            mainChain: frame.mainChain?.slice(),
-                            insertions: frame.insertions?.slice(),
-                            binarySearch: frame.binarySearch ? {
-                                ...frame.binarySearch
-                            } : undefined
-                        })),
-                        pending: state.pending,
-                        final: state.final?.slice() ?? null,
-                        refinePass: state.refinePass,
-                        refineIndex: state.refineIndex,
-                        refineSwapped: state.refineSwapped
-                    };
-                }
-
                 snapshot() {
-                    return this.clone(this);
+                    return structuredClone({
+                        stack: this.stack,
+                        pending: this.pending,
+                        final: this.final,
+                        refinePass: this.refinePass,
+                        refineIndex: this.refineIndex,
+                        refineSwapped: this.refineSwapped
+                    });
                 }
                 restore(state) {
-                    Object.assign(this, this.clone(state));
+                    Object.assign(this, structuredClone(state));
                 }
 
                 unmark(pair) {
