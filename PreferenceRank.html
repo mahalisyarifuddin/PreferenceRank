@@ -728,6 +728,10 @@
                     this.checkStartButton();
                 }
 
+                getItems() {
+                    return dom.items.value.split('\n').map(line => line.trim()).filter(Boolean);
+                }
+
                 string(key) {
                     return text[this.language]?.[key] ?? key;
                 }
@@ -791,13 +795,13 @@
                 }
 
                 checkStartButton() {
-                    const valid = new Set(dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean)).size >= 2;
+                    const valid = new Set(this.getItems()).size >= 2;
                     dom.start.disabled = !valid;
                     valid && dom.error.classList.add('hidden');
                 }
 
                 start() {
-                    const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
+                    const raw = this.getItems();
                     const unique = [...new Set(raw)];
                     if (raw.length > unique.length) {
                         dom.items.value = unique.join('\n');
