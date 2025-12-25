@@ -546,16 +546,9 @@
 				}
 				next(state, result) {
 					this.pending && this.handlePending(state, result);
-					const handlers = {
-						init: f=>this.handleInit(f),
-						comparing: f=>this.handleComparing(f),
-						recursion: f=>this.handleRecursion(f),
-						grouping: f=>this.handleGrouping(f),
-						inserting: f=>this.handleInserting(f)
-					};
 					while (this.stack.length) {
 						const frame = this.stack[this.stack.length - 1];
-						const result = handlers[frame.stage](frame);
+						const result = this[`handle${frame.stage[0].toUpperCase()}${frame.stage.slice(1)}`](frame);
 						if (result)
 							return result
 					}
