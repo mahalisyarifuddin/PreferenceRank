@@ -471,9 +471,6 @@
 				getProgress(step) {
 					return step
 				}
-				static getEstimate(count) {
-					return 0
-				}
 			}
 
 			class FullPairProvider extends PairProvider {
@@ -493,9 +490,6 @@
 				}
 				getProgress(step) {
 					return `${step}/${this.pairs.length}`
-				}
-				static getEstimate(count) {
-					return (count * (count - 1)) / 2
 				}
 			}
 
@@ -708,11 +702,8 @@
 					})).sort((a,b)=>b.score - a.score) : super.getResults(items, scores)
 				}
 				getProgress(step) {
-					const total = Math.round(QuickPairProvider.getEstimate(this.count));
+					const total = Math.round(0.78 * this.count * Math.log2(this.count));
 					return `${step}/~${total}`
-				}
-				static getEstimate(count) {
-					return Math.round(0.78 * count * Math.log2(count))
 				}
 			}
 
