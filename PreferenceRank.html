@@ -760,7 +760,6 @@
 					dom.items.placeholder = this.string('placeholderItems');
 					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
-					dom.toggle.textContent = this.string(dom.tips.classList.contains('hidden') ? 'toggleShow' : 'toggleHide');
 					[['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,i])=>dom.theme.options[i].textContent = this.string(key));
 					this.updateHelp();
 					this.updateProgress();
@@ -782,9 +781,7 @@
 					this.updateHelp()
 				}
 				checkStartButton() {
-					const raw = dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
-					const unique = new Set(raw);
-					const valid = unique.size >= 2;
+					const valid = new Set(dom.items.value.split('\n').map(l=>l.trim()).filter(Boolean)).size >= 2;
 					dom.start.disabled = !valid;
 					valid && dom.error.classList.add('hidden');
 				}
