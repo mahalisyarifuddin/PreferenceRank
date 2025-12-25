@@ -696,13 +696,6 @@
                     this.stack.length ? this.stack[this.stack.length - 1].subResult = result : this.final = result.reverse();
                 }
 
-                getResults(items, scores) {
-                    return this.final ? this.final.map(i=>({
-                        text: items[i],
-                        score: scores[i]
-                    })).sort((a,b)=>b.score - a.score) : super.getResults(items, scores);
-                }
-
                 getProgress(step) {
                     return `${step}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`;
                 }
