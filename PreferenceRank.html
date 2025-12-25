@@ -837,24 +837,19 @@
                 }
 
                 recalculateScores() {
-                    const steps = 5;
-                    const currentScores = new Float64Array(this.items.length).fill(1000);
-                    const deltas = new Float64Array(this.items.length);
-                    const factor = Math.log(10) / 400;
-                    const K = 32 / steps;
+                    const steps = 5, scores = Array(this.items.length).fill(1000);
+                    const factor = Math.log(10) / 400, K = 32 / steps;
                     for (let step = 0; step < steps; step++) {
-                        deltas.fill(0);
-                        for (let j = 0; j < this.matches.length; j++) {
-                            const {a, b, result} = this.matches[j];
-                            const expected = 1 / (1 + Math.exp((currentScores[b] - currentScores[a]) * factor));
+                        const deltas = Array(this.items.length).fill(0);
+                        this.matches.forEach(({a, b, result}) => {
+                            const expected = 1 / (1 + Math.exp((scores[b] - scores[a]) * factor));
                             const change = K * (result - expected);
                             deltas[a] += change;
                             deltas[b] -= change;
-                        }
-                        for (let i = 0; i < this.items.length; i++)
-                            currentScores[i] += deltas[i];
+                        });
+                        scores.forEach((_, i) => scores[i] += deltas[i]);
                     }
-                    this.scores = Array.from(currentScores);
+                    this.scores = scores;
                 }
 
                 choose(winner) {
