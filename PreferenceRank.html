@@ -871,7 +871,11 @@
                     const key = this.provider.key(nextPair);
                     this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
                     this.swapped = this.swaps.get(key);
-                    let[a,b] = nextPair;
+            this.renderPair();
+        }
+
+        renderPair() {
+            let [a,b] = this.pair;
                     this.swapped && ([a,b] = [b, a]);
                     dom.left.textContent = this.items[a];
                     dom.right.textContent = this.items[b];
@@ -949,11 +953,7 @@
                         swapped: last.swapped
                     });
                     this.provider.unmark(last.pair);
-                    let[a,b] = last.pair;
-                    this.swapped && ([a,b] = [b, a]);
-                    dom.left.textContent = this.items[a];
-                    dom.right.textContent = this.items[b];
-                    this.updateProgress();
+            this.renderPair();
                     this.show('battleSection');
                     dom.undo.disabled = !this.history.length;
                 }
