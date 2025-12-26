@@ -191,6 +191,23 @@
 				text-align: center
 			}
 
+			.progress-track {
+				background: var(--dim);
+				border-radius: 4px;
+				height: 6px;
+				margin: 8px auto 0;
+				max-width: 200px;
+				overflow: hidden;
+				width: 100%
+			}
+
+			#progressFill {
+				background: var(--primary);
+				height: 100%;
+				transition: width .3s ease;
+				width: 0%
+			}
+
 			#tips {
 				background: var(--bg);
 				border: 1px solid var(--border);
@@ -369,6 +386,7 @@
 					<button id="tie" class="secondary"></button>
 				</div>
 				<div id="progress"></div>
+				<div class="progress-track"><div id="progressFill"></div></div>
 				<button id="cancel"></button>
 				<button id="toggle" aria-controls="tips" aria-expanded="false"></button>
 				<div id="tips" class="hidden"></div>
@@ -895,7 +913,15 @@
 				}
 
 				updateProgress() {
-					dom.progress.textContent = `${this.string('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`;
+					const text = this.provider ? this.provider.getProgress(this.step) : '0';
+					dom.progress.textContent = `${this.string('progress')}: ${text}`;
+					let percent = 0;
+					if (this.provider) {
+						const [curr, total] = text.split('/');
+						const t = parseInt(total.replace('~', ''), 10);
+						if (t > 0) percent = (parseInt(curr, 10) / t) * 100;
+					}
+					dom.progressFill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
 				}
 				clearSelections() {
 					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
