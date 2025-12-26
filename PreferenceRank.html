@@ -930,12 +930,11 @@
                     if (this.cancelTimeout) {
                         clearTimeout(this.cancelTimeout);
                         reset();
-                        this.show('inputSection');
-                    } else {
-                        dom.cancel.textContent = this.string('confirmCancel');
-                        dom.cancel.classList.add('confirming');
-                        this.cancelTimeout = setTimeout(reset, 3000);
+                        return this.show('inputSection');
                     }
+                    dom.cancel.textContent = this.string('confirmCancel');
+                    dom.cancel.classList.add('confirming');
+                    this.cancelTimeout = setTimeout(reset, 3000);
                 }
 
                 undo() {
