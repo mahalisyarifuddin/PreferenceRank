@@ -922,21 +922,19 @@
                 }
 
                 cancel() {
-                    if (this.cancelTimeout) {
-                        clearTimeout(this.cancelTimeout);
-                        this.cancelTimeout = null;
-                        this.show('inputSection');
+                    const reset = () => {
                         dom.cancel.classList.remove('confirming');
                         dom.cancel.textContent = this.string('cancel');
-                        return;
+                        this.cancelTimeout = null;
+                    };
+                    if (this.cancelTimeout) {
+                        clearTimeout(this.cancelTimeout);
+                        reset();
+                        return this.show('inputSection');
                     }
                     dom.cancel.textContent = this.string('confirmCancel');
                     dom.cancel.classList.add('confirming');
-                    this.cancelTimeout = setTimeout(() => {
-                        this.cancelTimeout = null;
-                        dom.cancel.classList.remove('confirming');
-                        dom.cancel.textContent = this.string('cancel');
-                    }, 3000);
+                    this.cancelTimeout = setTimeout(reset, 3000);
                 }
 
                 undo() {
