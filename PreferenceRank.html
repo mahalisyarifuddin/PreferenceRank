@@ -1,985 +1,1006 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>PreferenceRank</title>
-        <style>
-            :root {
-                --primary: #0070ea;
-                --hover: #005bc0;
-                --bg: #f9f9ff;
-                --surface: #fff;
-                --text: #414754;
-                --border: #c1c6d7;
-                --dim: #d7d9e5;
-                --success: #28a745;
-                --danger: #dc3545
-            }
-
-            @media(prefers-color-scheme: dark) {
-                :root:not(.light) {
-                    --bg:#10131b;
-                    --surface: #181c23;
-                    --text: #c1c6d7;
-                    --border: #414754;
-                    --dim: #10131b
-                }
-            }
-
-            :root.dark {
-                --bg: #10131b;
-                --surface: #181c23;
-                --text: #c1c6d7;
-                --border: #414754;
-                --dim: #10131b
-            }
-
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0
-            }
-
-            *:focus-visible {
-                outline: 2px solid var(--primary);
-                outline-offset: 2px
-            }
-
-            #battle button:focus-visible,#tieWrap button:focus-visible {
-                outline: none
-            }
-
-            body {
-                background: var(--bg);
-                color: var(--text);
-                font-family: sans-serif;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-                padding: 1rem
-            }
-
-            .container {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                max-width: 720px;
-                padding: 2rem;
-                width: 100%;
-                position: relative
-            }
-
-            .hidden {
-                display: none!important
-            }
-
-            h1,h2,label {
-                margin-bottom: .5rem;
-                display: block
-            }
-
-            h1,h2 {
-                margin-top: .5rem
-            }
-
-            label {
-                font-weight: 700
-            }
-
-            input,select,textarea,button {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                color: var(--text);
-                font-size: 1rem;
-                padding: .5rem;
-                width: 100%
-            }
-
-            textarea {
-                min-height: 80px;
-                resize: vertical
-            }
-
-            button {
-                cursor: pointer;
-                transition: background .1s
-            }
-
-            button:disabled {
-                background: var(--dim)!important;
-                border-color: var(--border)!important;
-                color: var(--text)!important;
-                cursor: not-allowed;
-                opacity: .6
-            }
-
-            #copy {
-                width: auto
-            }
-
-            .primary {
-                background: var(--primary);
-                border: none;
-                color: #fff
-            }
-
-            .primary:hover:not(:disabled) {
-                background: var(--hover)
-            }
-
-            .secondary:hover:not(:disabled) {
-                background: var(--dim)
-            }
-
-            .error {
-                color: var(--danger);
-                font-size: .9rem;
-                margin-top: .5rem;
-                display: block
-            }
-
-            .selectors {
-                position: absolute;
-                right: 2rem;
-                top: 1rem;
-                display: flex;
-                gap: 8px
-            }
-
-            .selectors select {
-                font-size: .9rem;
-                padding: 5px;
-                width: auto
-            }
-
-            .checkbox-row {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin: .75rem 0
-            }
-
-            .checkbox-row input {
-                width: auto
-            }
-
-            .checkbox-row label {
-                margin: 0
-            }
-
-            #battle,#tieWrap,#restartWrap {
-                display: flex;
-                gap: 1rem;
-                margin-top: 1rem
-            }
-
-            #battle button,#tieWrap button,#restartWrap button {
-                flex: 1
-            }
-
-            #battle button,#tieWrap button {
-                font-size: 1.2rem;
-                min-height: 100px
-            }
-
-            #progress {
-                font-size: 1.1rem;
-                margin-top: 1rem;
-                text-align: center
-            }
-
-            #tips {
-                background: var(--bg);
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                font-size: .85rem;
-                line-height: 1.5;
-                margin-top: 15px;
-                opacity: .9;
-                padding: 8px;
-                text-align: center
-            }
-
-            kbd {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 3px;
-                box-shadow: 0 1px 1px #0003;
-                display: inline-block;
-                font-family: monospace;
-                font-size: .9em;
-                margin: 0 3px;
-                padding: 2px 5px
-            }
-
-            #cancel,#toggle {
-                background: none;
-                border: 1px solid var(--border);
-                color: var(--text);
-                cursor: pointer;
-                display: block;
-                font-size: .9rem;
-                margin: 1rem auto;
-                padding: 5px 15px;
-                width: auto
-            }
-
-            #cancel:hover {
-                background: var(--dim)
-            }
-
-            #cancel.confirming {
-                border-color: var(--danger);
-                color: var(--danger)
-            }
-
-            #toggle {
-                border: none;
-                color: var(--primary);
-                font-size: .85rem;
-                margin-top: 10px;
-                text-decoration: underline
-            }
-
-            #results table {
-                border-collapse: collapse;
-                margin-top: 1rem;
-                width: 100%
-            }
-
-            #results th,#results td {
-                border: 1px solid var(--border);
-                padding: .5rem;
-                text-align: left
-            }
-
-            #results th {
-                background: var(--primary);
-                color: #fff
-            }
-
-            .results-header {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                position: relative;
-                min-height: 40px;
-                margin-bottom: 1rem
-            }
-
-            .results-header h2 {
-                margin: 0
-            }
-
-            .results-header #undo {
-                position: absolute;
-                left: 0;
-                top: 50%;
-                transform: translateY(-50%)
-            }
-
-            .results-header #copy {
-                position: absolute;
-                right: 0;
-                top: 50%;
-                transform: translateY(-50%)
-            }
-
-            #undo {
-                width: auto
-            }
-
-            .selected {
-                background: var(--primary)!important;
-                color: #fff!important
-            }
-
-            @media(max-width: 768px) {
-                body {
-                    padding:.75rem
-                }
-
-                .container {
-                    padding: 1.5rem
-                }
-
-                .selectors {
-                    position: static;
-                    justify-content: flex-end;
-                    margin-bottom: .5rem;
-                    gap: 4px
-                }
-
-                .selectors select {
-                    font-size: .8rem;
-                    padding: 4px
-                }
-
-                #battle,#tieWrap,#restartWrap {
-                    flex-direction: column
-                }
-
-                #battle button,#tieWrap button {
-                    width: 100%
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div id="inputSection">
-                <div class="selectors">
-                    <select id="language" aria-label="Language">
-                        <option value="en">English</option>
-                        <option value="id">Bahasa Indonesia</option>
-                    </select>
-                    <select id="theme" aria-label="Theme">
-                        <option value="auto"></option>
-                        <option value="light"></option>
-                        <option value="dark"></option>
-                    </select>
-                </div>
-                <h1 id="title"></h1>
-                <div class="group">
-                    <label for="items" id="labelItems"></label>
-                    <textarea id="items" rows="5" spellcheck="false" autofocus></textarea>
-                    <span id="error" class="error hidden" aria-live="polite"></span>
-                </div>
-                <div class="checkbox-row">
-                    <input type="checkbox" id="allowTies">
-                    <label for="allowTies" id="labelTies"></label>
-                </div>
-                <div class="checkbox-row">
-                    <input type="checkbox" id="quickRank">
-                    <label for="quickRank" id="labelQuick"></label>
-                </div>
-                <button id="start" class="primary"></button>
-            </div>
-            <button id="undo" class="secondary hidden" disabled></button>
-            <button id="copy" class="secondary hidden"></button>
-            <div id="battleSection" class="hidden">
-                <div id="battle">
-                    <button id="left" class="secondary"></button>
-                    <button id="right" class="secondary"></button>
-                </div>
-                <div id="tieWrap" class="hidden">
-                    <button id="tie" class="secondary"></button>
-                </div>
-                <div id="progress"></div>
-                <button id="cancel"></button>
-                <button id="toggle" aria-controls="tips" aria-expanded="false"></button>
-                <div id="tips" class="hidden"></div>
-            </div>
-            <div id="results" class="hidden"></div>
-            <div id="restartWrap" class="hidden">
-                <button id="restartBattle" class="primary"></button>
-                <button id="restartNew" class="primary"></button>
-            </div>
-        </div>
-        <script>
-            const text = {
-                en: {
-                    title: 'PreferenceRank',
-                    languageLabel: 'Language',
-                    themeLabel: 'Theme',
-                    auto: 'Auto Theme',
-                    light: 'Light',
-                    dark: 'Dark',
-                    labelItems: 'Enter items, one per line:',
-                    labelTies: 'Allow Ties',
-                    labelQuick: 'Use Quick Rank (fewer comparisons)',
-                    alert: 'Please enter at least two items.',
-                    duplicate: '{count} duplicate item(s) removed.',
-                    start: 'Start Ranking',
-                    cancel: 'Cancel',
-                    confirmCancel: 'Confirm Cancel?',
-                    tie: "It's a Tie",
-                    undo: 'Undo',
-                    progress: 'Progress',
-                    toggleShow: 'Show keyboard shortcuts',
-                    toggleHide: 'Hide keyboard shortcuts',
-                    tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
-                    tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
-                    resultsTitle: 'Results',
-                    rank: 'Rank',
-                    item: 'Item',
-                    score: 'Score',
-                    restartBattle: 'Restart Battle',
-                    restartNew: 'Start with New Items',
-                    placeholderItems: 'Apple\nBanana\nCherry',
-                    copy: 'Copy Results',
-                    copied: 'Copied!'
-                },
-                id: {
-                    title: 'PreferenceRank',
-                    languageLabel: 'Bahasa',
-                    themeLabel: 'Tema',
-                    auto: 'Tema Otomatis',
-                    light: 'Terang',
-                    dark: 'Gelap',
-                    labelItems: 'Masukkan pilihan, satu per baris:',
-                    labelTies: 'Izinkan Seri',
-                    labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
-                    alert: 'Harap masukkan setidaknya dua pilihan.',
-                    duplicate: '{count} item duplikat dihapus.',
-                    start: 'Mulai Peringkat',
-                    cancel: 'Batal',
-                    confirmCancel: 'Konfirmasi Batal?',
-                    tie: 'Seri',
-                    undo: 'Urungkan',
-                    progress: 'Kemajuan',
-                    toggleShow: 'Tampilkan pintasan papan ketik',
-                    toggleHide: 'Sembunyikan pintasan papan ketik',
-                    tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
-                    tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
-                    resultsTitle: 'Hasil',
-                    rank: 'Peringkat',
-                    item: 'Nama',
-                    score: 'Skor',
-                    restartBattle: 'Mulai Ulang Pertarungan',
-                    restartNew: 'Mulai dengan Pilihan Baru',
-                    placeholderItems: 'Apel\nPisang\nCeri',
-                    copy: 'Salin Hasil',
-                    copied: 'Disalin!'
-                }
-            };
-
-            const escape = t=>t.replace(/[&<>"']/g, c=>'&#'+c.charCodeAt(0)+';');
-            const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id, element]));
-
-            class PairProvider {
-                constructor(count) {
-                    this.count = count;
-                    this.compared = new Set();
-                }
-                key([a,b]) {
-                    return a < b ? `${a}-${b}` : `${b}-${a}`;
-                }
-                mark(pair) {
-                    this.compared.add(this.key(pair));
-                }
-                unmark(pair) {
-                    this.compared.delete(this.key(pair));
-                }
-                getRanking(scores) {
-                    return [...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
-                }
-            }
-
-            class FullPairProvider extends PairProvider {
-                constructor(count) {
-                    super(count);
-                    this.pairs = [];
-                    for (let i = 0; i < count - 1; i++)
-                        for (let j = i + 1; j < count; j++)
-                            this.pairs.push([i, j]);
-                    for (let i = this.pairs.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
-                    }
-                }
-                next(state) {
-                    return this.pairs[state.step];
-                }
-                getProgress(step) {
-                    return `${step}/${this.pairs.length}`;
-                }
-            }
-
-            class QuickPairProvider extends PairProvider {
-                constructor(count) {
-                    super(count);
-                    this.stack = [{
-                        stage: 'init',
-                        items: Array.from({
-                            length: count
-                        }, (_,i)=>i)
-                    }];
-                    this.history = [];
-                    this.pending = null;
-                    this.final = null;
-                    this.refinePass = 0;
-                    this.refineIndex = 0;
-                    this.refineSwapped = false;
-                    this.jacobsthal = [0, 1];
-                    while (this.jacobsthal.at(-1) < count)
-                        this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
-                }
-
-                snapshot() {
-                    return structuredClone({
-                        stack: this.stack,
-                        pending: this.pending,
-                        final: this.final,
-                        refinePass: this.refinePass,
-                        refineIndex: this.refineIndex,
-                        refineSwapped: this.refineSwapped
-                    });
-                }
-                restore(state) {
-                    Object.assign(this, structuredClone(state));
-                }
-
-                unmark(pair) {
-                    this.pending && this.history.length && this.history.pop();
-                    this.history.length && this.restore(this.history[this.history.length - 1]);
-                    super.unmark(pair);
-                }
-
-                next(state, result) {
-                    this.pending && this.handlePending(state, result);
-                    while (this.stack.length) {
-                        const frame = this.stack[this.stack.length - 1];
-                        const output = this[frame.stage](frame);
-                        if (output)
-                            return output;
-                    }
-                    return this.final ? this.handleRefinement() : null;
-                }
-
-                handlePending(state, result) {
-                    const [a,b] = this.pending;
-                    const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
-                    const frame = this.stack[this.stack.length - 1];
-                    frame && (frame.lastWinner = winner);
-                    this.final && this.handleRefinementSwap(a, b, winner);
-                    this.pending = null;
-                }
-
-                handleRefinementSwap(a, b, winner) {
-                    const index = this.final.indexOf(a);
-                    const adjacent = index !== -1 && this.final[index + 1] === b;
-                    if (winner === b && adjacent) {
-                        [this.final[index],this.final[index + 1]] = [this.final[index + 1], this.final[index]];
-                        this.refineSwapped = true;
-                    }
-                    this.refineIndex++;
-                }
-
-                init(frame) {
-                    if (frame.items.length < 2)
-                        return this.returnResult(frame.items);
-                    frame.pairs = Array.from({length: frame.items.length >> 1}, (_, i) => [frame.items[2*i], frame.items[2*i+1]]);
-                    frame.straggler = frame.items.length % 2 ? frame.items.at(-1) : null;
-                    Object.assign(frame, {
-                        winners: [],
-                        losers: [],
-                        pairIndex: 0,
-                        stage: 'comparing'
-                    });
-                    return null;
-                }
-
-                comparing(frame) {
-                    if (frame.pairIndex >= frame.pairs.length) {
-                        frame.stage = 'recursion';
-                        this.stack.push({
-                            stage: 'init',
-                            items: [...frame.winners]
-                        });
-                        return null;
-                    }
-                    if (frame.lastWinner !== undefined) {
-                        frame.winners.push(frame.lastWinner);
-                        const [a,b] = frame.pairs[frame.pairIndex];
-                        frame.losers.push(frame.lastWinner === a ? b : a);
-                        delete frame.lastWinner;
-                        frame.pairIndex++;
-                        return null;
-                    }
-                    this.pending = frame.pairs[frame.pairIndex];
-                    this.history.push(this.snapshot());
-                    return this.pending;
-                }
-
-                recursion(frame) {
-                    if (!frame.subResult)
-                        return null;
-                    frame.mainChain = frame.subResult;
-                    delete frame.subResult;
-                    frame.pairMap = {};
-                    frame.winners.forEach((winner,i)=>frame.pairMap[winner] = frame.losers[i]);
-                    frame.mainChain.unshift(frame.pairMap[frame.mainChain[0]]);
-                    const sortedWinners = frame.mainChain.slice(1);
-                    frame.insertions = [];
-                    sortedWinners.forEach((winner,i)=>i > 0 && frame.insertions.push({
-                        item: frame.pairMap[winner],
-                        boundItem: winner
-                    }));
-                    frame.straggler !== null && frame.insertions.push({
-                        item: frame.straggler,
-                        boundItem: null
-                    });
-                    frame.jacobIndex = 2;
-                    frame.currentGroup = [];
-                    frame.stage = 'grouping';
-                }
-
-                grouping(frame) {
-                    if (frame.currentGroup.length === 0) {
-                        if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
-                            this.returnResult(frame.mainChain);
-                            return null;
-                        }
-                        const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
-                        const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
-                        frame.currentGroup.push(...frame.insertions.slice(start, end + 1).reverse());
-                        frame.jacobIndex++;
-                    }
-                    if (frame.mainChain === this.final)
-                        return null;
-                    if (frame.currentGroup.length > 0) {
-                        frame.currentItem = frame.currentGroup.shift();
-                        frame.stage = 'inserting';
-                        frame.binarySearch = {
-                            min: 0,
-                            max: frame.currentItem.boundItem !== null ? frame.mainChain.indexOf(frame.currentItem.boundItem) : frame.mainChain.length,
-                            target: frame.currentItem.item
-                        };
-                    }
-                    return null;
-                }
-
-                inserting(frame) {
-                    const {min, max, target} = frame.binarySearch;
-                    if (min >= max) {
-                        frame.mainChain.splice(min, 0, target);
-                        frame.stage = 'grouping';
-                        return null;
-                    }
-                    if (frame.lastWinner !== undefined) {
-                        frame.lastWinner === target ? frame.binarySearch.min = frame.binarySearch.mid + 1 : frame.binarySearch.max = frame.binarySearch.mid;
-                        delete frame.lastWinner;
-                        return null;
-                    }
-                    frame.binarySearch.mid = Math.floor((min + max) / 2);
-                    this.pending = [target, frame.mainChain[frame.binarySearch.mid]];
-                    this.history.push(this.snapshot());
-                    return this.pending;
-                }
-
-                handleRefinement() {
-                    while (true) {
-                        if (this.refinePass >= 2)
-                            return null;
-                        if (this.refineIndex >= this.final.length - 1) {
-                            if (!this.refineSwapped)
-                                return null;
-                            this.refinePass++;
-                            this.refineIndex = 0;
-                            this.refineSwapped = false;
-                            continue;
-                        }
-                        const [a,b] = [this.final[this.refineIndex], this.final[this.refineIndex + 1]];
-                        if (!this.compared.has(this.key([a, b]))) {
-                            this.pending = [a, b];
-                            this.history.push(this.snapshot());
-                            return this.pending;
-                        }
-                        this.refineIndex++;
-                    }
-                }
-
-                returnResult(result) {
-                    this.stack.pop();
-                    this.stack.length ? this.stack[this.stack.length - 1].subResult = result : this.final = result.reverse();
-                }
-
-                getProgress(step) {
-                    return `${step}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`;
-                }
-            }
-
-            class PreferenceRank {
-                init() {
-                    Object.assign(this, {
-                        items: [],
-                        scores: [],
-                        matches: [],
-                        pair: null,
-                        swapped: false,
-                        step: 0,
-                        allowTies: false,
-                        history: [],
-                        keyboardEnabled: false,
-                        busy: false,
-                        swaps: new Map(),
-                        provider: null,
-                        cancelTimeout: null
-                    });
-                }
-
-                constructor() {
-                    this.init();
-                    this.language = navigator.language.startsWith('id') ? 'id' : 'en';
-                    this.bind();
-                    this.setTheme('auto');
-                    this.updateText();
-                    this.checkStartButton();
-                }
-
-                getItems() {
-                    return dom.items.value.split('\n').map(line => line.trim()).filter(Boolean);
-                }
-
-                string(key) {
-                    return text[this.language]?.[key] ?? key;
-                }
-
-                bind() {
-                    Object.entries({
-                        start: this.start, restartBattle: this.start, restartNew: this.reset,
-                        undo: this.undo, copy: this.copyResults, toggle: this.toggleHelp,
-                        cancel: this.cancel,
-                        left: () => this.choose('left'), right: () => this.choose('right'), tie: () => this.choose('tie'),
-                    }).forEach(([id, fn]) => dom[id].onclick = fn.bind(this));
-                    dom.language.onchange = e => { this.language = e.target.value; this.updateText(); };
-                    dom.theme.onchange = e => this.setTheme(e.target.value);
-                    dom.allowTies.onchange = e => this.setTies(e.target.checked);
-                    dom.items.oninput = () => this.checkStartButton();
-                    document.onkeydown = e => this.handleKey(e);
-                }
-
-                setTheme(theme) {
-                    document.documentElement.className = theme === 'auto' ? '' : theme;
-                    dom.theme.value = theme;
-                }
-
-                updateText() {
-                    dom.language.value = this.language;
-                    dom.language.setAttribute('aria-label', this.string('languageLabel'));
-                    dom.theme.setAttribute('aria-label', this.string('themeLabel'));
-                    dom.items.placeholder = this.string('placeholderItems');
-                    ['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
-                    dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
-                    [...dom.theme.options].forEach(o => o.textContent = this.string(o.value));
-                    this.updateHelp();
-                    this.updateProgress();
-                    !dom.results.classList.contains('hidden') && this.renderResults();
-                }
-
-                setTies(enabled) {
-                    this.allowTies = enabled;
-                    !dom.battleSection.classList.contains('hidden') && dom.tieWrap.classList.toggle('hidden', !enabled);
-                    this.updateHelp();
-                }
-
-                updateHelp() {
-                    const isHidden = dom.tips.classList.contains('hidden');
-                    dom.toggle.textContent = this.string(isHidden ? 'toggleShow' : 'toggleHide');
-                    dom.toggle.setAttribute('aria-expanded', !isHidden);
-                    dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
-                }
-
-                toggleHelp() {
-                    dom.tips.classList.toggle('hidden');
-                    this.updateHelp();
-                }
-
-                checkStartButton() {
-                    const valid = new Set(this.getItems()).size >= 2;
-                    dom.start.disabled = !valid;
-                    valid && dom.error.classList.add('hidden');
-                }
-
-                start() {
-                    const raw = this.getItems();
-                    const unique = [...new Set(raw)];
-                    if (raw.length > unique.length) {
-                        dom.items.value = unique.join('\n');
-                        dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
-                        dom.error.classList.remove('hidden');
-                        return;
-                    }
-                    Object.assign(this, {
-                        items: unique,
-                        allowTies: dom.allowTies.checked,
-                        scores: Array(unique.length).fill(1000),
-                        matches: [],
-                        step: 0,
-                        history: [],
-                        swaps: new Map(),
-                        busy: false
-                    });
-                    dom.undo.disabled = true;
-                    this.provider = new (dom.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
-                    dom.tieWrap.classList.toggle('hidden', !this.allowTies);
-                    this.updateHelp();
-                    this.show('battleSection');
-                    this.next();
-                }
-
-                recalculateScores() {
-                    const steps = 5, scores = Array(this.items.length).fill(1000);
-                    const factor = Math.log(10) / 400, K = 32 / steps;
-                    for (let step = 0; step < steps; step++) {
-                        const deltas = Array(this.items.length).fill(0);
-                        this.matches.forEach(({a, b, result}) => {
-                            const expected = 1 / (1 + Math.exp((scores[b] - scores[a]) * factor));
-                            const change = K * (result - expected);
-                            deltas[a] += change;
-                            deltas[b] -= change;
-                        });
-                        scores.forEach((_, i) => scores[i] += deltas[i]);
-                    }
-                    this.scores = scores;
-                }
-
-                choose(winner) {
-                    if (this.busy || dom.battleSection.classList.contains('hidden'))
-                        return;
-                    this.busy = true;
-                    this.history.push({
-                        pair: this.pair,
-                        scores: [...this.scores],
-                        step: this.step,
-                        swapped: this.swapped
-                    });
-                    this.provider.mark(this.pair);
-                    const [a,b] = this.pair;
-                    const isLeftWinner = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
-                    const result = winner === 'tie' ? 0.5 : isLeftWinner ? 1 : 0;
-                    this.matches.push({
-                        a,
-                        b,
-                        result
-                    });
-                    this.recalculateScores();
-                    this.step++;
-                    dom.undo.disabled = false;
-                    this.updateProgress();
-                    this.clearSelections();
-                    (winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
-                    setTimeout(()=>{
-                        if (dom.battleSection.classList.contains('hidden') || !this.busy)
-                            return;
-                        this.busy = false;
-                        this.next(result);
-                    }
-                    , 150);
-                }
-
-                next(result) {
-                    this.clearSelections();
-                    const nextPair = this.provider.next(this, result);
-                    if (!nextPair)
-                        return this.renderResults();
-                    this.pair = nextPair;
-                    const key = this.provider.key(nextPair);
-                    this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
-                    this.swapped = this.swaps.get(key);
-                    let[a,b] = nextPair;
-                    this.swapped && ([a,b] = [b, a]);
-                    dom.left.textContent = this.items[a];
-                    dom.right.textContent = this.items[b];
-                    this.updateProgress();
-                }
-
-                updateProgress() {
-                    dom.progress.textContent = `${this.string('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`;
-                }
-
-                clearSelections() {
-                    ['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
-                }
-
-                renderResults() {
-                    const ranking = this.provider.getRanking(this.scores);
-                    dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((idx,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[idx])}</td><td>${Math.round(this.scores[idx])}</td></tr>`).join('')}</tbody></table>`;
-                    this.show('results');
-                }
-
-                show(section) {
-                    ['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
-                    dom.restartWrap.classList.toggle('hidden', section !== 'results');
-                    dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
-                    dom.copy.classList.toggle('hidden', section !== 'results');
-                    this.keyboardEnabled = section === 'battleSection' || section === 'results';
-                    section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
-                    section === 'results' && (dom.results.firstElementChild.prepend(dom.undo),
-                    dom.results.firstElementChild.appendChild(dom.copy));
-                    section === 'inputSection' && this.checkStartButton();
-                    const focusTarget = {
-                        battleSection: dom.left,
-                        results: dom.restartBattle,
-                        inputSection: dom.items
-                    }[section];
-                    focusTarget && setTimeout(()=>focusTarget.focus(), 50);
-                }
-
-                copyResults() {
-                    const ranking = this.provider.getRanking(this.scores);
-                    const lines = ranking.map((idx,i)=>`${i + 1}. ${this.items[idx]} (${Math.round(this.scores[idx])})`);
-                    navigator.clipboard.writeText(lines.join('\n')).then(()=>{
-                        const original = dom.copy.textContent;
-                        dom.copy.textContent = this.string('copied');
-                        setTimeout(()=>dom.copy.textContent = original, 2000);
-                    }
-                    );
-                }
-
-                cancel() {
-                    const reset = () => {
-                        dom.cancel.classList.remove('confirming');
-                        dom.cancel.textContent = this.string('cancel');
-                        this.cancelTimeout = null;
-                    };
-                    if (this.cancelTimeout) {
-                        clearTimeout(this.cancelTimeout);
-                        reset();
-                        return this.show('inputSection');
-                    }
-                    dom.cancel.textContent = this.string('confirmCancel');
-                    dom.cancel.classList.add('confirming');
-                    this.cancelTimeout = setTimeout(reset, 3000);
-                }
-
-                undo() {
-                    if (this.busy || !this.history.length)
-                        return;
-                    const last = this.history.pop();
-                    this.matches.pop();
-                    this.recalculateScores();
-                    Object.assign(this, {
-                        step: last.step,
-                        pair: last.pair,
-                        swapped: last.swapped
-                    });
-                    this.provider.unmark(last.pair);
-                    let[a,b] = last.pair;
-                    this.swapped && ([a,b] = [b, a]);
-                    dom.left.textContent = this.items[a];
-                    dom.right.textContent = this.items[b];
-                    this.updateProgress();
-                    this.show('battleSection');
-                    dom.undo.disabled = !this.history.length;
-                }
-
-                reset() {
-                    this.init();
-                    dom.items.value = '';
-                    this.show('inputSection');
-                    this.updateHelp();
-                    this.updateProgress();
-                }
-
-                handleKey(e) {
-                    if (e.repeat) return;
-                    const {key, ctrlKey, metaKey, shiftKey} = e;
-                    if (key === 'Enter' && (ctrlKey || metaKey))
-                        return !dom.inputSection.classList.contains('hidden') && !dom.start.disabled && (e.preventDefault(), dom.start.click());
-                    const action = {arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo'}[key.toLowerCase()];
-                    if (!action || !this.keyboardEnabled || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName))
-                        return;
-                    const valid = action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies);
-                    valid && (e.preventDefault(), dom[action].click());
-                }
-            }
-
-            new PreferenceRank();
-        </script>
-    </body>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>PreferenceRank</title>
+		<style>
+			:root {
+				--primary: #0070ea;
+				--hover: #005bc0;
+				--bg: #f9f9ff;
+				--surface: #fff;
+				--text: #414754;
+				--border: #c1c6d7;
+				--dim: #d7d9e5;
+				--success: #28a745;
+				--danger: #dc3545
+			}
+
+			@media(prefers-color-scheme: dark) {
+				:root:not(.light) {
+					--bg:#10131b;
+					--surface: #181c23;
+					--text: #c1c6d7;
+					--border: #414754;
+					--dim: #10131b
+				}
+			}
+
+			:root.dark {
+				--bg: #10131b;
+				--surface: #181c23;
+				--text: #c1c6d7;
+				--border: #414754;
+				--dim: #10131b
+			}
+
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0
+			}
+
+			*:focus-visible {
+				outline: 2px solid var(--primary);
+				outline-offset: 2px
+			}
+
+			#battle button:focus-visible,#tieWrap button:focus-visible {
+				outline: none
+			}
+
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: sans-serif;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 100vh;
+				padding: 1rem
+			}
+
+			.container {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				max-width: 720px;
+				padding: 2rem;
+				width: 100%;
+				position: relative
+			}
+
+			.hidden {
+				display: none!important
+			}
+
+			h1,h2,label {
+				margin-bottom: .5rem;
+				display: block
+			}
+
+			h1,h2 {
+				margin-top: .5rem
+			}
+
+			label {
+				font-weight: 700
+			}
+
+			input,select,textarea,button {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				color: var(--text);
+				font-size: 1rem;
+				padding: .5rem;
+				width: 100%
+			}
+
+			textarea {
+				min-height: 80px;
+				resize: vertical
+			}
+
+			button {
+				cursor: pointer;
+				transition: background .1s
+			}
+
+			button:disabled {
+				background: var(--dim)!important;
+				border-color: var(--border)!important;
+				color: var(--text)!important;
+				cursor: not-allowed;
+				opacity: .6
+			}
+
+			#copy {
+				width: auto
+			}
+
+			.primary {
+				background: var(--primary);
+				border: none;
+				color: #fff
+			}
+
+			.primary:hover:not(:disabled) {
+				background: var(--hover)
+			}
+
+			.secondary:hover:not(:disabled) {
+				background: var(--dim)
+			}
+
+			.error {
+				color: var(--danger);
+				font-size: .9rem;
+				margin-top: .5rem;
+				display: block
+			}
+
+			.selectors {
+				position: absolute;
+				right: 2rem;
+				top: 1rem;
+				display: flex;
+				gap: 8px
+			}
+
+			.selectors select {
+				font-size: .9rem;
+				padding: 5px;
+				width: auto
+			}
+
+			.checkbox-row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin: .75rem 0
+			}
+
+			.checkbox-row input {
+				width: auto
+			}
+
+			.checkbox-row label {
+				margin: 0
+			}
+
+			#battle,#tieWrap,#restartWrap {
+				display: flex;
+				gap: 1rem;
+				margin-top: 1rem
+			}
+
+			#battle button,#tieWrap button,#restartWrap button {
+				flex: 1
+			}
+
+			#battle button,#tieWrap button {
+				font-size: 1.2rem;
+				min-height: 100px
+			}
+
+			#progress {
+				font-size: 1.1rem;
+				margin-top: 1rem;
+				text-align: center
+			}
+
+			#tips {
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				font-size: .85rem;
+				line-height: 1.5;
+				margin-top: 15px;
+				opacity: .9;
+				padding: 8px;
+				text-align: center
+			}
+
+			kbd {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 3px;
+				box-shadow: 0 1px 1px #0003;
+				display: inline-block;
+				font-family: monospace;
+				font-size: .9em;
+				margin: 0 3px;
+				padding: 2px 5px
+			}
+
+			#cancel,#toggle {
+				background: none;
+				border: 1px solid var(--border);
+				color: var(--text);
+				cursor: pointer;
+				display: block;
+				font-size: .9rem;
+				margin: 1rem auto;
+				padding: 5px 15px;
+				width: auto
+			}
+
+			#cancel:hover {
+				background: var(--dim)
+			}
+
+			#cancel.confirming {
+				border-color: var(--danger);
+				color: var(--danger)
+			}
+
+			#toggle {
+				border: none;
+				color: var(--primary);
+				font-size: .85rem;
+				margin-top: 10px;
+				text-decoration: underline
+			}
+
+			#results table {
+				border-collapse: collapse;
+				margin-top: 1rem;
+				width: 100%
+			}
+
+			#results th,#results td {
+				border: 1px solid var(--border);
+				padding: .5rem;
+				text-align: left
+			}
+
+			#results th {
+				background: var(--primary);
+				color: #fff
+			}
+
+			.results-header {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				position: relative;
+				min-height: 40px;
+				margin-bottom: 1rem
+			}
+
+			.results-header h2 {
+				margin: 0
+			}
+
+			.results-header #undo {
+				position: absolute;
+				left: 0;
+				top: 50%;
+				transform: translateY(-50%)
+			}
+
+			.results-header #copy {
+				position: absolute;
+				right: 0;
+				top: 50%;
+				transform: translateY(-50%)
+			}
+
+			#undo {
+				width: auto
+			}
+
+			.selected {
+				background: var(--primary)!important;
+				color: #fff!important
+			}
+
+			@media(max-width: 768px) {
+				body {
+					padding:.75rem
+				}
+
+				.container {
+					padding: 1.5rem
+				}
+
+				.selectors {
+					position: static;
+					justify-content: flex-end;
+					margin-bottom: .5rem;
+					gap: 4px
+				}
+
+				.selectors select {
+					font-size: .8rem;
+					padding: 4px
+				}
+
+				#battle,#tieWrap,#restartWrap {
+					flex-direction: column
+				}
+
+				#battle button,#tieWrap button {
+					width: 100%
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div id="inputSection">
+				<div class="selectors">
+					<select id="language" aria-label="Language">
+						<option value="en">English</option>
+						<option value="id">Bahasa Indonesia</option>
+					</select>
+					<select id="theme" aria-label="Theme">
+						<option value="auto"></option>
+						<option value="light"></option>
+						<option value="dark"></option>
+					</select>
+				</div>
+				<h1 id="title"></h1>
+				<div class="group">
+					<label for="items" id="labelItems"></label>
+					<textarea id="items" rows="5" spellcheck="false" autofocus></textarea>
+					<span id="error" class="error hidden" aria-live="polite"></span>
+				</div>
+				<div class="checkbox-row">
+					<input type="checkbox" id="allowTies">
+					<label for="allowTies" id="labelTies"></label>
+				</div>
+				<div class="checkbox-row">
+					<input type="checkbox" id="quickRank">
+					<label for="quickRank" id="labelQuick"></label>
+				</div>
+				<button id="start" class="primary"></button>
+			</div>
+			<button id="undo" class="secondary hidden" disabled></button>
+			<button id="copy" class="secondary hidden"></button>
+			<div id="battleSection" class="hidden">
+				<div id="battle">
+					<button id="left" class="secondary"></button>
+					<button id="right" class="secondary"></button>
+				</div>
+				<div id="tieWrap" class="hidden">
+					<button id="tie" class="secondary"></button>
+				</div>
+				<div id="progress"></div>
+				<button id="cancel"></button>
+				<button id="toggle" aria-controls="tips" aria-expanded="false"></button>
+				<div id="tips" class="hidden"></div>
+			</div>
+			<div id="results" class="hidden"></div>
+			<div id="restartWrap" class="hidden">
+				<button id="restartBattle" class="primary"></button>
+				<button id="restartNew" class="primary"></button>
+			</div>
+		</div>
+		<script>
+			const text = {
+				en: {
+					title: 'PreferenceRank',
+					languageLabel: 'Language',
+					themeLabel: 'Theme',
+					auto: 'Auto Theme',
+					light: 'Light',
+					dark: 'Dark',
+					labelItems: 'Enter items, one per line:',
+					labelTies: 'Allow Ties',
+					labelQuick: 'Use Quick Rank (fewer comparisons)',
+					alert: 'Please enter at least two items.',
+					duplicate: '{count} duplicate item(s) removed.',
+					start: 'Start Ranking',
+					cancel: 'Cancel',
+					confirmCancel: 'Confirm Cancel?',
+					tie: "It's a Tie",
+					undo: 'Undo',
+					progress: 'Progress',
+					toggleShow: 'Show keyboard shortcuts',
+					toggleHide: 'Hide keyboard shortcuts',
+					tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
+					tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
+					resultsTitle: 'Results',
+					rank: 'Rank',
+					item: 'Item',
+					score: 'Score',
+					restartBattle: 'Restart Battle',
+					restartNew: 'Start with New Items',
+					placeholderItems: 'Apple\nBanana\nCherry',
+					copy: 'Copy Results',
+					copied: 'Copied!'
+				},
+				id: {
+					title: 'PreferenceRank',
+					languageLabel: 'Bahasa',
+					themeLabel: 'Tema',
+					auto: 'Tema Otomatis',
+					light: 'Terang',
+					dark: 'Gelap',
+					labelItems: 'Masukkan pilihan, satu per baris:',
+					labelTies: 'Izinkan Seri',
+					labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
+					alert: 'Harap masukkan setidaknya dua pilihan.',
+					duplicate: '{count} item duplikat dihapus.',
+					start: 'Mulai Peringkat',
+					cancel: 'Batal',
+					confirmCancel: 'Konfirmasi Batal?',
+					tie: 'Seri',
+					undo: 'Urungkan',
+					progress: 'Kemajuan',
+					toggleShow: 'Tampilkan pintasan papan ketik',
+					toggleHide: 'Sembunyikan pintasan papan ketik',
+					tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
+					tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
+					resultsTitle: 'Hasil',
+					rank: 'Peringkat',
+					item: 'Nama',
+					score: 'Skor',
+					restartBattle: 'Mulai Ulang Pertarungan',
+					restartNew: 'Mulai dengan Pilihan Baru',
+					placeholderItems: 'Apel\nPisang\nCeri',
+					copy: 'Salin Hasil',
+					copied: 'Disalin!'
+				}
+			};
+
+			const escape = t=>t.replace(/[&<>"']/g, c=>'&#' + c.charCodeAt(0) + ';');
+			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
+
+			class PairProvider {
+				constructor(count) {
+					this.count = count;
+					this.compared = new Set();
+				}
+				key([a,b]) {
+					return a < b ? `${a}-${b}` : `${b}-${a}`;
+				}
+				mark(pair) {
+					this.compared.add(this.key(pair));
+				}
+				unmark(pair) {
+					this.compared.delete(this.key(pair));
+				}
+				getRanking(scores) {
+					return [...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
+				}
+			}
+
+			class FullPairProvider extends PairProvider {
+				constructor(count) {
+					super(count);
+					this.pairs = [];
+					for (let i = 0; i < count - 1; i++)
+						for (let j = i + 1; j < count; j++)
+							this.pairs.push([i, j]);
+					for (let i = this.pairs.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
+					}
+				}
+				next(state) {
+					return this.pairs[state.step];
+				}
+				getProgress(step) {
+					return `${step}/${this.pairs.length}`;
+				}
+			}
+
+			class QuickPairProvider extends PairProvider {
+				constructor(count) {
+					super(count);
+					this.stack = [{
+						stage: 'init',
+						items: Array.from({
+							length: count
+						}, (_,i)=>i)
+					}];
+					this.history = [];
+					this.pending = null;
+					this.final = null;
+					this.refinePass = 0;
+					this.refineIndex = 0;
+					this.refineSwapped = false;
+					this.jacobsthal = [0, 1];
+					while (this.jacobsthal.at(-1) < count)
+						this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
+				}
+
+				snapshot() {
+					return structuredClone({
+						stack: this.stack,
+						pending: this.pending,
+						final: this.final,
+						refinePass: this.refinePass,
+						refineIndex: this.refineIndex,
+						refineSwapped: this.refineSwapped
+					});
+				}
+				restore(state) {
+					Object.assign(this, structuredClone(state));
+				}
+
+				unmark(pair) {
+					this.pending && this.history.length && this.history.pop();
+					this.history.length && this.restore(this.history[this.history.length - 1]);
+					super.unmark(pair);
+				}
+
+				next(state, result) {
+					this.pending && this.handlePending(state, result);
+					while (this.stack.length) {
+						const frame = this.stack[this.stack.length - 1];
+						const output = this[frame.stage](frame);
+						if (output)
+							return output;
+					}
+					return this.final ? this.handleRefinement() : null;
+				}
+
+				handlePending(state, result) {
+					const [a,b] = this.pending;
+					const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
+					const frame = this.stack[this.stack.length - 1];
+					frame && (frame.lastWinner = winner);
+					this.final && this.handleRefinementSwap(a, b, winner);
+					this.pending = null;
+				}
+
+				handleRefinementSwap(a, b, winner) {
+					const index = this.final.indexOf(a);
+					const adjacent = index !== -1 && this.final[index + 1] === b;
+					if (winner === b && adjacent) {
+						[this.final[index],this.final[index + 1]] = [this.final[index + 1], this.final[index]];
+						this.refineSwapped = true;
+					}
+					this.refineIndex++;
+				}
+
+				init(frame) {
+					if (frame.items.length < 2)
+						return this.returnResult(frame.items);
+					frame.pairs = Array.from({
+						length: frame.items.length >> 1
+					}, (_,i)=>[frame.items[2 * i], frame.items[2 * i + 1]]);
+					frame.straggler = frame.items.length % 2 ? frame.items.at(-1) : null;
+					Object.assign(frame, {
+						winners: [],
+						losers: [],
+						pairIndex: 0,
+						stage: 'comparing'
+					});
+					return null;
+				}
+
+				comparing(frame) {
+					if (frame.pairIndex >= frame.pairs.length) {
+						frame.stage = 'recursion';
+						this.stack.push({
+							stage: 'init',
+							items: [...frame.winners]
+						});
+						return null;
+					}
+					if (frame.lastWinner !== undefined) {
+						frame.winners.push(frame.lastWinner);
+						const [a,b] = frame.pairs[frame.pairIndex];
+						frame.losers.push(frame.lastWinner === a ? b : a);
+						delete frame.lastWinner;
+						frame.pairIndex++;
+						return null;
+					}
+					this.pending = frame.pairs[frame.pairIndex];
+					this.history.push(this.snapshot());
+					return this.pending;
+				}
+
+				recursion(frame) {
+					if (!frame.subResult)
+						return null;
+					frame.mainChain = frame.subResult;
+					delete frame.subResult;
+					frame.pairMap = {};
+					frame.winners.forEach((winner,i)=>frame.pairMap[winner] = frame.losers[i]);
+					frame.mainChain.unshift(frame.pairMap[frame.mainChain[0]]);
+					const sortedWinners = frame.mainChain.slice(1);
+					frame.insertions = [];
+					sortedWinners.forEach((winner,i)=>i > 0 && frame.insertions.push({
+						item: frame.pairMap[winner],
+						boundItem: winner
+					}));
+					frame.straggler !== null && frame.insertions.push({
+						item: frame.straggler,
+						boundItem: null
+					});
+					frame.jacobIndex = 2;
+					frame.currentGroup = [];
+					frame.stage = 'grouping';
+				}
+
+				grouping(frame) {
+					if (frame.currentGroup.length === 0) {
+						if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
+							this.returnResult(frame.mainChain);
+							return null;
+						}
+						const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
+						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
+						frame.currentGroup.push(...frame.insertions.slice(start, end + 1).reverse());
+						frame.jacobIndex++;
+					}
+					if (frame.mainChain === this.final)
+						return null;
+					if (frame.currentGroup.length > 0) {
+						frame.currentItem = frame.currentGroup.shift();
+						frame.stage = 'inserting';
+						frame.binarySearch = {
+							min: 0,
+							max: frame.currentItem.boundItem !== null ? frame.mainChain.indexOf(frame.currentItem.boundItem) : frame.mainChain.length,
+							target: frame.currentItem.item
+						};
+					}
+					return null;
+				}
+
+				inserting(frame) {
+					const {min, max, target} = frame.binarySearch;
+					if (min >= max) {
+						frame.mainChain.splice(min, 0, target);
+						frame.stage = 'grouping';
+						return null;
+					}
+					if (frame.lastWinner !== undefined) {
+						frame.lastWinner === target ? frame.binarySearch.min = frame.binarySearch.mid + 1 : frame.binarySearch.max = frame.binarySearch.mid;
+						delete frame.lastWinner;
+						return null;
+					}
+					frame.binarySearch.mid = Math.floor((min + max) / 2);
+					this.pending = [target, frame.mainChain[frame.binarySearch.mid]];
+					this.history.push(this.snapshot());
+					return this.pending;
+				}
+
+				handleRefinement() {
+					while (true) {
+						if (this.refinePass >= 2)
+							return null;
+						if (this.refineIndex >= this.final.length - 1) {
+							if (!this.refineSwapped)
+								return null;
+							this.refinePass++;
+							this.refineIndex = 0;
+							this.refineSwapped = false;
+							continue;
+						}
+						const [a,b] = [this.final[this.refineIndex], this.final[this.refineIndex + 1]];
+						if (!this.compared.has(this.key([a, b]))) {
+							this.pending = [a, b];
+							this.history.push(this.snapshot());
+							return this.pending;
+						}
+						this.refineIndex++;
+					}
+				}
+
+				returnResult(result) {
+					this.stack.pop();
+					this.stack.length ? this.stack[this.stack.length - 1].subResult = result : this.final = result.reverse();
+				}
+				getProgress(step) {
+					return `${step}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`;
+				}
+			}
+
+			class PreferenceRank {
+				init() {
+					Object.assign(this, {
+						items: [],
+						scores: [],
+						matches: [],
+						pair: null,
+						swapped: false,
+						step: 0,
+						allowTies: false,
+						history: [],
+						keyboardEnabled: false,
+						busy: false,
+						swaps: new Map(),
+						provider: null,
+						cancelTimeout: null
+					});
+				}
+
+				constructor() {
+					this.init();
+					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
+					this.bind();
+					this.setTheme('auto');
+					this.updateText();
+					this.checkStartButton();
+				}
+
+				getItems() {
+					return dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
+				}
+				string(key) {
+					return text[this.language]?.[key] ?? key;
+				}
+
+				bind() {
+					Object.entries({
+						start: this.start,
+						restartBattle: this.start,
+						restartNew: this.reset,
+						undo: this.undo,
+						copy: this.copyResults,
+						toggle: this.toggleHelp,
+						cancel: this.cancel,
+						left: ()=>this.choose('left'),
+						right: ()=>this.choose('right'),
+						tie: ()=>this.choose('tie')
+					}).forEach(([id,handler])=>dom[id].onclick = handler.bind(this));
+					dom.language.onchange = e=>{
+						this.language = e.target.value;
+						this.updateText();
+					}
+					;
+					dom.theme.onchange = e=>this.setTheme(e.target.value);
+					dom.allowTies.onchange = e=>this.setTies(e.target.checked);
+					dom.items.oninput = ()=>this.checkStartButton();
+					document.onkeydown = e=>this.handleKey(e);
+				}
+
+				setTheme(theme) {
+					document.documentElement.className = theme === 'auto' ? '' : theme;
+					dom.theme.value = theme;
+				}
+
+				updateText() {
+					dom.language.value = this.language;
+					dom.language.setAttribute('aria-label', this.string('languageLabel'));
+					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
+					dom.items.placeholder = this.string('placeholderItems');
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
+					dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
+					[...dom.theme.options].forEach(option=>option.textContent = this.string(option.value));
+					this.updateHelp();
+					this.updateProgress();
+					!dom.results.classList.contains('hidden') && this.renderResults();
+				}
+
+				setTies(enabled) {
+					this.allowTies = enabled;
+					!dom.battleSection.classList.contains('hidden') && dom.tieWrap.classList.toggle('hidden', !enabled);
+					this.updateHelp();
+				}
+
+				updateHelp() {
+					const hidden = dom.tips.classList.contains('hidden');
+					dom.toggle.textContent = this.string(hidden ? 'toggleShow' : 'toggleHide');
+					dom.toggle.setAttribute('aria-expanded', !hidden);
+					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
+				}
+
+				toggleHelp() {
+					dom.tips.classList.toggle('hidden');
+					this.updateHelp();
+				}
+				checkStartButton() {
+					const valid = new Set(this.getItems()).size >= 2;
+					dom.start.disabled = !valid;
+					valid && dom.error.classList.add('hidden');
+				}
+
+				start() {
+					const raw = this.getItems();
+					const unique = [...new Set(raw)];
+					if (raw.length > unique.length) {
+						dom.items.value = unique.join('\n');
+						dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
+						dom.error.classList.remove('hidden');
+						return;
+					}
+					Object.assign(this, {
+						items: unique,
+						allowTies: dom.allowTies.checked,
+						scores: Array(unique.length).fill(1000),
+						matches: [],
+						step: 0,
+						history: [],
+						swaps: new Map(),
+						busy: false
+					});
+					dom.undo.disabled = true;
+					this.provider = new (dom.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
+					dom.tieWrap.classList.toggle('hidden', !this.allowTies);
+					this.updateHelp();
+					this.show('battleSection');
+					this.next();
+				}
+
+				recalculateScores() {
+					const steps = 5
+					  , scores = Array(this.items.length).fill(1000);
+					const factor = Math.log(10) / 400
+					  , k = 32 / steps;
+					for (let step = 0; step < steps; step++) {
+						const deltas = Array(this.items.length).fill(0);
+						this.matches.forEach(({a, b, result})=>{
+							const expected = 1 / (1 + Math.exp((scores[b] - scores[a]) * factor));
+							const change = k * (result - expected);
+							deltas[a] += change;
+							deltas[b] -= change;
+						}
+						);
+						scores.forEach((_,i)=>scores[i] += deltas[i]);
+					}
+					this.scores = scores;
+				}
+
+				choose(winner) {
+					if (this.busy || dom.battleSection.classList.contains('hidden'))
+						return;
+					this.busy = true;
+					this.history.push({
+						pair: this.pair,
+						scores: [...this.scores],
+						step: this.step,
+						swapped: this.swapped
+					});
+					this.provider.mark(this.pair);
+					const [a,b] = this.pair;
+					const isLeftWinner = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
+					const result = winner === 'tie' ? 0.5 : isLeftWinner ? 1 : 0;
+					this.matches.push({
+						a,
+						b,
+						result
+					});
+					this.recalculateScores();
+					this.step++;
+					dom.undo.disabled = false;
+					this.updateProgress();
+					this.clearSelections();
+					(winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
+					setTimeout(()=>{
+						if (dom.battleSection.classList.contains('hidden') || !this.busy)
+							return;
+						this.busy = false;
+						this.next(result);
+					}
+					, 150);
+				}
+
+				next(result) {
+					this.clearSelections();
+					const nextPair = this.provider.next(this, result);
+					if (!nextPair)
+						return this.renderResults();
+					this.pair = nextPair;
+					const key = this.provider.key(nextPair);
+					this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
+					this.swapped = this.swaps.get(key);
+					this.renderPair();
+				}
+
+				renderPair() {
+					let[a,b] = this.pair;
+					this.swapped && ([a,b] = [b, a]);
+					dom.left.textContent = this.items[a];
+					dom.right.textContent = this.items[b];
+					this.updateProgress();
+				}
+
+				updateProgress() {
+					dom.progress.textContent = `${this.string('progress')}: ${this.provider ? this.provider.getProgress(this.step) : '0'}`;
+				}
+				clearSelections() {
+					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
+				}
+
+				renderResults() {
+					const ranking = this.provider.getRanking(this.scores);
+					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
+					this.show('results');
+				}
+
+				show(section) {
+					['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
+					dom.restartWrap.classList.toggle('hidden', section !== 'results');
+					dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
+					dom.copy.classList.toggle('hidden', section !== 'results');
+					this.keyboardEnabled = section === 'battleSection' || section === 'results';
+					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
+					section === 'results' && (dom.results.firstElementChild.prepend(dom.undo),
+					dom.results.firstElementChild.appendChild(dom.copy));
+					section === 'inputSection' && this.checkStartButton();
+					const focusTarget = {
+						battleSection: dom.left,
+						results: dom.restartBattle,
+						inputSection: dom.items
+					}[section];
+					focusTarget && setTimeout(()=>focusTarget.focus(), 50);
+				}
+
+				copyResults() {
+					const ranking = this.provider.getRanking(this.scores);
+					const lines = ranking.map((index,i)=>`${i + 1}. ${this.items[index]} (${Math.round(this.scores[index])})`);
+					navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+						const original = dom.copy.textContent;
+						dom.copy.textContent = this.string('copied');
+						setTimeout(()=>dom.copy.textContent = original, 2000);
+					}
+					);
+				}
+
+				cancel() {
+					const reset = ()=>{
+						dom.cancel.classList.remove('confirming');
+						dom.cancel.textContent = this.string('cancel');
+						this.cancelTimeout = null;
+					}
+					;
+					if (this.cancelTimeout) {
+						clearTimeout(this.cancelTimeout);
+						reset();
+						return this.show('inputSection');
+					}
+					dom.cancel.textContent = this.string('confirmCancel');
+					dom.cancel.classList.add('confirming');
+					this.cancelTimeout = setTimeout(reset, 3000);
+				}
+
+				undo() {
+					if (this.busy || !this.history.length)
+						return;
+					const last = this.history.pop();
+					this.matches.pop();
+					this.recalculateScores();
+					Object.assign(this, {
+						step: last.step,
+						pair: last.pair,
+						swapped: last.swapped
+					});
+					this.provider.unmark(last.pair);
+					this.renderPair();
+					this.show('battleSection');
+					dom.undo.disabled = !this.history.length;
+				}
+
+				reset() {
+					this.init();
+					dom.items.value = '';
+					this.show('inputSection');
+					this.updateHelp();
+					this.updateProgress();
+				}
+
+				handleKey(event) {
+					if (event.repeat)
+						return;
+					const {key, ctrlKey, metaKey, shiftKey} = event;
+					if (key === 'Enter' && (ctrlKey || metaKey))
+						return !dom.inputSection.classList.contains('hidden') && !dom.start.disabled && (event.preventDefault(),
+						dom.start.click());
+					const action = {
+						arrowleft: 'left',
+						arrowright: 'right',
+						arrowup: 'tie',
+						arrowdown: 'tie',
+						z: 'undo'
+					}[key.toLowerCase()];
+					if (!action || !this.keyboardEnabled || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName))
+						return;
+					const valid = action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies);
+					valid && (event.preventDefault(),
+					dom[action].click());
+				}
+			}
+
+			new PreferenceRank();
+		</script>
+	</body>
 </html>
