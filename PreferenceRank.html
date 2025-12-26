@@ -922,21 +922,20 @@
                 }
 
                 cancel() {
+                    const reset = () => {
+                        dom.cancel.classList.remove('confirming');
+                        dom.cancel.textContent = this.string('cancel');
+                        this.cancelTimeout = null;
+                    };
                     if (this.cancelTimeout) {
                         clearTimeout(this.cancelTimeout);
-                        this.cancelTimeout = null;
+                        reset();
                         this.show('inputSection');
-                        dom.cancel.classList.remove('confirming');
-                        dom.cancel.textContent = this.string('cancel');
-                        return;
+                    } else {
+                        dom.cancel.textContent = this.string('confirmCancel');
+                        dom.cancel.classList.add('confirming');
+                        this.cancelTimeout = setTimeout(reset, 3000);
                     }
-                    dom.cancel.textContent = this.string('confirmCancel');
-                    dom.cancel.classList.add('confirming');
-                    this.cancelTimeout = setTimeout(() => {
-                        this.cancelTimeout = null;
-                        dom.cancel.classList.remove('confirming');
-                        dom.cancel.textContent = this.string('cancel');
-                    }, 3000);
                 }
 
                 undo() {
