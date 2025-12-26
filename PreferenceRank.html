@@ -755,7 +755,7 @@
                     dom.items.placeholder = this.string('placeholderItems');
                     ['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
                     dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
-                    [['auto', 0], ['light', 1], ['dark', 2]].forEach(([key,i])=>dom.theme.options[i].textContent = this.string(key));
+                    [...dom.theme.options].forEach(o => o.textContent = this.string(o.value));
                     this.updateHelp();
                     this.updateProgress();
                     !dom.results.classList.contains('hidden') && this.renderResults();
@@ -966,28 +966,16 @@
                     this.updateProgress();
                 }
 
-                handleKey(event) {
-                    if (event.repeat)
+                handleKey(e) {
+                    if (e.repeat) return;
+                    const {key, ctrlKey, metaKey, shiftKey} = e;
+                    if (key === 'Enter' && (ctrlKey || metaKey))
+                        return !dom.inputSection.classList.contains('hidden') && !dom.start.disabled && (e.preventDefault(), dom.start.click());
+                    const action = {arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo'}[key.toLowerCase()];
+                    if (!action || !this.keyboardEnabled || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName))
                         return;
-                    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-                        !dom.inputSection.classList.contains('hidden') && !dom.start.disabled && (event.preventDefault(),
-                        dom.start.click());
-                        return;
-                    }
-                    const action = {
-                        ArrowLeft: 'left',
-                        ArrowRight: 'right',
-                        ArrowUp: 'tie',
-                        ArrowDown: 'tie',
-                        z: 'undo',
-                        Z: 'undo'
-                    }[event.key];
-                    if (!action || !this.keyboardEnabled || ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement.tagName))
-                        return;
-                    if (action === 'undo' ? ((!event.ctrlKey && !event.metaKey) || event.shiftKey) : (dom.battleSection.classList.contains('hidden') || (action === 'tie' && !this.allowTies)))
-                        return;
-                    event.preventDefault();
-                    dom[action].click();
+                    const valid = action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies);
+                    valid && (e.preventDefault(), dom[action].click());
                 }
             }
 
