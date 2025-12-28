@@ -975,8 +975,9 @@
 
 				copyResults() {
 					const ranking = this.provider.getRanking(this.scores);
-					const lines = ranking.map((index,i)=>`${i + 1}. ${this.items[index]} (${Math.round(this.scores[index])})`);
-					navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
+					const lines = ranking.map((index,i)=>`${i + 1}\t${this.items[index]}\t${Math.round(this.scores[index])}`);
+					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(()=>{
 						const original = dom.copy.textContent;
 						dom.copy.textContent = this.string('copied');
 						setTimeout(()=>dom.copy.textContent = original, 2000);
