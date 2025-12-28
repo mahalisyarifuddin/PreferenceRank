@@ -426,7 +426,7 @@
 					item: 'Item',
 					score: 'Score',
 					restartBattle: 'Restart Battle',
-					restartNew: 'Start with New Items',
+					restartNew: 'Edit Items',
 					placeholderItems: 'Apple\nBanana\nCherry',
 					copy: 'Copy Results',
 					copied: 'Copied!'
@@ -458,7 +458,7 @@
 					item: 'Nama',
 					score: 'Skor',
 					restartBattle: 'Mulai Ulang Pertarungan',
-					restartNew: 'Mulai dengan Pilihan Baru',
+					restartNew: 'Ubah Pilihan',
 					placeholderItems: 'Apel\nPisang\nCeri',
 					copy: 'Salin Hasil',
 					copied: 'Disalin!'
@@ -998,7 +998,6 @@
 
 				reset() {
 					this.init();
-					dom.items.value = '';
 					this.show('inputSection');
 					this.updateHelp();
 					this.updateProgress();
