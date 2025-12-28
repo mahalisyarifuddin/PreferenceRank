@@ -134,6 +134,14 @@
 				background: var(--dim)
 			}
 
+			.count {
+				color: var(--text);
+				font-size: .85rem;
+				margin-top: .25rem;
+				text-align: right;
+				opacity: .8
+			}
+
 			.error {
 				color: var(--danger);
 				font-size: .9rem;
@@ -363,6 +371,7 @@
 				<div class="group">
 					<label for="items" id="labelItems"></label>
 					<textarea id="items" rows="5" spellcheck="false" autofocus></textarea>
+					<div id="itemCount" class="count"></div>
 					<span id="error" class="error hidden" aria-live="polite"></span>
 				</div>
 				<div class="checkbox-row">
@@ -411,6 +420,7 @@
 					labelQuick: 'Use Quick Rank (fewer comparisons)',
 					alert: 'Please enter at least two items.',
 					duplicate: '{count} duplicate item(s) removed.',
+					itemsCount: '{count} items',
 					start: 'Start Ranking',
 					cancel: 'Cancel',
 					confirmCancel: 'Confirm Cancel?',
@@ -443,6 +453,7 @@
 					labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
 					alert: 'Harap masukkan setidaknya dua pilihan.',
 					duplicate: '{count} item duplikat dihapus.',
+					itemsCount: '{count} pilihan',
 					start: 'Mulai Peringkat',
 					cancel: 'Batal',
 					confirmCancel: 'Konfirmasi Batal?',
@@ -738,6 +749,7 @@
 					this.setTheme('auto');
 					this.updateText();
 					this.checkStartButton();
+					this.updateItemCount();
 				}
 
 				getItems() {
@@ -767,7 +779,11 @@
 					;
 					dom.theme.onchange = e=>this.setTheme(e.target.value);
 					dom.allowTies.onchange = e=>this.setTies(e.target.checked);
-					dom.items.oninput = ()=>this.checkStartButton();
+					dom.items.oninput = ()=>{
+						this.checkStartButton();
+						this.updateItemCount();
+					}
+					;
 					document.onkeydown = e=>this.handleKey(e);
 				}
 
@@ -786,7 +802,13 @@
 					[...dom.theme.options].forEach(option=>option.textContent = this.string(option.value));
 					this.updateHelp();
 					this.updateProgress();
+					this.updateItemCount();
 					!dom.results.classList.contains('hidden') && this.renderResults();
+				}
+
+				updateItemCount() {
+					const count = this.getItems().length;
+					dom.itemCount.textContent = this.string('itemsCount').replace('{count}', count);
 				}
 
 				setTies(enabled) {
