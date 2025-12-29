@@ -417,7 +417,7 @@
 					dark: 'Dark',
 					labelItems: 'Enter items, one per line:',
 					labelTies: 'Allow Ties',
-					labelQuick: 'Use Quick Rank (fewer comparisons)',
+					labelQuick: 'Use Smart Rank (faster & more accurate)',
 					alert: 'Please enter at least two items.',
 					duplicate: '{count} duplicate item(s) removed.',
 					itemsCount: '{count} items',
@@ -450,7 +450,7 @@
 					dark: 'Gelap',
 					labelItems: 'Masukkan pilihan, satu per baris:',
 					labelTies: 'Izinkan Seri',
-					labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
+					labelQuick: 'Gunakan Peringkat Cerdas (lebih cepat & akurat)',
 					alert: 'Harap masukkan setidaknya dua pilihan.',
 					duplicate: '{count} item duplikat dihapus.',
 					itemsCount: '{count} pilihan',
@@ -518,7 +518,7 @@
 				}
 			}
 
-			class QuickPairProvider extends PairProvider {
+			class SmartPairProvider extends PairProvider {
 				constructor(count) {
 					super(count);
 					this.stack = [{
@@ -530,9 +530,6 @@
 					this.history = [];
 					this.pending = null;
 					this.final = null;
-					this.refinePass = 0;
-					this.refineIndex = 0;
-					this.refineSwapped = false;
 					this.jacobsthal = [0, 1];
 					while (this.jacobsthal.at(-1) < count)
 						this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
@@ -542,10 +539,7 @@
 					return structuredClone({
 						stack: this.stack,
 						pending: this.pending,
-						final: this.final,
-						refinePass: this.refinePass,
-						refineIndex: this.refineIndex,
-						refineSwapped: this.refineSwapped
+						final: this.final
 					});
 				}
 				restore(state) {
@@ -566,7 +560,7 @@
 						if (output)
 							return output;
 					}
-					return this.final ? this.handleRefinement() : null;
+					return this.handleAdaptiveRefinement(state);
 				}
 
 				handlePending(state, result) {
@@ -574,18 +568,7 @@
 					const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
 					const frame = this.stack[this.stack.length - 1];
 					frame && (frame.lastWinner = winner);
-					this.final && this.handleRefinementSwap(a, b, winner);
 					this.pending = null;
-				}
-
-				handleRefinementSwap(a, b, winner) {
-					const index = this.final.indexOf(a);
-					const adjacent = index !== -1 && this.final[index + 1] === b;
-					if (winner === b && adjacent) {
-						[this.final[index],this.final[index + 1]] = [this.final[index + 1], this.final[index]];
-						this.refineSwapped = true;
-					}
-					this.refineIndex++;
 				}
 
 				init(frame) {
@@ -692,26 +675,22 @@
 					return this.pending;
 				}
 
-				handleRefinement() {
-					while (true) {
-						if (this.refinePass >= 2)
-							return null;
-						if (this.refineIndex >= this.final.length - 1) {
-							if (!this.refineSwapped)
-								return null;
-							this.refinePass++;
-							this.refineIndex = 0;
-							this.refineSwapped = false;
-							continue;
-						}
-						const [a,b] = [this.final[this.refineIndex], this.final[this.refineIndex + 1]];
+				handleAdaptiveRefinement(state) {
+					const {scores, items} = state;
+					const indices = Array.from({
+						length: items.length
+					}, (_,i)=>i);
+					indices.sort((a,b)=>(scores[b] - scores[a]) || (a - b));
+					for (let i = 0; i < indices.length - 1; i++) {
+						const a = indices[i];
+						const b = indices[i + 1];
 						if (!this.compared.has(this.key([a, b]))) {
 							this.pending = [a, b];
 							this.history.push(this.snapshot());
 							return this.pending;
 						}
-						this.refineIndex++;
 					}
+					return null;
 				}
 
 				returnResult(result) {
@@ -854,7 +833,7 @@
 						busy: false
 					});
 					dom.undo.disabled = true;
-					this.provider = new (dom.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
+					this.provider = new (dom.quickRank.checked ? SmartPairProvider : FullPairProvider)(unique.length);
 					dom.tieWrap.classList.toggle('hidden', !this.allowTies);
 					this.updateHelp();
 					this.show('battleSection');
