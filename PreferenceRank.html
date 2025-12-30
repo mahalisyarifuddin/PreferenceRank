@@ -6,8 +6,8 @@
 		<title>PreferenceRank</title>
 		<style>
 			:root {
-				--primary: #0070ea;
-				--hover: #005bc0;
+				--primary: #0060c9;
+				--hover: #0050b0;
 				--bg: #f9f9ff;
 				--surface: #fff;
 				--text: #414754;
@@ -19,6 +19,8 @@
 
 			@media(prefers-color-scheme: dark) {
 				:root:not(.light) {
+					--primary: #3395ff;
+					--hover: #55aaff;
 					--bg:#10131b;
 					--surface: #181c23;
 					--text: #c1c6d7;
@@ -28,6 +30,8 @@
 			}
 
 			:root.dark {
+				--primary: #3395ff;
+				--hover: #55aaff;
 				--bg: #10131b;
 				--surface: #181c23;
 				--text: #c1c6d7;
@@ -370,7 +374,7 @@
 				<h1 id="title"></h1>
 				<div class="group">
 					<label for="items" id="labelItems"></label>
-					<textarea id="items" rows="5" spellcheck="false" autofocus></textarea>
+					<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
 					<div id="itemCount" class="count"></div>
 					<span id="error" class="error hidden" aria-live="polite"></span>
 				</div>
@@ -844,7 +848,10 @@
 				checkStartButton() {
 					const valid = new Set(this.getItems()).size >= 2;
 					dom.start.disabled = !valid;
-					valid && dom.error.classList.add('hidden');
+					if (valid) {
+						dom.error.classList.add('hidden');
+						dom.items.removeAttribute('aria-invalid');
+					}
 				}
 
 				start() {
@@ -852,7 +859,8 @@
 					const unique = [...new Set(raw)];
 					return raw.length > unique.length ? (dom.items.value = unique.join('\n'),
 					dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
-					dom.error.classList.remove('hidden')) : this.doStart(unique);
+					dom.error.classList.remove('hidden'),
+					dom.items.setAttribute('aria-invalid', 'true')) : this.doStart(unique);
 				}
 
 				doStart(unique) {
@@ -954,7 +962,7 @@
 				}
 
 				updateProgress() {
-					const progressText = this.provider ? this.provider.getProgress(this.step) : '0';
+					const progressText = this.provider ? this.provider.getProgress(this.step) : '0/0';
 					dom.progress.textContent = `${this.string('progress')}: ${progressText}`;
 					const [current,total] = progressText.split('/');
 					const totalValue = parseInt(total.replace('~', ''), 10);
