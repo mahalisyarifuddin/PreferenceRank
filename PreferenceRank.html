@@ -395,7 +395,9 @@
 					<button id="tie" class="secondary"></button>
 				</div>
 				<div id="progress"></div>
-				<div class="progress-track"><div id="progressFill"></div></div>
+				<div class="progress-track">
+					<div id="progressFill"></div>
+				</div>
 				<button id="cancel"></button>
 				<button id="toggle" aria-controls="tips" aria-expanded="false"></button>
 				<div id="tips" class="hidden"></div>
@@ -477,13 +479,199 @@
 			};
 
 			const escape = t=>t.replace(/[&<>"']/g, c=>'&#' + c.charCodeAt(0) + ';');
-			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
+			const dom = new Proxy({},{
+				get: (_,id)=>document.getElementById(id)
+			});
 
-			class PairProvider{constructor(c){this.count=c;this.compared=new Set}key([a,b]){return a<b?`${a}-${b}`:`${b}-${a}`}mark(p){this.compared.add(this.key(p))}unmark(p){this.compared.delete(this.key(p))}getRanking(s){return[...s.keys()].sort((a,b)=>s[b]-s[a])}}
+			class PairProvider {
+				constructor(count) {
+					this.count = count;
+					this.compared = new Set;
+				}
+				key([a,b]) {
+					return a < b ? `${a}-${b}` : `${b}-${a}`;
+				}
+				mark(pair) {
+					this.compared.add(this.key(pair));
+				}
+				unmark(pair) {
+					this.compared.delete(this.key(pair));
+				}
+				getRanking(scores) {
+					return [...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
+				}
+			}
 
-			class FullPairProvider extends PairProvider{constructor(c){super(c);this.pairs=[];for(let i=0;i<c-1;i++)for(let j=i+1;j<c;j++)this.pairs.push([i,j]);for(let i=this.pairs.length;i--;){const j=Math.floor(Math.random()*(i+1));[this.pairs[i],this.pairs[j]]=[this.pairs[j],this.pairs[i]]}}next(s){return this.pairs[s.step]}getProgress(s){return`${s}/${this.pairs.length}`}}
+			class FullPairProvider extends PairProvider {
+				constructor(count) {
+					super(count);
+					this.pairs = [];
+					for (let i = 0; i < count - 1; i++)
+						for (let j = i + 1; j < count; j++)
+							this.pairs.push([i, j]);
+					for (let i = this.pairs.length; i--; ) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
+					}
+				}
+				next(state) {
+					return this.pairs[state.step];
+				}
+				getProgress(state) {
+					return `${state}/${this.pairs.length}`;
+				}
+			}
 
-			class QuickPairProvider extends PairProvider{constructor(c){super(c);this.S=[{s:'init',items:[...Array(c).keys()]}];this.H=[];this.P=this.F=null;this.R={p:0,i:0,s:!1};this.J=[0,1];while(this.J.at(-1)<c)this.J.push(this.J.at(-1)+2*this.J.at(-2))}snap(){return structuredClone({S:this.S,P:this.P,F:this.F,R:this.R})}rest(s){Object.assign(this,structuredClone(s))}unmark(p){this.P&&this.H.length&&this.H.pop();this.H.length&&this.rest(this.H.at(-1));super.unmark(p)}next(s,r){this.P&&this.hP(s,r);while(this.S.length){const f=this.S.at(-1),o=this[f.s](f);if(o)return o}return this.F?this.hR():null}hP(s,r){const[a,b]=this.P,w=r===.5?(s.swapped?b:a):r===1?a:b;this.S.at(-1)&&(this.S.at(-1).lw=w);this.F&&this.hRS(a,b,w);this.P=null}hRS(a,b,w){const i=this.F.indexOf(a);if(w===b&&i!==-1&&this.F[i+1]===b){[this.F[i],this.F[i+1]]=[this.F[i+1],this.F[i]];this.R.s=!0}this.R.i++}init(f){if(f.items.length<2)return this.ret(f.items);f.pairs=Array.from({length:f.items.length>>1},(_,i)=>[f.items[2*i],f.items[2*i+1]]);f.odd=f.items.length%2?f.items.at(-1):null;Object.assign(f,{win:[],lose:[],pi:0,s:'cmp'})}cmp(f){if(f.pi>=f.pairs.length){f.s='rec';this.S.push({s:'init',items:[...f.win]});return null}if(f.lw!==undefined){f.win.push(f.lw);const[a,b]=f.pairs[f.pi];f.lose.push(f.lw===a?b:a);delete f.lw;f.pi++;return null}this.P=f.pairs[f.pi];this.H.push(this.snap());return this.P}rec(f){if(!f.sub)return null;f.main=f.sub;delete f.sub;f.map={};f.win.forEach((w,i)=>f.map[w]=f.lose[i]);f.main.unshift(f.map[f.main[0]]);f.ins=[];f.main.slice(1).forEach((w,i)=>i>0&&f.ins.push({item:f.map[w],bound:w}));f.odd!==null&&f.ins.push({item:f.odd,bound:null});f.ji=2;f.grp=[];f.s='grp'}grp(f){if(!f.grp.length){if(this.J[f.ji-1]-1>=f.ins.length)return this.ret(f.main);const s=this.J[f.ji-1]-1,e=Math.min(this.J[f.ji]-2,f.ins.length-1);f.grp.push(...f.ins.slice(s,e+1).reverse());f.ji++}if(f.main===this.F)return null;if(f.grp.length){f.curr=f.grp.shift();f.s='ins';f.bs={min:0,max:f.curr.bound!==null?f.main.indexOf(f.curr.bound):f.main.length,t:f.curr.item}}}ins(f){const{min,max,t}=f.bs;if(min>=max){f.main.splice(min,0,t);f.s='grp';return null}if(f.lw!==undefined){f.lw===t?f.bs.min=f.bs.mid+1:f.bs.max=f.bs.mid;delete f.lw;return null}f.bs.mid=(min+max)>>1;this.P=[t,f.main[f.bs.mid]];this.H.push(this.snap());return this.P}hR(){while(1){if(this.R.p>=2)return null;if(this.R.i>=this.F.length-1){if(!this.R.s)return null;this.R.p++;this.R.i=0;this.R.s=!1;continue}const[a,b]=[this.F[this.R.i],this.F[this.R.i+1]];if(!this.compared.has(this.key([a,b]))){this.P=[a,b];this.H.push(this.snap());return this.P}this.R.i++}}ret(r){this.S.pop();this.S.length?this.S.at(-1).sub=r:this.F=r.reverse()}getProgress(s){return`${s}/~${Math.round(.78*this.count*Math.log2(this.count))}`}}
+			class QuickPairProvider extends PairProvider {
+				constructor(count) {
+					super(count);
+					this.stack = [{
+						state: 'init',
+						items: [...Array(count).keys()]
+					}];
+					this.history = [];
+					this.pending = this.final = null;
+					this.refine = {
+						pass: 0,
+						index: 0,
+						swapped: false
+					};
+					this.jacobsthal = [0, 1];
+					while (this.jacobsthal.at(-1) < count)
+						this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
+				}
+				snap() {
+					return structuredClone({
+						stack: this.stack,
+						pending: this.pending,
+						final: this.final,
+						refine: this.refine
+					});
+				}
+				restore(snapshot) {
+					Object.assign(this, structuredClone(snapshot));
+				}
+				unmark(pair) {
+					this.pending && this.history.length && this.history.pop();
+					this.history.length && this.restore(this.history.at(-1));
+					super.unmark(pair);
+				}
+				next(state, result) {
+					this.pending && this.handlePending(state, result);
+					while (this.stack.length) {
+						const frame = this.stack.at(-1);
+						const output = this[frame.state](frame);
+						return output || (this.stack.length ? undefined : (this.final ? this.handleRefine() : null)) || this.next(state, result);
+					}
+					return this.final ? this.handleRefine() : null;
+				}
+				handlePending(state, result) {
+					const [a,b] = this.pending;
+					const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
+					this.stack.at(-1) && (this.stack.at(-1).lastWinner = winner);
+					this.final && this.handleRefineSwap(a, b, winner);
+					this.pending = null;
+				}
+				handleRefineSwap(a, b, winner) {
+					const index = this.final.indexOf(a);
+					winner === b && index !== -1 && this.final[index + 1] === b && ([this.final[index],this.final[index + 1]] = [this.final[index + 1], this.final[index]],
+					this.refine.swapped = true);
+					this.refine.index++;
+				}
+				init(frame) {
+					return frame.items.length < 2 ? this.return(frame.items) : (frame.pairs = Array.from({
+						length: frame.items.length >> 1
+					}, (_,i)=>[frame.items[2 * i], frame.items[2 * i + 1]]),
+					frame.odd = frame.items.length % 2 ? frame.items.at(-1) : null,
+					Object.assign(frame, {
+						winners: [],
+						losers: [],
+						pairIndex: 0,
+						state: 'compare'
+					}),
+					null);
+				}
+				compare(frame) {
+					return frame.pairIndex >= frame.pairs.length ? (frame.state = 'recurse',
+					this.stack.push({
+						state: 'init',
+						items: [...frame.winners]
+					}),
+					null) : frame.lastWinner !== undefined ? (frame.winners.push(frame.lastWinner),
+					frame.losers.push(frame.pairs[frame.pairIndex][frame.lastWinner === frame.pairs[frame.pairIndex][0] ? 1 : 0]),
+					delete frame.lastWinner,
+					frame.pairIndex++,
+					null) : (this.pending = frame.pairs[frame.pairIndex],
+					this.history.push(this.snap()),
+					this.pending);
+				}
+				recurse(frame) {
+					return frame.subresult ? (frame.main = frame.subresult,
+					delete frame.subresult,
+					frame.map = {},
+					frame.winners.forEach((w,i)=>frame.map[w] = frame.losers[i]),
+					frame.main.unshift(frame.map[frame.main[0]]),
+					frame.insertions = [],
+					frame.main.slice(1).forEach((w,i)=>i > 0 && frame.insertions.push({
+						item: frame.map[w],
+						bound: w
+					})),
+					frame.odd !== null && frame.insertions.push({
+						item: frame.odd,
+						bound: null
+					}),
+					frame.jacobIndex = 2,
+					frame.group = [],
+					frame.state = 'group',
+					null) : null;
+				}
+				group(frame) {
+					!frame.group.length && (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length ? this.return(frame.main) : ((()=>{
+						const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
+						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
+						frame.group.push(...frame.insertions.slice(start, end + 1).reverse());
+					}
+					)(),
+					frame.jacobIndex++));
+					return frame.main === this.final ? null : (frame.group.length && (frame.current = frame.group.shift(),
+					frame.state = 'insert',
+					frame.binarySearch = {
+						min: 0,
+						max: frame.current.bound !== null ? frame.main.indexOf(frame.current.bound) : frame.main.length,
+						target: frame.current.item
+					}),
+					null);
+				}
+				insert(frame) {
+					const {min, max, target} = frame.binarySearch;
+					return min >= max ? (frame.main.splice(min, 0, target),
+					frame.state = 'group',
+					null) : frame.lastWinner !== undefined ? (frame.lastWinner === target ? frame.binarySearch.min = frame.binarySearch.mid + 1 : frame.binarySearch.max = frame.binarySearch.mid,
+					delete frame.lastWinner,
+					null) : (frame.binarySearch.mid = (min + max) >> 1,
+					this.pending = [target, frame.main[frame.binarySearch.mid]],
+					this.history.push(this.snap()),
+					this.pending);
+				}
+				handleRefine() {
+					while (true) {
+						return this.refine.pass >= 2 ? null : this.refine.index >= this.final.length - 1 ? (this.refine.swapped ? (this.refine.pass++,
+						this.refine.index = 0,
+						this.refine.swapped = false,
+						this.handleRefine()) : null) : !this.compared.has(this.key([this.final[this.refine.index], this.final[this.refine.index + 1]])) ? (this.pending = [this.final[this.refine.index], this.final[this.refine.index + 1]],
+						this.history.push(this.snap()),
+						this.pending) : (this.refine.index++,
+						this.handleRefine());
+					}
+				}
+				return(result) {
+					this.stack.pop();
+					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse();
+				}
+				getProgress(state) {
+					return `${state}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`;
+				}
+			}
 
 			class PreferenceRank {
 				init() {
@@ -498,7 +686,7 @@
 						history: [],
 						keyboardEnabled: false,
 						busy: false,
-						swaps: new Map(),
+						swaps: new Map,
 						provider: null,
 						cancelTimeout: null
 					});
@@ -518,10 +706,7 @@
 				saveState() {
 					const data = {
 						inputValue: dom.items.value,
-						battle: null
-					};
-					if (dom.inputSection.classList.contains('hidden')) {
-						data.battle = {
+						battle: dom.inputSection.classList.contains('hidden') ? {
 							items: this.items,
 							scores: this.scores,
 							matches: this.matches,
@@ -533,54 +718,55 @@
 							swaps: this.swaps,
 							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full',
 							provider: this.provider
-						};
-					}
+						} : null
+					};
 					try {
-						localStorage.setItem('preferenceRankData', JSON.stringify(data, (k, v) => v instanceof Map ? {__type: 'Map', value: [...v]} : v instanceof Set ? {__type: 'Set', value: [...v]} : v));
-					} catch (e) {
-						console.error('Failed to save state', e);
+						localStorage.setItem('preferenceRankData', JSON.stringify(data, (k,v)=>v instanceof Map ? {
+							__type: 'Map',
+							value: [...v]
+						} : v instanceof Set ? {
+							__type: 'Set',
+							value: [...v]
+						} : v));
+					} catch (error) {
+						console.error('Failed to save state', error);
 					}
 				}
 
 				loadState() {
 					const raw = localStorage.getItem('preferenceRankData');
-					if (!raw)
-						return;
+					raw && this.doLoadState(raw);
+				}
+
+				doLoadState(raw) {
 					try {
-						const data = JSON.parse(raw, (k, v) => v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
-						if (data.inputValue) {
-							dom.items.value = data.inputValue;
-							this.checkStartButton();
-							this.updateItemCount();
-						}
-						if (data.battle) {
-							Object.assign(this, data.battle);
-							const ProviderClass = data.battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider;
-							this.provider = new ProviderClass(this.items.length);
-							Object.assign(this.provider, data.battle.provider);
-							dom.allowTies.checked = this.allowTies;
-							dom.quickRank.checked = data.battle.providerType === 'quick';
-							this.setTies(this.allowTies);
-							if (this.pair) {
-								this.show('battleSection');
-								this.renderPair();
-								this.updateProgress();
-								dom.undo.disabled = !this.history.length;
-							} else if (this.matches.length > 0) {
-								this.renderResults();
-							} else {
-								this.show('inputSection');
-							}
-						}
-					} catch (e) {
-						console.error('Failed to load state', e);
+						const data = JSON.parse(raw, (k,v)=>v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
+						data.inputValue && (dom.items.value = data.inputValue,
+						this.checkStartButton(),
+						this.updateItemCount());
+						data.battle && this.restoreBattle(data.battle);
+					} catch (error) {
+						console.error('Failed to load state', error);
 						localStorage.removeItem('preferenceRankData');
 					}
 				}
 
+				restoreBattle(battle) {
+					Object.assign(this, battle);
+					const ProviderClass = battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider;
+					this.provider = new ProviderClass(this.items.length);
+					Object.assign(this.provider, battle.provider);
+					dom.allowTies.checked = this.allowTies;
+					dom.quickRank.checked = battle.providerType === 'quick';
+					this.setTies(this.allowTies);
+					this.pair ? (this.show('battleSection'),
+					this.renderPair(),
+					this.updateProgress(),
+					dom.undo.disabled = !this.history.length) : this.matches.length > 0 ? this.renderResults() : this.show('inputSection');
+				}
+
 				saveInput() {
-					if (this.saveTimeout)
-						clearTimeout(this.saveTimeout);
+					this.saveTimeout && clearTimeout(this.saveTimeout);
 					this.saveTimeout = setTimeout(()=>this.saveState(), 500);
 				}
 
@@ -604,20 +790,14 @@
 						right: ()=>this.choose('right'),
 						tie: ()=>this.choose('tie')
 					}).forEach(([id,handler])=>dom[id].onclick = handler.bind(this));
-					dom.language.onchange = e=>{
-						this.language = e.target.value;
-						this.updateText();
-					}
-					;
-					dom.theme.onchange = e=>this.setTheme(e.target.value);
-					dom.allowTies.onchange = e=>this.setTies(e.target.checked);
-					dom.items.oninput = ()=>{
-						this.checkStartButton();
-						this.updateItemCount();
-						this.saveInput();
-					}
-					;
-					document.onkeydown = e=>this.handleKey(e);
+					dom.language.onchange = event=>(this.language = event.target.value,
+					this.updateText());
+					dom.theme.onchange = event=>this.setTheme(event.target.value);
+					dom.allowTies.onchange = event=>this.setTies(event.target.checked);
+					dom.items.oninput = ()=>(this.checkStartButton(),
+					this.updateItemCount(),
+					this.saveInput());
+					document.onkeydown = event=>this.handleKey(event);
 				}
 
 				setTheme(theme) {
@@ -640,8 +820,7 @@
 				}
 
 				updateItemCount() {
-					const count = this.getItems().length;
-					dom.itemCount.textContent = this.string('itemsCount').replace('{count}', count);
+					dom.itemCount.textContent = this.string('itemsCount').replace('{count}', this.getItems().length);
 				}
 
 				setTies(enabled) {
@@ -661,6 +840,7 @@
 					dom.tips.classList.toggle('hidden');
 					this.updateHelp();
 				}
+
 				checkStartButton() {
 					const valid = new Set(this.getItems()).size >= 2;
 					dom.start.disabled = !valid;
@@ -670,12 +850,12 @@
 				start() {
 					const raw = this.getItems();
 					const unique = [...new Set(raw)];
-					if (raw.length > unique.length) {
-						dom.items.value = unique.join('\n');
-						dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
-						dom.error.classList.remove('hidden');
-						return;
-					}
+					return raw.length > unique.length ? (dom.items.value = unique.join('\n'),
+					dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
+					dom.error.classList.remove('hidden')) : this.doStart(unique);
+				}
+
+				doStart(unique) {
 					Object.assign(this, {
 						items: unique,
 						allowTies: dom.allowTies.checked,
@@ -683,7 +863,7 @@
 						matches: [],
 						step: 0,
 						history: [],
-						swaps: new Map(),
+						swaps: new Map,
 						busy: false
 					});
 					dom.undo.disabled = true;
@@ -715,8 +895,12 @@
 				}
 
 				choose(winner) {
-					if (this.busy || dom.battleSection.classList.contains('hidden'))
-						return;
+					(this.busy || dom.battleSection.classList.contains('hidden')) && (()=>{}
+					)();
+					!this.busy && !dom.battleSection.classList.contains('hidden') && this.doChoose(winner);
+				}
+
+				doChoose(winner) {
 					this.busy = true;
 					this.history.push({
 						pair: this.pair,
@@ -740,11 +924,9 @@
 					this.clearSelections();
 					(winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
 					setTimeout(()=>{
-						if (dom.battleSection.classList.contains('hidden') || !this.busy)
-							return;
-						this.busy = false;
-						this.next(result);
-						this.saveState();
+						(dom.battleSection.classList.contains('hidden') || !this.busy) || (this.busy = false,
+						this.next(result),
+						this.saveState());
 					}
 					, 150);
 				}
@@ -752,8 +934,10 @@
 				next(result) {
 					this.clearSelections();
 					const nextPair = this.provider.next(this, result);
-					if (!nextPair)
-						return this.renderResults();
+					return nextPair ? this.setPair(nextPair) : this.renderResults();
+				}
+
+				setPair(nextPair) {
 					this.pair = nextPair;
 					const key = this.provider.key(nextPair);
 					this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
@@ -770,23 +954,21 @@
 				}
 
 				updateProgress() {
-					const text = this.provider ? this.provider.getProgress(this.step) : '0';
-					dom.progress.textContent = `${this.string('progress')}: ${text}`;
-					let percent = 0;
-					if (this.provider) {
-						const [curr, total] = text.split('/');
-						const t = parseInt(total.replace('~', ''), 10);
-						if (t > 0) percent = (parseInt(curr, 10) / t) * 100;
-					}
+					const progressText = this.provider ? this.provider.getProgress(this.step) : '0';
+					dom.progress.textContent = `${this.string('progress')}: ${progressText}`;
+					const [current,total] = progressText.split('/');
+					const totalValue = parseInt(total.replace('~', ''), 10);
+					const percent = totalValue > 0 ? (parseInt(current, 10) / totalValue) * 100 : 0;
 					dom.progressFill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
 				}
+
 				clearSelections() {
 					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
 				}
 
 				renderResults() {
 					const ranking = this.provider.getRanking(this.scores);
-					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
+					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>` + `<table><thead><tr><th style="width:20%">${this.string('rank')}</th>` + `<th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>` + `<tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 					this.saveState();
 				}
@@ -822,25 +1004,21 @@
 				}
 
 				cancel() {
-					const reset = ()=>{
-						dom.cancel.classList.remove('confirming');
-						dom.cancel.textContent = this.string('cancel');
-						this.cancelTimeout = null;
-					}
-					;
-					if (this.cancelTimeout) {
-						clearTimeout(this.cancelTimeout);
-						reset();
-						return this.show('inputSection');
-					}
-					dom.cancel.textContent = this.string('confirmCancel');
-					dom.cancel.classList.add('confirming');
-					this.cancelTimeout = setTimeout(reset, 3000);
+					const reset = ()=>(dom.cancel.classList.remove('confirming'),
+					dom.cancel.textContent = this.string('cancel'),
+					this.cancelTimeout = null);
+					return this.cancelTimeout ? (clearTimeout(this.cancelTimeout),
+					reset(),
+					this.show('inputSection')) : (dom.cancel.textContent = this.string('confirmCancel'),
+					dom.cancel.classList.add('confirming'),
+					this.cancelTimeout = setTimeout(reset, 3000));
 				}
 
 				undo() {
-					if (this.busy || !this.history.length)
-						return;
+					(this.busy || !this.history.length) || this.doUndo();
+				}
+
+				doUndo() {
 					const last = this.history.pop();
 					this.matches.pop();
 					this.recalculateScores();
@@ -865,12 +1043,13 @@
 				}
 
 				handleKey(event) {
-					if (event.repeat)
-						return;
+					event.repeat || this.processKey(event);
+				}
+
+				processKey(event) {
 					const {key, ctrlKey, metaKey, shiftKey} = event;
-					if (key === 'Enter' && (ctrlKey || metaKey))
-						return !dom.inputSection.classList.contains('hidden') && !dom.start.disabled && (event.preventDefault(),
-						dom.start.click());
+					(key === 'Enter' && (ctrlKey || metaKey) && !dom.inputSection.classList.contains('hidden') && !dom.start.disabled) && (event.preventDefault(),
+					dom.start.click());
 					const action = {
 						arrowleft: 'left',
 						arrowright: 'right',
@@ -878,11 +1057,8 @@
 						arrowdown: 'tie',
 						z: 'undo'
 					}[key.toLowerCase()];
-					if (!action || !this.keyboardEnabled || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName))
-						return;
-					const valid = action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies);
-					valid && (event.preventDefault(),
-					dom[action].click());
+					action && this.keyboardEnabled && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && ((action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) && (event.preventDefault(),
+					dom[action].click()));
 				}
 			}
 
