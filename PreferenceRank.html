@@ -479,6 +479,30 @@
 			const escape = t=>t.replace(/[&<>"']/g, c=>'&#' + c.charCodeAt(0) + ';');
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
 
+			const serializer = {
+				replacer: (key,value)=>{
+					if (value instanceof Map)
+						return {
+							__type: 'Map',
+							value: [...value]
+						};
+					if (value instanceof Set)
+						return {
+							__type: 'Set',
+							value: [...value]
+						};
+					return value;
+				}
+				,
+				reviver: (key,value)=>{
+					if (value && value.__type === 'Map')
+						return new Map(value.value);
+					if (value && value.__type === 'Set')
+						return new Set(value.value);
+					return value;
+				}
+			};
+
 			class PairProvider {
 				constructor(count) {
 					this.count = count;
@@ -750,6 +774,76 @@
 					this.updateText();
 					this.checkStartButton();
 					this.updateItemCount();
+					this.loadState();
+				}
+
+				saveState() {
+					const data = {
+						inputValue: dom.items.value,
+						battle: null
+					};
+					if (dom.inputSection.classList.contains('hidden')) {
+						data.battle = {
+							items: this.items,
+							scores: this.scores,
+							matches: this.matches,
+							pair: this.pair,
+							swapped: this.swapped,
+							step: this.step,
+							allowTies: this.allowTies,
+							history: this.history,
+							swaps: this.swaps,
+							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full',
+							provider: this.provider
+						};
+					}
+					try {
+						localStorage.setItem('preferenceRankData', JSON.stringify(data, serializer.replacer));
+					} catch (e) {
+						console.error('Failed to save state', e);
+					}
+				}
+
+				loadState() {
+					const raw = localStorage.getItem('preferenceRankData');
+					if (!raw)
+						return;
+					try {
+						const data = JSON.parse(raw, serializer.reviver);
+						if (data.inputValue) {
+							dom.items.value = data.inputValue;
+							this.checkStartButton();
+							this.updateItemCount();
+						}
+						if (data.battle) {
+							Object.assign(this, data.battle);
+							const ProviderClass = data.battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider;
+							this.provider = new ProviderClass(this.items.length);
+							Object.assign(this.provider, data.battle.provider);
+							dom.allowTies.checked = this.allowTies;
+							dom.quickRank.checked = data.battle.providerType === 'quick';
+							this.setTies(this.allowTies);
+							if (this.pair) {
+								this.show('battleSection');
+								this.renderPair();
+								this.updateProgress();
+								dom.undo.disabled = !this.history.length;
+							} else if (this.matches.length > 0) {
+								this.renderResults();
+							} else {
+								this.show('inputSection');
+							}
+						}
+					} catch (e) {
+						console.error('Failed to load state', e);
+						localStorage.removeItem('preferenceRankData');
+					}
+				}
+
+				saveInput() {
+					if (this.saveTimeout)
+						clearTimeout(this.saveTimeout);
+					this.saveTimeout = setTimeout(()=>this.saveState(), 500);
 				}
 
 				getItems() {
@@ -782,6 +876,7 @@
 					dom.items.oninput = ()=>{
 						this.checkStartButton();
 						this.updateItemCount();
+						this.saveInput();
 					}
 					;
 					document.onkeydown = e=>this.handleKey(e);
@@ -859,6 +954,7 @@
 					this.updateHelp();
 					this.show('battleSection');
 					this.next();
+					this.saveState();
 				}
 
 				recalculateScores() {
@@ -910,6 +1006,7 @@
 							return;
 						this.busy = false;
 						this.next(result);
+						this.saveState();
 					}
 					, 150);
 				}
@@ -953,6 +1050,7 @@
 					const ranking = this.provider.getRanking(this.scores);
 					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
+					this.saveState();
 				}
 
 				show(section) {
@@ -1017,6 +1115,7 @@
 					this.renderPair();
 					this.show('battleSection');
 					dom.undo.disabled = !this.history.length;
+					this.saveState();
 				}
 
 				reset() {
@@ -1024,6 +1123,7 @@
 					this.show('inputSection');
 					this.updateHelp();
 					this.updateProgress();
+					this.saveState();
 				}
 
 				handleKey(event) {
