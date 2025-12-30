@@ -479,11 +479,6 @@
 			const escape = t=>t.replace(/[&<>"']/g, c=>'&#' + c.charCodeAt(0) + ';');
 			const dom = Object.fromEntries([...document.querySelectorAll('[id]')].map(e=>[e.id, e]));
 
-			const serializer = {
-				replacer: (k, v) => v instanceof Map ? {__type: 'Map', value: [...v]} : v instanceof Set ? {__type: 'Set', value: [...v]} : v,
-				reviver: (k, v) => v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v
-			};
-
 			class PairProvider {
 				constructor(count) {
 					this.count = count;
@@ -779,7 +774,7 @@
 						};
 					}
 					try {
-						localStorage.setItem('preferenceRankData', JSON.stringify(data, serializer.replacer));
+						localStorage.setItem('preferenceRankData', JSON.stringify(data, (k, v) => v instanceof Map ? {__type: 'Map', value: [...v]} : v instanceof Set ? {__type: 'Set', value: [...v]} : v));
 					} catch (e) {
 						console.error('Failed to save state', e);
 					}
@@ -790,7 +785,7 @@
 					if (!raw)
 						return;
 					try {
-						const data = JSON.parse(raw, serializer.reviver);
+						const data = JSON.parse(raw, (k, v) => v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
 						if (data.inputValue) {
 							dom.items.value = data.inputValue;
 							this.checkStartButton();
