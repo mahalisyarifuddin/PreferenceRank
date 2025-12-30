@@ -1,45 +1,30 @@
 **English** | [Bahasa Indonesia](README-id.md)
 
-# PreferenceRank
-Sorting made better, powered by science.
+# ApportionmentCalc
+Electoral seat allocation calculator: Sainte-Laguë vs Hare Quota.
 
 ## Introduction
-PreferenceRank is a versatile and scientific tool for ranking anything you like, inspired by viral character/bias sorters but enhanced with a more rigorous approach. Rank your favorite characters, foods, movies, or travel destinations with precision and fun.
+ApportionmentCalc is a tool designed to help users calculate and visualize electoral seat allocations. It compares two popular methods: the **Sainte-Laguë method** (Webster method) and the **Hare Quota method** (largest remainder method). This tool is essential for understanding how different electoral systems translate votes into parliamentary seats.
 
-## How It Works
-PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rating system**, inspired by the Bradley-Terry model, to assign a score to each item based on your choices. This provides a transparent and relative ranking that adapts with every decision you make. See the "Ranking Modes" section for more details on the comparison methods.
+## Features
+- **Method Comparison**: Side-by-side comparison of seat allocations using Sainte-Laguë and Hare Quota methods.
+- **Detailed Steps**: View step-by-step calculations for the Sainte-Laguë method, including divisors and quotients for each round.
+- **Customizable Inputs**: Easily adjust the total number of seats and the electoral threshold percentage.
+- **Data Management**:
+  - **Import**: Load vote data from CSV or TSV files.
+  - **Export**: Download the calculation results as a CSV file.
+- **Multi-language Support**: Fully localized in English and Bahasa Indonesia.
+- **Theme Support**: Choose between Light, Dark, or Auto (system default) themes.
+- **Privacy First**: All calculations are done locally in your browser; no data leaves your device.
+- **Single File**: A lightweight, standalone HTML file with no external dependencies.
 
-## Ranking Modes
-PreferenceRank offers two distinct modes to sort your items:
-
-- **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
-
-- **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) to minimize comparisons (Battles ≈ 0.78 N log₂ N). It guarantees 100% sorting accuracy while drastically reducing time.
-    - *Example:* For 50 items, Quick Rank uses ~215 battles vs. 1225 for Full Rank (~80% reduction).
-
-## Quick Start
-1. Download the `PreferenceRank.html` file from the repository.
-2. Open the file in any modern web browser.
-3. Start ranking your preferences!
-
-## Key Features
-- **Flexible Input**: Rank anything—characters, foods, movies, destinations, and more.
-- **Two Ranking Modes**: Choose between a comprehensive "Full Rank" or an intelligent "Quick Rank" (see details above).
-- **Scientific Scoring**: Utilizes the Bradley-Terry Elo rating system for accurate results.
-- **Undo and Ties**: Easily undo your last choice or allow for ties in the rankings.
-- **Lightweight**: A single HTML file with no external dependencies, making it portable and fast.
-- **Theme Options**: Choose between light, dark, or auto themes for a personalized experience.
-- **Keyboard Shortcuts**: Use keyboard shortcuts for quicker selections during ranking.
-- **Multi-language Support**: Available in English and Bahasa Indonesia.
-
-## Customization
-PreferenceRank is open source, allowing you to modify and adapt it as needed. Tweak the algorithm, redesign the UI, or add new functionality—it's all up to you.
+## Usage
+1. Download the `PreferenceRank.html` file.
+2. Open it in any modern web browser.
+3. Enter the total number of seats to be allocated.
+4. Set the electoral threshold (if any).
+5. Add parties and their vote counts, or import a dataset.
+6. Click **Calculate Allocation** to view the results.
 
 ## License
 This project is licensed under the MIT License. See the `LICENSE` file for details.
-
-## Contributions
-Contributions are welcome! Feel free to fork the repository and submit a pull request. For major changes, please open an issue first to discuss your ideas.
-
-## Feedback
-If you have any feedback or suggestions, please reach out via the Issues section of the repository.

@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width,initial-scale=1">
-		<title>PreferenceRank</title>
+		<title>ApportionmentCalc</title>
 		<style>
 			:root {
 				--primary: #0060c9;
@@ -21,7 +21,7 @@
 				:root:not(.light) {
 					--primary: #3395ff;
 					--hover: #55aaff;
-					--bg:#10131b;
+					--bg: #10131b;
 					--surface: #181c23;
 					--text: #c1c6d7;
 					--border: #414754;
@@ -50,16 +50,11 @@
 				outline-offset: 2px
 			}
 
-			#battle button:focus-visible,#tieWrap button:focus-visible {
-				outline: none
-			}
-
 			body {
 				background: var(--bg);
 				color: var(--text);
 				font-family: sans-serif;
 				display: flex;
-				align-items: center;
 				justify-content: center;
 				min-height: 100vh;
 				padding: 1rem
@@ -69,30 +64,28 @@
 				background: var(--surface);
 				border: 1px solid var(--border);
 				border-radius: 8px;
-				max-width: 720px;
+				max-width: 960px;
 				padding: 2rem;
 				width: 100%;
-				position: relative
+				position: relative;
+				margin-top: 2rem;
+				margin-bottom: 2rem
 			}
 
 			.hidden {
 				display: none!important
 			}
 
-			h1,h2,label {
-				margin-bottom: .5rem;
-				display: block
-			}
-
-			h1,h2 {
-				margin-top: .5rem
+			h1,h2,h3,label {
+				margin: .5rem 0
 			}
 
 			label {
+				display: block;
 				font-weight: 700
 			}
 
-			input,select,textarea,button {
+			input,select,button {
 				background: var(--surface);
 				border: 1px solid var(--border);
 				border-radius: 4px;
@@ -100,11 +93,6 @@
 				font-size: 1rem;
 				padding: .5rem;
 				width: 100%
-			}
-
-			textarea {
-				min-height: 80px;
-				resize: vertical
 			}
 
 			button {
@@ -120,14 +108,10 @@
 				opacity: .6
 			}
 
-			#copy {
-				width: auto
-			}
-
 			.primary {
 				background: var(--primary);
 				border: none;
-				color: #fff
+				color: #ffffff
 			}
 
 			.primary:hover:not(:disabled) {
@@ -138,19 +122,21 @@
 				background: var(--dim)
 			}
 
-			.count {
-				color: var(--text);
-				font-size: .85rem;
-				margin-top: .25rem;
-				text-align: right;
-				opacity: .8
+			.danger,.success {
+				color: #ffffff;
+				border: 0
 			}
 
-			.error {
-				color: var(--danger);
-				font-size: .9rem;
-				margin-top: .5rem;
-				display: block
+			.danger {
+				background: var(--danger)
+			}
+
+			.success {
+				background: var(--success)
+			}
+
+			.danger:hover,.success:hover {
+				filter: brightness(.9)
 			}
 
 			.selectors {
@@ -167,318 +153,370 @@
 				width: auto
 			}
 
-			.checkbox-row {
+			.row {
 				display: flex;
-				align-items: center;
-				gap: 10px;
-				margin: .75rem 0
+				gap: 1rem;
+				margin-bottom: 1rem
 			}
 
-			.checkbox-row input {
-				width: auto
+			.group {
+				flex: 1
 			}
 
-			.checkbox-row label {
-				margin: 0
+			.party-list {
+				display: block;
+				margin-bottom: 1rem
 			}
 
-			#battle,#tieWrap,#restartWrap {
+			.party-row {
+				margin-bottom: .5rem;
 				display: flex;
+				gap: .5rem;
+				align-items: center
+			}
+
+			.party-row input[type=text] {
+				flex: 2
+			}
+
+			.party-row input[type=number] {
+				flex: 1
+			}
+
+			.party-row button {
+				width: auto;
+				padding: .5rem 1rem
+			}
+
+			.results-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
 				gap: 1rem;
 				margin-top: 1rem
 			}
 
-			#battle button,#tieWrap button,#restartWrap button {
-				flex: 1
-			}
-
-			#battle button,#tieWrap button {
-				font-size: 1.2rem;
-				min-height: 100px
-			}
-
-			#progress {
-				font-size: 1.1rem;
-				margin-top: 1rem;
-				text-align: center
-			}
-
-			.progress-track {
-				background: var(--dim);
-				border-radius: 4px;
-				height: 6px;
-				margin: 8px auto 0;
-				max-width: 200px;
-				overflow: hidden;
-				width: 100%
-			}
-
-			#progressFill {
-				background: var(--primary);
-				height: 100%;
-				transition: width .3s ease;
-				width: 0%
-			}
-
-			#tips {
-				background: var(--bg);
-				border: 1px solid var(--border);
-				border-radius: 4px;
-				font-size: .85rem;
-				line-height: 1.5;
-				margin-top: 15px;
-				opacity: .9;
-				padding: 8px;
-				text-align: center
-			}
-
-			kbd {
-				background: var(--surface);
-				border: 1px solid var(--border);
-				border-radius: 3px;
-				box-shadow: 0 1px 1px #0003;
-				display: inline-block;
-				font-family: monospace;
-				font-size: .9em;
-				margin: 0 3px;
-				padding: 2px 5px
-			}
-
-			#cancel,#toggle {
-				background: none;
-				border: 1px solid var(--border);
-				color: var(--text);
-				cursor: pointer;
-				display: block;
-				font-size: .9rem;
-				margin: 1rem auto;
-				padding: 5px 15px;
-				width: auto
-			}
-
-			#cancel:hover {
-				background: var(--dim)
-			}
-
-			#cancel.confirming {
-				border-color: var(--danger);
-				color: var(--danger)
-			}
-
-			#toggle {
-				border: none;
-				color: var(--primary);
-				font-size: .85rem;
-				margin-top: 10px;
-				text-decoration: underline
-			}
-
-			#results table {
+			table {
 				border-collapse: collapse;
 				margin-top: 1rem;
-				width: 100%
+				width: 100%;
+				font-size: .9rem
 			}
 
-			#results th,#results td {
+			th,td {
 				border: 1px solid var(--border);
 				padding: .5rem;
 				text-align: left
 			}
 
-			#results th {
+			th {
 				background: var(--primary);
-				color: #fff
+				color: #ffffff
 			}
 
-			.results-header {
+			.comparison {
+				margin-top: 2rem;
+				padding-top: 1rem;
+				border-top: 1px solid var(--border)
+			}
+
+			.positive {
+				color: var(--success);
+				font-weight: 700
+			}
+
+			.negative {
+				color: var(--danger);
+				font-weight: 700
+			}
+
+			.neutral {
+				opacity: .5
+			}
+
+			.step {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				margin-bottom: 1rem;
+				padding: 1rem;
+				border-radius: 4px
+			}
+
+			.highlight {
+				background: rgba(0,112,234,.1);
+				font-weight: bold
+			}
+
+			.error {
+				color: #d32f2f;
+				font-size: .9rem;
+				margin-top: 1rem;
+				margin-bottom: 1rem;
+				display: block;
+				font-weight: 500
+			}
+
+			#modal {
+				position: fixed;
+				inset: 0;
+				background: rgba(0,0,0,.5);
 				display: flex;
 				justify-content: center;
 				align-items: center;
-				position: relative;
-				min-height: 40px;
-				margin-bottom: 1rem
+				z-index: 1000
 			}
 
-			.results-header h2 {
-				margin: 0
+			#content {
+				background: var(--surface);
+				padding: 2rem;
+				border-radius: 8px;
+				max-width: 90%;
+				max-height: 90%;
+				overflow-y: auto;
+				width: 800px;
+				position: relative
 			}
 
-			.results-header #undo {
+			#close {
 				position: absolute;
-				left: 0;
-				top: 50%;
-				transform: translateY(-50%)
+				top: 1rem;
+				right: 1rem;
+				width: auto;
+				padding: .5rem 1rem
 			}
 
-			.results-header #copy {
-				position: absolute;
-				right: 0;
-				top: 50%;
-				transform: translateY(-50%)
+			.actions {
+				display: flex;
+				gap: 1rem;
+				margin-top: 1rem;
+				flex-wrap: wrap
 			}
 
-			#undo {
-				width: auto
+			.actions button {
+				flex: 1
 			}
 
-			.selected {
-				background: var(--primary)!important;
-				color: #fff!important
+			.info {
+				font-size: .9rem;
+				opacity: .8;
+				line-height: 1.6
+			}
+
+			#subtitle {
+				margin-bottom: 1.5rem;
+				opacity: .8
+			}
+
+			.stats {
+				margin-top: 1rem;
+				padding: 1rem;
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 4px
+			}
+
+			.italic {
+				font-style: italic
+			}
+
+			.step-header {
+				margin-top: 2rem
 			}
 
 			@media(max-width: 768px) {
-				body {
-					padding:.75rem
-				}
-
-				.container {
-					padding: 1.5rem
+				.results-grid {
+					grid-template-columns:1fr
 				}
 
 				.selectors {
 					position: static;
 					justify-content: flex-end;
-					margin-bottom: .5rem;
-					gap: 4px
+					margin-bottom: .5rem
 				}
 
-				.selectors select {
-					font-size: .8rem;
-					padding: 4px
-				}
-
-				#battle,#tieWrap,#restartWrap {
-					flex-direction: column
-				}
-
-				#battle button,#tieWrap button {
-					width: 100%
+				.row {
+					flex-direction: column;
+					gap: 1rem
 				}
 			}
 		</style>
 	</head>
 	<body>
 		<div class="container">
-			<div id="inputSection">
-				<div class="selectors">
-					<select id="language" aria-label="Language">
-						<option value="en">English</option>
-						<option value="id">Bahasa Indonesia</option>
-					</select>
-					<select id="theme" aria-label="Theme">
-						<option value="auto"></option>
-						<option value="light"></option>
-						<option value="dark"></option>
-					</select>
-				</div>
-				<h1 id="title"></h1>
-				<div class="group">
-					<label for="items" id="labelItems"></label>
-					<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
-					<div id="itemCount" class="count"></div>
-					<span id="error" class="error hidden" aria-live="polite"></span>
-				</div>
-				<div class="checkbox-row">
-					<input type="checkbox" id="allowTies">
-					<label for="allowTies" id="labelTies"></label>
-				</div>
-				<div class="checkbox-row">
-					<input type="checkbox" id="quickRank">
-					<label for="quickRank" id="labelQuick"></label>
-				</div>
-				<button id="start" class="primary"></button>
+			<div class="selectors">
+				<select id="language">
+					<option value="en">English</option>
+					<option value="id">Bahasa Indonesia</option>
+				</select>
+				<select id="theme">
+					<option value="auto"></option>
+					<option value="light"></option>
+					<option value="dark"></option>
+				</select>
 			</div>
-			<button id="undo" class="secondary hidden" disabled></button>
-			<button id="copy" class="secondary hidden"></button>
-			<div id="battleSection" class="hidden">
-				<div id="battle">
-					<button id="left" class="secondary"></button>
-					<button id="right" class="secondary"></button>
+			<h1 id="title"></h1>
+			<p id="subtitle"></p>
+			<div id="input">
+				<div class="row">
+					<div class="group">
+						<label id="seatsLabel" for="seats"></label>
+						<input type="number" id="seats" min="1" value="10">
+					</div>
+					<div class="group">
+						<label id="thresholdLabel" for="threshold"></label>
+						<input type="text" id="threshold" value="4">
+					</div>
 				</div>
-				<div id="tieWrap" class="hidden">
-					<button id="tie" class="secondary"></button>
+				<div class="party-list" id="list"></div>
+				<div class="row" style="gap:0.5rem;margin-bottom:1rem">
+					<button id="add" class="secondary" style="flex:1"></button>
+					<button id="clear" class="secondary" style="flex:1"></button>
+					<button id="import" class="secondary" style="flex:1"></button>
 				</div>
-				<div id="progress"></div>
-				<div class="progress-track">
-					<div id="progressFill"></div>
-				</div>
-				<button id="cancel"></button>
-				<button id="toggle" aria-controls="tips" aria-expanded="false"></button>
-				<div id="tips" class="hidden"></div>
+				<input type="file" id="file" accept=".csv,.tsv,.txt" class="hidden">
+				<span id="error" class="error hidden" aria-live="polite"></span>
+				<button id="calculate" class="primary"></button>
 			</div>
-			<div id="results" class="hidden"></div>
-			<div id="restartWrap" class="hidden">
-				<button id="restartBattle" class="primary"></button>
-				<button id="restartNew" class="primary"></button>
+			<div id="results" class="hidden">
+				<div class="actions">
+					<button id="edit" class="secondary"></button>
+					<button id="steps" class="secondary"></button>
+					<button id="export" class="success"></button>
+				</div>
+				<div id="stats" class="stats"></div>
+				<div class="results-grid">
+					<div>
+						<h2 id="hareTitle"></h2>
+						<div id="hare"></div>
+					</div>
+					<div>
+						<h2 id="sainteLagueTitle"></h2>
+						<div id="sainteLague"></div>
+					</div>
+				</div>
+				<div class="comparison">
+					<h2 id="compareTitle"></h2>
+					<div id="compare"></div>
+				</div>
+			</div>
+		</div>
+		<div id="modal" class="hidden">
+			<div id="content">
+				<button id="close" class="secondary">×</button>
+				<h2 id="modalTitle"></h2>
+				<div id="modalSteps"></div>
 			</div>
 		</div>
 		<script>
 			const text = {
 				en: {
-					title: 'PreferenceRank',
+					title: 'ApportionmentCalc',
+					subtitle: 'Electoral seat allocation calculator: Sainte-Laguë vs Hare Quota',
+					autoTheme: 'Auto Theme',
+					lightTheme: 'Light',
+					darkTheme: 'Dark',
+					seatsLabel: 'Total Seats',
+					thresholdLabel: 'Electoral Threshold (%)',
+					add: '+ Add Party',
+					calculate: 'Calculate Allocation',
+					edit: 'Edit Inputs',
+					steps: 'Show Sainte-Laguë Steps',
+					export: 'Export to CSV',
+					hareTitle: 'Hare Quota Method',
+					sainteLagueTitle: 'Sainte-Laguë Method',
+					compareTitle: 'Results Comparison',
+					modalTitle: 'Sainte-Laguë Step-by-Step',
+					party: 'Party',
+					votes: 'Votes',
+					seatsColumn: 'Seats',
+					remainder: 'Remainder',
+					diff: 'Diff',
+					quota: 'Quota',
+					totalVotes: 'Total Valid Votes',
+					thresholdVotes: 'Threshold Votes',
+					belowThreshold: 'Parties below threshold',
+					partyPlaceholder: 'Party Name',
+					votesPlaceholder: 'Votes',
+					alertSeats: 'Total seats must be at least 1.',
+					alertParties: 'Please add at least one party with votes.',
+					round: 'Round',
+					winner: 'Winner',
+					quotient: 'Quotient',
+					divisor: 'Divisor',
+					seatAllocated: 'Seat #{n}',
+					divisorsText: 'Divisors: 1, 3, 5, 7...',
+					quotientDetail: 'Quotient Detail',
+					detailsLimited: 'Showing details for the first {n} rounds only.',
+					winnerPrefix: 'Winner: ',
+					share: '%',
+					passedHeader: 'Passed Threshold?',
+					hareSeatsHeader: 'Hare Seats',
+					sainteLagueSeatsHeader: 'Sainte-Laguë Seats',
+					differenceHeader: 'Difference',
+					yes: 'Yes',
+					no: 'No',
+					import: 'Import CSV/TSV',
+					alertImport: 'Error importing file. Please ensure it is a valid CSV/TSV with "Party" and "Votes" columns.',
+					clear: 'Clear All',
+					clearConfirm: 'Are you sure you want to clear all parties?',
+					removeParty: 'Remove Party',
+					closeModal: 'Close Modal',
 					languageLabel: 'Language',
-					themeLabel: 'Theme',
-					auto: 'Auto Theme',
-					light: 'Light',
-					dark: 'Dark',
-					labelItems: 'Enter items, one per line:',
-					labelTies: 'Allow Ties',
-					labelQuick: 'Use Quick Rank (fewer comparisons)',
-					alert: 'Please enter at least two items.',
-					duplicate: '{count} duplicate item(s) removed.',
-					itemsCount: '{count} items',
-					start: 'Start Ranking',
-					cancel: 'Cancel',
-					confirmCancel: 'Confirm Cancel?',
-					tie: "It's a Tie",
-					undo: 'Undo',
-					progress: 'Progress',
-					toggleShow: 'Show keyboard shortcuts',
-					toggleHide: 'Hide keyboard shortcuts',
-					tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
-					tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
-					resultsTitle: 'Results',
-					rank: 'Rank',
-					item: 'Item',
-					score: 'Score',
-					restartBattle: 'Restart Battle',
-					restartNew: 'Edit Items',
-					placeholderItems: 'Apple\nBlueberry\nCherry',
-					copy: 'Copy Results',
-					copied: 'Copied!'
+					themeLabel: 'Theme'
 				},
 				id: {
-					title: 'PreferenceRank',
+					title: 'ApportionmentCalc',
+					subtitle: 'Kalkulator alokasi kursi pemilu: Sainte-Laguë vs Kuota Hare',
+					autoTheme: 'Tema Otomatis',
+					lightTheme: 'Terang',
+					darkTheme: 'Gelap',
+					seatsLabel: 'Jumlah Kursi',
+					thresholdLabel: 'Ambang Batas Parlemen (%)',
+					add: '+ Tambah Partai',
+					calculate: 'Hitung Alokasi',
+					edit: 'Ubah Input',
+					steps: 'Tampilkan Langkah Sainte-Laguë',
+					export: 'Ekspor ke CSV',
+					hareTitle: 'Metode Kuota Hare',
+					sainteLagueTitle: 'Metode Sainte-Laguë',
+					compareTitle: 'Perbandingan Hasil',
+					modalTitle: 'Langkah-langkah Sainte-Laguë',
+					party: 'Partai',
+					votes: 'Suara',
+					seatsColumn: 'Kursi',
+					remainder: 'Sisa',
+					diff: 'Selisih',
+					quota: 'BPP (Bilangan Pembagi Pemilih)',
+					totalVotes: 'Total Suara Sah',
+					thresholdVotes: 'Suara Ambang Batas',
+					belowThreshold: 'Partai di bawah ambang batas',
+					partyPlaceholder: 'Nama Partai',
+					votesPlaceholder: 'Jumlah Suara',
+					alertSeats: 'Jumlah kursi harus minimal 1.',
+					alertParties: 'Harap tambahkan setidaknya satu partai dengan suara.',
+					round: 'Putaran',
+					winner: 'Pemenang',
+					quotient: 'Bilangan',
+					divisor: 'Pembagi',
+					seatAllocated: 'Kursi ke-{n}',
+					divisorsText: 'Pembagi: 1, 3, 5, 7...',
+					quotientDetail: 'Rincian Bilangan',
+					detailsLimited: 'Menampilkan rincian untuk {n} putaran pertama saja.',
+					winnerPrefix: 'Pemenang: ',
+					share: '%',
+					passedHeader: 'Lolos Ambang Batas?',
+					hareSeatsHeader: 'Kursi Hare',
+					sainteLagueSeatsHeader: 'Kursi Sainte-Laguë',
+					differenceHeader: 'Selisih',
+					yes: 'Ya',
+					no: 'Tidak',
+					import: 'Impor CSV/TSV',
+					alertImport: 'Gagal mengimpor file. Pastikan format CSV/TSV valid dengan kolom "Partai" dan "Suara".',
+					clear: 'Hapus Semua',
+					clearConfirm: 'Apakah Anda yakin ingin menghapus semua partai?',
+					removeParty: 'Hapus Partai',
+					closeModal: 'Tutup Modal',
 					languageLabel: 'Bahasa',
-					themeLabel: 'Tema',
-					auto: 'Tema Otomatis',
-					light: 'Terang',
-					dark: 'Gelap',
-					labelItems: 'Masukkan pilihan, satu per baris:',
-					labelTies: 'Izinkan Seri',
-					labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
-					alert: 'Harap masukkan setidaknya dua pilihan.',
-					duplicate: '{count} item duplikat dihapus.',
-					itemsCount: '{count} pilihan',
-					start: 'Mulai Peringkat',
-					cancel: 'Batal',
-					confirmCancel: 'Konfirmasi Batal?',
-					tie: 'Seri',
-					undo: 'Urungkan',
-					progress: 'Kemajuan',
-					toggleShow: 'Tampilkan pintasan papan ketik',
-					toggleHide: 'Sembunyikan pintasan papan ketik',
-					tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
-					tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
-					resultsTitle: 'Hasil',
-					rank: 'Peringkat',
-					item: 'Nama',
-					score: 'Skor',
-					restartBattle: 'Mulai Ulang Pertarungan',
-					restartNew: 'Ubah Pilihan',
-					placeholderItems: 'Apel\nBluberi\nCeri',
-					copy: 'Salin Hasil',
-					copied: 'Disalin!'
+					themeLabel: 'Tema'
 				}
 			};
 
@@ -486,322 +524,75 @@
 			const dom = new Proxy({},{
 				get: (_,id)=>document.getElementById(id)
 			});
+			const STEPS_LIMIT = 50;
 
-			class PairProvider {
-				constructor(count) {
-					this.count = count;
-					this.compared = new Set;
-				}
-				key([a,b]) {
-					return a < b ? `${a}-${b}` : `${b}-${a}`;
-				}
-				mark(pair) {
-					this.compared.add(this.key(pair));
-				}
-				unmark(pair) {
-					this.compared.delete(this.key(pair));
-				}
-				getRanking(scores) {
-					return [...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
-				}
-			}
-
-			class FullPairProvider extends PairProvider {
-				constructor(count) {
-					super(count);
-					this.pairs = [];
-					for (let i = 0; i < count - 1; i++)
-						for (let j = i + 1; j < count; j++)
-							this.pairs.push([i, j]);
-					for (let i = this.pairs.length; i--; ) {
-						const j = Math.floor(Math.random() * (i + 1));
-						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
-					}
-				}
-				next(state) {
-					return this.pairs[state.step];
-				}
-				getProgress(state) {
-					return `${state}/${this.pairs.length}`;
-				}
-			}
-
-			class QuickPairProvider extends PairProvider {
-				constructor(count) {
-					super(count);
-					this.stack = [{
-						state: 'init',
-						items: [...Array(count).keys()]
-					}];
-					this.history = [];
-					this.pending = this.final = null;
-					this.refine = {
-						pass: 0,
-						index: 0,
-						swapped: false
-					};
-					this.jacobsthal = [0, 1];
-					while (this.jacobsthal.at(-1) < count)
-						this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
-				}
-				snap() {
-					return structuredClone({
-						stack: this.stack,
-						pending: this.pending,
-						final: this.final,
-						refine: this.refine
-					});
-				}
-				restore(snapshot) {
-					Object.assign(this, structuredClone(snapshot));
-				}
-				unmark(pair) {
-					this.pending && this.history.length && this.history.pop();
-					this.history.length && this.restore(this.history.at(-1));
-					super.unmark(pair);
-				}
-				next(state, result) {
-					this.pending && this.handlePending(state, result);
-					while (this.stack.length) {
-						const frame = this.stack.at(-1);
-						const output = this[frame.state](frame);
-						return output || (this.stack.length ? undefined : (this.final ? this.handleRefine() : null)) || this.next(state, result);
-					}
-					return this.final ? this.handleRefine() : null;
-				}
-				handlePending(state, result) {
-					const [a,b] = this.pending;
-					const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
-					this.stack.at(-1) && (this.stack.at(-1).lastWinner = winner);
-					this.final && this.handleRefineSwap(a, b, winner);
-					this.pending = null;
-				}
-				handleRefineSwap(a, b, winner) {
-					const index = this.final.indexOf(a);
-					winner === b && index !== -1 && this.final[index + 1] === b && ([this.final[index],this.final[index + 1]] = [this.final[index + 1], this.final[index]],
-					this.refine.swapped = true);
-					this.refine.index++;
-				}
-				init(frame) {
-					return frame.items.length < 2 ? this.return(frame.items) : (frame.pairs = Array.from({
-						length: frame.items.length >> 1
-					}, (_,i)=>[frame.items[2 * i], frame.items[2 * i + 1]]),
-					frame.odd = frame.items.length % 2 ? frame.items.at(-1) : null,
-					Object.assign(frame, {
-						winners: [],
-						losers: [],
-						pairIndex: 0,
-						state: 'compare'
-					}),
-					null);
-				}
-				compare(frame) {
-					return frame.pairIndex >= frame.pairs.length ? (frame.state = 'recurse',
-					this.stack.push({
-						state: 'init',
-						items: [...frame.winners]
-					}),
-					null) : frame.lastWinner !== undefined ? (frame.winners.push(frame.lastWinner),
-					frame.losers.push(frame.pairs[frame.pairIndex][frame.lastWinner === frame.pairs[frame.pairIndex][0] ? 1 : 0]),
-					delete frame.lastWinner,
-					frame.pairIndex++,
-					null) : (this.pending = frame.pairs[frame.pairIndex],
-					this.history.push(this.snap()),
-					this.pending);
-				}
-				recurse(frame) {
-					return frame.subresult ? (frame.main = frame.subresult,
-					delete frame.subresult,
-					frame.map = {},
-					frame.winners.forEach((w,i)=>frame.map[w] = frame.losers[i]),
-					frame.main.unshift(frame.map[frame.main[0]]),
-					frame.insertions = [],
-					frame.main.slice(1).forEach((w,i)=>i > 0 && frame.insertions.push({
-						item: frame.map[w],
-						bound: w
-					})),
-					frame.odd !== null && frame.insertions.push({
-						item: frame.odd,
-						bound: null
-					}),
-					frame.jacobIndex = 2,
-					frame.group = [],
-					frame.state = 'group',
-					null) : null;
-				}
-				group(frame) {
-					!frame.group.length && (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length ? this.return(frame.main) : ((()=>{
-						const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
-						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
-						frame.group.push(...frame.insertions.slice(start, end + 1).reverse());
-					}
-					)(),
-					frame.jacobIndex++));
-					return frame.main === this.final ? null : (frame.group.length && (frame.current = frame.group.shift(),
-					frame.state = 'insert',
-					frame.binarySearch = {
-						min: 0,
-						max: frame.current.bound !== null ? frame.main.indexOf(frame.current.bound) : frame.main.length,
-						target: frame.current.item
-					}),
-					null);
-				}
-				insert(frame) {
-					const {min, max, target} = frame.binarySearch;
-					return min >= max ? (frame.main.splice(min, 0, target),
-					frame.state = 'group',
-					null) : frame.lastWinner !== undefined ? (frame.lastWinner === target ? frame.binarySearch.min = frame.binarySearch.mid + 1 : frame.binarySearch.max = frame.binarySearch.mid,
-					delete frame.lastWinner,
-					null) : (frame.binarySearch.mid = (min + max) >> 1,
-					this.pending = [target, frame.main[frame.binarySearch.mid]],
-					this.history.push(this.snap()),
-					this.pending);
-				}
-				handleRefine() {
-					while (true) {
-						return this.refine.pass >= 2 ? null : this.refine.index >= this.final.length - 1 ? (this.refine.swapped ? (this.refine.pass++,
-						this.refine.index = 0,
-						this.refine.swapped = false,
-						this.handleRefine()) : null) : !this.compared.has(this.key([this.final[this.refine.index], this.final[this.refine.index + 1]])) ? (this.pending = [this.final[this.refine.index], this.final[this.refine.index + 1]],
-						this.history.push(this.snap()),
-						this.pending) : (this.refine.index++,
-						this.handleRefine());
-					}
-				}
-				return(result) {
-					this.stack.pop();
-					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse();
-				}
-				getProgress(state) {
-					return `${state}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`;
-				}
-			}
-
-			class PreferenceRank {
-				init() {
-					Object.assign(this, {
-						items: [],
-						scores: [],
-						matches: [],
-						pair: null,
-						swapped: false,
-						step: 0,
-						allowTies: false,
-						history: [],
-						keyboardEnabled: false,
-						busy: false,
-						swaps: new Map,
-						provider: null,
-						cancelTimeout: null
-					});
-				}
-
+			class ApportionmentCalc {
 				constructor() {
-					this.init();
-					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
+					this.parties = Object.entries({
+						'Apple Party': 25000,
+						'Blueberry Party': 15000,
+						'Cherry Party': 9000,
+						'Date Party': 5000,
+						'Elderberry Party': 1500
+					}).map(([name,votes],i)=>({
+						id: i + 1,
+						name,
+						votes
+					}));
+					this.nextIndex = 6;
+					this.data = null;
 					this.bind();
 					this.setTheme('auto');
-					this.updateText();
-					this.checkStartButton();
-					this.updateItemCount();
-					this.loadState();
+					this.setLanguage(navigator.language?.startsWith('id') ? 'id' : 'en');
 				}
 
-				saveState() {
-					const data = {
-						inputValue: dom.items.value,
-						battle: dom.inputSection.classList.contains('hidden') ? {
-							items: this.items,
-							scores: this.scores,
-							matches: this.matches,
-							pair: this.pair,
-							swapped: this.swapped,
-							step: this.step,
-							allowTies: this.allowTies,
-							history: this.history,
-							swaps: this.swaps,
-							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full',
-							provider: this.provider
-						} : null
-					};
-					try {
-						localStorage.setItem('preferenceRankData', JSON.stringify(data, (k,v)=>v instanceof Map ? {
-							__type: 'Map',
-							value: [...v]
-						} : v instanceof Set ? {
-							__type: 'Set',
-							value: [...v]
-						} : v));
-					} catch (error) {
-						console.error('Failed to save state', error);
+				bind() {
+					dom.add.onclick = ()=>this.addParty();
+					dom.clear.onclick = ()=>this.clearAll();
+					dom.calculate.onclick = ()=>this.calculate();
+					dom.edit.onclick = ()=>this.show('input');
+					dom.steps.onclick = ()=>this.toggleModal(true);
+					dom.close.onclick = ()=>this.toggleModal(false);
+					dom.export.onclick = ()=>this.exportData();
+					dom.import.onclick = ()=>dom.file.click();
+					dom.file.onchange = event=>this.importData(event.target.files[0]);
+					dom.modal.onclick = event=>event.target === dom.modal && this.toggleModal(false);
+					dom.language.onchange = event=>this.setLanguage(event.target.value);
+					dom.theme.onchange = event=>this.setTheme(event.target.value);
+					dom.input.oninput = ()=>this.toggleError();
+					document.onkeydown = event=>this.handleKey(event);
+					dom.list.onclick = event=>{
+						const row = event.target.closest('.party-row');
+						event.target.matches('.danger') && row && this.removeParty(+row.dataset.id);
 					}
-				}
-
-				loadState() {
-					const raw = localStorage.getItem('preferenceRankData');
-					raw && this.doLoadState(raw);
-				}
-
-				doLoadState(raw) {
-					try {
-						const data = JSON.parse(raw, (k,v)=>v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
-						data.inputValue && (dom.items.value = data.inputValue,
-						this.checkStartButton(),
-						this.updateItemCount());
-						data.battle && this.restoreBattle(data.battle);
-					} catch (error) {
-						console.error('Failed to load state', error);
-						localStorage.removeItem('preferenceRankData');
+					;
+					dom.list.onchange = event=>{
+						const row = event.target.closest('.party-row');
+						const party = row && this.parties.find(p=>p.id === +row.dataset.id);
+						party && event.target.type === 'text' && (party.name = event.target.value);
+						party && event.target.type === 'number' && (event.target.value = party.votes = Math.round(parseFloat(event.target.value)) || 0);
 					}
+					;
 				}
 
-				restoreBattle(battle) {
-					Object.assign(this, battle);
-					const ProviderClass = battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider;
-					this.provider = new ProviderClass(this.items.length);
-					Object.assign(this.provider, battle.provider);
-					dom.allowTies.checked = this.allowTies;
-					dom.quickRank.checked = battle.providerType === 'quick';
-					this.setTies(this.allowTies);
-					this.pair ? (this.show('battleSection'),
-					this.renderPair(),
-					this.updateProgress(),
-					dom.undo.disabled = !this.history.length) : this.matches.length > 0 ? this.renderResults() : this.show('inputSection');
+				handleKey(event) {
+					event.key === 'Escape' && !dom.modal.classList.contains('hidden') && this.toggleModal(false);
+					(event.ctrlKey || event.metaKey) && event.key === 'Enter' && this.calculate();
+					const row = event.target.closest('.party-row');
+					!event.ctrlKey && !event.metaKey && event.key === 'Enter' && row && event.target.matches('input') && (event.preventDefault(),
+					row.nextElementSibling ? row.nextElementSibling.querySelector('input')?.focus() : this.addParty());
 				}
 
-				saveInput() {
-					this.saveTimeout && clearTimeout(this.saveTimeout);
-					this.saveTimeout = setTimeout(()=>this.saveState(), 500);
-				}
-
-				getItems() {
-					return dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
-				}
 				string(key) {
 					return text[this.language]?.[key] ?? key;
 				}
 
-				bind() {
-					Object.entries({
-						start: this.start,
-						restartBattle: this.start,
-						restartNew: this.reset,
-						undo: this.undo,
-						copy: this.copyResults,
-						toggle: this.toggleHelp,
-						cancel: this.cancel,
-						left: ()=>this.choose('left'),
-						right: ()=>this.choose('right'),
-						tie: ()=>this.choose('tie')
-					}).forEach(([id,handler])=>dom[id].onclick = handler.bind(this));
-					dom.language.onchange = event=>(this.language = event.target.value,
-					this.updateText());
-					dom.theme.onchange = event=>this.setTheme(event.target.value);
-					dom.allowTies.onchange = event=>this.setTies(event.target.checked);
-					dom.items.oninput = ()=>(this.checkStartButton(),
-					this.updateItemCount(),
-					this.saveInput());
-					document.onkeydown = event=>this.handleKey(event);
+				format(value, options={}) {
+					return value.toLocaleString(this.language === 'id' ? 'id-ID' : 'en-US', options);
+				}
+
+				table(headers, body) {
+					return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
 				}
 
 				setTheme(theme) {
@@ -809,268 +600,263 @@
 					dom.theme.value = theme;
 				}
 
-				updateText() {
-					dom.language.value = this.language;
+				setLanguage(language) {
+					this.language = dom.language.value = document.documentElement.lang = language;
+					Object.keys(text.en).forEach(key=>dom[key] && !dom[key].matches('input,select') && (dom[key].textContent = this.string(key)));
+					[...dom.theme.options].forEach(option=>option.textContent = this.string(option.value + 'Theme'));
+					dom.close.setAttribute('aria-label', this.string('closeModal'));
 					dom.language.setAttribute('aria-label', this.string('languageLabel'));
 					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
-					dom.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
-					dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
-					[...dom.theme.options].forEach(option=>option.textContent = this.string(option.value));
-					this.updateHelp();
-					this.updateProgress();
-					this.updateItemCount();
-					!dom.results.classList.contains('hidden') && this.renderResults();
-				}
-
-				updateItemCount() {
-					dom.itemCount.textContent = this.string('itemsCount').replace('{count}', this.getItems().length);
-				}
-
-				setTies(enabled) {
-					this.allowTies = enabled;
-					!dom.battleSection.classList.contains('hidden') && dom.tieWrap.classList.toggle('hidden', !enabled);
-					this.updateHelp();
-				}
-
-				updateHelp() {
-					const hidden = dom.tips.classList.contains('hidden');
-					dom.toggle.textContent = this.string(hidden ? 'toggleShow' : 'toggleHide');
-					dom.toggle.setAttribute('aria-expanded', !hidden);
-					dom.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
-				}
-
-				toggleHelp() {
-					dom.tips.classList.toggle('hidden');
-					this.updateHelp();
-				}
-
-				checkStartButton() {
-					const valid = new Set(this.getItems()).size >= 2;
-					dom.start.disabled = !valid;
-					if (valid) {
-						dom.error.classList.add('hidden');
-						dom.items.removeAttribute('aria-invalid');
-					}
-				}
-
-				start() {
-					const raw = this.getItems();
-					const unique = [...new Set(raw)];
-					return raw.length > unique.length ? (dom.items.value = unique.join('\n'),
-					dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
-					dom.error.classList.remove('hidden'),
-					dom.items.setAttribute('aria-invalid', 'true')) : this.doStart(unique);
-				}
-
-				doStart(unique) {
-					Object.assign(this, {
-						items: unique,
-						allowTies: dom.allowTies.checked,
-						scores: Array(unique.length).fill(1000),
-						matches: [],
-						step: 0,
-						history: [],
-						swaps: new Map,
-						busy: false
-					});
-					dom.undo.disabled = true;
-					this.provider = new (dom.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
-					dom.tieWrap.classList.toggle('hidden', !this.allowTies);
-					this.updateHelp();
-					this.show('battleSection');
-					this.next();
-					this.saveState();
-				}
-
-				recalculateScores() {
-					const steps = 5
-					  , scores = Array(this.items.length).fill(1000);
-					const factor = Math.log(10) / 400
-					  , k = 32 / steps;
-					for (let step = 0; step < steps; step++) {
-						const deltas = Array(this.items.length).fill(0);
-						this.matches.forEach(({a, b, result})=>{
-							const expected = 1 / (1 + Math.exp((scores[b] - scores[a]) * factor));
-							const change = k * (result - expected);
-							deltas[a] += change;
-							deltas[b] -= change;
-						}
-						);
-						scores.forEach((_,i)=>scores[i] += deltas[i]);
-					}
-					this.scores = scores;
-				}
-
-				choose(winner) {
-					(this.busy || dom.battleSection.classList.contains('hidden')) && (()=>{}
-					)();
-					!this.busy && !dom.battleSection.classList.contains('hidden') && this.doChoose(winner);
-				}
-
-				doChoose(winner) {
-					this.busy = true;
-					this.history.push({
-						pair: this.pair,
-						scores: [...this.scores],
-						step: this.step,
-						swapped: this.swapped
-					});
-					this.provider.mark(this.pair);
-					const [a,b] = this.pair;
-					const isLeftWinner = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
-					const result = winner === 'tie' ? 0.5 : isLeftWinner ? 1 : 0;
-					this.matches.push({
-						a,
-						b,
-						result
-					});
-					this.recalculateScores();
-					this.step++;
-					dom.undo.disabled = false;
-					this.updateProgress();
-					this.clearSelections();
-					(winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
-					setTimeout(()=>{
-						(dom.battleSection.classList.contains('hidden') || !this.busy) || (this.busy = false,
-						this.next(result),
-						this.saveState());
-					}
-					, 150);
-				}
-
-				next(result) {
-					this.clearSelections();
-					const nextPair = this.provider.next(this, result);
-					return nextPair ? this.setPair(nextPair) : this.renderResults();
-				}
-
-				setPair(nextPair) {
-					this.pair = nextPair;
-					const key = this.provider.key(nextPair);
-					this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
-					this.swapped = this.swaps.get(key);
-					this.renderPair();
-				}
-
-				renderPair() {
-					let[a,b] = this.pair;
-					this.swapped && ([a,b] = [b, a]);
-					dom.left.textContent = this.items[a];
-					dom.right.textContent = this.items[b];
-					this.updateProgress();
-				}
-
-				updateProgress() {
-					const progressText = this.provider ? this.provider.getProgress(this.step) : '0/0';
-					dom.progress.textContent = `${this.string('progress')}: ${progressText}`;
-					const [current,total] = progressText.split('/');
-					const totalValue = parseInt(total.replace('~', ''), 10);
-					const percent = totalValue > 0 ? (parseInt(current, 10) / totalValue) * 100 : 0;
-					dom.progressFill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
-				}
-
-				clearSelections() {
-					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
-				}
-
-				renderResults() {
-					const ranking = this.provider.getRanking(this.scores);
-					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>` + `<table><thead><tr><th style="width:20%">${this.string('rank')}</th>` + `<th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>` + `<tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
-					this.show('results');
-					this.saveState();
+					this.renderParties();
+					!dom.results.classList.contains('hidden') && this.data && this.renderResults();
 				}
 
 				show(section) {
-					['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
-					dom.restartWrap.classList.toggle('hidden', section !== 'results');
-					dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
-					dom.copy.classList.toggle('hidden', section !== 'results');
-					this.keyboardEnabled = section === 'battleSection' || section === 'results';
-					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
-					section === 'results' && (dom.results.firstElementChild.prepend(dom.undo),
-					dom.results.firstElementChild.appendChild(dom.copy));
-					section === 'inputSection' && this.checkStartButton();
-					const focusTarget = {
-						battleSection: dom.left,
-						results: dom.restartBattle,
-						inputSection: dom.items
-					}[section];
-					focusTarget && setTimeout(()=>focusTarget.focus(), 50);
+					['input', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
 				}
 
-				copyResults() {
-					const ranking = this.provider.getRanking(this.scores);
-					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
-					const lines = ranking.map((index,i)=>`${i + 1}\t${this.items[index]}\t${Math.round(this.scores[index])}`);
-					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(()=>{
-						const original = dom.copy.textContent;
-						dom.copy.textContent = this.string('copied');
-						setTimeout(()=>dom.copy.textContent = original, 2000);
+				toggleModal(visible) {
+					dom.modal.classList.toggle('hidden', !visible);
+					visible ? (this.lastFocus = document.activeElement,
+					this.renderSteps(),
+					dom.close.focus()) : this.lastFocus?.focus();
+				}
+
+				toggleError(message) {
+					dom.error.textContent = message || '';
+					dom.error.classList.toggle('hidden', !message);
+					dom.calculate.disabled = !!message;
+				}
+
+				addParty() {
+					this.toggleError();
+					this.parties.push({
+						id: this.nextIndex++,
+						name: '',
+						votes: 0
+					});
+					this.renderParties();
+					dom.list.lastElementChild?.querySelector('input')?.focus();
+				}
+
+				clearAll() {
+					confirm(this.string('clearConfirm')) && (this.parties = [],
+					this.renderParties(),
+					this.addParty(),
+					this.toggleError());
+				}
+
+				removeParty(id) {
+					this.toggleError();
+					const index = this.parties.findIndex(p=>p.id === id);
+					this.parties = this.parties.filter(p=>p.id !== id);
+					this.renderParties();
+					const target = Math.min(index, this.parties.length - 1);
+					target >= 0 ? dom.list.children[target]?.querySelector('.danger')?.focus() : dom.add.focus();
+				}
+
+				renderParties() {
+					dom.list.innerHTML = this.parties.map((party,i)=>`<div class="party-row" data-id="${party.id}">` + `<input type="text" value="${escape(party.name)}" placeholder="${this.string('partyPlaceholder')}" aria-label="${this.string('partyPlaceholder')} ${i + 1}">` + `<input type="number" value="${party.votes || ''}" placeholder="${this.string('votesPlaceholder')}" min="0" aria-label="${this.string('votesPlaceholder')} ${i + 1}">` + `<button class="danger" aria-label="${this.string('removeParty')} ${i + 1}">×</button></div>`).join('');
+				}
+
+				importData(file) {
+					file && new FileReader().constructor.prototype.readAsText.call(Object.assign(new FileReader(), {
+						onload: event=>{
+							try {
+								const lines = event.target.result.split(/\r?\n/).filter(line=>line.trim());
+								!lines.length && (()=>{
+									throw new Error();
+								}
+								)();
+								const delimiter = lines[0].split('\t').length > lines[0].split(',').length ? '\t' : ',';
+								const parse = line=>line.split(new RegExp(`\\${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`)).map(c=>c.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+								const firstRow = parse(lines[0]);
+								const isNumeric = c=>/^\d+$/.test(c.replace(/[.,]/g, '').trim());
+								let nameIndex = firstRow.findIndex(c=>/party|partai|name|nama/i.test(c));
+								let voteIndex = firstRow.findIndex((c,i)=>i !== nameIndex && /vote|suara/i.test(c));
+								let start = 1;
+								(nameIndex < 0 || voteIndex < 0) && (voteIndex = firstRow.findIndex(isNumeric),
+								nameIndex = firstRow.findIndex(c=>!isNumeric(c)),
+								nameIndex < 0 && voteIndex >= 0 && firstRow.length === 2 && (nameIndex = 1 - voteIndex),
+								start = 0);
+								(nameIndex === -1 || voteIndex === -1) && (()=>{
+									throw new Error();
+								}
+								)();
+								const newParties = lines.slice(start).reduce((list,line)=>{
+									const columns = parse(line);
+									const name = columns[nameIndex];
+									const votes = parseInt((columns[voteIndex] || '').replace(/\D/g, '')) || 0;
+									name && columns.length > Math.max(nameIndex, voteIndex) && list.push({
+										id: this.nextIndex++,
+										name,
+										votes
+									});
+									return list;
+								}
+								, []);
+								!newParties.length && (()=>{
+									throw new Error();
+								}
+								)();
+								this.parties = newParties;
+								this.toggleError();
+								this.renderParties();
+								dom.file.value = '';
+							} catch {
+								this.toggleError(this.string('alertImport'));
+							}
+						}
+					}), file);
+				}
+
+				calculate() {
+					this.toggleError();
+					const seats = parseInt(dom.seats.value);
+					const threshold = parseFloat(dom.threshold.value.replace(',', '.')) || 0;
+					return (isNaN(seats) || seats < 1) ? this.toggleError(this.string('alertSeats')) : this.doCalculate(seats, threshold);
+				}
+
+				doCalculate(seats, threshold) {
+					const valid = this.parties.filter(p=>p.name && p.votes >= 0);
+					const total = valid.reduce((sum,p)=>sum + p.votes, 0);
+					return (!valid.length || total === 0) ? this.toggleError(this.string('alertParties')) : this.processCalculation(seats, threshold, valid, total);
+				}
+
+				processCalculation(seats, threshold, valid, total) {
+					const thresholdVotes = total * threshold / 100;
+					const passed = valid.filter(p=>p.votes >= thresholdVotes - 1e-7);
+					return !passed.length ? this.toggleError(this.string('belowThreshold')) : this.finishCalculation(seats, threshold, valid, total, thresholdVotes, passed);
+				}
+
+				finishCalculation(seats, threshold, valid, total, thresholdVotes, passed) {
+					const quota = total / seats;
+					const hare = passed.map(p=>{
+						const hareSeats = Math.floor((p.votes * seats) / total);
+						return {
+							...p,
+							hareSeats,
+							remainder: p.votes - hareSeats * quota
+						};
 					}
 					);
+					let allocated = hare.reduce((sum,p)=>sum + p.hareSeats, 0);
+					hare.sort((a,b)=>b.remainder - a.remainder || b.votes - a.votes);
+					for (let i = 0; i < seats - allocated; i++)
+						hare[i].hareSeats++;
+					const work = passed.map(p=>({
+						...p,
+						slSeats: 0,
+						divisor: 1,
+						quotient: p.votes
+					}));
+					const stepList = [];
+					for (let i = 1; i <= seats; i++) {
+						const winner = work.reduce((best,p)=>p.quotient > best.quotient || (p.quotient === best.quotient && p.votes > best.votes) ? p : best);
+						stepList.push({
+							round: i,
+							winner: winner.name,
+							winnerId: winner.id,
+							winnerQuotient: winner.quotient,
+							winnerDivisor: winner.divisor,
+							quotients: i <= STEPS_LIMIT ? work.map(({id, name, quotient, divisor})=>({
+								id,
+								name,
+								quotient,
+								divisor
+							})) : null
+						});
+						winner.slSeats++;
+						winner.divisor += 2;
+						winner.quotient = winner.votes / winner.divisor;
+					}
+					this.data = {
+						total,
+						thresholdVotes,
+						threshold,
+						seats,
+						quota,
+						steps: stepList,
+						results: valid.map(p=>{
+							const hareResult = hare.find(x=>x.id === p.id);
+							const slResult = work.find(x=>x.id === p.id);
+							return {
+								...p,
+								passed: p.votes >= thresholdVotes - 1e-7,
+								hareSeats: hareResult?.hareSeats ?? 0,
+								sainteLagueSeats: slResult?.slSeats ?? 0,
+								remainder: hareResult?.remainder ?? 0
+							};
+						}
+						)
+					};
+					this.renderResults();
+					this.show('results');
 				}
 
-				cancel() {
-					const reset = ()=>(dom.cancel.classList.remove('confirming'),
-					dom.cancel.textContent = this.string('cancel'),
-					this.cancelTimeout = null);
-					return this.cancelTimeout ? (clearTimeout(this.cancelTimeout),
-					reset(),
-					this.show('inputSection')) : (dom.cancel.textContent = this.string('confirmCancel'),
-					dom.cancel.classList.add('confirming'),
-					this.cancelTimeout = setTimeout(reset, 3000));
+				renderResults() {
+					this.data && this.doRenderResults();
 				}
 
-				undo() {
-					(this.busy || !this.history.length) || this.doUndo();
+				doRenderResults() {
+					const {results, total, thresholdVotes, threshold, quota} = this.data;
+					const passed = results.filter(r=>r.passed);
+					const failed = results.filter(r=>!r.passed);
+					const row = (r,seats,extra='')=>`<tr><td>${escape(r.name)}</td><td>${this.format(r.votes)}</td>` + `<td>${this.format(r.votes / total * 100, {
+						maximumFractionDigits: 2
+					})}%</td>` + `<td><strong>${seats}</strong></td>${extra}</tr>`;
+					dom.stats.innerHTML = `<div class="info">${this.string('totalVotes')}: ${this.format(total)}<br>` + `${this.string('thresholdVotes')} (${this.format(threshold)}%): ${this.format(thresholdVotes, {
+						maximumFractionDigits: 0
+					})}` + (failed.length ? `<br><span class="italic">${this.string('belowThreshold')}: ${failed.map(r=>`${escape(r.name)} (${this.format(r.votes)})`).join(', ')}</span>` : '') + `</div>`;
+					dom.hare.innerHTML = `<p class="info">${this.string('quota')}: ${this.format(quota)}</p>` + this.table(['party', 'votes', 'share', 'seatsColumn', 'remainder'].map(k=>this.string(k)), [...passed].sort((a,b)=>b.hareSeats - a.hareSeats).map(r=>row(r, r.hareSeats, `<td>${this.format(r.remainder, {
+						maximumFractionDigits: 6
+					})}</td>`)).join(''));
+					dom.sainteLague.innerHTML = `<p class="info">${this.string('divisorsText')}</p>` + this.table(['party', 'votes', 'share', 'seatsColumn'].map(k=>this.string(k)), [...passed].sort((a,b)=>b.sainteLagueSeats - a.sainteLagueSeats).map(r=>row(r, r.sainteLagueSeats)).join(''));
+					dom.compare.innerHTML = this.table([this.string('party'), 'Hare', 'Sainte-Laguë', this.string('diff')], [...passed].sort((a,b)=>b.votes - a.votes).map(r=>{
+						const diff = r.sainteLagueSeats - r.hareSeats;
+						return `<tr><td>${escape(r.name)}</td><td>${r.hareSeats}</td><td>${r.sainteLagueSeats}</td>` + `<td class="${diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'neutral'}">${diff > 0 ? '+' : ''}${diff}</td></tr>`;
+					}
+					).join(''));
 				}
 
-				doUndo() {
-					const last = this.history.pop();
-					this.matches.pop();
-					this.recalculateScores();
-					Object.assign(this, {
-						step: last.step,
-						pair: last.pair,
-						swapped: last.swapped
-					});
-					this.provider.unmark(last.pair);
-					this.renderPair();
-					this.show('battleSection');
-					dom.undo.disabled = !this.history.length;
-					this.saveState();
+				renderSteps() {
+					const {steps} = this.data;
+					steps?.length && this.doRenderSteps(steps);
 				}
 
-				reset() {
-					this.init();
-					this.show('inputSection');
-					this.updateHelp();
-					this.updateProgress();
-					this.saveState();
+				doRenderSteps(steps) {
+					const details = steps.slice(0, STEPS_LIMIT);
+					const warning = steps.length > STEPS_LIMIT ? `<p class="info" style="margin-top:1rem;font-style:italic">${this.string('detailsLimited').replace('{n}', STEPS_LIMIT)}</p>` : '';
+					const seatTemplate = this.string('seatAllocated');
+					const winnerPrefix = this.string('winnerPrefix');
+					const options = {
+						maximumFractionDigits: 2
+					};
+					dom.modalSteps.innerHTML = this.table(['round', 'winner', 'quotient', 'divisor'].map(k=>this.string(k)), steps.map(s=>`<tr><td>${seatTemplate.replace('{n}', s.round)}</td><td><strong>${escape(s.winner)}</strong></td>` + `<td>${this.format(s.winnerQuotient, options)}</td><td>${s.winnerDivisor}</td></tr>`).join('')) + `<h3 class="step-header">${this.string('quotientDetail')}</h3>${warning}` + details.map(s=>s.quotients ? `<div class="step"><h4>${seatTemplate.replace('{n}', s.round)} - ${winnerPrefix}${escape(s.winner)}</h4>` + this.table(s.quotients.map(q=>`${escape(q.name)} (/${q.divisor})`), `<tr>${s.quotients.map(q=>`<td class="${q.id === s.winnerId ? 'highlight' : ''}">${this.format(q.quotient, options)}</td>`).join('')}</tr>`) + `</div>` : '').join('') + warning;
 				}
 
-				handleKey(event) {
-					event.repeat || this.processKey(event);
+				exportData() {
+					this.data && this.doExportData();
 				}
 
-				processKey(event) {
-					const {key, ctrlKey, metaKey, shiftKey} = event;
-					(key === 'Enter' && (ctrlKey || metaKey) && !dom.inputSection.classList.contains('hidden') && !dom.start.disabled) && (event.preventDefault(),
-					dom.start.click());
-					const action = {
-						arrowleft: 'left',
-						arrowright: 'right',
-						arrowup: 'tie',
-						arrowdown: 'tie',
-						z: 'undo'
-					}[key.toLowerCase()];
-					action && this.keyboardEnabled && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && ((action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) && (event.preventDefault(),
-					dom[action].click()));
+				doExportData() {
+					const {results} = this.data;
+					const total = results.reduce((sum,p)=>sum + p.votes, 0);
+					const header = [this.string('party'), this.string('votes'), this.string('share'), this.string('passedHeader'), this.string('hareSeatsHeader'), this.string('sainteLagueSeatsHeader'), this.string('differenceHeader')].join(',');
+					const csv = header + '\n' + results.map(r=>`"${r.name.replace(/"/g, '""')}",${r.votes},"${this.format(r.votes / total * 100, {
+						minimumFractionDigits: 2,
+						maximumFractionDigits: 2
+					})}",` + `${r.passed ? this.string('yes') : this.string('no')},${r.hareSeats},${r.sainteLagueSeats},${r.sainteLagueSeats - r.hareSeats}`).join('\n');
+					Object.assign(document.createElement('a'), {
+						href: URL.createObjectURL(new Blob([csv],{
+							type: 'text/csv'
+						})),
+						download: `apportionment_${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.csv`
+					}).click();
 				}
 			}
 
-			new PreferenceRank();
+			new ApportionmentCalc();
 		</script>
 	</body>
 </html>
