@@ -75,6 +75,18 @@
 				display: none!important
 			}
 
+			.visually-hidden {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				padding: 0;
+				margin: -1px;
+				overflow: hidden;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
+				border: 0
+			}
+
 			h1,h2,label {
 				margin-bottom: .5rem;
 				display: block
@@ -384,6 +396,7 @@
 				</div>
 				<button id="start" class="primary"></button>
 			</div>
+			<div id="announcer" class="visually-hidden" aria-live="polite"></div>
 			<button id="undo" class="secondary hidden" disabled></button>
 			<button id="copy" class="secondary hidden"></button>
 			<div id="battleSection" class="hidden">
@@ -437,6 +450,8 @@
 					rank: 'Rank',
 					item: 'Item',
 					score: 'Score',
+					compare: 'Compare: {1} vs {2}',
+					resultsReady: 'Ranking complete. Results table is shown.',
 					restartBattle: 'Restart Battle',
 					restartNew: 'Edit Items',
 					placeholderItems: 'Apple\nBlueberry\nCherry',
@@ -470,6 +485,8 @@
 					rank: 'Peringkat',
 					item: 'Nama',
 					score: 'Skor',
+					compare: 'Bandingkan: {1} lawan {2}',
+					resultsReady: 'Peringkat selesai. Tabel hasil ditampilkan.',
 					restartBattle: 'Mulai Ulang Pertarungan',
 					restartNew: 'Ubah Pilihan',
 					placeholderItems: 'Apel\nBluberi\nCeri',
@@ -776,6 +793,9 @@
 				string(key) {
 					return text[this.language]?.[key] ?? key;
 				}
+				announce(message) {
+					dom.announcer.textContent = message;
+				}
 
 				bind() {
 					Object.entries({
@@ -955,6 +975,7 @@
 					dom.left.textContent = this.items[a];
 					dom.right.textContent = this.items[b];
 					this.updateProgress();
+					this.announce(this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]));
 				}
 
 				updateProgress() {
@@ -974,6 +995,7 @@
 					const ranking = this.provider.getRanking(this.scores);
 					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>` + `<table><thead><tr><th style="width:20%">${this.string('rank')}</th>` + `<th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>` + `<tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
+					this.announce(this.string('resultsReady'));
 					this.saveState();
 				}
 
@@ -1059,7 +1081,9 @@
 						arrowright: 'right',
 						arrowup: 'tie',
 						arrowdown: 'tie',
-						z: 'undo'
+						z: 'undo',
+						'?': 'toggle',
+						'/': 'toggle'
 					}[key.toLowerCase()];
 					action && this.keyboardEnabled && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && ((action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) && (event.preventDefault(),
 					dom[action].click()));
