@@ -46,10 +46,6 @@
 				outline-offset: 2px
 			}
 
-			#battle button:focus-visible,#tieWrap button:focus-visible {
-				outline: none
-			}
-
 			body {
 				background: var(--bg);
 				color: var(--text);
@@ -444,6 +440,10 @@
 					progress: 'Progress',
 					toggleShow: 'Show keyboard shortcuts',
 					toggleHide: 'Hide keyboard shortcuts',
+					shortcutLeft: 'Left Arrow',
+					shortcutRight: 'Right Arrow',
+					shortcutTie: 'Up/Down Arrow',
+					shortcutUndo: 'Ctrl/⌘ + Z',
 					tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
 					tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
 					resultsTitle: 'Results',
@@ -479,6 +479,10 @@
 					progress: 'Kemajuan',
 					toggleShow: 'Tampilkan pintasan papan ketik',
 					toggleHide: 'Sembunyikan pintasan papan ketik',
+					shortcutLeft: 'Panah Kiri',
+					shortcutRight: 'Panah Kanan',
+					shortcutTie: 'Panah Atas/Bawah',
+					shortcutUndo: 'Ctrl/⌘ + Z',
 					tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
 					tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
 					resultsTitle: 'Hasil',
@@ -832,6 +836,10 @@
 					dom.items.placeholder = this.string('placeholderItems');
 					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
+					dom.left.title = this.string('shortcutLeft');
+					dom.right.title = this.string('shortcutRight');
+					dom.tie.title = this.string('shortcutTie');
+					dom.undo.title = `${this.string('undo')} (${this.string('shortcutUndo')})`;
 					[...dom.theme.options].forEach(option=>option.textContent = this.string(option.value));
 					this.updateHelp();
 					this.updateProgress();
