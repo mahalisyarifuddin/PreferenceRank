@@ -511,6 +511,7 @@
 
 			const getKey = ([a,b])=>a < b ? `${a}-${b}` : `${b}-${a}`;
 			const getRanking = scores=>[...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
+			const keyMap = {arrowleft:'left',arrowright:'right',arrowup:'tie',arrowdown:'tie',z:'undo','?':'toggle','/':'toggle'};
 
 			class FullPairProvider {
 				constructor(count) {
@@ -1067,15 +1068,7 @@
 						event.preventDefault();
 						dom.start.click();
 					}
-					const action = {
-						arrowleft: 'left',
-						arrowright: 'right',
-						arrowup: 'tie',
-						arrowdown: 'tie',
-						z: 'undo',
-						'?': 'toggle',
-						'/': 'toggle'
-					}[key.toLowerCase()];
+					const action = keyMap[key.toLowerCase()];
 					if (action && this.keyboardEnabled && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
 						if (action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
 							event.preventDefault();
