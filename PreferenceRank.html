@@ -434,7 +434,6 @@
 					labelItems: 'Enter items, one per line:',
 					labelTies: 'Allow Ties',
 					labelQuick: 'Use Quick Rank (fewer comparisons)',
-					alert: 'Please enter at least two items.',
 					duplicate: '{count} duplicate item(s) removed.',
 					itemsCount: '{count} items',
 					start: 'Start Ranking',
@@ -473,7 +472,6 @@
 					labelItems: 'Masukkan pilihan, satu per baris:',
 					labelTies: 'Izinkan Seri',
 					labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
-					alert: 'Harap masukkan setidaknya dua pilihan.',
 					duplicate: '{count} item duplikat dihapus.',
 					itemsCount: '{count} pilihan',
 					start: 'Mulai Peringkat',
@@ -575,9 +573,8 @@
 				next(state, result) {
 					this.pending && this.handlePending(state, result);
 					while (this.stack.length) {
-						const frame = this.stack.at(-1);
-						const output = this[frame.state](frame);
-						return output || (this.stack.length ? undefined : (this.final ? this.handleRefine() : null)) || this.next(state, result);
+						const output = this[this.stack.at(-1).state](this.stack.at(-1));
+						if (output) return output;
 					}
 					return this.final ? this.handleRefine() : null;
 				}
@@ -670,15 +667,25 @@
 					this.pending);
 				}
 				handleRefine() {
-					while (true) {
-						return this.refine.pass >= 2 ? null : this.refine.index >= this.final.length - 1 ? (this.refine.swapped ? (this.refine.pass++,
-						this.refine.index = 0,
-						this.refine.swapped = false,
-						this.handleRefine()) : null) : !this.compared.has(getKey([this.final[this.refine.index], this.final[this.refine.index + 1]])) ? (this.pending = [this.final[this.refine.index], this.final[this.refine.index + 1]],
-						this.history.push(this.snap()),
-						this.pending) : (this.refine.index++,
-						this.handleRefine());
+					while (this.refine.pass < 2) {
+						if (this.refine.index >= this.final.length - 1) {
+							if (this.refine.swapped) {
+								this.refine.pass++;
+								this.refine.index = 0;
+								this.refine.swapped = false;
+								continue;
+							}
+							return null;
+						}
+						const pair = [this.final[this.refine.index], this.final[this.refine.index + 1]];
+						if (!this.compared.has(getKey(pair))) {
+							this.pending = pair;
+							this.history.push(this.snap());
+							return this.pending;
+						}
+						this.refine.index++;
 					}
+					return null;
 				}
 				return(result) {
 					this.stack.pop();
