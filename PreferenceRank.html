@@ -9,7 +9,7 @@
 				--primary: #1976d2;
 				--hover: #004080;
 				--bg: #f9f9ff;
-				--surface: #ffffff;
+				--surface: #fff;
 				--text: #181c21;
 				--border: #c1c6d4;
 				--dim: #e0e2ec;
@@ -19,7 +19,7 @@
 
 			@media(prefers-color-scheme: dark) {
 				:root:not(.light) {
-					--bg: #101319;
+					--bg:#101319;
 					--surface: #0b0e14;
 					--text: #e0e2ea;
 					--border: #414752;
@@ -83,7 +83,7 @@
 				padding: 0;
 				margin: -1px;
 				overflow: hidden;
-				clip: rect(0, 0, 0, 0);
+				clip: rect(0,0,0,0);
 				white-space: nowrap;
 				border: 0
 			}
@@ -123,8 +123,6 @@
 
 			button:disabled {
 				background: var(--dim)!important;
-				border-color: var(--border)!important;
-				color: var(--text)!important;
 				cursor: not-allowed;
 				opacity: .6
 			}
@@ -226,7 +224,7 @@
 				background: var(--primary);
 				height: 100%;
 				transition: width .3s ease;
-				width: 0%
+				width: 0
 			}
 
 			#tips {
@@ -501,15 +499,21 @@
 					copied: 'Disalin!'
 				}
 			};
-
 			const escape = t=>t.replace(/[&<>"']/g, c=>'&#' + c.charCodeAt(0) + ';');
 			const dom = new Proxy({},{
 				get: (_,id)=>document.getElementById(id)
 			});
-
 			const getKey = ([a,b])=>a < b ? `${a}-${b}` : `${b}-${a}`;
 			const getRanking = scores=>[...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
-			const keyMap = {arrowleft:'left',arrowright:'right',arrowup:'tie',arrowdown:'tie',z:'undo','?':'toggle','/':'toggle'};
+			const keyMap = {
+				arrowleft: 'left',
+				arrowright: 'right',
+				arrowup: 'tie',
+				arrowdown: 'tie',
+				z: 'undo',
+				'?': 'toggle',
+				'/': 'toggle'
+			};
 
 			class FullPairProvider {
 				constructor(count) {
@@ -523,10 +527,10 @@
 					}
 				}
 				next(state) {
-					return this.pairs[state.step];
+					return this.pairs[state.step]
 				}
 				getProgress(state) {
-					return `${state}/${this.pairs.length}`;
+					return `${state}/${this.pairs.length}`
 				}
 			}
 
@@ -555,24 +559,25 @@
 						pending: this.pending,
 						final: this.final,
 						refine: this.refine
-					});
+					})
 				}
 				restore(snapshot) {
-					Object.assign(this, structuredClone(snapshot));
+					Object.assign(this, structuredClone(snapshot))
 				}
 				unmark(pair) {
 					this.pending && this.history.length && this.history.pop();
 					this.history.length && this.restore(this.history.at(-1));
-					this.compared.delete(getKey(pair));
+					this.compared.delete(getKey(pair))
 				}
 				mark(pair) {
-					this.compared.add(getKey(pair));
+					this.compared.add(getKey(pair))
 				}
 				next(state, result) {
 					this.pending && this.handlePending(state, result);
 					while (this.stack.length) {
 						const output = this[this.stack.at(-1).state](this.stack.at(-1));
-						if (output) return output;
+						if (output)
+							return output;
 					}
 					return this.final ? this.handleRefine() : null;
 				}
@@ -636,12 +641,10 @@
 					null) : null;
 				}
 				group(frame) {
-					!frame.group.length && (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length ? this.return(frame.main) : ((()=>{
-						const start = this.jacobsthal[frame.jacobIndex - 1] - 1;
-						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
-						frame.group.push(...frame.insertions.slice(start, end + 1).reverse());
+					!frame.group.length && (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length ? this.return(frame.main) : (((start,end)=>{
+						frame.group.push(...frame.insertions.slice(start, end + 1).reverse())
 					}
-					)(),
+					)(this.jacobsthal[frame.jacobIndex - 1] - 1, Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1)),
 					frame.jacobIndex++));
 					return frame.main === this.final ? null : (frame.group.length && (frame.current = frame.group.shift(),
 					frame.state = 'insert',
@@ -670,7 +673,7 @@
 								this.refine.pass++;
 								this.refine.index = 0;
 								this.refine.swapped = false;
-								continue;
+								continue
 							}
 							return null;
 						}
@@ -678,7 +681,7 @@
 						if (!this.compared.has(getKey(pair))) {
 							this.pending = pair;
 							this.history.push(this.snap());
-							return this.pending;
+							return this.pending
 						}
 						this.refine.index++;
 					}
@@ -686,15 +689,15 @@
 				}
 				return(result) {
 					this.stack.pop();
-					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse();
+					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse()
 				}
 				getProgress(state) {
-					return `${state}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`;
+					return `${state}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`
 				}
 			}
 
 			class PreferenceRank {
-				init(items = []) {
+				init(items=[]) {
 					Object.assign(this, {
 						items,
 						scores: items.length ? Array(items.length).fill(1000) : [],
@@ -748,13 +751,14 @@
 							value: [...v]
 						} : v));
 					} catch (error) {
-						console.error('Failed to save state', error);
+						console.error('Failed to save state', error)
 					}
 				}
 
 				loadState() {
 					const raw = localStorage.getItem('preferenceRankData');
-					if (!raw) return;
+					if (!raw)
+						return;
 					try {
 						const data = JSON.parse(raw, (k,v)=>v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
 						data.inputValue && (dom.items.value = data.inputValue,
@@ -763,7 +767,7 @@
 						data.battle && this.restoreBattle(data.battle);
 					} catch (error) {
 						console.error('Failed to load state', error);
-						localStorage.removeItem('preferenceRankData');
+						localStorage.removeItem('preferenceRankData')
 					}
 				}
 
@@ -787,13 +791,13 @@
 				}
 
 				getItems() {
-					return dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
+					return dom.items.value.split('\n').map(line=>line.trim()).filter(Boolean)
 				}
 				string(key) {
-					return text[this.language]?.[key] ?? key;
+					return text[this.language]?.[key] ?? key
 				}
 				announce(message) {
-					dom.announcer.textContent = message;
+					dom.announcer.textContent = message
 				}
 
 				bind() {
@@ -809,14 +813,14 @@
 						right: ()=>this.choose('right'),
 						tie: ()=>this.choose('tie')
 					}).forEach(([id,handler])=>dom[id].onclick = handler.bind(this));
-					dom.language.onchange = event=>(this.language = event.target.value,
+					dom.language.onchange = e=>(this.language = e.target.value,
 					this.updateText());
-					dom.theme.onchange = event=>this.setTheme(event.target.value);
-					dom.allowTies.onchange = event=>this.setTies(event.target.checked);
+					dom.theme.onchange = e=>this.setTheme(e.target.value);
+					dom.allowTies.onchange = e=>this.setTies(e.target.checked);
 					dom.items.oninput = ()=>(this.checkStartButton(),
 					this.updateItemCount(),
 					this.saveInput());
-					document.onkeydown = event=>this.handleKey(event);
+					document.onkeydown = e=>this.handleKey(e);
 				}
 
 				setTheme(theme) {
@@ -843,7 +847,7 @@
 				}
 
 				updateItemCount() {
-					dom.itemCount.textContent = this.string('itemsCount').replace('{count}', this.getItems().length);
+					dom.itemCount.textContent = this.string('itemsCount').replace('{count}', this.getItems().length)
 				}
 
 				setTies(enabled) {
@@ -861,7 +865,7 @@
 
 				toggleHelp() {
 					dom.tips.classList.toggle('hidden');
-					this.updateHelp();
+					this.updateHelp()
 				}
 
 				checkStartButton() {
@@ -869,13 +873,13 @@
 					dom.start.disabled = !valid;
 					if (valid) {
 						dom.error.classList.add('hidden');
-						dom.items.removeAttribute('aria-invalid');
+						dom.items.removeAttribute('aria-invalid')
 					}
 				}
 
 				start() {
-					const raw = this.getItems();
-					const unique = [...new Set(raw)];
+					const raw = this.getItems()
+					  , unique = [...new Set(raw)];
 					if (raw.length > unique.length) {
 						dom.items.value = unique.join('\n');
 						dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
@@ -896,20 +900,23 @@
 
 				recalculateScores() {
 					this.scores = Array(this.items.length).fill(1000);
-					const steps = 2, k = 32 / steps;
+					const steps = 2
+					  , k = 32 / steps;
 					for (let step = 0; step < steps; step++) {
 						const deltas = new Float64Array(this.items.length);
 						this.matches.forEach(({a, b, result})=>{
 							const change = k * (result - 1 / (1 + 10 ** ((this.scores[b] - this.scores[a]) / 400)));
 							deltas[a] += change;
 							deltas[b] -= change;
-						});
+						}
+						);
 						this.scores.forEach((_,i)=>this.scores[i] += deltas[i]);
 					}
 				}
 
 				choose(winner) {
-					if (this.busy || dom.battleSection.classList.contains('hidden')) return;
+					if (this.busy || dom.battleSection.classList.contains('hidden'))
+						return;
 					this.busy = true;
 					this.history.push({
 						pair: this.pair,
@@ -933,7 +940,8 @@
 					this.clearSelections();
 					(winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
 					setTimeout(()=>{
-						if (dom.battleSection.classList.contains('hidden') || !this.busy) return;
+						if (dom.battleSection.classList.contains('hidden') || !this.busy)
+							return;
 						this.busy = false;
 						this.next(result);
 						this.saveState();
@@ -974,12 +982,12 @@
 				}
 
 				clearSelections() {
-					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'));
+					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'))
 				}
 
 				renderResults() {
 					const ranking = getRanking(this.scores);
-					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>` + `<table><thead><tr><th style="width:20%">${this.string('rank')}</th>` + `<th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>` + `<tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
+					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 					this.announce(this.string('resultsReady'));
 					this.saveState();
@@ -1026,7 +1034,8 @@
 				}
 
 				undo() {
-					if (this.busy || !this.history.length) return;
+					if (this.busy || !this.history.length)
+						return;
 					const last = this.history.pop();
 					this.matches.pop();
 					this.recalculateScores();
@@ -1050,18 +1059,19 @@
 					this.saveState();
 				}
 
-				handleKey(event) {
-					if (event.repeat) return;
-					const {key, ctrlKey, metaKey, shiftKey} = event;
+				handleKey(e) {
+					if (e.repeat)
+						return;
+					const {key, ctrlKey, metaKey, shiftKey} = e;
 					if (key === 'Enter' && (ctrlKey || metaKey) && !dom.inputSection.classList.contains('hidden') && !dom.start.disabled) {
-						event.preventDefault();
-						dom.start.click();
+						e.preventDefault();
+						dom.start.click()
 					}
 					const action = keyMap[key.toLowerCase()];
 					if (action && dom.inputSection.classList.contains('hidden') && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
 						if (action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
-							event.preventDefault();
-							dom[action].click();
+							e.preventDefault();
+							dom[action].click()
 						}
 					}
 				}
