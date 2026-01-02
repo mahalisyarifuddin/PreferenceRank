@@ -1028,7 +1028,8 @@
 					this.cancelTimeout = null);
 					return this.cancelTimeout ? (clearTimeout(this.cancelTimeout),
 					reset(),
-					this.show('inputSection')) : (dom.cancel.textContent = this.string('confirmCancel'),
+					this.show('inputSection'),
+					this.saveState()) : (dom.cancel.textContent = this.string('confirmCancel'),
 					dom.cancel.classList.add('confirming'),
 					this.cancelTimeout = setTimeout(reset, 3000));
 				}
