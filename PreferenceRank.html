@@ -594,7 +594,7 @@
 					this.refine.index++;
 				}
 				init(frame) {
-					return frame.items.length < 2 ? this.return(frame.items) : (frame.pairs = Array.from({
+					return frame.items.length < 2 ? this.resolve(frame.items) : (frame.pairs = Array.from({
 						length: frame.items.length >> 1
 					}, (_,i)=>[frame.items[2 * i], frame.items[2 * i + 1]]),
 					frame.odd = frame.items.length % 2 ? frame.items.at(-1) : null,
@@ -641,7 +641,7 @@
 					null) : null;
 				}
 				group(frame) {
-					!frame.group.length && (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length ? this.return(frame.main) : (((start,end)=>{
+					!frame.group.length && (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length ? this.resolve(frame.main) : (((start,end)=>{
 						frame.group.push(...frame.insertions.slice(start, end + 1).reverse())
 					}
 					)(this.jacobsthal[frame.jacobIndex - 1] - 1, Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1)),
@@ -687,7 +687,7 @@
 					}
 					return null;
 				}
-				return(result) {
+				resolve(result) {
 					this.stack.pop();
 					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse()
 				}
