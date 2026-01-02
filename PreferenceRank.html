@@ -901,11 +901,11 @@
 
 				recalculateScores() {
 					this.scores = Array(this.items.length).fill(1000);
-					const steps = 2, k = 32 / steps, factor = Math.log(10) / 400;
+					const steps = 2, k = 32 / steps;
 					for (let step = 0; step < steps; step++) {
 						const deltas = new Float64Array(this.items.length);
 						this.matches.forEach(({a, b, result})=>{
-							const change = k * (result - 1 / (1 + Math.exp((this.scores[b] - this.scores[a]) * factor)));
+							const change = k * (result - 1 / (1 + 10 ** ((this.scores[b] - this.scores[a]) / 400)));
 							deltas[a] += change;
 							deltas[b] -= change;
 						});
