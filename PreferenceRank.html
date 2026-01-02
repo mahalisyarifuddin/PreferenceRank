@@ -584,8 +584,7 @@
 					this.pending = null;
 				}
 				handleRefineSwap(a, b, winner) {
-					const index = this.final.indexOf(a);
-					winner === b && index !== -1 && this.final[index + 1] === b && ([this.final[index],this.final[index + 1]] = [this.final[index + 1], this.final[index]],
+					winner === b && ([this.final[this.refine.index],this.final[this.refine.index + 1]] = [b, a],
 					this.refine.swapped = true);
 					this.refine.index++;
 				}
