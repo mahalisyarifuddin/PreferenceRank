@@ -761,10 +761,7 @@
 
 				loadState() {
 					const raw = localStorage.getItem('preferenceRankData');
-					raw && this.doLoadState(raw);
-				}
-
-				doLoadState(raw) {
+					if (!raw) return;
 					try {
 						const data = JSON.parse(raw, (k,v)=>v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
 						data.inputValue && (dom.items.value = data.inputValue,
@@ -886,13 +883,13 @@
 				start() {
 					const raw = this.getItems();
 					const unique = [...new Set(raw)];
-					return raw.length > unique.length ? (dom.items.value = unique.join('\n'),
-					dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length),
-					dom.error.classList.remove('hidden'),
-					dom.items.setAttribute('aria-invalid', 'true')) : this.doStart(unique);
-				}
-
-				doStart(unique) {
+					if (raw.length > unique.length) {
+						dom.items.value = unique.join('\n');
+						dom.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
+						dom.error.classList.remove('hidden');
+						dom.items.setAttribute('aria-invalid', 'true');
+						return;
+					}
 					Object.assign(this, {
 						items: unique,
 						allowTies: dom.allowTies.checked,
@@ -932,12 +929,7 @@
 				}
 
 				choose(winner) {
-					(this.busy || dom.battleSection.classList.contains('hidden')) && (()=>{}
-					)();
-					!this.busy && !dom.battleSection.classList.contains('hidden') && this.doChoose(winner);
-				}
-
-				doChoose(winner) {
+					if (this.busy || dom.battleSection.classList.contains('hidden')) return;
 					this.busy = true;
 					this.history.push({
 						pair: this.pair,
@@ -961,9 +953,10 @@
 					this.clearSelections();
 					(winner === 'tie' ? dom.tie : dom[winner]).classList.add('selected');
 					setTimeout(()=>{
-						(dom.battleSection.classList.contains('hidden') || !this.busy) || (this.busy = false,
-						this.next(result),
-						this.saveState());
+						if (dom.battleSection.classList.contains('hidden') || !this.busy) return;
+						this.busy = false;
+						this.next(result);
+						this.saveState();
 					}
 					, 150);
 				}
@@ -1054,10 +1047,7 @@
 				}
 
 				undo() {
-					(this.busy || !this.history.length) || this.doUndo();
-				}
-
-				doUndo() {
+					if (this.busy || !this.history.length) return;
 					const last = this.history.pop();
 					this.matches.pop();
 					this.recalculateScores();
@@ -1082,13 +1072,12 @@
 				}
 
 				handleKey(event) {
-					event.repeat || this.processKey(event);
-				}
-
-				processKey(event) {
+					if (event.repeat) return;
 					const {key, ctrlKey, metaKey, shiftKey} = event;
-					(key === 'Enter' && (ctrlKey || metaKey) && !dom.inputSection.classList.contains('hidden') && !dom.start.disabled) && (event.preventDefault(),
-					dom.start.click());
+					if (key === 'Enter' && (ctrlKey || metaKey) && !dom.inputSection.classList.contains('hidden') && !dom.start.disabled) {
+						event.preventDefault();
+						dom.start.click();
+					}
 					const action = {
 						arrowleft: 'left',
 						arrowright: 'right',
@@ -1098,8 +1087,12 @@
 						'?': 'toggle',
 						'/': 'toggle'
 					}[key.toLowerCase()];
-					action && this.keyboardEnabled && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && ((action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) && (event.preventDefault(),
-					dom[action].click()));
+					if (action && this.keyboardEnabled && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
+						if (action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
+							event.preventDefault();
+							dom[action].click();
+						}
+					}
 				}
 			}
 
