@@ -710,7 +710,8 @@
 						busy: false,
 						swaps: new Map,
 						provider: null,
-						cancelTimeout: null
+						cancelTimeout: null,
+						view: 'inputSection'
 					});
 				}
 
@@ -728,7 +729,7 @@
 				saveState() {
 					const data = {
 						inputValue: dom.items.value,
-						battle: dom.inputSection.classList.contains('hidden') ? {
+						battle: this.view !== 'inputSection' ? {
 							items: this.items,
 							scores: this.scores,
 							matches: this.matches,
@@ -994,6 +995,7 @@
 				}
 
 				show(section) {
+					this.view = section;
 					['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
 					dom.restartWrap.classList.toggle('hidden', section !== 'results');
 					dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
@@ -1028,6 +1030,7 @@
 					this.cancelTimeout = null);
 					return this.cancelTimeout ? (clearTimeout(this.cancelTimeout),
 					reset(),
+					this.init(this.items),
 					this.show('inputSection'),
 					this.saveState()) : (dom.cancel.textContent = this.string('confirmCancel'),
 					dom.cancel.classList.add('confirming'),
