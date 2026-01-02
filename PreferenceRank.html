@@ -728,6 +728,10 @@
 				saveState() {
 					const data = {
 						inputValue: dom.items.value,
+						settings: {
+							theme: dom.theme.value,
+							language: this.language
+						},
 						battle: dom.inputSection.classList.contains('hidden') ? {
 							items: this.items,
 							scores: this.scores,
@@ -761,6 +765,13 @@
 						return;
 					try {
 						const data = JSON.parse(raw, (k,v)=>v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
+						if (data.settings) {
+							data.settings.theme && this.setTheme(data.settings.theme);
+							if (data.settings.language) {
+								this.language = data.settings.language;
+								this.updateText();
+							}
+						}
 						data.inputValue && (dom.items.value = data.inputValue,
 						this.checkStartButton(),
 						this.updateItemCount());
@@ -814,8 +825,10 @@
 						tie: ()=>this.choose('tie')
 					}).forEach(([id,handler])=>dom[id].onclick = handler.bind(this));
 					dom.language.onchange = e=>(this.language = e.target.value,
-					this.updateText());
-					dom.theme.onchange = e=>this.setTheme(e.target.value);
+					this.updateText(),
+					this.saveState());
+					dom.theme.onchange = e=>(this.setTheme(e.target.value),
+					this.saveState());
 					dom.allowTies.onchange = e=>this.setTies(e.target.checked);
 					dom.items.oninput = ()=>(this.checkStartButton(),
 					this.updateItemCount(),
