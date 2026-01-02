@@ -522,8 +522,6 @@
 						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
 					}
 				}
-				mark() {}
-				unmark() {}
 				next(state) {
 					return this.pairs[state.step];
 				}
@@ -929,7 +927,7 @@
 						step: this.step,
 						swapped: this.swapped
 					});
-					this.provider.mark(this.pair);
+					this.provider.mark?.(this.pair);
 					const [a,b] = this.pair;
 					const isLeftWinner = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
 					const result = winner === 'tie' ? 0.5 : isLeftWinner ? 1 : 0;
@@ -1048,7 +1046,7 @@
 						pair: last.pair,
 						swapped: last.swapped
 					});
-					this.provider.unmark(last.pair);
+					this.provider.unmark?.(last.pair);
 					this.renderPair();
 					this.show('battleSection');
 					dom.undo.disabled = !this.history.length;
