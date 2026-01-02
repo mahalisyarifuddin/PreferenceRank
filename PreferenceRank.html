@@ -695,17 +695,16 @@
 			}
 
 			class PreferenceRank {
-				init() {
+				init(items = []) {
 					Object.assign(this, {
-						items: [],
-						scores: [],
+						items,
+						scores: items.length ? Array(items.length).fill(1000) : [],
 						matches: [],
 						pair: null,
 						swapped: false,
 						step: 0,
 						allowTies: false,
 						history: [],
-						keyboardEnabled: false,
 						busy: false,
 						swaps: new Map,
 						provider: null,
@@ -885,16 +884,8 @@
 						dom.items.setAttribute('aria-invalid', 'true');
 						return;
 					}
-					Object.assign(this, {
-						items: unique,
-						allowTies: dom.allowTies.checked,
-						scores: Array(unique.length).fill(1000),
-						matches: [],
-						step: 0,
-						history: [],
-						swaps: new Map,
-						busy: false
-					});
+					this.init(unique);
+					this.allowTies = dom.allowTies.checked;
 					dom.undo.disabled = true;
 					this.provider = new (dom.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
 					dom.tieWrap.classList.toggle('hidden', !this.allowTies);
@@ -1000,7 +991,6 @@
 					dom.restartWrap.classList.toggle('hidden', section !== 'results');
 					dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
 					dom.copy.classList.toggle('hidden', section !== 'results');
-					this.keyboardEnabled = section === 'battleSection' || section === 'results';
 					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
 					section === 'results' && (dom.results.firstElementChild.prepend(dom.undo),
 					dom.results.firstElementChild.appendChild(dom.copy));
@@ -1069,7 +1059,7 @@
 						dom.start.click();
 					}
 					const action = keyMap[key.toLowerCase()];
-					if (action && this.keyboardEnabled && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
+					if (action && dom.inputSection.classList.contains('hidden') && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
 						if (action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !dom.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
 							event.preventDefault();
 							dom[action].click();
