@@ -509,28 +509,11 @@
 				get: (_,id)=>document.getElementById(id)
 			});
 
-			class PairProvider {
-				constructor(count) {
-					this.count = count;
-					this.compared = new Set;
-				}
-				key([a,b]) {
-					return a < b ? `${a}-${b}` : `${b}-${a}`;
-				}
-				mark(pair) {
-					this.compared.add(this.key(pair));
-				}
-				unmark(pair) {
-					this.compared.delete(this.key(pair));
-				}
-				getRanking(scores) {
-					return [...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
-				}
-			}
+			const getKey = ([a,b])=>a < b ? `${a}-${b}` : `${b}-${a}`;
+			const getRanking = scores=>[...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
 
-			class FullPairProvider extends PairProvider {
+			class FullPairProvider {
 				constructor(count) {
-					super(count);
 					this.pairs = [];
 					for (let i = 0; i < count - 1; i++)
 						for (let j = i + 1; j < count; j++)
@@ -540,6 +523,8 @@
 						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
 					}
 				}
+				mark() {}
+				unmark() {}
 				next(state) {
 					return this.pairs[state.step];
 				}
@@ -548,9 +533,10 @@
 				}
 			}
 
-			class QuickPairProvider extends PairProvider {
+			class QuickPairProvider {
 				constructor(count) {
-					super(count);
+					this.count = count;
+					this.compared = new Set;
 					this.stack = [{
 						state: 'init',
 						items: [...Array(count).keys()]
@@ -580,7 +566,10 @@
 				unmark(pair) {
 					this.pending && this.history.length && this.history.pop();
 					this.history.length && this.restore(this.history.at(-1));
-					super.unmark(pair);
+					this.compared.delete(getKey(pair));
+				}
+				mark(pair) {
+					this.compared.add(getKey(pair));
 				}
 				next(state, result) {
 					this.pending && this.handlePending(state, result);
@@ -684,7 +673,7 @@
 						return this.refine.pass >= 2 ? null : this.refine.index >= this.final.length - 1 ? (this.refine.swapped ? (this.refine.pass++,
 						this.refine.index = 0,
 						this.refine.swapped = false,
-						this.handleRefine()) : null) : !this.compared.has(this.key([this.final[this.refine.index], this.final[this.refine.index + 1]])) ? (this.pending = [this.final[this.refine.index], this.final[this.refine.index + 1]],
+						this.handleRefine()) : null) : !this.compared.has(getKey([this.final[this.refine.index], this.final[this.refine.index + 1]])) ? (this.pending = [this.final[this.refine.index], this.final[this.refine.index + 1]],
 						this.history.push(this.snap()),
 						this.pending) : (this.refine.index++,
 						this.handleRefine());
@@ -969,7 +958,7 @@
 
 				setPair(nextPair) {
 					this.pair = nextPair;
-					const key = this.provider.key(nextPair);
+					const key = getKey(nextPair);
 					this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
 					this.swapped = this.swaps.get(key);
 					this.renderPair();
@@ -998,7 +987,7 @@
 				}
 
 				renderResults() {
-					const ranking = this.provider.getRanking(this.scores);
+					const ranking = getRanking(this.scores);
 					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div>` + `<table><thead><tr><th style="width:20%">${this.string('rank')}</th>` + `<th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead>` + `<tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 					this.announce(this.string('resultsReady'));
@@ -1024,7 +1013,7 @@
 				}
 
 				copyResults() {
-					const ranking = this.provider.getRanking(this.scores);
+					const ranking = getRanking(this.scores);
 					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
 					const lines = ranking.map((index,i)=>`${i + 1}\t${this.items[index]}\t${Math.round(this.scores[index])}`);
 					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(()=>{
