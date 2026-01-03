@@ -765,10 +765,6 @@
 				string(key) {
 					return text[this.language]?.[key] ?? key
 				}
-				announce(message) {
-					dom.announcer.textContent = message
-				}
-
 				bind() {
 					Object.entries({
 						start: this.start,
@@ -934,10 +930,8 @@
 				next(result) {
 					this.clearSelections();
 					const nextPair = this.provider.next(this, result);
-					return nextPair ? this.setPair(nextPair) : this.renderResults();
-				}
-
-				setPair(nextPair) {
+					if (!nextPair)
+						return this.renderResults();
 					this.pair = nextPair;
 					const key = getKey(nextPair);
 					this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
@@ -951,7 +945,7 @@
 					dom.left.textContent = this.items[a];
 					dom.right.textContent = this.items[b];
 					this.updateProgress();
-					this.announce(this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]));
+					dom.announcer.textContent = this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]);
 				}
 
 				updateProgress() {
@@ -973,18 +967,18 @@
 					const ranking = getRanking(this.scores);
 					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
-					this.announce(this.string('resultsReady'));
+					dom.announcer.textContent = this.string('resultsReady');
 					this.saveState();
 				}
 
 				show(section) {
 					['inputSection', 'battleSection', 'results'].forEach(id=>dom[id].classList.toggle('hidden', id !== section));
 					dom.restartWrap.classList.toggle('hidden', section !== 'results');
-					dom.undo.classList.toggle('hidden', section !== 'battleSection' && section !== 'results');
+					dom.undo.classList.toggle('hidden', section === 'inputSection');
 					dom.copy.classList.toggle('hidden', section !== 'results');
-					section === 'battleSection' && dom.battleSection.parentNode.insertBefore(dom.undo, dom.battleSection);
-					section === 'results' && (dom.results.firstElementChild.prepend(dom.undo),
-					dom.results.firstElementChild.appendChild(dom.copy));
+					section === 'battleSection' && dom.battleSection.before(dom.undo);
+					section === 'results' && (dom.results.firstChild.prepend(dom.undo),
+					dom.results.firstChild.append(dom.copy));
 					section === 'inputSection' && this.checkStartButton();
 					const focusTarget = {
 						battleSection: dom.left,
