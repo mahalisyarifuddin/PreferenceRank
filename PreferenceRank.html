@@ -189,6 +189,13 @@
 				margin: 0
 			}
 
+			.action-buttons {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				margin-top: 1rem
+			}
+
 			#battle,#tieWrap,#restartWrap {
 				display: flex;
 				gap: 1rem;
@@ -431,7 +438,10 @@
 					<input type="checkbox" id="quickRank">
 					<label for="quickRank" id="labelQuick"></label>
 				</div>
-				<button id="start" class="primary"></button>
+				<div class="action-buttons">
+					<button id="resume" class="primary hidden"></button>
+					<button id="start" class="primary"></button>
+				</div>
 			</div>
 			<div id="announcer" class="visually-hidden" aria-live="polite"></div>
 			<button id="undo" class="secondary hidden" disabled></button>
@@ -473,6 +483,7 @@
 					duplicate: '{count} duplicate item(s) removed.',
 					itemsCount: '{count} items',
 					start: 'Start Ranking',
+					resume: 'Resume Ranking',
 					cancel: 'Cancel',
 					confirmCancel: 'Confirm Cancel?',
 					tie: "It's a Tie",
@@ -515,6 +526,7 @@
 					duplicate: '{count} item duplikat dihapus.',
 					itemsCount: '{count} pilihan',
 					start: 'Mulai Peringkat',
+					resume: 'Lanjutkan Peringkat',
 					cancel: 'Batal',
 					confirmCancel: 'Konfirmasi Batal?',
 					tie: 'Seri',
@@ -785,7 +797,7 @@
 							theme: dom.theme.value,
 							language: this.language
 						},
-						battle: dom.inputSection.classList.contains('hidden') ? {
+						battle: this.provider ? {
 							...Object.fromEntries(['items', 'matches', 'pair', 'swapped', 'step', 'allowTies', 'history', 'swaps'].map(key=>[key, this[key]])),
 							scores: [...this.scores],
 							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full',
@@ -882,6 +894,7 @@
 						cancel: this.cancel,
 						sessionContinue: ()=>this.restoreSession(),
 						sessionNew: ()=>this.startNewSession(),
+						resume: ()=>this.resume(),
 						left: ()=>this.choose('left'),
 						right: ()=>this.choose('right'),
 						tie: ()=>this.choose('tie')
@@ -909,7 +922,7 @@
 					dom.language.setAttribute('aria-label', this.string('languageLabel'));
 					dom.theme.setAttribute('aria-label', this.string('themeLabel'));
 					dom.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>dom[key].textContent = this.string(key));
 					dom.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
 					dom.left.title = this.string('shortcutLeft');
 					dom.right.title = this.string('shortcutRight');
@@ -949,6 +962,7 @@
 					dom.start.disabled = !valid;
 					valid && (dom.error.classList.add('hidden'),
 					dom.items.removeAttribute('aria-invalid'));
+					dom.resume.classList.toggle('hidden', !this.provider);
 				}
 
 				start() {
@@ -970,6 +984,15 @@
 					this.show('battleSection');
 					this.next();
 					this.saveState();
+				}
+
+				resume() {
+					if (this.pair) {
+						this.show('battleSection');
+						this.renderPair();
+					} else {
+						this.renderResults();
+					}
 				}
 
 				recalculateScores() {
