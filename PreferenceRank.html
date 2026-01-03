@@ -505,6 +505,8 @@
 			});
 			const getKey = ([a,b])=>a < b ? `${a}-${b}` : `${b}-${a}`;
 			const getRanking = scores=>[...scores.keys()].sort((a,b)=>scores[b] - scores[a]);
+			const jsonReplacer = (k,v)=>v instanceof Map ? {__type: 'Map', value: [...v]} : v instanceof Set ? {__type: 'Set', value: [...v]} : v;
+			const jsonReviver = (k,v)=>v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v;
 			const keyMap = {
 				arrowleft: 'left',
 				arrowright: 'right',
@@ -705,13 +707,7 @@
 						} : null
 					};
 					try {
-						localStorage.setItem('preferenceRankData', JSON.stringify(data, (k,v)=>v instanceof Map ? {
-							__type: 'Map',
-							value: [...v]
-						} : v instanceof Set ? {
-							__type: 'Set',
-							value: [...v]
-						} : v));
+						localStorage.setItem('preferenceRankData', JSON.stringify(data, jsonReplacer));
 					} catch (error) {
 						console.error('Failed to save state', error)
 					}
@@ -722,7 +718,7 @@
 					if (!raw)
 						return;
 					try {
-						const data = JSON.parse(raw, (k,v)=>v?.__type === 'Map' ? new Map(v.value) : v?.__type === 'Set' ? new Set(v.value) : v);
+						const data = JSON.parse(raw, jsonReviver);
 						if (data.settings) {
 							data.settings.theme && this.setTheme(data.settings.theme);
 							if (data.settings.language) {
