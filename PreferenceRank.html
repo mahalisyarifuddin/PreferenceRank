@@ -912,19 +912,60 @@
 				}
 
 				recalculateScores() {
-					this.scores = Array(this.items.length).fill(1000);
-					const steps = 2
-					  , k = 32 / steps;
-					for (let step = 0; step < steps; step++) {
-						const deltas = new Float64Array(this.items.length);
-						this.matches.forEach(({a, b, result})=>{
-							const change = k * (result - 1 / (1 + 10 ** ((this.scores[b] - this.scores[a]) / 400)));
-							deltas[a] += change;
-							deltas[b] -= change;
-						}
-						);
-						this.scores.forEach((_,i)=>this.scores[i] += deltas[i]);
+					const N = this.items.length;
+					if (N === 0)
+						return;
+					let p = new Float64Array(N).fill(1.0);
+					const wins = new Float64Array(N);
+					const pairCounts = new Map;
+					this.matches.forEach(({a, b, result})=>{
+						wins[a] += result;
+						wins[b] += (1 - result);
+						const key = getKey([a, b]);
+						pairCounts.set(key, (pairCounts.get(key) || 0) + 1)
 					}
+					);
+					const neighbors = Array.from({
+						length: N
+					}, ()=>[]);
+					pairCounts.forEach((count,key)=>{
+						const [u,v] = key.split('-').map(Number);
+						neighbors[u].push({
+							neighbor: v,
+							count
+						});
+						neighbors[v].push({
+							neighbor: u,
+							count
+						})
+					}
+					);
+					const ghostP = 1.0;
+					const ghostMatches = 1;
+					const ghostWins = 0.5;
+					const iterations = 100;
+					const epsilon = 1e-9;
+					for (let iter = 0; iter < iterations; iter++) {
+						const nextP = new Float64Array(N);
+						let maxDiff = 0;
+						for (let i = 0; i < N; i++) {
+							let denom = 0;
+							for (const {neighbor: j, count} of neighbors[i])
+								denom += count / (p[i] + p[j]);
+							denom += ghostMatches / (p[i] + ghostP);
+							const totalWins = wins[i] + ghostWins;
+							nextP[i] = denom > 0 ? totalWins / denom : p[i]
+						}
+						for (let i = 0; i < N; i++) {
+							maxDiff = Math.max(maxDiff, Math.abs(p[i] - nextP[i]));
+							p[i] = nextP[i]
+						}
+						if (maxDiff < epsilon)
+							break
+					}
+					this.scores = new Float64Array(N);
+					for (let i = 0; i < N; i++)
+						this.scores[i] = p[i] > 0 ? 1000 + 400 * Math.log10(p[i]) : -9999
 				}
 
 				choose(winner) {
