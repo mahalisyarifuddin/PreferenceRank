@@ -928,8 +928,14 @@
 							break
 					}
 					this.scores = new Float64Array(N);
+					let sum = 0;
+					for (let i = 0; i < N; i++) {
+						this.scores[i] = 1000 + 400 * Math.log10(p[i]);
+						sum += this.scores[i]
+					}
+					const offset = 1000 - sum / N;
 					for (let i = 0; i < N; i++)
-						this.scores[i] = p[i] > 0 ? 1000 + 400 * Math.log10(p[i]) : -9999
+						this.scores[i] += offset
 				}
 
 				choose(winner) {
