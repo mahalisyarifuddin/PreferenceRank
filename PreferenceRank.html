@@ -674,7 +674,7 @@
 					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse()
 				}
 				getProgress(state) {
-					return `${state}/~${Math.max(state, Math.round(this.count * (Math.log2(this.count) - 1.35)))}`
+					return `${state}/~${Math.max(state, Math.round(this.count * Math.log2(this.count) - 1.4 * this.count + 3))}`
 				}
 			}
 

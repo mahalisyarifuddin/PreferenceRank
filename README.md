@@ -14,7 +14,7 @@ PreferenceRank offers two distinct modes to sort your items:
 
 - **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
 
-- **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation. This optimized approach minimizes comparisons (Battles ≈ N (log₂ N - 1.35)) by skipping redundant refinement steps while maintaining statistical ranking quality.
+- **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation. This optimized approach minimizes comparisons (Battles ≈ N log₂ N - 1.4 N + 3) by skipping redundant refinement steps while maintaining statistical ranking quality.
     - *Example:* For 50 items, Quick Rank uses ~215 battles vs. 1225 for Full Rank (~80% reduction).
 
 ## Quick Start
