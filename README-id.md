@@ -30,6 +30,8 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 - **Ringan**: Satu berkas HTML tanpa dependensi eksternal, sehingga portabel dan cepat.
 - **Opsi Tema**: Pilih antara tema terang, gelap, atau otomatis untuk pengalaman yang dipersonalisasi.
 - **Pintasan Papan Ketik**: Gunakan pintasan papan ketik untuk pemilihan yang lebih cepat saat memeringkatkan.
+- **Penyimpanan Sesi**: Progres Anda disimpan secara otomatis ke penyimpanan lokal peramban, memungkinkan Anda melanjutkan sesi peringkat kapan saja.
+- **Salin Hasil**: Salin tabel peringkat akhir Anda ke papan klip dengan mudah hanya dengan satu klik.
 - **Dukungan Multi-bahasa**: Tersedia dalam Bahasa Inggris dan Bahasa Indonesia.
 
 ## Kustomisasi
