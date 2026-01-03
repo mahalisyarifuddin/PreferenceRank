@@ -1040,8 +1040,10 @@
 				next(result) {
 					this.clearSelections();
 					const nextPair = this.provider.next(this, result);
-					if (!nextPair)
+					if (!nextPair) {
+						this.pair = null;
 						return this.renderResults();
+					}
 					this.pair = nextPair;
 					const key = getKey(nextPair);
 					this.swaps.has(key) || this.swaps.set(key, Math.random() < 0.5);
