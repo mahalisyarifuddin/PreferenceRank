@@ -917,9 +917,7 @@
 						return;
 					let p = new Float64Array(N).fill(1.0);
 					const wins = new Float64Array(N);
-					const neighbors = Array.from({
-						length: N
-					}, ()=>[]);
+					const neighbors = Array.from({length: N}, ()=>[]);
 					this.matches.forEach(({a, b, result})=>{
 						wins[a] += result;
 						wins[b] += (1 - result);
@@ -935,10 +933,7 @@
 						const nextP = new Float64Array(N);
 						let maxDiff = 0;
 						for (let i = 0; i < N; i++) {
-							let denom = 0;
-							for (const j of neighbors[i])
-								denom += 1 / (p[i] + p[j]);
-							denom += ghostMatches / (p[i] + ghostP);
+							const denom = neighbors[i].reduce((sum, j) => sum + 1 / (p[i] + p[j]), 0) + ghostMatches / (p[i] + ghostP);
 							const totalWins = wins[i] + ghostWins;
 							nextP[i] = denom > 0 ? totalWins / denom : p[i]
 						}
