@@ -667,24 +667,6 @@
 					this.pending);
 				}
 				handleRefine() {
-					while (this.refine.pass < 2) {
-						if (this.refine.index >= this.final.length - 1) {
-							if (this.refine.swapped) {
-								this.refine.pass++;
-								this.refine.index = 0;
-								this.refine.swapped = false;
-								continue
-							}
-							return null;
-						}
-						const pair = [this.final[this.refine.index], this.final[this.refine.index + 1]];
-						if (!this.compared.has(getKey(pair))) {
-							this.pending = pair;
-							this.history.push(this.snap());
-							return this.pending
-						}
-						this.refine.index++;
-					}
 					return null;
 				}
 				return(result) {
@@ -692,7 +674,7 @@
 					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse()
 				}
 				getProgress(state) {
-					return `${state}/~${Math.round(0.78 * this.count * Math.log2(this.count))}`
+					return `${state}/~${Math.max(state, Math.round(this.count * Math.log2(this.count) - 1.44 * this.count + 3.3))}`
 				}
 			}
 
