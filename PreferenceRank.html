@@ -786,7 +786,8 @@
 							language: this.language
 						},
 						battle: dom.inputSection.classList.contains('hidden') ? {
-							...Object.fromEntries(['items', 'scores', 'matches', 'pair', 'swapped', 'step', 'allowTies', 'history', 'swaps'].map(key=>[key, this[key]])),
+							...Object.fromEntries(['items', 'matches', 'pair', 'swapped', 'step', 'allowTies', 'history', 'swaps'].map(key=>[key, this[key]])),
+							scores: [...this.scores],
 							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full',
 							provider: this.provider
 						} : null
@@ -845,6 +846,8 @@
 
 				restoreBattle(battle) {
 					Object.assign(this, battle);
+					if (this.scores && typeof this.scores[Symbol.iterator] !== 'function')
+						this.scores = Object.values(this.scores);
 					const ProviderClass = battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider;
 					this.provider = new ProviderClass(this.items.length);
 					Object.assign(this.provider, battle.provider);
