@@ -30,6 +30,8 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Lightweight**: A single HTML file with no external dependencies, making it portable and fast.
 - **Theme Options**: Choose between light, dark, or auto themes for a personalized experience.
 - **Keyboard Shortcuts**: Use keyboard shortcuts for quicker selections during ranking.
+- **Session Persistence**: Your progress is automatically saved to your browser's local storage, allowing you to resume ranking sessions anytime.
+- **Copy Results**: Easily copy your final ranking table to the clipboard with a single click.
 - **Multi-language Support**: Available in English and Bahasa Indonesia.
 
 ## Customization
