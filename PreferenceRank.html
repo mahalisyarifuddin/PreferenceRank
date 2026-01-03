@@ -700,7 +700,7 @@
 				init(items=[]) {
 					Object.assign(this, {
 						items,
-						scores: items.length ? Array(items.length).fill(1000) : [],
+						scores: Array(items.length).fill(1000),
 						matches: [],
 						pair: null,
 						swapped: false,
@@ -721,7 +721,6 @@
 					this.setTheme('auto');
 					this.updateText();
 					this.checkStartButton();
-					this.updateItemCount();
 					this.loadState();
 				}
 
@@ -905,35 +904,27 @@
 
 				recalculateScores() {
 					const N = this.items.length;
-					if (N === 0)
-						return;
 					let p = new Float64Array(N).fill(1.0);
 					const wins = new Float64Array(N);
-					const neighbors = Array.from({length: N}, ()=>[]);
+					const neighbors = this.items.map(()=>[]);
 					this.matches.forEach(({a, b, result})=>{
 						wins[a] += result;
-						wins[b] += (1 - result);
+						wins[b] += 1 - result;
 						neighbors[a].push(b);
 						neighbors[b].push(a)
 					});
-					const ghostP = 1.0;
-					const ghostMatches = 1;
-					const ghostWins = 0.5;
-					const iterations = 100;
-					const epsilon = 1e-9;
-					for (let iter = 0; iter < iterations; iter++) {
+					for (let iter = 0; iter < 100; iter++) {
 						const nextP = new Float64Array(N);
 						let maxDiff = 0;
 						for (let i = 0; i < N; i++) {
-							const denom = neighbors[i].reduce((sum, j) => sum + 1 / (p[i] + p[j]), 0) + ghostMatches / (p[i] + ghostP);
-							const totalWins = wins[i] + ghostWins;
-							nextP[i] = denom > 0 ? totalWins / denom : p[i]
+							const denom = neighbors[i].reduce((sum, j) => sum + 1 / (p[i] + p[j]), 0) + 1 / (p[i] + 1);
+							nextP[i] = denom > 0 ? (wins[i] + 0.5) / denom : p[i]
 						}
 						for (let i = 0; i < N; i++) {
 							maxDiff = Math.max(maxDiff, Math.abs(p[i] - nextP[i]));
 							p[i] = nextP[i]
 						}
-						if (maxDiff < epsilon)
+						if (maxDiff < 1e-9)
 							break
 					}
 					this.scores = new Float64Array(N);
