@@ -917,29 +917,15 @@
 						return;
 					let p = new Float64Array(N).fill(1.0);
 					const wins = new Float64Array(N);
-					const pairCounts = new Map;
-					this.matches.forEach(({a, b, result})=>{
-						wins[a] += result;
-						wins[b] += (1 - result);
-						const key = getKey([a, b]);
-						pairCounts.set(key, (pairCounts.get(key) || 0) + 1)
-					}
-					);
 					const neighbors = Array.from({
 						length: N
 					}, ()=>[]);
-					pairCounts.forEach((count,key)=>{
-						const [u,v] = key.split('-').map(Number);
-						neighbors[u].push({
-							neighbor: v,
-							count
-						});
-						neighbors[v].push({
-							neighbor: u,
-							count
-						})
-					}
-					);
+					this.matches.forEach(({a, b, result})=>{
+						wins[a] += result;
+						wins[b] += (1 - result);
+						neighbors[a].push(b);
+						neighbors[b].push(a)
+					});
 					const ghostP = 1.0;
 					const ghostMatches = 1;
 					const ghostWins = 0.5;
@@ -950,8 +936,8 @@
 						let maxDiff = 0;
 						for (let i = 0; i < N; i++) {
 							let denom = 0;
-							for (const {neighbor: j, count} of neighbors[i])
-								denom += count / (p[i] + p[j]);
+							for (const j of neighbors[i])
+								denom += 1 / (p[i] + p[j]);
 							denom += ghostMatches / (p[i] + ghostP);
 							const totalWins = wins[i] + ghostWins;
 							nextP[i] = denom > 0 ? totalWins / denom : p[i]
