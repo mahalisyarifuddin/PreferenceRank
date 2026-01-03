@@ -362,10 +362,48 @@
 					width: 100%
 				}
 			}
+
+			#sessionModal {
+				position: absolute;
+				inset: 0;
+				background: var(--surface);
+				z-index: 10;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				padding: 2rem;
+				border-radius: 8px;
+				text-align: center
+			}
+
+			#sessionModal p {
+				margin: 1rem 0 2rem;
+				line-height: 1.5
+			}
+
+			#sessionButtons {
+				display: flex;
+				gap: 1rem;
+				width: 100%;
+				max-width: 400px
+			}
+
+			#sessionButtons button {
+				flex: 1
+			}
 		</style>
 	</head>
 	<body>
 		<div class="container">
+			<div id="sessionModal" class="hidden">
+				<h2 id="sessionTitle"></h2>
+				<p id="sessionMessage"></p>
+				<div id="sessionButtons">
+					<button id="sessionContinue" class="primary"></button>
+					<button id="sessionNew" class="secondary"></button>
+				</div>
+			</div>
 			<div id="inputSection">
 				<div class="selectors">
 					<select id="language" aria-label="Language">
@@ -458,7 +496,11 @@
 					restartNew: 'Edit Items',
 					placeholderItems: 'Apple\nBlueberry\nCherry',
 					copy: 'Copy Results',
-					copied: 'Copied!'
+					copied: 'Copied!',
+					resumeTitle: 'Resume Session?',
+					resumeMessage: 'A previous ranking session was found. Do you want to continue where you left off?',
+					resumeConfirm: 'Continue',
+					resumeNew: 'New Session'
 				},
 				id: {
 					title: 'PreferenceRank',
@@ -496,7 +538,11 @@
 					restartNew: 'Ubah Pilihan',
 					placeholderItems: 'Apel\nBluberi\nCeri',
 					copy: 'Salin Hasil',
-					copied: 'Disalin!'
+					copied: 'Disalin!',
+					resumeTitle: 'Lanjutkan Sesi?',
+					resumeMessage: 'Sesi peringkat sebelumnya ditemukan. Apakah Anda ingin melanjutkannya?',
+					resumeConfirm: 'Lanjutkan',
+					resumeNew: 'Sesi Baru'
 				}
 			};
 			const escape = t=>t.replace(/[&<>"']/g, c=>'&#' + c.charCodeAt(0) + ';');
@@ -729,11 +775,33 @@
 						data.inputValue && (dom.items.value = data.inputValue,
 						this.checkStartButton(),
 						this.updateItemCount());
-						data.battle && this.restoreBattle(data.battle);
+						data.battle ? this.promptSession(data.battle) : this.show('inputSection');
 					} catch (error) {
 						console.error('Failed to load state', error);
 						localStorage.removeItem('preferenceRankData')
 					}
+				}
+
+				promptSession(battle) {
+					this.pendingBattle = battle;
+					dom.sessionTitle.textContent = this.string('resumeTitle');
+					dom.sessionMessage.textContent = this.string('resumeMessage');
+					dom.sessionContinue.textContent = this.string('resumeConfirm');
+					dom.sessionNew.textContent = this.string('resumeNew');
+					dom.sessionModal.classList.remove('hidden');
+					dom.sessionContinue.focus();
+				}
+
+				restoreSession() {
+					dom.sessionModal.classList.add('hidden');
+					this.pendingBattle && this.restoreBattle(this.pendingBattle);
+					this.pendingBattle = null;
+				}
+
+				startNewSession() {
+					dom.sessionModal.classList.add('hidden');
+					this.pendingBattle = null;
+					this.reset();
 				}
 
 				restoreBattle(battle) {
@@ -770,6 +838,8 @@
 						copy: this.copyResults,
 						toggle: this.toggleHelp,
 						cancel: this.cancel,
+						sessionContinue: ()=>this.restoreSession(),
+						sessionNew: ()=>this.startNewSession(),
 						left: ()=>this.choose('left'),
 						right: ()=>this.choose('right'),
 						tie: ()=>this.choose('tie')
