@@ -667,24 +667,6 @@
 					this.pending);
 				}
 				handleRefine() {
-					while (this.refine.pass < 2) {
-						if (this.refine.index >= this.final.length - 1) {
-							if (this.refine.swapped) {
-								this.refine.pass++;
-								this.refine.index = 0;
-								this.refine.swapped = false;
-								continue
-							}
-							return null;
-						}
-						const pair = [this.final[this.refine.index], this.final[this.refine.index + 1]];
-						if (!this.compared.has(getKey(pair))) {
-							this.pending = pair;
-							this.history.push(this.snap());
-							return this.pending
-						}
-						this.refine.index++;
-					}
 					return null;
 				}
 				return(result) {
@@ -1000,11 +982,41 @@
 					['left', 'right', 'tie'].forEach(id=>dom[id].classList.remove('selected'))
 				}
 
+				getSmoothedScores(ranking) {
+					if (!this.provider?.final)
+						return this.scores;
+					const values = ranking.map(i=>this.scores[i]);
+					const blocks = values.map(v=>({
+						val: v,
+						weight: 1
+					}));
+					let i = 0;
+					while (i < blocks.length - 1) {
+						if (blocks[i].val < blocks[i + 1].val) {
+							const totalWeight = blocks[i].weight + blocks[i + 1].weight;
+							const totalVal = blocks[i].val * blocks[i].weight + blocks[i + 1].val * blocks[i + 1].weight;
+							blocks[i].val = totalVal / totalWeight;
+							blocks[i].weight = totalWeight;
+							blocks.splice(i + 1, 1);
+							i = Math.max(0, i - 1)
+						} else
+							i++
+					}
+					const smoothed = new Float64Array(this.scores.length);
+					let idx = 0;
+					blocks.forEach(block=>{
+						for (let k = 0; k < block.weight; k++)
+							smoothed[ranking[idx++]] = block.val
+					});
+					return smoothed
+				}
+
 				renderResults() {
 					dom.results.parentElement.appendChild(dom.undo);
 					dom.results.parentElement.appendChild(dom.copy);
-					const ranking = getRanking(this.scores);
-					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(this.scores[index])}</td></tr>`).join('')}</tbody></table>`;
+					const ranking = this.provider?.final || getRanking(this.scores);
+					const scores = this.getSmoothedScores(ranking);
+					dom.results.innerHTML = `<div class="results-header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((index,i)=>`<tr><td>${i + 1}</td><td>${escape(this.items[index])}</td><td>${Math.round(scores[index])}</td></tr>`).join('')}</tbody></table>`;
 					this.show('results');
 					this.announce(this.string('resultsReady'));
 					this.saveState();
@@ -1028,9 +1040,10 @@
 				}
 
 				copyResults() {
-					const ranking = getRanking(this.scores);
+					const ranking = this.provider?.final || getRanking(this.scores);
+					const scores = this.getSmoothedScores(ranking);
 					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
-					const lines = ranking.map((index,i)=>`${i + 1}\t${this.items[index]}\t${Math.round(this.scores[index])}`);
+					const lines = ranking.map((index,i)=>`${i + 1}\t${this.items[index]}\t${Math.round(scores[index])}`);
 					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(()=>{
 						const original = dom.copy.textContent;
 						dom.copy.textContent = this.string('copied');
