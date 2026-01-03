@@ -835,6 +835,11 @@
 				startNewSession() {
 					dom.sessionModal.classList.add('hidden');
 					this.pendingBattle = null;
+					dom.items.value = '';
+					dom.allowTies.checked = false;
+					dom.quickRank.checked = false;
+					this.checkStartButton();
+					this.updateItemCount();
 					this.reset();
 				}
 
