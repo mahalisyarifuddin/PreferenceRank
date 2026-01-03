@@ -733,15 +733,7 @@
 							language: this.language
 						},
 						battle: dom.inputSection.classList.contains('hidden') ? {
-							items: this.items,
-							scores: this.scores,
-							matches: this.matches,
-							pair: this.pair,
-							swapped: this.swapped,
-							step: this.step,
-							allowTies: this.allowTies,
-							history: this.history,
-							swaps: this.swaps,
+							...Object.fromEntries(['items', 'scores', 'matches', 'pair', 'swapped', 'step', 'allowTies', 'history', 'swaps'].map(k=>[k, this[k]])),
 							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full',
 							provider: this.provider
 						} : null
