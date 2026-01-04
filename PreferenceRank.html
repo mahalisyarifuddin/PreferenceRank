@@ -360,7 +360,7 @@
 					<button id="tie" class="secondary"></button>
 				</div>
 				<div id="progress"></div>
-				<div class="track">
+				<div id="progressTrack" class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
 					<div id="progressFill" class="fill"></div>
 				</div>
 				<button id="cancel"></button>
@@ -750,7 +750,9 @@
 					const progress = this.provider ? this.provider.getProgress(this.step) : '0/0';
 					elements.progress.textContent = `${this.string('progress')}: ${progress}`;
 					const [current, total] = progress.split('/');
-					elements.progressFill.style.width = `${Math.min(100, Math.max(0, parseInt(total.replace('~', '')) > 0 ? parseInt(current) / parseInt(total.replace('~', '')) * 100 : 0))}%`;
+					const percent = Math.min(100, Math.max(0, parseInt(total.replace('~', '')) > 0 ? parseInt(current) / parseInt(total.replace('~', '')) * 100 : 0));
+					elements.progressFill.style.width = `${percent}%`;
+					elements.progressTrack.setAttribute('aria-valuenow', Math.round(percent));
 				}
 				clear() {
 					['left', 'right', 'tie'].forEach(id => elements[id].classList.remove('selected'));
@@ -758,7 +760,7 @@
 				results() {
 					elements.results.parentElement.append(elements.undo, elements.copy);
 					const ranking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
-					elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th style="width:20%">${this.string('rank')}</th><th style="width:60%">${this.string('item')}</th><th style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((x, i) => `<tr><td>${i + 1}</td><td>${escape(this.items[x])}</td><td>${Math.round(this.scores[x])}</td></tr>`).join('')}</tbody></table>`;
+					elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr><th scope="col" style="width:20%">${this.string('rank')}</th><th scope="col" style="width:60%">${this.string('item')}</th><th scope="col" style="width:20%">${this.string('score')}</th></tr></thead><tbody>${ranking.map((x, i) => `<tr><td>${i + 1}</td><td>${escape(this.items[x])}</td><td>${Math.round(this.scores[x])}</td></tr>`).join('')}</tbody></table>`;
 					this.display('results');
 					elements.announcer.textContent = this.string('resultsReady');
 					this.save();
