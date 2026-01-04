@@ -884,7 +884,7 @@
 				}
 
 				bind() {
-					Object.entries({
+					const handlers = {
 						start: this.start,
 						restartBattle: this.start,
 						restartNew: this.reset,
@@ -898,8 +898,8 @@
 						left: ()=>this.choose('left'),
 						right: ()=>this.choose('right'),
 						tie: ()=>this.choose('tie')
-					}).forEach(([id,handler])=>dom[id].onclick = handler.bind(this));
-
+					};
+					Object.entries(handlers).forEach(([id,handler])=>dom[id].onclick = handler.bind(this));
 					dom.language.onchange = event=>(this.language = event.target.value,
 					this.updateText(),
 					this.saveState());
@@ -987,12 +987,8 @@
 				}
 
 				resume() {
-					if (this.pair) {
-						this.show('battleSection');
-						this.renderPair();
-					} else {
-						this.renderResults();
-					}
+					this.pair ? (this.show('battleSection'),
+					this.renderPair()) : this.renderResults();
 				}
 
 				recalculateScores() {
