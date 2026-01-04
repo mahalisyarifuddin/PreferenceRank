@@ -316,8 +316,8 @@ th {
 	</div>
 	<div id="inputSection">
 		<div class="selectors">
-			<select id="language"></select>
-			<select id="theme">
+			<select id="language" aria-label="Language"></select>
+			<select id="theme" aria-label="Theme">
 				<option value="auto"></option>
 				<option value="light"></option>
 				<option value="dark"></option>
@@ -326,9 +326,9 @@ th {
 		<h1 id="title"></h1>
 		<div class="group">
 			<label for="items" id="labelItems"></label>
-			<textarea id="items" rows="5" spellcheck="false" autofocus></textarea>
+			<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
 			<div id="itemCount" class="count"></div>
-			<span id="error" class="error hidden"></span>
+			<span id="error" class="error hidden" aria-live="polite"></span>
 		</div>
 		<div class="row">
 			<input type="checkbox" id="allowTies">
@@ -782,6 +782,8 @@ class PreferenceRank {
 	updateText() {
 		dom.language.innerHTML = `<option value="en">English</option><option value="id">Bahasa Indonesia</option>`;
 		dom.language.value = this.language;
+		dom.language.setAttribute('aria-label', this.getText('languageLabel'));
+		dom.theme.setAttribute('aria-label', this.getText('themeLabel'));
 		dom.items.placeholder = this.getText('placeholderItems');
 		['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key => dom[key].textContent = this.getText(key));
 		dom.start.title = `${this.getText('start')} (Ctrl/⌘ + Enter)`;
@@ -1018,7 +1020,8 @@ class PreferenceRank {
 		Object.assign(this, {
 			scores: [],
 			matches: [],
-			history: []
+			history: [],
+			provider: null
 		});
 		this.show('inputSection');
 		this.updateHelp();
