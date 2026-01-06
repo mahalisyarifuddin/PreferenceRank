@@ -708,7 +708,8 @@
 				}
 				recalculateScores() {
 					const count = this.items.length;
-					const power = new Float64Array(count).fill(1);
+					let power = new Float64Array(count).fill(1);
+					let nextPower = new Float64Array(count);
 					const wins = new Float64Array(count);
 					const graph = [...Array(count)].map(() => []);
 					this.matches.forEach(({ a, b, result }) => {
@@ -719,11 +720,19 @@
 					});
 					for (let i = 0; i < 100; i++) {
 						let diff = 0;
-						power.set(power.map((value, j) => {
-							const denominator = graph[j].reduce((sum, k) => sum + 1 / (value + power[k]), 0) + 1 / (value + 1);
+						for (let j = 0; j < count; j++) {
+							const value = power[j];
+							let denominator = 1 / (value + 1);
+							const neighbors = graph[j];
+							for (let k = 0, len = neighbors.length; k < len; k++) {
+								denominator += 1 / (value + power[neighbors[k]]);
+							}
 							const newValue = denominator > 0 ? (wins[j] + .5) / denominator : value;
-							return diff = Math.max(diff, Math.abs(value - newValue)), newValue;
-						}));
+							const d = Math.abs(value - newValue);
+							if (d > diff) diff = d;
+							nextPower[j] = newValue;
+						}
+						[power, nextPower] = [nextPower, power];
 						if (diff < 1e-9) break;
 					}
 					const logs = power.map(Math.log10);
