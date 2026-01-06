@@ -659,7 +659,7 @@
 				}
 				restoreBattle(battle) {
 					Object.assign(this, battle);
-					this.scores = Array.isArray(battle.scores) ? battle.scores : Object.values(battle.scores);
+					this.scores = Object.values(battle.scores);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
 					Object.assign(this.provider, battle.provider);
 					elements.allowTies.checked = this.allowTies;
@@ -708,9 +708,9 @@
 				}
 				recalculateScores() {
 					const count = this.items.length;
-					let power = new Float64Array(count).fill(1);
-					let nextPower = new Float64Array(count);
-					const wins = new Float64Array(count);
+					let power = Array(count).fill(1);
+					let nextPower = Array(count);
+					const wins = Array(count).fill(0);
 					const graph = [...Array(count)].map(() => []);
 					this.matches.forEach(({ a, b, result }) => {
 						wins[a] += result;
