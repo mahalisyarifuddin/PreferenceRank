@@ -570,12 +570,6 @@
 				constructor() {
 					Object.assign(this, { scores: [], matches: [], history: [], swaps: {}, sortState: { column: 'rank', direction: 'asc' } });
 					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
-					this.setup();
-					this.theme('auto');
-					this.lang(this.language);
-					this.load();
-				}
-				setup() {
 					const events = {
 						start: 'start', restartBattle: 'start', restartNew: 'reset', undo: 'undo',
 						copy: 'copyResults', toggle: 'toggleHelp', cancel: 'cancel',
@@ -592,6 +586,9 @@
 						th && th.dataset.sort && this.sortResults(th.dataset.sort);
 					};
 					document.onkeydown = event => this.key(event);
+					this.theme('auto');
+					this.lang(this.language);
+					this.load();
 				}
 				string(key) {
 					return text[this.language]?.[key] ?? key;
