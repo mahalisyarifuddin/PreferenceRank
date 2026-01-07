@@ -702,37 +702,23 @@
 					this.pair ? (this.display('battleSection'), this.render()) : this.results();
 				}
 				recalculateScores() {
-					const count = this.items.length;
-					let power = Array(count).fill(1);
-					let nextPower = Array(count);
-					const wins = Array(count).fill(0);
-					const graph = [...Array(count)].map(() => []);
-					this.matches.forEach(({ a, b, result }) => {
-						wins[a] += result;
-						wins[b] += 1 - result;
-						graph[a].push(b);
-						graph[b].push(a);
-					});
+					const count = this.items.length, wins = Array(count).fill(0), graph = Array.from({ length: count }, () => []);
+					this.matches.forEach(({ a, b, result }) => (wins[a] += result, wins[b] += 1 - result, graph[a].push(b), graph[b].push(a)));
+					let power = Array(count).fill(1), nextPower = Array(count);
 					for (let i = 0; i < 100; i++) {
 						let diff = 0;
 						for (let j = 0; j < count; j++) {
-							const value = power[j];
-							let denominator = 1 / (value + 1);
-							const neighbors = graph[j];
-							for (let k = 0, len = neighbors.length; k < len; k++) {
-								denominator += 1 / (value + power[neighbors[k]]);
-							}
-							const newValue = denominator > 0 ? (wins[j] + .5) / denominator : value;
-							const d = Math.abs(value - newValue);
-							if (d > diff) diff = d;
-							nextPower[j] = newValue;
+							let denom = 1 / (power[j] + 1);
+							for (const k of graph[j]) denom += 1 / (power[j] + power[k]);
+							const newVal = denom > 0 ? (wins[j] + .5) / denom : power[j];
+							diff = Math.max(diff, Math.abs(power[j] - newVal));
+							nextPower[j] = newVal;
 						}
 						[power, nextPower] = [nextPower, power];
 						if (diff < 1e-9) break;
 					}
-					const logs = power.map(Math.log10);
-					const average = logs.reduce((sum, val) => sum + val, 0) / count;
-					this.scores = logs.map(value => 1e3 + 400 * (value - average));
+					const logs = power.map(Math.log10), avg = logs.reduce((a, b) => a + b, 0) / count;
+					this.scores = logs.map(v => 1e3 + 400 * (v - avg));
 				}
 				choose(winner) {
 					if (this.busy || elements.battleSection.classList.contains('hidden')) return;
