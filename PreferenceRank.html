@@ -487,8 +487,6 @@
 				}
 			};
 			const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
-			const escape = string => string.replace(/[&<>"']/g, char => '&#' + char.charCodeAt(0) + ';');
-			const getPairKey = ([a, b]) => a < b ? `${a}-${b}` : `${b}-${a}`;
 
 			class FullPairProvider {
 				constructor(count) {
@@ -722,8 +720,7 @@
 					this.busy = true;
 					this.history.push({ pair: this.pair, scores: [...this.scores], step: this.step, swapped: this.swapped });
 					const [a, b] = this.pair;
-					const isLeft = (winner === 'left' && !this.swapped) || (winner === 'right' && this.swapped);
-					const result = winner === 'tie' ? .5 : isLeft ? 1 : 0;
+					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
 					this.matches.push({ a, b, result });
 					this.recalculateScores();
 					this.step++;
@@ -738,7 +735,7 @@
 					const nextPair = this.provider.next(this, result);
 					if (!nextPair) return this.pair = null, this.results();
 					this.pair = nextPair;
-					this.swapped = this.swaps[getPairKey(nextPair)] ??= Math.random() < .5;
+					this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
 					this.render();
 				}
 				render() {
@@ -782,7 +779,7 @@
 					const headers = ['rank', 'item', 'score'].map(key => `<th scope="col" style="width:${key === 'item' ? 60 : 20}%" data-sort="${key}">${this.string(key)}${this.sortState.column === key ? arrow : ''}</th>`).join('');
 					elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
 						const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
-						return `<tr><td>${ranks[x]}</td><td>${escape(this.items[x])}</td><td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td></tr>`;
+						return `<tr><td>${ranks[x]}</td><td>${new Option(this.items[x]).innerHTML}</td><td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td></tr>`;
 					}).join('')}</tbody></table>`;
 					this.display('results');
 					elements.announcer.textContent = this.string('resultsReady');
