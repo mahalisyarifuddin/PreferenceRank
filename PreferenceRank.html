@@ -699,17 +699,15 @@
 				recalculateScores() {
 					const count = this.items.length, wins = Array(count).fill(0), graph = Array.from({ length: count }, () => []);
 					this.matches.forEach(({ a, b, result }) => (wins[a] += result, wins[b] += 1 - result, graph[a].push(b), graph[b].push(a)));
-					let power = Array(count).fill(1), nextPower = Array(count);
+					let power = Array(count).fill(1);
 					for (let i = 0; i < 100; i++) {
 						let diff = 0;
-						for (let j = 0; j < count; j++) {
-							let denom = 1 / (power[j] + 1);
-							for (const k of graph[j]) denom += 1 / (power[j] + power[k]);
-							const newVal = denom > 0 ? (wins[j] + .5) / denom : power[j];
-							diff = Math.max(diff, Math.abs(power[j] - newVal));
-							nextPower[j] = newVal;
-						}
-						[power, nextPower] = [nextPower, power];
+						power = power.map((p, j) => {
+							const denom = graph[j].reduce((acc, k) => acc + 1 / (p + power[k]), 1 / (p + 1));
+							const val = denom > 0 ? (wins[j] + .5) / denom : p;
+							diff = Math.max(diff, Math.abs(p - val));
+							return val;
+						});
 						if (diff < 1e-9) break;
 					}
 					const logs = power.map(Math.log10), avg = logs.reduce((a, b) => a + b, 0) / count;
