@@ -581,22 +581,13 @@
 					this.load();
 				}
 				setup() {
-					const handlers = {
-						start: () => this.start(),
-						restartBattle: () => this.start(),
-						restartNew: () => this.reset(),
-						undo: () => this.undo(),
-						copy: () => this.copyResults(),
-						toggle: () => this.toggleHelp(),
-						cancel: () => this.cancel(),
-						sessionContinue: () => this.restoreSession(),
-						sessionNew: () => this.startNewSession(),
-						resume: () => this.resume(),
-						left: () => this.choose('left'),
-						right: () => this.choose('right'),
-						tie: () => this.choose('tie')
+					const events = {
+						start: 'start', restartBattle: 'start', restartNew: 'reset', undo: 'undo',
+						copy: 'copyResults', toggle: 'toggleHelp', cancel: 'cancel',
+						sessionContinue: 'restoreSession', sessionNew: 'startNewSession', resume: 'resume'
 					};
-					Object.keys(handlers).forEach(key => elements[key].onclick = handlers[key]);
+					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
+					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
 					elements.language.onchange = event => (this.lang(event.target.value), this.save());
 					elements.theme.onchange = event => (this.theme(event.target.value), this.save());
 					elements.allowTies.onchange = event => this.setTies(event.target.checked);
