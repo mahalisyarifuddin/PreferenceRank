@@ -799,9 +799,8 @@
 					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
 					const lines = ranking.map((x, i) => `${i + 1}\t${this.items[x]}\t${Math.round(this.scores[x])}`);
 					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
-						const original = elements.copy.textContent;
 						elements.copy.textContent = this.string('copied');
-						setTimeout(() => elements.copy.textContent = original, 2e3);
+						setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
 					});
 				}
 				cancel() {
