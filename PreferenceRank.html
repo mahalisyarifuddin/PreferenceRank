@@ -539,25 +539,91 @@
 					this.pending = null;
 				}
 				init(frame) {
-					return frame.items.length < 2 ? this.return(frame.items) : (frame.pairs = Array.from({ length: frame.items.length >> 1 }, (_, i) => [frame.items[2 * i], frame.items[2 * i + 1]]), frame.odd = frame.items.length % 2 ? frame.items.at(-1) : null, Object.assign(frame, { winners: [], losers: [], pairIndex: 0, state: 'compare' }), null);
+					if (frame.items.length < 2) {
+						this.return(frame.items);
+						return null;
+					}
+					frame.pairs = Array.from({ length: frame.items.length >> 1 }, (_, i) => [frame.items[2 * i], frame.items[2 * i + 1]]);
+					frame.odd = frame.items.length % 2 ? frame.items.at(-1) : null;
+					Object.assign(frame, { winners: [], losers: [], pairIndex: 0, state: 'compare' });
+					return null;
 				}
 				compare(frame) {
-					return frame.pairIndex >= frame.pairs.length ? (frame.state = 'recurse', this.stack.push({ state: 'init', items: [...frame.winners] }), null) : frame.lastWinner !== undefined ? (frame.winners.push(frame.lastWinner), frame.losers.push(frame.pairs[frame.pairIndex][frame.lastWinner === frame.pairs[frame.pairIndex][0] ? 1 : 0]), delete frame.lastWinner, frame.pairIndex++, null) : (this.pending = frame.pairs[frame.pairIndex], this.history.push(this.snap()), this.pending);
+					if (frame.pairIndex >= frame.pairs.length) {
+						frame.state = 'recurse';
+						this.stack.push({ state: 'init', items: [...frame.winners] });
+						return null;
+					}
+					if (frame.lastWinner !== undefined) {
+						frame.winners.push(frame.lastWinner);
+						frame.losers.push(frame.pairs[frame.pairIndex][frame.lastWinner === frame.pairs[frame.pairIndex][0] ? 1 : 0]);
+						delete frame.lastWinner;
+						frame.pairIndex++;
+						return null;
+					}
+					this.pending = frame.pairs[frame.pairIndex];
+					this.history.push(this.snap());
+					return this.pending;
 				}
 				recurse(frame) {
-					return frame.subresult ? (frame.main = frame.subresult, delete frame.subresult, frame.map = {}, frame.winners.forEach((winner, i) => frame.map[winner] = frame.losers[i]), frame.main.unshift(frame.map[frame.main[0]]), frame.insertions = [], frame.main.slice(1).forEach((winner, i) => i > 0 && frame.insertions.push({ item: frame.map[winner], bound: winner })), frame.odd !== null && frame.insertions.push({ item: frame.odd, bound: null }), frame.jacobIndex = 2, frame.group = [], frame.state = 'group', null) : null;
+					if (!frame.subresult) return null;
+					frame.main = frame.subresult;
+					delete frame.subresult;
+					frame.map = {};
+					frame.winners.forEach((winner, i) => frame.map[winner] = frame.losers[i]);
+					frame.main.unshift(frame.map[frame.main[0]]);
+					frame.insertions = [];
+					frame.main.slice(1).forEach((winner, i) => i > 0 && frame.insertions.push({ item: frame.map[winner], bound: winner }));
+					if (frame.odd !== null) frame.insertions.push({ item: frame.odd, bound: null });
+					frame.jacobIndex = 2;
+					frame.group = [];
+					frame.state = 'group';
+					return null;
 				}
 				group(frame) {
-					!frame.group.length && (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length ? this.return(frame.main) : (frame.group.push(...frame.insertions.slice(this.jacobsthal[frame.jacobIndex - 1] - 1, Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1) + 1).reverse()), frame.jacobIndex++));
-					return frame.main === this.final ? null : (frame.group.length && (frame.current = frame.group.shift(), frame.state = 'insert', frame.binarySearch = { min: 0, max: frame.current.bound !== null ? frame.main.indexOf(frame.current.bound) : frame.main.length, target: frame.current.item }), null);
+					if (!frame.group.length) {
+						if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
+							this.return(frame.main);
+							return null;
+						}
+						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
+						frame.group.push(...frame.insertions.slice(this.jacobsthal[frame.jacobIndex - 1] - 1, end + 1).reverse());
+						frame.jacobIndex++;
+					}
+					if (frame.main === this.final) return null;
+					if (frame.group.length) {
+						frame.current = frame.group.shift();
+						frame.state = 'insert';
+						frame.binarySearch = {
+							min: 0,
+							max: frame.current.bound !== null ? frame.main.indexOf(frame.current.bound) : frame.main.length,
+							target: frame.current.item
+						};
+					}
+					return null;
 				}
 				insert(frame) {
 					const { min, max, target } = frame.binarySearch;
-					return min >= max ? (frame.main.splice(min, 0, target), frame.state = 'group', null) : frame.lastWinner !== undefined ? (frame.lastWinner === target ? frame.binarySearch.min = frame.binarySearch.mid + 1 : frame.binarySearch.max = frame.binarySearch.mid, delete frame.lastWinner, null) : (frame.binarySearch.mid = (min + max) >> 1, this.pending = [target, frame.main[frame.binarySearch.mid]], this.history.push(this.snap()), this.pending);
+					if (min >= max) {
+						frame.main.splice(min, 0, target);
+						frame.state = 'group';
+						return null;
+					}
+					if (frame.lastWinner !== undefined) {
+						if (frame.lastWinner === target) frame.binarySearch.min = frame.binarySearch.mid + 1;
+						else frame.binarySearch.max = frame.binarySearch.mid;
+						delete frame.lastWinner;
+						return null;
+					}
+					frame.binarySearch.mid = (min + max) >> 1;
+					this.pending = [target, frame.main[frame.binarySearch.mid]];
+					this.history.push(this.snap());
+					return this.pending;
 				}
 				return(result) {
 					this.stack.pop();
-					this.stack.length ? this.stack.at(-1).subresult = result : this.final = result.reverse();
+					if (this.stack.length) this.stack.at(-1).subresult = result;
+					else this.final = result.reverse();
 				}
 				getProgress(step) {
 					return `${step}/~${Math.max(step, Math.round(this.count * Math.log2(this.count) - 1.44 * this.count + 3.3))}`;
