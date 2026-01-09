@@ -728,7 +728,11 @@
 					this.saveTimeout = setTimeout(() => this.save(), 500);
 				}
 				getItems() {
-					return elements.items.value.split('\n').map(line => line.trim()).filter(Boolean);
+					const lines = elements.items.value.split('\n').map(line => line.trim()).filter(Boolean);
+					if (!lines.length) return [];
+					const patterns = [/^\d+[\.\)]\s*/, /^[-*•]\s*/];
+					const pattern = patterns.find(p => lines.every(line => p.test(line)));
+					return pattern ? lines.map(line => line.replace(pattern, '')) : lines;
 				}
 				updateCount() {
 					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', this.getItems().length);
@@ -757,7 +761,7 @@
 				start() {
 					const raw = this.getItems();
 					const unique = [...new Set(raw)];
-					return raw.length > unique.length ? (elements.items.value = unique.join('\n'), elements.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length), elements.error.classList.remove('hidden'), void elements.items.setAttribute('aria-invalid', 'true')) : (Object.assign(this, { items: unique, scores: Array(unique.length).fill(1e3), matches: [], pair: null, swapped: false, step: 0, allowTies: elements.allowTies.checked, history: [], busy: false, swaps: {} }), elements.undo.disabled = true, this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length), elements.tieWrap.classList.toggle('hidden', !this.allowTies), this.updateHelp(), this.display('battleSection'), this.next(), void this.save());
+					return raw.length > unique.length ? (elements.items.value = unique.join('\n'), elements.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length), elements.error.classList.remove('hidden'), void elements.items.setAttribute('aria-invalid', 'true')) : (elements.items.value = unique.join('\n'), Object.assign(this, { items: unique, scores: Array(unique.length).fill(1e3), matches: [], pair: null, swapped: false, step: 0, allowTies: elements.allowTies.checked, history: [], busy: false, swaps: {} }), elements.undo.disabled = true, this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length), elements.tieWrap.classList.toggle('hidden', !this.allowTies), this.updateHelp(), this.display('battleSection'), this.next(), void this.save());
 				}
 				resume() {
 					this.pair ? (this.display('battleSection'), this.render()) : this.results();
