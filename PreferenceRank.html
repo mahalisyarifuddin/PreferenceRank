@@ -730,9 +730,11 @@
 				getItems() {
 					const lines = elements.items.value.split('\n').map(line => line.trim()).filter(Boolean);
 					if (!lines.length) return [];
-					const patterns = [/^\d+[\.\)]\s*/, /^[-*•]\s*/];
-					const pattern = patterns.find(p => lines.every(line => p.test(line)));
-					return pattern ? lines.map(line => line.replace(pattern, '')) : lines;
+					const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
+					return lines.map(line => {
+						const p = patterns.find(pattern => pattern.test(line));
+						return p ? line.replace(p, '') : line;
+					});
 				}
 				updateCount() {
 					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', this.getItems().length);
