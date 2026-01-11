@@ -644,7 +644,11 @@
 					elements.language.onchange = event => (this.lang(event.target.value), this.save());
 					elements.theme.onchange = event => (this.theme(event.target.value), this.save());
 					elements.allowTies.onchange = event => this.setTies(event.target.checked);
-					elements.items.oninput = () => (this.check(), this.updateCount(), this.saveInput());
+					elements.items.oninput = () => {
+						this.check();
+						this.updateCount();
+						this.saveInput();
+					};
 					elements.results.onclick = event => {
 						const th = event.target.closest('th');
 						th && th.dataset.sort && this.sortResults(th.dataset.sort);
@@ -763,7 +767,33 @@
 				start() {
 					const raw = this.getItems();
 					const unique = [...new Set(raw)];
-					return raw.length > unique.length ? (elements.items.value = unique.join('\n'), elements.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length), elements.error.classList.remove('hidden'), void elements.items.setAttribute('aria-invalid', 'true')) : (elements.items.value = unique.join('\n'), Object.assign(this, { items: unique, scores: Array(unique.length).fill(1e3), matches: [], pair: null, swapped: false, step: 0, allowTies: elements.allowTies.checked, history: [], busy: false, swaps: {} }), elements.undo.disabled = true, this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length), elements.tieWrap.classList.toggle('hidden', !this.allowTies), this.updateHelp(), this.display('battleSection'), this.next(), void this.save());
+					if (raw.length > unique.length) {
+						elements.items.value = unique.join('\n');
+						elements.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
+						elements.error.classList.remove('hidden');
+						elements.items.setAttribute('aria-invalid', 'true');
+						return;
+					}
+					elements.items.value = unique.join('\n');
+					Object.assign(this, {
+						items: unique,
+						scores: Array(unique.length).fill(1e3),
+						matches: [],
+						pair: null,
+						swapped: false,
+						step: 0,
+						allowTies: elements.allowTies.checked,
+						history: [],
+						busy: false,
+						swaps: {}
+					});
+					elements.undo.disabled = true;
+					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
+					elements.tieWrap.classList.toggle('hidden', !this.allowTies);
+					this.updateHelp();
+					this.display('battleSection');
+					this.next();
+					this.save();
 				}
 				resume() {
 					this.pair ? (this.display('battleSection'), this.render()) : this.results();
@@ -900,11 +930,28 @@
 					this.save();
 				}
 				key(event) {
-					if (!event.repeat) {
-						const { key, ctrlKey, metaKey, shiftKey } = event;
-						if (key === 'Enter' && (ctrlKey || metaKey) && !elements.inputSection.classList.contains('hidden') && !elements.start.disabled) event.preventDefault(), elements.start.click();
-						const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
-						action && elements.inputSection.classList.contains('hidden') && !/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && (action === 'undo' ? (ctrlKey || metaKey) && !shiftKey : !elements.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) && (event.preventDefault(), elements[action].click());
+					if (event.repeat) return;
+					const { key, ctrlKey, metaKey, shiftKey } = event;
+					if (key === 'Enter' && (ctrlKey || metaKey) && !elements.inputSection.classList.contains('hidden') && !elements.start.disabled) {
+						event.preventDefault();
+						elements.start.click();
+						return;
+					}
+					const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
+					if (!action) return;
+					if (!elements.inputSection.classList.contains('hidden')) return;
+					if (/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+
+					if (action === 'undo') {
+						if ((ctrlKey || metaKey) && !shiftKey) {
+							event.preventDefault();
+							elements.undo.click();
+						}
+					} else {
+						if (!elements.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
+							event.preventDefault();
+							elements[action].click();
+						}
 					}
 				}
 			}
