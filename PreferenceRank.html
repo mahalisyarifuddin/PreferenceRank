@@ -250,8 +250,10 @@
 				cursor: pointer;
 				user-select: none;
 			}
-			th:hover {
+			th:hover, th:focus-visible {
 				background: var(--hover);
+				outline: 2px solid var(--on-primary);
+				outline-offset: -2px;
 			}
 			.header {
 				display: flex;
@@ -653,6 +655,15 @@
 						const th = event.target.closest('th');
 						th && th.dataset.sort && this.sortResults(th.dataset.sort);
 					};
+					elements.results.onkeydown = event => {
+						if (event.key === 'Enter' || event.key === ' ') {
+							const th = event.target.closest('th');
+							if (th && th.dataset.sort) {
+								event.preventDefault();
+								this.sortResults(th.dataset.sort);
+							}
+						}
+					};
 					document.onkeydown = event => this.key(event);
 					this.theme('auto');
 					this.lang(this.language);
@@ -876,7 +887,10 @@
 					const min = Math.min(...this.scores);
 					const range = Math.max(...this.scores) - min;
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
-					const headers = ['rank', 'item', 'score'].map(key => `<th scope="col" style="width:${key === 'item' ? 60 : 20}%" data-sort="${key}">${this.string(key)}${this.sortState.column === key ? arrow : ''}</th>`).join('');
+					const headers = ['rank', 'item', 'score'].map(key => {
+						const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
+						return `<th scope="col" tabindex="0" aria-sort="${sort}" style="width:${key === 'item' ? 60 : 20}%" data-sort="${key}">${this.string(key)}${this.sortState.column === key ? arrow : ''}</th>`;
+					}).join('');
 					elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
 						const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
 						return `<tr><td>${ranks[x]}</td><td>${new Option(this.items[x]).innerHTML}</td><td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td></tr>`;
