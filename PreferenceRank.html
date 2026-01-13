@@ -699,7 +699,7 @@
 				load() {
 					try {
 						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-						data && (data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language)), data.inputValue && (elements.items.value = data.inputValue, this.check(), this.updateCount()), data.battle ? this.prompt(data.battle) : this.display('inputSection'));
+						data && (data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language)), data.inputValue && (elements.items.value = data.inputValue, this.check(), this.updateCount()), data.battle ? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle)) : this.display('inputSection'));
 					} catch {
 						localStorage.removeItem('preferenceRankData');
 					}
