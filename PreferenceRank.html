@@ -334,7 +334,7 @@
 	</head>
 	<body>
 		<div class="container">
-			<div id="sessionModal" class="hidden">
+			<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
 				<h2 id="sessionTitle"></h2>
 				<p id="sessionMessage" style="margin:1rem 0 2rem;line-height:1.5"></p>
 				<div id="sessionButtons">
@@ -711,6 +711,7 @@
 					elements.sessionContinue.textContent = this.string('resumeConfirm');
 					elements.sessionNew.textContent = this.string('resumeNew');
 					elements.sessionModal.classList.remove('hidden');
+					elements.inputSection.classList.add('hidden');
 					elements.sessionContinue.focus();
 				}
 				restoreSession() {
