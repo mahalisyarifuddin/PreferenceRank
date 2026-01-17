@@ -4,6 +4,7 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<title>PreferenceRank</title>
+		<script>try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}</script>
 		<style>
 			:root {
 				--primary: #005dac;
@@ -56,6 +57,7 @@
 				box-sizing: border-box;
 				margin: 0;
 				padding: 0;
+				transition: background-color .3s, color .3s, border-color .3s, outline-color .3s;
 			}
 			body {
 				background: var(--background);
