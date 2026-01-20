@@ -890,7 +890,8 @@
 						item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
 						score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir
 					};
-					const ranking = [...this.scores.keys()].sort(sorters[this.sortState.column]);
+					this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column]);
+					const ranking = this.currentRanking;
 					const min = Math.min(...this.scores);
 					const range = Math.max(...this.scores) - min;
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
@@ -918,9 +919,11 @@
 					focusTarget && setTimeout(() => focusTarget.focus(), 50);
 				}
 				copyResults() {
-					const ranking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
+					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
+					const ranks = []; baseRanking.forEach((x, i) => ranks[x] = i + 1);
+					const ranking = this.currentRanking || baseRanking;
 					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
-					const lines = ranking.map((x, i) => `${i + 1}\t${this.items[x]}\t${Math.round(this.scores[x])}`);
+					const lines = ranking.map(x => `${ranks[x]}\t${this.items[x]}\t${Math.round(this.scores[x])}`);
 					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
 						elements.copy.textContent = this.string('copied');
 						setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
