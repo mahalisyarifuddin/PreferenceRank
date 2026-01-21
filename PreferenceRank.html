@@ -925,8 +925,10 @@
 					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
 					const lines = ranking.map(x => `${ranks[x]}\t${this.items[x]}\t${Math.round(this.scores[x])}`);
 					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
+						clearTimeout(this.copyTimeout);
 						elements.copy.textContent = this.string('copied');
-						setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
+						elements.announcer.textContent = `${this.string('resultsTitle')} ${this.string('copied')}`;
+						this.copyTimeout = setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
 					});
 				}
 				cancel() {
