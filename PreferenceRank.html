@@ -836,11 +836,10 @@
 				choose(winner) {
 					if (this.busy || elements.battleSection.classList.contains('hidden')) return;
 					this.busy = true;
-					this.history.push({ pair: this.pair, scores: [...this.scores], step: this.step, swapped: this.swapped });
+					this.history.push({ pair: this.pair, step: this.step, swapped: this.swapped });
 					const [a, b] = this.pair;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
 					this.matches.push({ a, b, result });
-					this.recalculateScores();
 					this.step++;
 					elements.undo.disabled = false;
 					this.updateProgress();
@@ -881,6 +880,7 @@
 					this.results();
 				}
 				results() {
+					this.recalculateScores();
 					elements.results.parentElement.append(elements.undo, elements.copy);
 					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = []; baseRanking.forEach((x, i) => ranks[x] = i + 1);
@@ -939,7 +939,6 @@
 					if (!this.busy && this.history.length) {
 						const last = this.history.pop();
 						this.matches.pop();
-						this.recalculateScores();
 						Object.assign(this, { step: last.step, pair: last.pair, swapped: last.swapped });
 						this.provider.unmark?.(last.pair);
 						this.render();
