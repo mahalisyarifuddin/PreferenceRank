@@ -640,7 +640,7 @@
 
 			class PreferenceRank {
 				constructor() {
-					Object.assign(this, { scores: [], matches: [], history: [], swaps: {}, sortState: { column: 'rank', direction: 'asc' } });
+					Object.assign(this, { scores: [], matches: [], history: [], swaps: {}, sortState: { column: 'rank', direction: 'asc' }, dirty: true });
 					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
 					const events = {
 						start: 'start', restartBattle: 'start', restartNew: 'reset', undo: 'undo',
@@ -803,7 +803,8 @@
 						allowTies: elements.allowTies.checked,
 						history: [],
 						busy: false,
-						swaps: {}
+						swaps: {},
+						dirty: true
 					});
 					elements.undo.disabled = true;
 					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
@@ -817,6 +818,7 @@
 					this.pair ? (this.display('battleSection'), this.render()) : this.results();
 				}
 				recalculateScores() {
+					if (!this.dirty && this.scores && this.scores.length === this.items.length) return;
 					const count = this.items.length, wins = Array(count).fill(0), graph = Array.from({ length: count }, () => []);
 					this.matches.forEach(({ a, b, result }) => (wins[a] += result, wins[b] += 1 - result, graph[a].push(b), graph[b].push(a)));
 					let power = Array(count).fill(1);
@@ -832,6 +834,7 @@
 					}
 					const logs = power.map(Math.log10), avg = logs.reduce((a, b) => a + b, 0) / count;
 					this.scores = logs.map(v => 1e3 + 400 * (v - avg));
+					this.dirty = false;
 				}
 				choose(winner) {
 					if (this.busy || elements.battleSection.classList.contains('hidden')) return;
@@ -840,6 +843,7 @@
 					const [a, b] = this.pair;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
 					this.matches.push({ a, b, result });
+					this.dirty = true;
 					this.step++;
 					elements.undo.disabled = false;
 					this.updateProgress();
@@ -939,6 +943,7 @@
 					if (!this.busy && this.history.length) {
 						const last = this.history.pop();
 						this.matches.pop();
+						this.dirty = true;
 						Object.assign(this, { step: last.step, pair: last.pair, swapped: last.swapped });
 						this.provider.unmark?.(last.pair);
 						this.render();
@@ -948,7 +953,7 @@
 					}
 				}
 				reset() {
-					Object.assign(this, { scores: [], matches: [], history: [], provider: null });
+					Object.assign(this, { scores: [], matches: [], history: [], provider: null, dirty: true });
 					this.display('inputSection');
 					this.updateHelp();
 					this.updateProgress();
