@@ -653,8 +653,7 @@
 					elements.theme.onchange = event => (this.theme(event.target.value), this.save());
 					elements.allowTies.onchange = event => this.setTies(event.target.checked);
 					elements.items.oninput = () => {
-						this.check();
-						this.updateCount();
+						this.updateInputState();
 						this.saveInput();
 					};
 					elements.results.onclick = event => {
@@ -705,7 +704,7 @@
 				load() {
 					try {
 						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-						data && (data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language)), data.inputValue && (elements.items.value = data.inputValue, this.check(), this.updateCount()), data.battle ? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle)) : this.display('inputSection'));
+						data && (data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language)), data.inputValue && (elements.items.value = data.inputValue, this.updateInputState()), data.battle ? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle)) : this.display('inputSection'));
 					} catch {
 						localStorage.removeItem('preferenceRankData');
 					}
@@ -731,8 +730,7 @@
 					elements.items.value = '';
 					elements.allowTies.checked = false;
 					elements.quickRank.checked = false;
-					this.check();
-					this.updateCount();
+					this.updateInputState();
 					this.reset();
 				}
 				restoreBattle(battle) {
@@ -758,8 +756,13 @@
 						return p ? line.replace(p, '') : line;
 					});
 				}
-				updateCount() {
-					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', this.getItems().length);
+				updateInputState() {
+					const items = this.getItems();
+					this.check(items);
+					this.updateCount(items);
+				}
+				updateCount(items) {
+					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', (items || this.getItems()).length);
 				}
 				setTies(enabled) {
 					this.allowTies = enabled;
@@ -776,8 +779,8 @@
 					elements.tips.classList.toggle('hidden');
 					this.updateHelp();
 				}
-				check() {
-					const valid = new Set(this.getItems()).size >= 2;
+				check(items) {
+					const valid = new Set(items || this.getItems()).size >= 2;
 					elements.start.disabled = !valid;
 					valid && (elements.error.classList.add('hidden'), elements.items.removeAttribute('aria-invalid'));
 					elements.resume.classList.toggle('hidden', !this.provider);
