@@ -448,7 +448,8 @@
 					resumeTitle: 'Resume Session?',
 					resumeMessage: 'A previous ranking session was found. Do you want to continue where you left off?',
 					resumeConfirm: 'Continue',
-					resumeNew: 'New Session'
+					resumeNew: 'New Session',
+					estMatches: ' (~{count} comparisons)'
 				},
 				id: {
 					title: 'PreferenceRank',
@@ -491,12 +492,16 @@
 					resumeTitle: 'Lanjutkan Sesi?',
 					resumeMessage: 'Sesi peringkat sebelumnya ditemukan. Apakah Anda ingin melanjutkannya?',
 					resumeConfirm: 'Lanjutkan',
-					resumeNew: 'Sesi Baru'
+					resumeNew: 'Sesi Baru',
+					estMatches: ' (~{count} perbandingan)'
 				}
 			};
 			const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
 
 			class FullPairProvider {
+				static estimate(count) {
+					return count * (count - 1) / 2;
+				}
 				constructor(count) {
 					this.pairs = [];
 					for (let i = 0; i < count; i++) for (let j = i + 1; j < count; j++) this.pairs.push([i, j]);
@@ -514,6 +519,9 @@
 			}
 
 			class QuickPairProvider {
+				static estimate(count) {
+					return Math.max(0, Math.round(count * Math.log2(count) - 1.44 * count + 3.3));
+				}
 				constructor(count) {
 					this.count = count;
 					this.stack = [{ state: 'init', items: [...Array(count).keys()] }];
@@ -634,7 +642,7 @@
 					else this.final = result.reverse();
 				}
 				getProgress(step) {
-					return `${step}/~${Math.max(step, Math.round(this.count * Math.log2(this.count) - 1.44 * this.count + 3.3))}`;
+					return `${step}/~${Math.max(step, QuickPairProvider.estimate(this.count))}`;
 				}
 			}
 
@@ -652,6 +660,7 @@
 					elements.language.onchange = event => (this.lang(event.target.value), this.save());
 					elements.theme.onchange = event => (this.theme(event.target.value), this.save());
 					elements.allowTies.onchange = event => this.setTies(event.target.checked);
+					elements.quickRank.onchange = () => this.updateInputState();
 					elements.items.oninput = () => {
 						this.updateInputState();
 						this.saveInput();
@@ -762,7 +771,10 @@
 					this.updateCount(items);
 				}
 				updateCount(items) {
-					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', (items || this.getItems()).length);
+					const list = items || this.getItems();
+					const count = list.length;
+					const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
+					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
 				}
 				setTies(enabled) {
 					this.allowTies = enabled;

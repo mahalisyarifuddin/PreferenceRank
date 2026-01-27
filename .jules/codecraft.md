@@ -12,3 +12,8 @@
 **Mode:** Bolt
 **Learning:** In simple "reactive" UI setups (via `oninput`), separate method calls (`check`, `updateCount`) often duplicate expensive parsing logic (`getItems`), leading to O(N) operations running multiple times per event.
 **Action:** Centralize state updates into a single method (like `updateInputState`) that computes derived state once and passes it to consumers.
+
+## 2024-05-25 - Verification of Single-file Apps
+**Mode:** Palette
+**Learning:** Verifying logic inside a single HTML file is challenging without a build step.
+**Action:** Extract the JS content using regex/sed and run it in a Node.js environment with a mock DOM (`document`, `window`, etc.) to verify logic without a browser.
