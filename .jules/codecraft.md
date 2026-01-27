@@ -17,3 +17,8 @@
 **Mode:** Palette
 **Learning:** Verifying logic inside a single HTML file is challenging without a build step.
 **Action:** Extract the JS content using regex/sed and run it in a Node.js environment with a mock DOM (`document`, `window`, etc.) to verify logic without a browser.
+
+## 2024-05-25 - Math.log2 Edge Cases
+**Mode:** Medic
+**Learning:** `Math.log2(0)` returns `-Infinity`, which can propagate to `NaN` in mathematical formulas like comparisons estimates. Formulas derived for large N often fail for N=0 or N=1.
+**Action:** Always include guard clauses (e.g., `if (n <= 1) return 0`) when implementing statistical estimation formulas to handle empty or trivial inputs gracefully.
