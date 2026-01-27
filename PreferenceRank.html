@@ -520,6 +520,7 @@
 
 			class QuickPairProvider {
 				static estimate(count) {
+					if (count <= 1) return 0;
 					return Math.max(0, Math.round(count * Math.log2(count) - 1.44 * count + 3.3));
 				}
 				constructor(count) {
