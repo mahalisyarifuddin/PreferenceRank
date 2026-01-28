@@ -1,44 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width,initial-scale=1">
-		<title>PreferenceRank</title>
-		<script>try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}</script>
-		<style>
-			:root {
-				--primary: #005dac;
-				--on-primary: #ffffff;
-				--hover: #00539a;
-				--background: #f9f9ff;
-				--surface: #ffffff;
-				--text: #181c21;
-				--border: #c1c6d4;
-				--muted: #f2f3fc;
-				--success: #0b6b1d;
-				--on-success: #ffffff;
-				--danger: #ba1a1a;
-				--on-danger: #ffffff;
-				--highlight-bg: #d4e3ff;
-			}
-			@media (prefers-color-scheme: dark) {
-				:root:not(.light) {
-					--primary: #a5c8ff;
-					--on-primary: #00315f;
-					--hover: #72adff;
-					--background: #101319;
-					--surface: #0b0e14;
-					--text: #e0e2ea;
-					--border: #414752;
-					--muted: #181c21;
-					--success: #82db7e;
-					--on-success: #00390a;
-					--danger: #ffb4ab;
-					--on-danger: #93000a;
-					--highlight-bg: #001c3a;
-				}
-			}
-			:root.dark {
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>PreferenceRank</title>
+	<script>try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}</script>
+	<style>
+		:root {
+			--primary: #005dac;
+			--on-primary: #ffffff;
+			--hover: #00539a;
+			--background: #f9f9ff;
+			--surface: #ffffff;
+			--text: #181c21;
+			--border: #c1c6d4;
+			--muted: #f2f3fc;
+			--success: #0b6b1d;
+			--on-success: #ffffff;
+			--danger: #ba1a1a;
+			--on-danger: #ffffff;
+			--highlight-bg: #d4e3ff;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root:not(.light) {
 				--primary: #a5c8ff;
 				--on-primary: #00315f;
 				--hover: #72adff;
@@ -53,955 +37,941 @@
 				--on-danger: #93000a;
 				--highlight-bg: #001c3a;
 			}
-			* {
-				box-sizing: border-box;
-				margin: 0;
-				padding: 0;
-				transition: background-color .3s, color .3s, border-color .3s, outline-color .3s;
+		}
+		:root.dark {
+			--primary: #a5c8ff;
+			--on-primary: #00315f;
+			--hover: #72adff;
+			--background: #101319;
+			--surface: #0b0e14;
+			--text: #e0e2ea;
+			--border: #414752;
+			--muted: #181c21;
+			--success: #82db7e;
+			--on-success: #00390a;
+			--danger: #ffb4ab;
+			--on-danger: #93000a;
+			--highlight-bg: #001c3a;
+		}
+		* { 
+			box-sizing: border-box; 
+			margin: 0; 
+			padding: 0; 
+			transition: background-color .3s, 
+			color .3s, 
+			border-color .3s, 
+			outline-color .3s; 
+		}
+		body {
+			background: var(--background);
+			color: var(--text);
+			font-family: sans-serif;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			padding: 1rem;
+		}
+		.container {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			max-width: 720px;
+			padding: 2rem;
+			width: 100%;
+			position: relative;
+		}
+		.hidden { 
+			display: none !important; 
+		}
+		h1, h2, label { 
+			margin: .5rem 0; 
+			display: block; 
+		}
+		label { 
+			font-weight: 700; 
+		}
+		input, select, textarea, button {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 4px;
+			color: var(--text);
+			font: 1rem sans-serif;
+			padding: .5rem;
+			width: 100%;
+		}
+		input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { 
+			outline: 2px solid var(--primary); 
+			outline-offset: 2px; 
+		}
+		textarea { 
+			font-family: monospace; 
+			min-height: 80px; 
+			resize: vertical; 
+		}
+		button { 
+			cursor: pointer; 
+			transition: background .1s; 
+		}
+		button:disabled { 
+			background: var(--muted) !important; 
+			cursor: not-allowed; 
+			opacity: .6; 
+		}
+		.primary { 
+			background: var(--primary); 
+			border: none; 
+			color: var(--on-primary); 
+		}
+		.primary:hover:not(:disabled) { 
+			background: var(--hover); 
+		}
+		.secondary:hover:not(:disabled) { 
+			background: var(--muted); 
+		}
+		.count { 
+			font-size: .85rem; 
+			margin-top: .25rem; 
+			text-align: right; 
+			opacity: .8; 
+		}
+		.error { 
+			color: var(--danger); 
+			font-size: .9rem; 
+			margin-top: .5rem; 
+			display: block; 
+		}
+		.selectors { 
+			position: absolute; 
+			right: 2rem; 
+			top: 1rem; 
+			display: flex; 
+			gap: 8px; 
+		}
+		.selectors select { 
+			width: auto; 
+			font-size: .9rem; 
+		}
+		.row { 
+			display: flex; 
+			align-items: center; 
+			gap: 10px; 
+			margin: .75rem 0; 
+		}
+		.row input { 
+			width: auto; 
+		}
+		.row label { 
+			margin: 0; 
+		}
+		.actions { 
+			display: flex; 
+			flex-direction: column; 
+			gap: 10px; 
+			margin-top: 1rem; 
+		}
+		#battle, #tieWrap, #restartWrap { 
+			display: flex; 
+			gap: 1rem; 
+			margin-top: 1rem; 
+		}
+		#battle button, #tieWrap button { 
+			flex: 1; 
+			font-size: 1.2rem; 
+			min-height: 100px; 
+		}
+		#progress { 
+			font-size: 1.1rem; 
+			margin-top: 1rem; 
+			text-align: center; 
+		}
+		.track { 
+			background: var(--muted); 
+			border-radius: 4px; 
+			height: 6px; 
+			margin: 8px auto 0; 
+			max-width: 200px; 
+			overflow: hidden; 
+		}
+		.fill { 
+			background: var(--primary); 
+			height: 100%; 
+			width: 0; 
+		}
+		#tips {
+			background: var(--background);
+			border: 1px solid var(--border);
+			border-radius: 4px;
+			font-size: .85rem;
+			line-height: 1.5;
+			margin-top: 15px;
+			opacity: .9;
+			padding: 8px;
+			text-align: center;
+		}
+		kbd {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 3px;
+			box-shadow: 0 1px 1px #0003;
+			display: inline-block;
+			font-family: monospace;
+			font-size: .9em;
+			margin: 0 3px;
+			padding: 2px 5px;
+		}
+		#cancel, #toggle { 
+			background: none; 
+			border: 1px solid var(--border); 
+			color: var(--text); 
+			cursor: pointer; 
+			display: block; 
+			font-size: .9rem; 
+			margin: 1rem auto; 
+			padding: 5px 15px; 
+			width: auto; 
+		}
+		#cancel:hover { 
+			background: var(--muted); 
+		}
+		#cancel.confirming { 
+			border-color: var(--danger); 
+			color: var(--danger); 
+		}
+		#toggle { 
+			border: none; 
+			color: var(--primary); 
+			text-decoration: underline; 
+		}
+		table { 
+			border-collapse: collapse; 
+			margin-top: 1rem; 
+			width: 100%; 
+		}
+		th, td { 
+			border: 1px solid var(--border); 
+			padding: .5rem; 
+			text-align: left; 
+		}
+		th { 
+			background: var(--primary); 
+			color: var(--on-primary); 
+			cursor: pointer; 
+			user-select: none; 
+		}
+		th:hover, th:focus-visible { 
+			background: var(--hover); 
+			outline: 2px solid var(--on-primary); 
+			outline-offset: -2px; 
+		}
+		.header { 
+			display: flex; 
+			justify-content: center; 
+			align-items: center; 
+			position: relative; 
+			min-height: 40px; 
+			margin-bottom: 1rem; 
+		}
+		.header #undo { 
+			position: absolute; 
+			left: 0; 
+			top: 50%; 
+			transform: translateY(-50%); 
+		}
+		.header #copy { 
+			position: absolute; 
+			right: 0; 
+			top: 50%; 
+			transform: translateY(-50%); 
+		}
+		#undo, #copy { 
+			width: auto; 
+		}
+		.selected { 
+			background: var(--primary) !important; 
+			color: var(--on-primary) !important; 
+		}
+		@media (max-width: 768px) {
+			body { 
+				padding: .75rem; 
 			}
-			body {
-				background: var(--background);
-				color: var(--text);
-				font-family: sans-serif;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				min-height: 100vh;
-				padding: 1rem;
+			.container { 
+				padding: 1.5rem; 
 			}
-			.container {
-				background: var(--surface);
-				border: 1px solid var(--border);
-				border-radius: 8px;
-				max-width: 720px;
-				padding: 2rem;
-				width: 100%;
-				position: relative;
+			.selectors { 
+				position: static; 
+				justify-content: flex-end; 
+				margin-bottom: .5rem; 
 			}
-			.hidden {
-				display: none !important;
+			#battle, #tieWrap, #restartWrap { 
+				flex-direction: column; 
 			}
-			h1, h2, label {
-				margin: .5rem 0;
-				display: block;
-			}
-			label {
-				font-weight: 700;
-			}
-			input, select, textarea, button {
-				background: var(--surface);
-				border: 1px solid var(--border);
-				border-radius: 4px;
-				color: var(--text);
-				font: 1rem sans-serif;
-				padding: .5rem;
-				width: 100%;
-			}
-			input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
-				outline: 2px solid var(--primary);
-				outline-offset: 2px;
-			}
-			textarea {
-				font-family: monospace;
-				min-height: 80px;
-				resize: vertical;
-			}
-			button {
-				cursor: pointer;
-				transition: background .1s;
-			}
-			button:disabled {
-				background: var(--muted) !important;
-				cursor: not-allowed;
-				opacity: .6;
-			}
-			.primary {
-				background: var(--primary);
-				border: none;
-				color: var(--on-primary);
-			}
-			.primary:hover:not(:disabled) {
-				background: var(--hover);
-			}
-			.secondary:hover:not(:disabled) {
-				background: var(--muted);
-			}
-			.count {
-				font-size: .85rem;
-				margin-top: .25rem;
-				text-align: right;
-				opacity: .8;
-			}
-			.error {
-				color: var(--danger);
-				font-size: .9rem;
-				margin-top: .5rem;
-				display: block;
-			}
-			.selectors {
-				position: absolute;
-				right: 2rem;
-				top: 1rem;
-				display: flex;
-				gap: 8px;
-			}
-			.selectors select {
-				width: auto;
-				font-size: .9rem;
-			}
-			.row {
-				display: flex;
-				align-items: center;
-				gap: 10px;
-				margin: .75rem 0;
-			}
-			.row input {
-				width: auto;
-			}
-			.row label {
-				margin: 0;
-			}
-			.actions {
-				display: flex;
-				flex-direction: column;
-				gap: 10px;
-				margin-top: 1rem;
-			}
-			#battle, #tieWrap, #restartWrap {
-				display: flex;
-				gap: 1rem;
-				margin-top: 1rem;
-			}
-			#battle button, #tieWrap button {
-				flex: 1;
-				font-size: 1.2rem;
-				min-height: 100px;
-			}
-			#progress {
-				font-size: 1.1rem;
-				margin-top: 1rem;
-				text-align: center;
-			}
-			.track {
-				background: var(--muted);
-				border-radius: 4px;
-				height: 6px;
-				margin: 8px auto 0;
-				max-width: 200px;
-				overflow: hidden;
-			}
-			.fill {
-				background: var(--primary);
-				height: 100%;
-				width: 0;
-			}
-			#tips {
-				background: var(--background);
-				border: 1px solid var(--border);
-				border-radius: 4px;
-				font-size: .85rem;
-				line-height: 1.5;
-				margin-top: 15px;
-				opacity: .9;
-				padding: 8px;
-				text-align: center;
-			}
-			kbd {
-				background: var(--surface);
-				border: 1px solid var(--border);
-				border-radius: 3px;
-				box-shadow: 0 1px 1px #0003;
-				display: inline-block;
-				font-family: monospace;
-				font-size: .9em;
-				margin: 0 3px;
-				padding: 2px 5px;
-			}
-			#cancel, #toggle {
-				background: none;
-				border: 1px solid var(--border);
-				color: var(--text);
-				cursor: pointer;
-				display: block;
-				font-size: .9rem;
-				margin: 1rem auto;
-				padding: 5px 15px;
-				width: auto;
-			}
-			#cancel:hover {
-				background: var(--muted);
-			}
-			#cancel.confirming {
-				border-color: var(--danger);
-				color: var(--danger);
-			}
-			#toggle {
-				border: none;
-				color: var(--primary);
-				text-decoration: underline;
-			}
-			table {
-				border-collapse: collapse;
-				margin-top: 1rem;
-				width: 100%;
-			}
-			th, td {
-				border: 1px solid var(--border);
-				padding: .5rem;
-				text-align: left;
-			}
-			th {
-				background: var(--primary);
-				color: var(--on-primary);
-				cursor: pointer;
-				user-select: none;
-			}
-			th:hover, th:focus-visible {
-				background: var(--hover);
-				outline: 2px solid var(--on-primary);
-				outline-offset: -2px;
-			}
-			.header {
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				position: relative;
-				min-height: 40px;
-				margin-bottom: 1rem;
-			}
-			.header #undo {
-				position: absolute;
-				left: 0;
-				top: 50%;
-				transform: translateY(-50%);
-			}
-			.header #copy {
-				position: absolute;
-				right: 0;
-				top: 50%;
-				transform: translateY(-50%);
-			}
-			#undo, #copy {
-				width: auto;
-			}
-			.selected {
-				background: var(--primary) !important;
-				color: var(--on-primary) !important;
-			}
-			@media (max-width: 768px) {
-				body {
-					padding: .75rem;
-				}
-				.container {
-					padding: 1.5rem;
-				}
-				.selectors {
-					position: static;
-					justify-content: flex-end;
-					margin-bottom: .5rem;
-				}
-				#battle, #tieWrap, #restartWrap {
-					flex-direction: column;
-				}
-			}
-			#sessionModal {
-				position: absolute;
-				inset: 0;
-				background: var(--surface);
-				z-index: 10;
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				justify-content: center;
-				padding: 2rem;
-				text-align: center;
-			}
-			#sessionButtons {
-				display: flex;
-				gap: 1rem;
-				width: 100%;
-				max-width: 400px;
-			}
-			#sessionButtons button {
-				flex: 1;
-			}
-			.visually-hidden {
-				position: absolute;
-				width: 1px;
-				height: 1px;
-				padding: 0;
-				margin: -1px;
-				overflow: hidden;
-				clip: rect(0, 0, 0, 0);
-				white-space: nowrap;
-				border: 0;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="container">
-			<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
-				<h2 id="sessionTitle"></h2>
-				<p id="sessionMessage" style="margin:1rem 0 2rem;line-height:1.5"></p>
-				<div id="sessionButtons">
-					<button id="sessionContinue" class="primary"></button>
-					<button id="sessionNew" class="secondary"></button>
-				</div>
-			</div>
-			<div id="inputSection">
-				<div class="selectors">
-					<select id="language" aria-label="Language">
-						<option value="en">English</option>
-						<option value="id">Bahasa Indonesia</option>
-					</select>
-					<select id="theme" aria-label="Theme">
-						<option value="auto"></option>
-						<option value="light"></option>
-						<option value="dark"></option>
-					</select>
-				</div>
-				<h1 id="title"></h1>
-				<div class="group">
-					<label for="items" id="labelItems"></label>
-					<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
-					<div id="itemCount" class="count"></div>
-					<span id="error" class="error hidden" aria-live="polite"></span>
-				</div>
-				<div class="row">
-					<input type="checkbox" id="allowTies">
-					<label for="allowTies" id="labelTies"></label>
-				</div>
-				<div class="row">
-					<input type="checkbox" id="quickRank">
-					<label for="quickRank" id="labelQuick"></label>
-				</div>
-				<div class="actions">
-					<button id="resume" class="primary hidden"></button>
-					<button id="start" class="primary"></button>
-				</div>
-			</div>
-			<div id="announcer" class="visually-hidden" aria-live="polite"></div>
-			<button id="undo" class="secondary hidden" disabled></button>
-			<button id="copy" class="secondary hidden"></button>
-			<div id="battleSection" class="hidden">
-				<div id="battle">
-					<button id="left" class="secondary"></button>
-					<button id="right" class="secondary"></button>
-				</div>
-				<div id="tieWrap" class="hidden">
-					<button id="tie" class="secondary"></button>
-				</div>
-				<div id="progress"></div>
-				<div id="progressTrack" class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-					<div id="progressFill" class="fill"></div>
-				</div>
-				<button id="cancel"></button>
-				<button id="toggle"></button>
-				<div id="tips" class="hidden"></div>
-			</div>
-			<div id="results" class="hidden"></div>
-			<div id="restartWrap" class="hidden">
-				<button id="restartBattle" class="primary"></button>
-				<button id="restartNew" class="primary"></button>
+		}
+		#sessionModal { 
+			position: absolute; 
+			inset: 0; background: 
+			var(--surface); 
+			z-index: 10; 
+			display: flex; 
+			flex-direction: column; 
+			align-items: center; 
+			justify-content: center; 
+			padding: 2rem; 
+			text-align: center; 
+		}
+		#sessionButtons { 
+			display: flex; 
+			gap: 1rem; 
+			width: 100%; 
+			max-width: 400px; 
+		}
+		#sessionButtons button { 
+			flex: 1; 
+		}
+		.visually-hidden { 
+			position: absolute; 
+			width: 1px; 
+			height: 1px; 
+			padding: 0; 
+			margin: -1px; 
+			overflow: hidden; 
+			clip: rect(0, 0, 0, 0); 
+			white-space: nowrap; 
+			border: 0; 
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
+			<h2 id="sessionTitle"></h2>
+			<p id="sessionMessage" style="margin:1rem 0 2rem;line-height:1.5"></p>
+			<div id="sessionButtons">
+				<button id="sessionContinue" class="primary"></button>
+				<button id="sessionNew" class="secondary"></button>
 			</div>
 		</div>
-		<script>
-			const text = {
-				en: {
-					title: 'PreferenceRank',
-					languageLabel: 'Language',
-					themeLabel: 'Theme',
-					autoTheme: 'Auto Theme',
-					lightTheme: 'Light',
-					darkTheme: 'Dark',
-					labelItems: 'Enter items, one per line:',
-					labelTies: 'Allow Ties',
-					labelQuick: 'Use Quick Rank (fewer comparisons)',
-					duplicate: '{count} duplicate item(s) removed.',
-					itemsCount: '{count} items',
-					start: 'Start Ranking',
-					resume: 'Resume Ranking',
-					cancel: 'Cancel',
-					confirmCancel: 'Confirm Cancel?',
-					tie: "It's a Tie",
-					undo: 'Undo',
-					progress: 'Progress',
-					toggleShow: 'Show keyboard shortcuts',
-					toggleHide: 'Hide keyboard shortcuts',
-					shortcutLeft: 'Left Arrow',
-					shortcutRight: 'Right Arrow',
-					shortcutTie: 'Up/Down Arrow',
-					shortcutUndo: 'Ctrl/⌘ + Z',
-					tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
-					tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
-					resultsTitle: 'Results',
-					rank: 'Rank',
-					item: 'Item',
-					score: 'Score',
-					compare: 'Compare: {1} vs {2}',
-					resultsReady: 'Ranking complete. Results table is shown.',
-					restartBattle: 'Restart Battle',
-					restartNew: 'Edit Items',
-					placeholderItems: 'Apple\nBlueberry\nCherry',
-					copy: 'Copy Results',
-					copied: 'Copied!',
-					resumeTitle: 'Resume Session?',
-					resumeMessage: 'A previous ranking session was found. Do you want to continue where you left off?',
-					resumeConfirm: 'Continue',
-					resumeNew: 'New Session',
-					estMatches: ' (~{count} comparisons)'
-				},
-				id: {
-					title: 'PreferenceRank',
-					languageLabel: 'Bahasa',
-					themeLabel: 'Tema',
-					autoTheme: 'Tema Otomatis',
-					lightTheme: 'Terang',
-					darkTheme: 'Gelap',
-					labelItems: 'Masukkan pilihan, satu per baris:',
-					labelTies: 'Izinkan Seri',
-					labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
-					duplicate: '{count} item duplikat dihapus.',
-					itemsCount: '{count} pilihan',
-					start: 'Mulai Peringkat',
-					resume: 'Lanjutkan Peringkat',
-					cancel: 'Batal',
-					confirmCancel: 'Konfirmasi Batal?',
-					tie: 'Seri',
-					undo: 'Urungkan',
-					progress: 'Kemajuan',
-					toggleShow: 'Tampilkan pintasan papan ketik',
-					toggleHide: 'Sembunyikan pintasan papan ketik',
-					shortcutLeft: 'Panah Kiri',
-					shortcutRight: 'Panah Kanan',
-					shortcutTie: 'Panah Atas/Bawah',
-					shortcutUndo: 'Ctrl/⌘ + Z',
-					tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
-					tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
-					resultsTitle: 'Hasil',
-					rank: 'Peringkat',
-					item: 'Nama',
-					score: 'Skor',
-					compare: 'Bandingkan: {1} lawan {2}',
-					resultsReady: 'Peringkat selesai. Tabel hasil ditampilkan.',
-					restartBattle: 'Mulai Ulang Pertarungan',
-					restartNew: 'Ubah Pilihan',
-					placeholderItems: 'Apel\nBluberi\nCeri',
-					copy: 'Salin Hasil',
-					copied: 'Disalin!',
-					resumeTitle: 'Lanjutkan Sesi?',
-					resumeMessage: 'Sesi peringkat sebelumnya ditemukan. Apakah Anda ingin melanjutkannya?',
-					resumeConfirm: 'Lanjutkan',
-					resumeNew: 'Sesi Baru',
-					estMatches: ' (~{count} perbandingan)'
-				}
-			};
-			const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
+		<div id="inputSection">
+			<div class="selectors">
+				<select id="language" aria-label="Language"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select>
+				<select id="theme" aria-label="Theme"><option value="auto"></option><option value="light"></option><option value="dark"></option></select>
+			</div>
+			<h1 id="title"></h1>
+			<div class="group">
+				<label for="items" id="labelItems"></label>
+				<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
+				<div id="itemCount" class="count"></div>
+				<span id="error" class="error hidden" aria-live="polite"></span>
+			</div>
+			<div class="row"><input type="checkbox" id="allowTies"><label for="allowTies" id="labelTies"></label></div>
+			<div class="row"><input type="checkbox" id="quickRank"><label for="quickRank" id="labelQuick"></label></div>
+			<div class="actions">
+				<button id="resume" class="primary hidden"></button>
+				<button id="start" class="primary"></button>
+			</div>
+		</div>
+		<div id="announcer" class="visually-hidden" aria-live="polite"></div>
+		<button id="undo" class="secondary hidden" disabled></button>
+		<button id="copy" class="secondary hidden"></button>
+		<div id="battleSection" class="hidden">
+			<div id="battle">
+				<button id="left" class="secondary"></button>
+				<button id="right" class="secondary"></button>
+			</div>
+			<div id="tieWrap" class="hidden"><button id="tie" class="secondary"></button></div>
+			<div id="progress"></div>
+			<div id="progressTrack" class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill" class="fill"></div></div>
+			<button id="cancel"></button>
+			<button id="toggle"></button>
+			<div id="tips" class="hidden"></div>
+		</div>
+		<div id="results" class="hidden"></div>
+		<div id="restartWrap" class="hidden">
+			<button id="restartBattle" class="primary"></button>
+			<button id="restartNew" class="primary"></button>
+		</div>
+	</div>
+	<script>
+		const text = {
+			en: {
+				title: 'PreferenceRank',
+				languageLabel: 'Language',
+				themeLabel: 'Theme',
+				autoTheme: 'Auto Theme',
+				lightTheme: 'Light',
+				darkTheme: 'Dark',
+				labelItems: 'Enter items, one per line:',
+				labelTies: 'Allow Ties',
+				labelQuick: 'Use Quick Rank (fewer comparisons)',
+				duplicate: '{count} duplicate item(s) removed.',
+				itemsCount: '{count} items',
+				start: 'Start Ranking',
+				resume: 'Resume Ranking',
+				cancel: 'Cancel',
+				confirmCancel: 'Confirm Cancel?',
+				tie: "It's a Tie",
+				undo: 'Undo',
+				progress: 'Progress',
+				toggleShow: 'Show keyboard shortcuts',
+				toggleHide: 'Hide keyboard shortcuts',
+				shortcutLeft: 'Left Arrow',
+				shortcutRight: 'Right Arrow',
+				shortcutTie: 'Up/Down Arrow',
+				shortcutUndo: 'Ctrl/⌘ + Z',
+				tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
+				tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
+				resultsTitle: 'Results',
+				rank: 'Rank',
+				item: 'Item',
+				score: 'Score',
+				compare: 'Compare: {1} vs {2}',
+				resultsReady: 'Ranking complete. Results table is shown.',
+				restartBattle: 'Restart Battle',
+				restartNew: 'Edit Items',
+				placeholderItems: 'Apple\nBlueberry\nCherry',
+				copy: 'Copy Results',
+				copied: 'Copied!',
+				resumeTitle: 'Resume Session?',
+				resumeMessage: 'A previous ranking session was found. Do you want to continue where you left off?',
+				resumeConfirm: 'Continue',
+				resumeNew: 'New Session',
+				estMatches: ' (~{count} comparisons)'
+			},
+			id: {
+				title: 'PreferenceRank',
+				languageLabel: 'Bahasa',
+				themeLabel: 'Tema',
+				autoTheme: 'Tema Otomatis',
+				lightTheme: 'Terang',
+				darkTheme: 'Gelap',
+				labelItems: 'Masukkan pilihan, satu per baris:',
+				labelTies: 'Izinkan Seri',
+				labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
+				duplicate: '{count} item duplikat dihapus.',
+				itemsCount: '{count} pilihan',
+				start: 'Mulai Peringkat',
+				resume: 'Lanjutkan Peringkat',
+				cancel: 'Batal',
+				confirmCancel: 'Konfirmasi Batal?',
+				tie: 'Seri',
+				undo: 'Urungkan',
+				progress: 'Kemajuan',
+				toggleShow: 'Tampilkan pintasan papan ketik',
+				toggleHide: 'Sembunyikan pintasan papan ketik',
+				shortcutLeft: 'Panah Kiri',
+				shortcutRight: 'Panah Kanan',
+				shortcutTie: 'Panah Atas/Bawah',
+				shortcutUndo: 'Ctrl/⌘ + Z',
+				tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
+				tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
+				resultsTitle: 'Hasil',
+				rank: 'Peringkat',
+				item: 'Nama',
+				score: 'Skor',
+				compare: 'Bandingkan: {1} lawan {2}',
+				resultsReady: 'Peringkat selesai. Tabel hasil ditampilkan.',
+				restartBattle: 'Mulai Ulang Pertarungan',
+				restartNew: 'Ubah Pilihan',
+				placeholderItems: 'Apel\nBluberi\nCeri',
+				copy: 'Salin Hasil',
+				copied: 'Disalin!',
+				resumeTitle: 'Lanjutkan Sesi?',
+				resumeMessage: 'Sesi peringkat sebelumnya ditemukan. Apakah Anda ingin melanjutkannya?',
+				resumeConfirm: 'Lanjutkan',
+				resumeNew: 'Sesi Baru',
+				estMatches: ' (~{count} perbandingan)'
+			}
+		};
+		const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
 
-			class FullPairProvider {
-				static estimate(count) {
-					return count * (count - 1) / 2;
-				}
-				constructor(count) {
-					this.pairs = [];
-					for (let i = 0; i < count; i++) for (let j = i + 1; j < count; j++) this.pairs.push([i, j]);
-					for (let i = this.pairs.length; i--;) {
-						const j = Math.random() * (i + 1) | 0;
-						[this.pairs[i], this.pairs[j]] = [this.pairs[j], this.pairs[i]];
-					}
-				}
-				next(state) {
-					return this.pairs[state.step];
-				}
-				getProgress(state) {
-					return `${state}/${this.pairs.length}`;
+		class FullPairProvider {
+			static estimate(count) { return count * (count - 1) / 2; }
+			constructor(count) {
+				this.pairs = [];
+				for (let index = 0; index < count; index++) for (let j = index + 1; j < count; j++) this.pairs.push([index, j]);
+				for (let index = this.pairs.length; index--;) {
+					const j = Math.random() * (index + 1) | 0;
+					[this.pairs[index], this.pairs[j]] = [this.pairs[j], this.pairs[index]];
 				}
 			}
+			next(state) { return this.pairs[state.step]; }
+			getProgress(state) { return `${state}/${this.pairs.length}`; }
+		}
 
-			class QuickPairProvider {
-				static estimate(count) {
-					if (count <= 1) return 0;
-					return Math.max(0, Math.round(count * Math.log2(count) - 1.44 * count + 3.3));
+		class QuickPairProvider {
+			static estimate(count) {
+				if (count <= 1) return 0;
+				return Math.max(0, Math.round(count * Math.log2(count) - 1.44 * count + 3.3));
+			}
+			constructor(count) {
+				this.count = count;
+				this.stack = [{ state: 'init', items: [...Array(count).keys()] }];
+				this.history = [];
+				this.pending = this.final = null;
+				this.jacobsthal = [0, 1];
+				while (this.jacobsthal.at(-1) < count) this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
+			}
+			snap() { return structuredClone({ stack: this.stack, pending: this.pending, final: this.final }); }
+			restore(snapshot) { Object.assign(this, structuredClone(snapshot)); }
+			unmark(pair) { this.pending && this.history.length && this.history.pop(); this.history.length && this.restore(this.history.at(-1)); }
+			next(state, result) {
+				this.pending && this.handlePending(state, result);
+				while (this.stack.length) {
+					const output = this[this.stack.at(-1).state](this.stack.at(-1));
+					if (output) return output;
 				}
-				constructor(count) {
-					this.count = count;
-					this.stack = [{ state: 'init', items: [...Array(count).keys()] }];
-					this.history = [];
-					this.pending = this.final = null;
-					this.jacobsthal = [0, 1];
-					while (this.jacobsthal.at(-1) < count) this.jacobsthal.push(this.jacobsthal.at(-1) + 2 * this.jacobsthal.at(-2));
-				}
-				snap() {
-					return structuredClone({ stack: this.stack, pending: this.pending, final: this.final });
-				}
-				restore(snapshot) {
-					Object.assign(this, structuredClone(snapshot));
-				}
-				unmark(pair) {
-					this.pending && this.history.length && this.history.pop();
-					this.history.length && this.restore(this.history.at(-1));
-				}
-				next(state, result) {
-					this.pending && this.handlePending(state, result);
-					while (this.stack.length) {
-						const output = this[this.stack.at(-1).state](this.stack.at(-1));
-						if (output) return output;
-					}
+				return null;
+			}
+			handlePending(state, result) {
+				const [a, b] = this.pending;
+				const winner = result === .5 ? (state.swapped ? b : a) : result === 1 ? a : b;
+				this.stack.at(-1) && (this.stack.at(-1).lastWinner = winner);
+				this.pending = null;
+			}
+			init(frame) {
+				if (frame.items.length < 2) { this.return(frame.items); return null; }
+				frame.pairs = Array.from({ length: frame.items.length >> 1 }, (_, index) => [frame.items[2 * index], frame.items[2 * index + 1]]);
+				frame.odd = frame.items.length % 2 ? frame.items.at(-1) : null;
+				Object.assign(frame, { winners: [], losers: [], pairIndex: 0, state: 'compare' });
+				return null;
+			}
+			compare(frame) {
+				if (frame.pairIndex >= frame.pairs.length) {
+					frame.state = 'recurse';
+					this.stack.push({ state: 'init', items: [...frame.winners] });
 					return null;
 				}
-				handlePending(state, result) {
-					const [a, b] = this.pending;
-					const winner = result === .5 ? (state.swapped ? b : a) : result === 1 ? a : b;
-					this.stack.at(-1) && (this.stack.at(-1).lastWinner = winner);
-					this.pending = null;
-				}
-				init(frame) {
-					if (frame.items.length < 2) {
-						this.return(frame.items);
-						return null;
-					}
-					frame.pairs = Array.from({ length: frame.items.length >> 1 }, (_, i) => [frame.items[2 * i], frame.items[2 * i + 1]]);
-					frame.odd = frame.items.length % 2 ? frame.items.at(-1) : null;
-					Object.assign(frame, { winners: [], losers: [], pairIndex: 0, state: 'compare' });
+				if (frame.lastWinner !== undefined) {
+					frame.winners.push(frame.lastWinner);
+					frame.losers.push(frame.pairs[frame.pairIndex][frame.lastWinner === frame.pairs[frame.pairIndex][0] ? 1 : 0]);
+					delete frame.lastWinner;
+					frame.pairIndex++;
 					return null;
 				}
-				compare(frame) {
-					if (frame.pairIndex >= frame.pairs.length) {
-						frame.state = 'recurse';
-						this.stack.push({ state: 'init', items: [...frame.winners] });
-						return null;
-					}
-					if (frame.lastWinner !== undefined) {
-						frame.winners.push(frame.lastWinner);
-						frame.losers.push(frame.pairs[frame.pairIndex][frame.lastWinner === frame.pairs[frame.pairIndex][0] ? 1 : 0]);
-						delete frame.lastWinner;
-						frame.pairIndex++;
-						return null;
-					}
-					this.pending = frame.pairs[frame.pairIndex];
-					this.history.push(this.snap());
-					return this.pending;
+				this.pending = frame.pairs[frame.pairIndex];
+				this.history.push(this.snap());
+				return this.pending;
+			}
+			recurse(frame) {
+				if (!frame.subresult) return null;
+				frame.main = frame.subresult;
+				delete frame.subresult;
+				frame.map = {};
+				frame.winners.forEach((winner, index) => frame.map[winner] = frame.losers[index]);
+				frame.main.unshift(frame.map[frame.main[0]]);
+				frame.insertions = [];
+				frame.main.slice(1).forEach((winner, index) => index > 0 && frame.insertions.push({ item: frame.map[winner], bound: winner }));
+				if (frame.odd !== null) frame.insertions.push({ item: frame.odd, bound: null });
+				frame.jacobIndex = 2;
+				frame.group = [];
+				frame.state = 'group';
+				return null;
+			}
+			group(frame) {
+				if (!frame.group.length) {
+					if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) { this.return(frame.main); return null; }
+					const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
+					frame.group.push(...frame.insertions.slice(this.jacobsthal[frame.jacobIndex - 1] - 1, end + 1).reverse());
+					frame.jacobIndex++;
 				}
-				recurse(frame) {
-					if (!frame.subresult) return null;
-					frame.main = frame.subresult;
-					delete frame.subresult;
-					frame.map = {};
-					frame.winners.forEach((winner, i) => frame.map[winner] = frame.losers[i]);
-					frame.main.unshift(frame.map[frame.main[0]]);
-					frame.insertions = [];
-					frame.main.slice(1).forEach((winner, i) => i > 0 && frame.insertions.push({ item: frame.map[winner], bound: winner }));
-					if (frame.odd !== null) frame.insertions.push({ item: frame.odd, bound: null });
-					frame.jacobIndex = 2;
-					frame.group = [];
-					frame.state = 'group';
+				if (frame.main === this.final) return null;
+				if (frame.group.length) {
+					frame.current = frame.group.shift();
+					frame.state = 'insert';
+					frame.binarySearch = { min: 0, max: frame.current.bound !== null ? frame.main.indexOf(frame.current.bound) : frame.main.length, target: frame.current.item };
+				}
+				return null;
+			}
+			insert(frame) {
+				const { min, max, target } = frame.binarySearch;
+				if (min >= max) { frame.main.splice(min, 0, target); frame.state = 'group'; return null; }
+				if (frame.lastWinner !== undefined) {
+					if (frame.lastWinner === target) frame.binarySearch.min = frame.binarySearch.mid + 1;
+					else frame.binarySearch.max = frame.binarySearch.mid;
+					delete frame.lastWinner;
 					return null;
 				}
-				group(frame) {
-					if (!frame.group.length) {
-						if (this.jacobsthal[frame.jacobIndex - 1] - 1 >= frame.insertions.length) {
-							this.return(frame.main);
-							return null;
-						}
-						const end = Math.min(this.jacobsthal[frame.jacobIndex] - 2, frame.insertions.length - 1);
-						frame.group.push(...frame.insertions.slice(this.jacobsthal[frame.jacobIndex - 1] - 1, end + 1).reverse());
-						frame.jacobIndex++;
+				frame.binarySearch.mid = (min + max) >> 1;
+				this.pending = [target, frame.main[frame.binarySearch.mid]];
+				this.history.push(this.snap());
+				return this.pending;
+			}
+			return(result) {
+				this.stack.pop();
+				if (this.stack.length) this.stack.at(-1).subresult = result;
+				else this.final = result.reverse();
+			}
+			getProgress(step) { return `${step}/~${Math.max(step, QuickPairProvider.estimate(this.count))}`; }
+		}
+
+		class PreferenceRank {
+			constructor() {
+				Object.assign(this, { scores: [], matches: [], history: [], swaps: {}, sortState: { column: 'rank', direction: 'asc' }, dirty: true });
+				this.language = navigator.language.startsWith('id') ? 'id' : 'en';
+				const events = {
+					start: 'start', restartBattle: 'start', restartNew: 'reset', undo: 'undo',
+					copy: 'copyResults', toggle: 'toggleHelp', cancel: 'cancel',
+					sessionContinue: 'restoreSession', sessionNew: 'startNewSession', resume: 'resume'
+				};
+				Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
+				['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
+				elements.language.onchange = event => { this.lang(event.target.value); this.save(); };
+				elements.theme.onchange = event => { this.theme(event.target.value); this.save(); };
+				elements.allowTies.onchange = event => this.setTies(event.target.checked);
+				elements.quickRank.onchange = () => this.updateInputState();
+				elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
+				elements.results.onclick = event => {
+					const header = event.target.closest('th');
+					if (header && header.dataset.sort) this.sortResults(header.dataset.sort);
+				};
+				elements.results.onkeydown = event => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						const header = event.target.closest('th');
+						if (header && header.dataset.sort) { event.preventDefault(); this.sortResults(header.dataset.sort); }
 					}
-					if (frame.main === this.final) return null;
-					if (frame.group.length) {
-						frame.current = frame.group.shift();
-						frame.state = 'insert';
-						frame.binarySearch = {
-							min: 0,
-							max: frame.current.bound !== null ? frame.main.indexOf(frame.current.bound) : frame.main.length,
-							target: frame.current.item
-						};
-					}
-					return null;
-				}
-				insert(frame) {
-					const { min, max, target } = frame.binarySearch;
-					if (min >= max) {
-						frame.main.splice(min, 0, target);
-						frame.state = 'group';
-						return null;
-					}
-					if (frame.lastWinner !== undefined) {
-						if (frame.lastWinner === target) frame.binarySearch.min = frame.binarySearch.mid + 1;
-						else frame.binarySearch.max = frame.binarySearch.mid;
-						delete frame.lastWinner;
-						return null;
-					}
-					frame.binarySearch.mid = (min + max) >> 1;
-					this.pending = [target, frame.main[frame.binarySearch.mid]];
-					this.history.push(this.snap());
-					return this.pending;
-				}
-				return(result) {
-					this.stack.pop();
-					if (this.stack.length) this.stack.at(-1).subresult = result;
-					else this.final = result.reverse();
-				}
-				getProgress(step) {
-					return `${step}/~${Math.max(step, QuickPairProvider.estimate(this.count))}`;
-				}
+				};
+				document.onkeydown = event => this.key(event);
+				this.theme('auto');
+				this.lang(this.language);
+				this.load();
 			}
 
-			class PreferenceRank {
-				constructor() {
-					Object.assign(this, { scores: [], matches: [], history: [], swaps: {}, sortState: { column: 'rank', direction: 'asc' }, dirty: true });
-					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
-					const events = {
-						start: 'start', restartBattle: 'start', restartNew: 'reset', undo: 'undo',
-						copy: 'copyResults', toggle: 'toggleHelp', cancel: 'cancel',
-						sessionContinue: 'restoreSession', sessionNew: 'startNewSession', resume: 'resume'
-					};
-					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
-					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
-					elements.language.onchange = event => (this.lang(event.target.value), this.save());
-					elements.theme.onchange = event => (this.theme(event.target.value), this.save());
-					elements.allowTies.onchange = event => this.setTies(event.target.checked);
-					elements.quickRank.onchange = () => this.updateInputState();
-					elements.items.oninput = () => {
-						this.updateInputState();
-						this.saveInput();
-					};
-					elements.results.onclick = event => {
-						const th = event.target.closest('th');
-						th && th.dataset.sort && this.sortResults(th.dataset.sort);
-					};
-					elements.results.onkeydown = event => {
-						if (event.key === 'Enter' || event.key === ' ') {
-							const th = event.target.closest('th');
-							if (th && th.dataset.sort) {
-								event.preventDefault();
-								this.sortResults(th.dataset.sort);
-							}
-						}
-					};
-					document.onkeydown = event => this.key(event);
-					this.theme('auto');
-					this.lang(this.language);
-					this.load();
-				}
-				string(key) {
-					return text[this.language]?.[key] ?? key;
-				}
-				theme(themeName) {
-					document.documentElement.className = themeName === 'auto' ? '' : themeName;
-					elements.theme.value = themeName;
-				}
-				lang(language) {
-					this.language = elements.language.value = language;
-					elements.language.setAttribute('aria-label', this.string('languageLabel'));
-					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
-					elements.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key => elements[key].textContent = this.string(key));
-					elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
-					elements.left.title = this.string('shortcutLeft');
-					elements.right.title = this.string('shortcutRight');
-					elements.tie.title = this.string('shortcutTie');
-					elements.undo.title = `${this.string('undo')} (${this.string('shortcutUndo')})`;
-					[...elements.theme.options].forEach(option => option.textContent = this.string(option.value + 'Theme'));
-					this.updateHelp();
-					this.updateProgress();
-					this.updateCount();
-					!elements.results.classList.contains('hidden') && this.results();
-				}
-				save() {
-					localStorage.setItem('preferenceRankData', JSON.stringify({ inputValue: elements.items.value, settings: { theme: elements.theme.value, language: this.language }, battle: this.provider ? { ...this, provider: this.provider, providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full' } : null }));
-				}
-				load() {
-					try {
-						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-						data && (data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language)), data.inputValue && (elements.items.value = data.inputValue, this.updateInputState()), data.battle ? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle)) : this.display('inputSection'));
-					} catch {
-						localStorage.removeItem('preferenceRankData');
+			string(key) { return text[this.language]?.[key] ?? key; }
+
+			theme(themeName) { document.documentElement.className = themeName === 'auto' ? '' : themeName; elements.theme.value = themeName; }
+
+			lang(language) {
+				this.language = elements.language.value = language;
+				elements.language.setAttribute('aria-label', this.string('languageLabel'));
+				elements.theme.setAttribute('aria-label', this.string('themeLabel'));
+				elements.items.placeholder = this.string('placeholderItems');
+				['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key => elements[key].textContent = this.string(key));
+				elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
+				elements.left.title = this.string('shortcutLeft');
+				elements.right.title = this.string('shortcutRight');
+				elements.tie.title = this.string('shortcutTie');
+				elements.undo.title = `${this.string('undo')} (${this.string('shortcutUndo')})`;
+				[...elements.theme.options].forEach(option => option.textContent = this.string(option.value + 'Theme'));
+				this.updateHelp();
+				this.updateProgress();
+				this.updateCount();
+				if (!elements.results.classList.contains('hidden')) this.results();
+			}
+
+			save() {
+				localStorage.setItem('preferenceRankData', JSON.stringify({
+					inputValue: elements.items.value,
+					settings: { theme: elements.theme.value, language: this.language },
+					battle: this.provider ? { ...this, provider: this.provider, providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full' } : null
+				}));
+			}
+
+			load() {
+				try {
+					const data = JSON.parse(localStorage.getItem('preferenceRankData'));
+					if (data) {
+						if (data.settings) { this.theme(data.settings.theme); this.lang(data.settings.language); }
+						if (data.inputValue) { elements.items.value = data.inputValue; this.updateInputState(); }
+						if (data.battle) data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle);
+						else this.display('inputSection');
 					}
-				}
-				prompt(battle) {
-					this.pending = battle;
-					elements.sessionTitle.textContent = this.string('resumeTitle');
-					elements.sessionMessage.textContent = this.string('resumeMessage');
-					elements.sessionContinue.textContent = this.string('resumeConfirm');
-					elements.sessionNew.textContent = this.string('resumeNew');
-					elements.sessionModal.classList.remove('hidden');
-					elements.inputSection.classList.add('hidden');
-					elements.sessionContinue.focus();
-				}
-				restoreSession() {
-					elements.sessionModal.classList.add('hidden');
-					this.pending && this.restoreBattle(this.pending);
-					this.pending = null;
-				}
-				startNewSession() {
-					elements.sessionModal.classList.add('hidden');
-					this.pending = null;
-					elements.items.value = '';
-					elements.allowTies.checked = false;
-					elements.quickRank.checked = false;
-					this.updateInputState();
-					this.reset();
-				}
-				restoreBattle(battle) {
-					Object.assign(this, battle);
-					this.scores = Object.values(battle.scores);
-					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
-					Object.assign(this.provider, battle.provider);
-					elements.allowTies.checked = this.allowTies;
-					elements.quickRank.checked = battle.providerType === 'quick';
-					this.setTies(this.allowTies);
-					this.pair ? (this.display('battleSection'), this.render(), this.updateProgress(), elements.undo.disabled = !this.history.length) : this.matches.length ? this.results() : this.display('inputSection');
-				}
-				saveInput() {
-					clearTimeout(this.saveTimeout);
-					this.saveTimeout = setTimeout(() => this.save(), 500);
-				}
-				getItems() {
-					const lines = elements.items.value.split('\n').map(line => line.trim()).filter(Boolean);
-					if (!lines.length) return [];
-					const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
-					return lines.map(line => {
-						const p = patterns.find(pattern => pattern.test(line));
-						return p ? line.replace(p, '') : line;
-					});
-				}
-				updateInputState() {
-					const items = this.getItems();
-					this.check(items);
-					this.updateCount(items);
-				}
-				updateCount(items) {
-					const list = items || this.getItems();
-					const count = list.length;
-					const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
-					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
-				}
-				setTies(enabled) {
-					this.allowTies = enabled;
-					!elements.battleSection.classList.contains('hidden') && elements.tieWrap.classList.toggle('hidden', !enabled);
-					this.updateHelp();
-				}
-				updateHelp() {
-					const hidden = elements.tips.classList.contains('hidden');
-					elements.toggle.textContent = this.string(hidden ? 'toggleShow' : 'toggleHide');
-					elements.toggle.setAttribute('aria-expanded', !hidden);
-					elements.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
-				}
-				toggleHelp() {
-					elements.tips.classList.toggle('hidden');
-					this.updateHelp();
-				}
-				check(items) {
-					const valid = new Set(items || this.getItems()).size >= 2;
-					elements.start.disabled = !valid;
-					valid && (elements.error.classList.add('hidden'), elements.items.removeAttribute('aria-invalid'));
-					elements.resume.classList.toggle('hidden', !this.provider);
-				}
-				start() {
-					const raw = this.getItems();
-					const unique = [...new Set(raw)];
-					if (raw.length > unique.length) {
-						elements.items.value = unique.join('\n');
-						elements.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
-						elements.error.classList.remove('hidden');
-						elements.items.setAttribute('aria-invalid', 'true');
-						return;
-					}
+				} catch { localStorage.removeItem('preferenceRankData'); }
+			}
+
+			prompt(battle) {
+				this.pending = battle;
+				elements.sessionTitle.textContent = this.string('resumeTitle');
+				elements.sessionMessage.textContent = this.string('resumeMessage');
+				elements.sessionContinue.textContent = this.string('resumeConfirm');
+				elements.sessionNew.textContent = this.string('resumeNew');
+				elements.sessionModal.classList.remove('hidden');
+				elements.inputSection.classList.add('hidden');
+				elements.sessionContinue.focus();
+			}
+
+			restoreSession() {
+				elements.sessionModal.classList.add('hidden');
+				this.pending && this.restoreBattle(this.pending);
+				this.pending = null;
+			}
+
+			startNewSession() {
+				elements.sessionModal.classList.add('hidden');
+				this.pending = null;
+				elements.items.value = '';
+				elements.allowTies.checked = false;
+				elements.quickRank.checked = false;
+				this.updateInputState();
+				this.reset();
+			}
+
+			restoreBattle(battle) {
+				Object.assign(this, battle);
+				this.scores = Object.values(battle.scores);
+				this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
+				Object.assign(this.provider, battle.provider);
+				elements.allowTies.checked = this.allowTies;
+				elements.quickRank.checked = battle.providerType === 'quick';
+				this.setTies(this.allowTies);
+				this.pair ? (this.display('battleSection'), this.render(), this.updateProgress(), elements.undo.disabled = !this.history.length) : this.matches.length ? this.results() : this.display('inputSection');
+			}
+
+			saveInput() { clearTimeout(this.saveTimeout); this.saveTimeout = setTimeout(() => this.save(), 500); }
+
+			getItems() {
+				const lines = elements.items.value.split('\n').map(line => line.trim()).filter(Boolean);
+				if (!lines.length) return [];
+				const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
+				return lines.map(line => {
+					const pattern = patterns.find(p => p.test(line));
+					return pattern ? line.replace(pattern, '') : line;
+				});
+			}
+
+			updateInputState() {
+				const items = this.getItems();
+				this.check(items);
+				this.updateCount(items);
+			}
+
+			updateCount(items) {
+				const list = items || this.getItems();
+				const count = list.length;
+				const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
+				elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
+			}
+
+			setTies(enabled) {
+				this.allowTies = enabled;
+				if (!elements.battleSection.classList.contains('hidden')) elements.tieWrap.classList.toggle('hidden', !enabled);
+				this.updateHelp();
+			}
+
+			updateHelp() {
+				const hidden = elements.tips.classList.contains('hidden');
+				elements.toggle.textContent = this.string(hidden ? 'toggleShow' : 'toggleHide');
+				elements.toggle.setAttribute('aria-expanded', !hidden);
+				elements.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
+			}
+
+			toggleHelp() { elements.tips.classList.toggle('hidden'); this.updateHelp(); }
+
+			check(items) {
+				const valid = new Set(items || this.getItems()).size >= 2;
+				elements.start.disabled = !valid;
+				if (valid) { elements.error.classList.add('hidden'); elements.items.removeAttribute('aria-invalid'); }
+				elements.resume.classList.toggle('hidden', !this.provider);
+			}
+
+			start() {
+				const raw = this.getItems();
+				const unique = [...new Set(raw)];
+				if (raw.length > unique.length) {
 					elements.items.value = unique.join('\n');
-					Object.assign(this, {
-						items: unique,
-						scores: Array(unique.length).fill(1e3),
-						matches: [],
-						pair: null,
-						swapped: false,
-						step: 0,
-						allowTies: elements.allowTies.checked,
-						history: [],
-						busy: false,
-						swaps: {},
-						dirty: true
-					});
-					elements.undo.disabled = true;
-					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
-					elements.tieWrap.classList.toggle('hidden', !this.allowTies);
-					this.updateHelp();
-					this.display('battleSection');
-					this.next();
-					this.save();
+					elements.error.textContent = this.string('duplicate').replace('{count}', raw.length - unique.length);
+					elements.error.classList.remove('hidden');
+					elements.items.setAttribute('aria-invalid', 'true');
+					return;
 				}
-				resume() {
-					this.pair ? (this.display('battleSection'), this.render()) : this.results();
-				}
-				recalculateScores() {
-					if (!this.dirty && this.scores && this.scores.length === this.items.length) return;
-					const count = this.items.length, wins = Array(count).fill(0), graph = Array.from({ length: count }, () => []);
-					this.matches.forEach(({ a, b, result }) => (wins[a] += result, wins[b] += 1 - result, graph[a].push(b), graph[b].push(a)));
-					let power = Array(count).fill(1);
-					for (let i = 0; i < 100; i++) {
-						let diff = 0;
-						power = power.map((p, j) => {
-							const denom = graph[j].reduce((acc, k) => acc + 1 / (p + power[k]), 1 / (p + 1));
-							const val = denom > 0 ? (wins[j] + .5) / denom : p;
-							diff = Math.max(diff, Math.abs(p - val));
-							return val;
-						});
-						if (diff < 1e-9) break;
-					}
-					const logs = power.map(Math.log10), avg = logs.reduce((a, b) => a + b, 0) / count;
-					this.scores = logs.map(v => 1e3 + 400 * (v - avg));
-					this.dirty = false;
-				}
-				choose(winner) {
-					if (this.busy || elements.battleSection.classList.contains('hidden')) return;
-					this.busy = true;
-					this.history.push({ pair: this.pair, step: this.step, swapped: this.swapped });
-					const [a, b] = this.pair;
-					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
-					this.matches.push({ a, b, result });
-					this.dirty = true;
-					this.step++;
-					elements.undo.disabled = false;
-					this.updateProgress();
-					this.clear();
-					(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
-					setTimeout(() => (!elements.battleSection.classList.contains('hidden') && this.busy && (this.busy = false, this.next(result), this.save())), 150);
-				}
-				next(result) {
-					this.clear();
-					const nextPair = this.provider.next(this, result);
-					if (!nextPair) return this.pair = null, this.results();
-					this.pair = nextPair;
-					this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
-					this.render();
-				}
-				render() {
-					let [a, b] = this.pair;
-					this.swapped && ([a, b] = [b, a]);
-					elements.left.textContent = this.items[a];
-					elements.right.textContent = this.items[b];
-					this.updateProgress();
-					elements.announcer.textContent = this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]);
-				}
-				updateProgress() {
-					const progress = this.provider ? this.provider.getProgress(this.step) : '0/0';
-					elements.progress.textContent = `${this.string('progress')}: ${progress}`;
-					const [current, total] = progress.split('/');
-					const percent = Math.min(100, Math.max(0, parseInt(total.replace('~', '')) > 0 ? parseInt(current) / parseInt(total.replace('~', '')) * 100 : 0));
-					elements.progressFill.style.width = `${percent}%`;
-					elements.progressTrack.setAttribute('aria-valuenow', Math.round(percent));
-				}
-				clear() {
-					['left', 'right', 'tie'].forEach(id => elements[id].classList.remove('selected'));
-				}
-				sortResults(column) {
-					const direction = this.sortState.column === column && this.sortState.direction === 'asc' ? 'desc' : 'asc';
-					this.sortState = { column, direction };
-					this.results();
-				}
-				results() {
-					this.recalculateScores();
-					elements.results.parentElement.append(elements.undo, elements.copy);
-					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
-					const ranks = []; baseRanking.forEach((x, i) => ranks[x] = i + 1);
-					const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
-					const sorters = {
-						rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
-						item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
-						score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir
-					};
-					this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column]);
-					const ranking = this.currentRanking;
-					const min = Math.min(...this.scores);
-					const range = Math.max(...this.scores) - min;
-					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
-					const headers = ['rank', 'item', 'score'].map(key => {
-						const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
-						return `<th scope="col" tabindex="0" aria-sort="${sort}" style="width:${key === 'item' ? 60 : 20}%" data-sort="${key}">${this.string(key)}${this.sortState.column === key ? arrow : ''}</th>`;
-					}).join('');
-					elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
-						const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
-						return `<tr><td>${ranks[x]}</td><td>${new Option(this.items[x]).innerHTML}</td><td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td></tr>`;
-					}).join('')}</tbody></table>`;
-					this.display('results');
-					elements.announcer.textContent = this.string('resultsReady');
-					this.save();
-				}
-				display(section) {
-					['inputSection', 'battleSection', 'results'].forEach(id => elements[id].classList.toggle('hidden', id !== section));
-					elements.restartWrap.classList.toggle('hidden', section !== 'results');
-					elements.undo.classList.toggle('hidden', section === 'inputSection');
-					elements.copy.classList.toggle('hidden', section !== 'results');
-					section === 'battleSection' && elements.battleSection.before(elements.undo);
-					section === 'results' && (elements.results.firstChild.prepend(elements.undo), elements.results.firstChild.appendChild(elements.copy));
-					section === 'inputSection' && this.check();
-					const focusTarget = { battleSection: elements.left, results: elements.restartBattle, inputSection: elements.items }[section];
-					focusTarget && setTimeout(() => focusTarget.focus(), 50);
-				}
-				copyResults() {
-					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
-					const ranks = []; baseRanking.forEach((x, i) => ranks[x] = i + 1);
-					const ranking = this.currentRanking || baseRanking;
-					const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
-					const lines = ranking.map(x => `${ranks[x]}\t${this.items[x]}\t${Math.round(this.scores[x])}`);
-					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
-						clearTimeout(this.copyTimeout);
-						elements.copy.textContent = this.string('copied');
-						elements.announcer.textContent = `${this.string('resultsTitle')} ${this.string('copied')}`;
-						this.copyTimeout = setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
-					});
-				}
-				cancel() {
-					const reset = () => (elements.cancel.classList.remove('confirming'), elements.cancel.textContent = this.string('cancel'), this.cancelTimeout = null);
-					this.cancelTimeout ? (clearTimeout(this.cancelTimeout), reset(), this.display('inputSection')) : (elements.cancel.textContent = this.string('confirmCancel'), elements.cancel.classList.add('confirming'), this.cancelTimeout = setTimeout(reset, 3000));
-				}
-				undo() {
-					if (!this.busy && this.history.length) {
-						const last = this.history.pop();
-						this.matches.pop();
-						this.dirty = true;
-						Object.assign(this, { step: last.step, pair: last.pair, swapped: last.swapped });
-						this.provider.unmark?.(last.pair);
-						this.render();
-						this.display('battleSection');
-						elements.undo.disabled = !this.history.length;
-						this.save();
-					}
-				}
-				reset() {
-					Object.assign(this, { scores: [], matches: [], history: [], provider: null, dirty: true });
-					this.display('inputSection');
-					this.updateHelp();
-					this.updateProgress();
-					this.save();
-				}
-				key(event) {
-					if (event.repeat) return;
-					const { key, ctrlKey, metaKey, shiftKey } = event;
-					if (key === 'Enter' && (ctrlKey || metaKey) && !elements.inputSection.classList.contains('hidden') && !elements.start.disabled) {
-						event.preventDefault();
-						elements.start.click();
-						return;
-					}
-					const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
-					if (!action) return;
-					if (!elements.inputSection.classList.contains('hidden')) return;
-					if (/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+				elements.items.value = unique.join('\n');
+				Object.assign(this, {
+					items: unique,
+					scores: Array(unique.length).fill(1e3),
+					matches: [],
+					pair: null,
+					swapped: false,
+					step: 0,
+					allowTies: elements.allowTies.checked,
+					history: [],
+					busy: false,
+					swaps: {},
+					dirty: true
+				});
+				elements.undo.disabled = true;
+				this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
+				elements.tieWrap.classList.toggle('hidden', !this.allowTies);
+				this.updateHelp();
+				this.display('battleSection');
+				this.next();
+				this.save();
+			}
 
-					if (action === 'undo') {
-						if ((ctrlKey || metaKey) && !shiftKey) {
-							event.preventDefault();
-							elements.undo.click();
-						}
-					} else {
-						if (!elements.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
-							event.preventDefault();
-							elements[action].click();
-						}
-					}
+			resume() { this.pair ? (this.display('battleSection'), this.render()) : this.results(); }
+
+			recalculateScores() {
+				if (!this.dirty && this.scores && this.scores.length === this.items.length) return;
+				const count = this.items.length, wins = Array(count).fill(0), graph = Array.from({ length: count }, () => []);
+				this.matches.forEach(({ a, b, result }) => { wins[a] += result; wins[b] += 1 - result; graph[a].push(b); graph[b].push(a); });
+				let power = Array(count).fill(1);
+				for (let index = 0; index < 100; index++) {
+					let diff = 0;
+					power = power.map((p, j) => {
+						const denom = graph[j].reduce((acc, k) => acc + 1 / (p + power[k]), 1 / (p + 1));
+						const val = denom > 0 ? (wins[j] + .5) / denom : p;
+						diff = Math.max(diff, Math.abs(p - val));
+						return val;
+					});
+					if (diff < 1e-9) break;
+				}
+				const logs = power.map(Math.log10), avg = logs.reduce((a, b) => a + b, 0) / count;
+				this.scores = logs.map(v => 1e3 + 400 * (v - avg));
+				this.dirty = false;
+			}
+
+			choose(winner) {
+				if (this.busy || elements.battleSection.classList.contains('hidden')) return;
+				this.busy = true;
+				this.history.push({ pair: this.pair, step: this.step, swapped: this.swapped });
+				const [a, b] = this.pair;
+				const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
+				this.matches.push({ a, b, result });
+				this.dirty = true;
+				this.step++;
+				elements.undo.disabled = false;
+				this.updateProgress();
+				this.clear();
+				(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
+				setTimeout(() => (!elements.battleSection.classList.contains('hidden') && this.busy && (this.busy = false, this.next(result), this.save())), 150);
+			}
+
+			next(result) {
+				this.clear();
+				const nextPair = this.provider.next(this, result);
+				if (!nextPair) return this.pair = null, this.results();
+				this.pair = nextPair;
+				this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
+				this.render();
+			}
+
+			render() {
+				let [a, b] = this.pair;
+				if (this.swapped) [a, b] = [b, a];
+				elements.left.textContent = this.items[a];
+				elements.right.textContent = this.items[b];
+				this.updateProgress();
+				elements.announcer.textContent = this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]);
+			}
+
+			updateProgress() {
+				const progress = this.provider ? this.provider.getProgress(this.step) : '0/0';
+				elements.progress.textContent = `${this.string('progress')}: ${progress}`;
+				const [current, total] = progress.split('/');
+				const percent = Math.min(100, Math.max(0, parseInt(total.replace('~', '')) > 0 ? parseInt(current) / parseInt(total.replace('~', '')) * 100 : 0));
+				elements.progressFill.style.width = `${percent}%`;
+				elements.progressTrack.setAttribute('aria-valuenow', Math.round(percent));
+			}
+
+			clear() { ['left', 'right', 'tie'].forEach(id => elements[id].classList.remove('selected')); }
+
+			sortResults(column) {
+				const direction = this.sortState.column === column && this.sortState.direction === 'asc' ? 'desc' : 'asc';
+				this.sortState = { column, direction };
+				this.results();
+			}
+
+			results() {
+				this.recalculateScores();
+				elements.results.parentElement.append(elements.undo, elements.copy);
+				const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
+				const ranks = []; baseRanking.forEach((x, index) => ranks[x] = index + 1);
+				const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
+				const sorters = {
+					rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
+					item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
+					score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir
+				};
+				this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column]);
+				const ranking = this.currentRanking;
+				const min = Math.min(...this.scores);
+				const range = Math.max(...this.scores) - min;
+				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
+				const headers = ['rank', 'item', 'score'].map(key => {
+					const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
+					return `<th scope="col" tabindex="0" aria-sort="${sort}" style="width:${key === 'item' ? 60 : 20}%" data-sort="${key}">${this.string(key)}${this.sortState.column === key ? arrow : ''}</th>`;
+				}).join('');
+				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
+					const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
+					return `<tr><td>${ranks[x]}</td><td>${new Option(this.items[x]).innerHTML}</td><td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td></tr>`;
+				}).join('')}</tbody></table>`;
+				this.display('results');
+				elements.announcer.textContent = this.string('resultsReady');
+				this.save();
+			}
+
+			display(section) {
+				['inputSection', 'battleSection', 'results'].forEach(id => elements[id].classList.toggle('hidden', id !== section));
+				elements.restartWrap.classList.toggle('hidden', section !== 'results');
+				elements.undo.classList.toggle('hidden', section === 'inputSection');
+				elements.copy.classList.toggle('hidden', section !== 'results');
+				if (section === 'battleSection') elements.battleSection.before(elements.undo);
+				if (section === 'results') { elements.results.firstChild.prepend(elements.undo); elements.results.firstChild.appendChild(elements.copy); }
+				if (section === 'inputSection') this.check();
+				const focusTarget = { battleSection: elements.left, results: elements.restartBattle, inputSection: elements.items }[section];
+				focusTarget && setTimeout(() => focusTarget.focus(), 50);
+			}
+
+			copyResults() {
+				const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
+				const ranks = []; baseRanking.forEach((x, index) => ranks[x] = index + 1);
+				const ranking = this.currentRanking || baseRanking;
+				const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
+				const lines = ranking.map(x => `${ranks[x]}\t${this.items[x]}\t${Math.round(this.scores[x])}`);
+				navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
+					clearTimeout(this.copyTimeout);
+					elements.copy.textContent = this.string('copied');
+					elements.announcer.textContent = `${this.string('resultsTitle')} ${this.string('copied')}`;
+					this.copyTimeout = setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
+				});
+			}
+
+			cancel() {
+				const reset = () => { elements.cancel.classList.remove('confirming'); elements.cancel.textContent = this.string('cancel'); this.cancelTimeout = null; };
+				this.cancelTimeout ? (clearTimeout(this.cancelTimeout), reset(), this.display('inputSection')) : (elements.cancel.textContent = this.string('confirmCancel'), elements.cancel.classList.add('confirming'), this.cancelTimeout = setTimeout(reset, 3000));
+			}
+
+			undo() {
+				if (!this.busy && this.history.length) {
+					const last = this.history.pop();
+					this.matches.pop();
+					this.dirty = true;
+					Object.assign(this, { step: last.step, pair: last.pair, swapped: last.swapped });
+					this.provider.unmark?.(last.pair);
+					this.render();
+					this.display('battleSection');
+					elements.undo.disabled = !this.history.length;
+					this.save();
 				}
 			}
-			new PreferenceRank();
-		</script>
-	</body>
+
+			reset() {
+				Object.assign(this, { scores: [], matches: [], history: [], provider: null, dirty: true });
+				this.display('inputSection');
+				this.updateHelp();
+				this.updateProgress();
+				this.save();
+			}
+
+			key(event) {
+				if (event.repeat) return;
+				const { key, ctrlKey, metaKey, shiftKey } = event;
+				if (key === 'Enter' && (ctrlKey || metaKey) && !elements.inputSection.classList.contains('hidden') && !elements.start.disabled) {
+					event.preventDefault();
+					elements.start.click();
+					return;
+				}
+				const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
+				if (!action) return;
+				if (!elements.inputSection.classList.contains('hidden')) return;
+				if (/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+				if (action === 'undo') {
+					if ((ctrlKey || metaKey) && !shiftKey) { event.preventDefault(); elements.undo.click(); }
+				} else if (!elements.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
+					event.preventDefault();
+					elements[action].click();
+				}
+			}
+		}
+		new PreferenceRank();
+	</script>
+</body>
 </html>
