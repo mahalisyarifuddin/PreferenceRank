@@ -339,7 +339,6 @@
 			border: 0;
 		}
 	</style>
-
 </head>
 <body>
 	<div class="container">
@@ -391,8 +390,8 @@
 			<button id="restartNew" class="primary"></button>
 		</div>
 	</div>
-
-<script>try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}
+	<script>
+		try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}
 
 		const text = {
 			en: {
