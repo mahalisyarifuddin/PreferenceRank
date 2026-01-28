@@ -339,7 +339,60 @@
 			border: 0;
 		}
 	</style>
-	<script>try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}
+
+</head>
+<body>
+	<div class="container">
+		<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
+			<h2 id="sessionTitle"></h2>
+			<p id="sessionMessage" style="margin:1rem 0 2rem;line-height:1.5"></p>
+			<div id="sessionButtons">
+				<button id="sessionContinue" class="primary"></button>
+				<button id="sessionNew" class="secondary"></button>
+			</div>
+		</div>
+		<div id="inputSection">
+			<div class="selectors">
+				<select id="language" aria-label="Language"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select>
+				<select id="theme" aria-label="Theme"><option value="auto"></option><option value="light"></option><option value="dark"></option></select>
+			</div>
+			<h1 id="title"></h1>
+			<div class="group">
+				<label for="items" id="labelItems"></label>
+				<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
+				<div id="itemCount" class="count"></div>
+				<span id="error" class="error hidden" aria-live="polite"></span>
+			</div>
+			<div class="row"><input type="checkbox" id="allowTies"><label for="allowTies" id="labelTies"></label></div>
+			<div class="row"><input type="checkbox" id="quickRank"><label for="quickRank" id="labelQuick"></label></div>
+			<div class="actions">
+				<button id="resume" class="primary hidden"></button>
+				<button id="start" class="primary"></button>
+			</div>
+		</div>
+		<div id="announcer" class="visually-hidden" aria-live="polite"></div>
+		<button id="undo" class="secondary hidden" disabled></button>
+		<button id="copy" class="secondary hidden"></button>
+		<div id="battleSection" class="hidden">
+			<div id="battle">
+				<button id="left" class="secondary"></button>
+				<button id="right" class="secondary"></button>
+			</div>
+			<div id="tieWrap" class="hidden"><button id="tie" class="secondary"></button></div>
+			<div id="progress"></div>
+			<div id="progressTrack" class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill" class="fill"></div></div>
+			<button id="cancel"></button>
+			<button id="toggle"></button>
+			<div id="tips" class="hidden"></div>
+		</div>
+		<div id="results" class="hidden"></div>
+		<div id="restartWrap" class="hidden">
+			<button id="restartBattle" class="primary"></button>
+			<button id="restartNew" class="primary"></button>
+		</div>
+	</div>
+
+<script>try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}
 
 		const text = {
 			en: {
@@ -920,59 +973,7 @@
 				}
 			}
 		}
-		window.addEventListener('DOMContentLoaded', () => { new PreferenceRank(); });
+		new PreferenceRank();
 	</script>
-</head>
-<body>
-	<div class="container">
-		<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
-			<h2 id="sessionTitle"></h2>
-			<p id="sessionMessage" style="margin:1rem 0 2rem;line-height:1.5"></p>
-			<div id="sessionButtons">
-				<button id="sessionContinue" class="primary"></button>
-				<button id="sessionNew" class="secondary"></button>
-			</div>
-		</div>
-		<div id="inputSection">
-			<div class="selectors">
-				<select id="language" aria-label="Language"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select>
-				<select id="theme" aria-label="Theme"><option value="auto"></option><option value="light"></option><option value="dark"></option></select>
-			</div>
-			<h1 id="title"></h1>
-			<div class="group">
-				<label for="items" id="labelItems"></label>
-				<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
-				<div id="itemCount" class="count"></div>
-				<span id="error" class="error hidden" aria-live="polite"></span>
-			</div>
-			<div class="row"><input type="checkbox" id="allowTies"><label for="allowTies" id="labelTies"></label></div>
-			<div class="row"><input type="checkbox" id="quickRank"><label for="quickRank" id="labelQuick"></label></div>
-			<div class="actions">
-				<button id="resume" class="primary hidden"></button>
-				<button id="start" class="primary"></button>
-			</div>
-		</div>
-		<div id="announcer" class="visually-hidden" aria-live="polite"></div>
-		<button id="undo" class="secondary hidden" disabled></button>
-		<button id="copy" class="secondary hidden"></button>
-		<div id="battleSection" class="hidden">
-			<div id="battle">
-				<button id="left" class="secondary"></button>
-				<button id="right" class="secondary"></button>
-			</div>
-			<div id="tieWrap" class="hidden"><button id="tie" class="secondary"></button></div>
-			<div id="progress"></div>
-			<div id="progressTrack" class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill" class="fill"></div></div>
-			<button id="cancel"></button>
-			<button id="toggle"></button>
-			<div id="tips" class="hidden"></div>
-		</div>
-		<div id="results" class="hidden"></div>
-		<div id="restartWrap" class="hidden">
-			<button id="restartBattle" class="primary"></button>
-			<button id="restartNew" class="primary"></button>
-		</div>
-	</div>
-
 </body>
 </html>
