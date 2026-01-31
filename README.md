@@ -26,6 +26,7 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Flexible Input**: Rank anything—characters, foods, movies, destinations, and more.
 - **Two Ranking Modes**: Choose between a comprehensive "Full Rank" or an intelligent "Quick Rank" (see details above).
 - **Scientific Scoring**: Utilizes the Bradley-Terry Elo rating system for accurate results.
+- **Uncertainty Estimates**: Visualizes ranking confidence with "Rank Spread" and "Confidence Interval (CI)" columns, useful for understanding stability in Quick Mode.
 - **Undo and Ties**: Easily undo your last choice or allow for ties in the rankings.
 - **Lightweight**: A single HTML file with no external dependencies, making it portable and fast.
 - **Theme Options**: Choose between light, dark, or auto themes for a personalized experience.
