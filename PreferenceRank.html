@@ -574,7 +574,7 @@
 				for (let i = 0; i < N; i++) {
 					let variance = 0, v = Array(N).fill(-1 / N); v[i] += 1;
 					for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) variance += v[r] * Cov[r][c] * v[c];
-					cis.push(1.96 * Math.sqrt(variance) / factor);
+					cis.push(1.28 * Math.sqrt(variance) / factor);
 				}
 				const L = Matrix.cholesky(invSubH);
 				if (!L) return { cis, spreads: null };
@@ -594,7 +594,7 @@
 					const indices = Array.from({ length: N }, (_, i) => i).sort((a, b) => sampleScores[b] - sampleScores[a]);
 					indices.forEach((origIndex, rank) => ranks[origIndex].push(rank + 1));
 				}
-				const spreads = ranks.map(r => { r.sort((a, b) => a - b); return [r[Math.floor(M * 0.025)], r[Math.floor(M * 0.975)]]; });
+				const spreads = ranks.map(r => { r.sort((a, b) => a - b); return [r[Math.floor(M * 0.1)], r[Math.floor(M * 0.9)]]; });
 				return { cis, spreads };
 			}
 		}
@@ -1002,11 +1002,13 @@
 				const range = Math.max(...this.scores) - min;
 				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
 				const columns = this.stats && this.stats.spreads ? ['rank', 'rankSpread', 'item', 'score', 'ci'] : ['rank', 'item', 'score'];
+				const widths = { rank: 50, rankSpread: 80, item: null, score: 60, ci: 60 };
 				const headers = columns.map(key => {
 					const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
 					const canSort = ['rank', 'item', 'score'].includes(key);
 					const content = this.string(key) + (this.sortState.column === key ? arrow : '');
-					return canSort ? `<th scope="col" tabindex="0" aria-sort="${sort}" data-sort="${key}">${content}</th>` : `<th scope="col">${content}</th>`;
+					const style = widths[key] ? `width:${widths[key]}px` : '';
+					return canSort ? `<th scope="col" tabindex="0" aria-sort="${sort}" data-sort="${key}" style="${style}">${content}</th>` : `<th scope="col" style="${style}">${content}</th>`;
 				}).join('');
 				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table class="dense"><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
 					const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
@@ -1014,7 +1016,7 @@
 					const scoreCell = `<td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td>`;
 					if (!this.stats || !this.stats.spreads) return `<tr><td>${ranks[x]}</td>${itemCell}${scoreCell}</tr>`;
 					const spread = this.stats.spreads[x], ci = this.stats.cis[x];
-					return `<tr><td>${ranks[x]}</td><td style="white-space:nowrap">${spread[0]} ↔ ${spread[1]}</td>${itemCell}${scoreCell}<td style="white-space:nowrap">± ${Math.round(ci)}</td></tr>`;
+					return `<tr><td>${ranks[x]}</td><td style="white-space:nowrap">${spread[0]}&nbsp;↔&nbsp;${spread[1]}</td>${itemCell}${scoreCell}<td style="white-space:nowrap">±&nbsp;${Math.round(ci)}</td></tr>`;
 				}).join('')}</tbody></table>`;
 				this.display('results');
 				elements.announcer.textContent = this.string('resultsReady');
