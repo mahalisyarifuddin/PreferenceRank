@@ -1002,7 +1002,7 @@
 				const range = Math.max(...this.scores) - min;
 				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
 				const columns = this.stats && this.stats.spreads ? ['rank', 'rankSpread', 'item', 'score', 'ci'] : ['rank', 'item', 'score'];
-				const widths = { rank: 50, rankSpread: 80, item: null, score: 60, ci: 60 };
+				const widths = { rank: 60, rankSpread: 110, item: null, score: 70, ci: 70 };
 				const headers = columns.map(key => {
 					const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
 					const canSort = ['rank', 'item', 'score'].includes(key);
