@@ -257,8 +257,8 @@
 			font-variant-numeric: tabular-nums;
 		}
 		table.dense th, table.dense td {
-			padding: 4px 8px;
-			font-size: .9rem;
+			padding: 4px 6px;
+			font-size: .8rem;
 		}
 		th {
 			background: var(--primary);
@@ -993,22 +993,23 @@
 				const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 				const sorters = {
 					rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
+					rankSpread: (a, b) => this.stats && this.stats.spreads ? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir : 0,
 					item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
-					score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir
+					score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
+					ci: (a, b) => this.stats && this.stats.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
 				};
-				this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column]);
+				this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column] || sorters.rank);
 				const ranking = this.currentRanking;
 				const min = Math.min(...this.scores);
 				const range = Math.max(...this.scores) - min;
 				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
 				const columns = this.stats && this.stats.spreads ? ['rank', 'rankSpread', 'item', 'score', 'ci'] : ['rank', 'item', 'score'];
-				const widths = { rank: 60, rankSpread: 110, item: null, score: 70, ci: 70 };
+				const widths = { rank: 90, rankSpread: 180, item: null, score: 90, ci: 110 };
 				const headers = columns.map(key => {
 					const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
-					const canSort = ['rank', 'item', 'score'].includes(key);
 					const content = this.string(key) + (this.sortState.column === key ? arrow : '');
 					const style = widths[key] ? `width:${widths[key]}px` : '';
-					return canSort ? `<th scope="col" tabindex="0" aria-sort="${sort}" data-sort="${key}" style="${style}">${content}</th>` : `<th scope="col" style="${style}">${content}</th>`;
+					return `<th scope="col" tabindex="0" aria-sort="${sort}" data-sort="${key}" style="${style}">${content}</th>`;
 				}).join('');
 				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table class="dense"><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
 					const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
