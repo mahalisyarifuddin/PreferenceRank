@@ -989,7 +989,7 @@
 				elements.results.parentElement.append(elements.undo, elements.copy);
 				const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 				const ranks = []; baseRanking.forEach((x, index) => ranks[x] = index + 1);
-				this.stats = Stats.calculate(this.items, this.matches, this.scores);
+				this.stats = this.provider instanceof FullPairProvider ? null : Stats.calculate(this.items, this.matches, this.scores);
 				const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 				const sorters = {
 					rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
