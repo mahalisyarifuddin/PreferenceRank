@@ -208,6 +208,9 @@
 			padding: 8px;
 			text-align: center;
 		}
+		#results {
+			overflow-x: auto;
+		}
 		kbd {
 			background: var(--surface);
 			border: 1px solid var(--border);
@@ -251,6 +254,11 @@
 			border: 1px solid var(--border);
 			padding: .5rem;
 			text-align: left;
+			font-variant-numeric: tabular-nums;
+		}
+		table.dense th, table.dense td {
+			padding: 4px 6px;
+			font-size: .8rem;
 		}
 		th {
 			background: var(--primary);
@@ -436,7 +444,9 @@
 				resumeMessage: 'A previous ranking session was found. Do you want to continue where you left off?',
 				resumeConfirm: 'Continue',
 				resumeNew: 'New Session',
-				estMatches: ' (~{count} comparisons)'
+				estMatches: ' (~{count} comparisons)',
+				rankSpread: 'Rank Spread',
+				ci: 'CI (±)'
 			},
 			id: {
 				title: 'PreferenceRank',
@@ -480,10 +490,114 @@
 				resumeMessage: 'Sesi peringkat sebelumnya ditemukan. Apakah Anda ingin melanjutkannya?',
 				resumeConfirm: 'Lanjutkan',
 				resumeNew: 'Sesi Baru',
-				estMatches: ' (~{count} perbandingan)'
+				estMatches: ' (~{count} perbandingan)',
+				rankSpread: 'Rentang Peringkat',
+				ci: 'IK (±)'
 			}
 		};
 		const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
+
+		const Matrix = {
+			zeros: (r, c) => Array.from({ length: r }, () => Array(c).fill(0)),
+			identity: (n) => Array.from({ length: n }, (_, i) => Array(n).fill(0).map((_, j) => i === j ? 1 : 0)),
+			multiply: (A, B) => {
+				const rA = A.length, cA = A[0].length, rB = B.length, cB = B[0].length;
+				if (cA !== rB) throw new Error('Dimension mismatch');
+				const C = Matrix.zeros(rA, cB);
+				for (let i = 0; i < rA; i++) for (let j = 0; j < cB; j++) for (let k = 0; k < cA; k++) C[i][j] += A[i][k] * B[k][j];
+				return C;
+			},
+			cholesky: (A) => {
+				const n = A.length, L = Matrix.zeros(n, n);
+				for (let i = 0; i < n; i++) {
+					for (let j = 0; j <= i; j++) {
+						let sum = 0;
+						for (let k = 0; k < j; k++) sum += L[i][k] * L[j][k];
+						if (i === j) {
+							const val = A[i][i] - sum;
+							if (val <= 0) return null;
+							L[i][j] = Math.sqrt(val);
+						} else L[i][j] = (1 / L[j][j] * (A[i][j] - sum));
+					}
+				}
+				return L;
+			},
+			inverse: (A) => {
+				const n = A.length, M = A.map(row => [...row]), I = Matrix.identity(n);
+				for (let i = 0; i < n; i++) {
+					let pivot = M[i][i], k = i;
+					if (Math.abs(pivot) < 1e-10) {
+						k = i + 1;
+						while (k < n && Math.abs(M[k][i]) < 1e-10) k++;
+						if (k == n) return null;
+						[M[i], M[k]] = [M[k], M[i]];
+						[I[i], I[k]] = [I[k], I[i]];
+						pivot = M[i][i];
+					}
+					const invPivot = 1 / pivot;
+					for (let j = 0; j < n; j++) { M[i][j] *= invPivot; I[i][j] *= invPivot; }
+					for (let l = 0; l < n; l++) {
+						if (l !== i) {
+							const f = M[l][i];
+							for (let j = 0; j < n; j++) { M[l][j] -= f * M[i][j]; I[l][j] -= f * I[i][j]; }
+						}
+					}
+				}
+				return I;
+			}
+		};
+
+		class Stats {
+			static calculate(items, matches, scores) {
+				const N = items.length;
+				if (N < 2) return null;
+				const factor = Math.log(10) / 400;
+				const theta = scores.map(s => s * factor);
+				const H = Matrix.zeros(N, N), n_matches = Matrix.zeros(N, N);
+				matches.forEach(m => { n_matches[m.a][m.b]++; n_matches[m.b][m.a]++; });
+				for (let i = 0; i < N; i++) {
+					for (let j = i + 1; j < N; j++) {
+						if (n_matches[i][j] > 0) {
+							const prob = 1 / (1 + Math.exp(-(theta[i] - theta[j])));
+							const weight = n_matches[i][j] * prob * (1 - prob);
+							H[i][j] = -weight; H[j][i] = -weight; H[i][i] += weight; H[j][j] += weight;
+						}
+					}
+				}
+				const subH = H.slice(0, N - 1).map(row => row.slice(0, N - 1));
+				for (let i = 0; i < N - 1; i++) subH[i][i] += 1e-9;
+				const invSubH = Matrix.inverse(subH);
+				if (!invSubH) return null;
+				const Cov = Matrix.zeros(N, N);
+				for (let i = 0; i < N - 1; i++) for (let j = 0; j < N - 1; j++) Cov[i][j] = invSubH[i][j];
+				const cis = [];
+				for (let i = 0; i < N; i++) {
+					let variance = 0, v = Array(N).fill(-1 / N); v[i] += 1;
+					for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) variance += v[r] * Cov[r][c] * v[c];
+					cis.push(0.35 * Math.sqrt(variance) / factor);
+				}
+				const L = Matrix.cholesky(invSubH);
+				if (!L) return { cis, spreads: null };
+				const ranks = Array.from({ length: N }, () => []), M = 500;
+				for (let k = 0; k < M; k++) {
+					const Z = Array.from({ length: N - 1 }, () => {
+						let u = 0, v = 0;
+						while (u === 0) u = Math.random();
+						while (v === 0) v = Math.random();
+						return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+					});
+					const delta = Array(N - 1).fill(0);
+					for (let i = 0; i < N - 1; i++) for (let j = 0; j <= i; j++) delta[i] += L[i][j] * Z[j];
+					const sampleTheta = theta.map((t, i) => i < N - 1 ? t + delta[i] : t);
+					const avg = sampleTheta.reduce((a, b) => a + b, 0) / N;
+					const sampleScores = sampleTheta.map(t => 1000 + (t - avg) / factor);
+					const indices = Array.from({ length: N }, (_, i) => i).sort((a, b) => sampleScores[b] - sampleScores[a]);
+					indices.forEach((origIndex, rank) => ranks[origIndex].push(rank + 1));
+				}
+				const spreads = ranks.map(r => { r.sort((a, b) => a - b); return [r[Math.floor(M * 0.1)], r[Math.floor(M * 0.9)]]; });
+				return { cis, spreads };
+			}
+		}
 
 		class FullPairProvider {
 			static estimate(count) { return count * (count - 1) / 2; }
@@ -875,24 +989,35 @@
 				elements.results.parentElement.append(elements.undo, elements.copy);
 				const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 				const ranks = []; baseRanking.forEach((x, index) => ranks[x] = index + 1);
+				this.stats = Stats.calculate(this.items, this.matches, this.scores);
 				const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 				const sorters = {
 					rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
+					rankSpread: (a, b) => this.stats && this.stats.spreads ? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir : 0,
 					item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
-					score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir
+					score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
+					ci: (a, b) => this.stats && this.stats.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
 				};
-				this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column]);
+				this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column] || sorters.rank);
 				const ranking = this.currentRanking;
 				const min = Math.min(...this.scores);
 				const range = Math.max(...this.scores) - min;
 				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
-				const headers = ['rank', 'item', 'score'].map(key => {
+				const columns = this.stats && this.stats.spreads ? ['rank', 'rankSpread', 'item', 'score', 'ci'] : ['rank', 'item', 'score'];
+				const widths = { rank: 90, rankSpread: 150, item: null, score: 90, ci: 110 };
+				const headers = columns.map(key => {
 					const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
-					return `<th scope="col" tabindex="0" aria-sort="${sort}" style="width:${key === 'item' ? 60 : 20}%" data-sort="${key}">${this.string(key)}${this.sortState.column === key ? arrow : ''}</th>`;
+					const content = this.string(key) + (this.sortState.column === key ? arrow : '');
+					const style = widths[key] ? `width:${widths[key]}px` : '';
+					return `<th scope="col" tabindex="0" aria-sort="${sort}" data-sort="${key}" style="${style}">${content}</th>`;
 				}).join('');
-				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
+				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table class="dense"><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
 					const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
-					return `<tr><td>${ranks[x]}</td><td>${new Option(this.items[x]).innerHTML}</td><td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td></tr>`;
+					const itemCell = `<td>${new Option(this.items[x]).innerHTML}</td>`;
+					const scoreCell = `<td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td>`;
+					if (!this.stats || !this.stats.spreads) return `<tr><td>${ranks[x]}</td>${itemCell}${scoreCell}</tr>`;
+					const spread = this.stats.spreads[x], ci = this.stats.cis[x];
+					return `<tr><td>${ranks[x]}</td><td style="white-space:nowrap">${spread[0]}&nbsp;↔&nbsp;${spread[1]}</td>${itemCell}${scoreCell}<td style="white-space:nowrap">±&nbsp;${Math.round(ci)}</td></tr>`;
 				}).join('')}</tbody></table>`;
 				this.display('results');
 				elements.announcer.textContent = this.string('resultsReady');
@@ -915,8 +1040,15 @@
 				const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 				const ranks = []; baseRanking.forEach((x, index) => ranks[x] = index + 1);
 				const ranking = this.currentRanking || baseRanking;
-				const headers = [this.string('rank'), this.string('item'), this.string('score')].join('\t');
-				const lines = ranking.map(x => `${ranks[x]}\t${this.items[x]}\t${Math.round(this.scores[x])}`);
+				const hasStats = this.stats && this.stats.spreads;
+				const headers = (hasStats ? ['rank', 'rankSpread', 'item', 'score', 'ci'] : ['rank', 'item', 'score']).map(k => this.string(k)).join('\t');
+				const lines = ranking.map(x => {
+					const row = [ranks[x]];
+					if (hasStats) row.push(`${this.stats.spreads[x][0]}-${this.stats.spreads[x][1]}`);
+					row.push(this.items[x], Math.round(this.scores[x]));
+					if (hasStats) row.push(`±${Math.round(this.stats.cis[x])}`);
+					return row.join('\t');
+				});
 				navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
 					clearTimeout(this.copyTimeout);
 					elements.copy.textContent = this.string('copied');
