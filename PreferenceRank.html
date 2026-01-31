@@ -852,7 +852,7 @@
 			updateCount(items) {
 				const list = items || this.getItems();
 				const count = list.length;
-				const type = elements.quickRank.checked && count > 20 ? QuickPairProvider : FullPairProvider;
+				const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
 				elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
 			}
 
@@ -903,7 +903,7 @@
 					dirty: true
 				});
 				elements.undo.disabled = true;
-				this.provider = new (elements.quickRank.checked && unique.length > 20 ? QuickPairProvider : FullPairProvider)(unique.length);
+				this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
 				elements.tieWrap.classList.toggle('hidden', !this.allowTies);
 				this.updateHelp();
 				this.display('battleSection');
