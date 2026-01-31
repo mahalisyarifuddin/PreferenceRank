@@ -574,7 +574,7 @@
 				for (let i = 0; i < N; i++) {
 					let variance = 0, v = Array(N).fill(-1 / N); v[i] += 1;
 					for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) variance += v[r] * Cov[r][c] * v[c];
-					cis.push(0.35 * Math.sqrt(variance) / factor);
+					cis.push(0.14 * Math.sqrt(variance) / factor);
 				}
 				const L = Matrix.cholesky(invSubH);
 				if (!L) return { cis, spreads: null };
@@ -852,7 +852,7 @@
 			updateCount(items) {
 				const list = items || this.getItems();
 				const count = list.length;
-				const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
+				const type = elements.quickRank.checked && count > 20 ? QuickPairProvider : FullPairProvider;
 				elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
 			}
 
@@ -903,7 +903,7 @@
 					dirty: true
 				});
 				elements.undo.disabled = true;
-				this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
+				this.provider = new (elements.quickRank.checked && unique.length > 20 ? QuickPairProvider : FullPairProvider)(unique.length);
 				elements.tieWrap.classList.toggle('hidden', !this.allowTies);
 				this.updateHelp();
 				this.display('battleSection');
