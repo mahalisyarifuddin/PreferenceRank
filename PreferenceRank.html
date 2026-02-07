@@ -461,7 +461,8 @@
 				resumeNew: 'New Session',
 				estMatches: ' (~{count} comparisons)',
 				rankSpread: 'Rank Spread',
-				ci: 'CI (±)'
+				ci: 'CI (±)',
+				filter: 'Filter items...'
 			},
 			id: {
 				title: 'PreferenceRank',
@@ -507,7 +508,8 @@
 				resumeNew: 'Sesi Baru',
 				estMatches: ' (~{count} perbandingan)',
 				rankSpread: 'Rentang Peringkat',
-				ci: 'IK (±)'
+				ci: 'IK (±)',
+				filter: 'Cari pilihan...'
 			}
 		};
 		const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
@@ -993,6 +995,18 @@
 
 			clear() { ['left', 'right', 'tie'].forEach(id => elements[id].classList.remove('selected')); }
 
+			filterResults(term) {
+				this.filterTerm = term;
+				const lower = term.toLowerCase();
+				const rows = elements.results.querySelector('tbody').querySelectorAll('tr');
+				const hasStats = this.stats && this.stats.spreads;
+				const itemIndex = hasStats ? 2 : 1;
+				rows.forEach(row => {
+					const text = row.children[itemIndex].textContent.toLowerCase();
+					row.classList.toggle('hidden', !text.includes(lower));
+				});
+			}
+
 			sortResults(column) {
 				const direction = this.sortState.column === column && this.sortState.direction === 'asc' ? 'desc' : 'asc';
 				this.sortState = { column, direction };
@@ -1000,11 +1014,14 @@
 			}
 
 			results() {
+				const dirty = this.dirty;
 				this.recalculateScores();
 				elements.results.parentElement.append(elements.undo, elements.copy);
 				const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 				const ranks = []; baseRanking.forEach((x, index) => ranks[x] = index + 1);
-				this.stats = this.provider instanceof FullPairProvider ? null : Stats.calculate(this.items, this.matches, this.scores);
+				if (dirty || !this.stats) {
+					this.stats = this.provider instanceof FullPairProvider ? null : Stats.calculate(this.items, this.matches, this.scores);
+				}
 				const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 				const sorters = {
 					rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
@@ -1026,7 +1043,7 @@
 					const style = widths[key] ? `width:${widths[key]}px` : '';
 					return `<th scope="col" tabindex="0" aria-sort="${sort}" data-sort="${key}" style="${style}">${content}</th>`;
 				}).join('');
-				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><table class="dense"><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
+				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><div style="margin-bottom:.5rem;text-align:right"><input type="search" id="resultFilter" placeholder="${this.string('filter')}" value="${this.filterTerm || ''}" style="width:200px;font-size:.9rem;padding:6px"></div><table class="dense"><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
 					const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
 					const itemCell = `<td>${new Option(this.items[x]).innerHTML}</td>`;
 					const scoreCell = `<td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td>`;
@@ -1040,6 +1057,8 @@
 					return `<tr><td>${ranks[x]}</td><td style="white-space:nowrap">${spread[0]}&nbsp;↔&nbsp;${spread[1]}<div class="spread-track"><div class="spread-bar" style="${barStyle}"></div></div></td>${itemCell}${scoreCell}<td style="white-space:nowrap">±&nbsp;${Math.round(ci)}</td></tr>`;
 				}).join('')}</tbody></table>`;
 				this.display('results');
+				elements.resultFilter.oninput = event => this.filterResults(event.target.value);
+				if (this.filterTerm) this.filterResults(this.filterTerm);
 				elements.announcer.textContent = this.string('resultsReady');
 				this.save();
 			}
