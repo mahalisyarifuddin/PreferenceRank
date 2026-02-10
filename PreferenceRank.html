@@ -245,31 +245,117 @@
 			color: var(--primary);
 			text-decoration: underline;
 		}
-		table {
-			border-collapse: collapse;
-			margin-top: 1rem;
-			width: 100%;
-		}
-		th, td {
+		.leaderboard {
 			border: 1px solid var(--border);
-			padding: .5rem;
-			text-align: left;
-			font-variant-numeric: tabular-nums;
+			border-radius: 8px;
+			background: var(--surface);
+			overflow: hidden;
+			margin-top: 1rem;
 		}
-		table.dense th, table.dense td {
-			padding: 4px 6px;
-			font-size: .8rem;
+		.lb-header {
+			display: flex;
+			padding: 1rem;
+			background: var(--background);
+			border-bottom: 1px solid var(--border);
+			font-weight: 600;
+			color: var(--text);
+			font-size: .9rem;
 		}
-		th {
-			background: var(--primary);
-			color: var(--on-primary);
+		.lb-header > div {
 			cursor: pointer;
 			user-select: none;
+			display: flex;
+			align-items: center;
+			gap: .5rem;
 		}
-		th:hover, th:focus-visible {
-			background: var(--hover);
-			outline: 2px solid var(--on-primary);
-			outline-offset: -2px;
+		.lb-header > div:hover {
+			color: var(--primary);
+		}
+		.lb-row {
+			border-bottom: 1px solid var(--border);
+		}
+		.lb-row:last-child {
+			border-bottom: none;
+		}
+		.lb-main {
+			display: flex;
+			padding: 1rem;
+			align-items: center;
+			cursor: pointer;
+			background: var(--surface);
+		}
+		.lb-main:hover {
+			background: var(--muted);
+		}
+		.lb-col-rank {
+			flex: 0 0 80px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-weight: bold;
+		}
+		.lb-col-item {
+			flex: 1;
+			font-weight: 500;
+		}
+		.lb-col-score {
+			flex: 0 0 120px;
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+		.lb-details {
+			display: none;
+			background: var(--background);
+			padding: 1rem 1rem 1rem 80px;
+			border-top: 1px solid var(--border);
+			font-size: .9rem;
+		}
+		.lb-row.expanded .lb-details {
+			display: block;
+		}
+		.lb-row.expanded .chevron {
+			transform: rotate(90deg);
+		}
+		.chevron {
+			display: inline-block;
+			transition: transform .2s;
+			font-size: .8rem;
+			color: var(--text);
+			opacity: .6;
+		}
+		.detail-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+			gap: 1.5rem;
+		}
+		.detail-item {
+			display: flex;
+			flex-direction: column;
+			gap: .25rem;
+		}
+		.detail-label {
+			font-size: .75rem;
+			color: var(--text);
+			opacity: .7;
+			font-weight: 600;
+		}
+		.detail-value {
+			font-size: 1.1rem;
+			font-weight: 500;
+		}
+		.ci-badge {
+			color: var(--text);
+			opacity: .6;
+			font-size: .85rem;
+			margin-left: 4px;
+		}
+		@media (max-width: 600px) {
+			.lb-header, .lb-main {
+				padding: .75rem;
+			}
+			.lb-col-rank { flex: 0 0 60px; }
+			.lb-col-score { flex: 0 0 90px; }
+			.lb-details { padding-left: 1rem; }
 		}
 		.header {
 			display: flex;
@@ -461,6 +547,7 @@
 				resumeNew: 'New Session',
 				estMatches: ' (~{count} comparisons)',
 				rankSpread: 'Rank Spread',
+				matches: 'Matches',
 				ci: 'CI (±)',
 				filter: 'Filter items...'
 			},
@@ -508,6 +595,7 @@
 				resumeNew: 'Sesi Baru',
 				estMatches: ' (~{count} perbandingan)',
 				rankSpread: 'Rentang Peringkat',
+				matches: 'Pertandingan',
 				ci: 'IK (±)',
 				filter: 'Cari pilihan...'
 			}
@@ -753,12 +841,12 @@
 				elements.quickRank.onchange = () => this.updateInputState();
 				elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
 				elements.results.onclick = event => {
-					const header = event.target.closest('th');
+					const header = event.target.closest('.lb-header > div');
 					if (header && header.dataset.sort) this.sortResults(header.dataset.sort);
 				};
 				elements.results.onkeydown = event => {
 					if (event.key === 'Enter' || event.key === ' ') {
-						const header = event.target.closest('th');
+						const header = event.target.closest('.lb-header > div');
 						if (header && header.dataset.sort) { event.preventDefault(); this.sortResults(header.dataset.sort); }
 					}
 				};
@@ -998,11 +1086,9 @@
 			filterResults(term) {
 				this.filterTerm = term;
 				const lower = term.toLowerCase();
-				const rows = elements.results.querySelector('tbody').querySelectorAll('tr');
-				const hasStats = this.stats && this.stats.spreads;
-				const itemIndex = hasStats ? 2 : 1;
+				const rows = elements.results.querySelectorAll('.lb-row');
 				rows.forEach(row => {
-					const text = row.children[itemIndex].textContent.toLowerCase();
+					const text = row.querySelector('.lb-col-item').textContent.toLowerCase();
 					row.classList.toggle('hidden', !text.includes(lower));
 				});
 			}
@@ -1032,33 +1118,89 @@
 				};
 				this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column] || sorters.rank);
 				const ranking = this.currentRanking;
-				const min = Math.min(...this.scores);
-				const range = Math.max(...this.scores) - min;
+
+				elements.results.innerHTML = '';
+				const headerWrapper = document.createElement('div');
+				headerWrapper.className = 'header';
+				headerWrapper.innerHTML = `<h2>${this.string('resultsTitle')}</h2>`;
+				headerWrapper.appendChild(elements.undo);
+				headerWrapper.appendChild(elements.copy);
+				elements.results.appendChild(headerWrapper);
+
+				const filterDiv = document.createElement('div');
+				filterDiv.style.cssText = "margin-bottom:.5rem;text-align:right";
+				filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" value="${this.filterTerm || ''}" style="width:200px;font-size:.9rem;padding:6px">`;
+				elements.results.appendChild(filterDiv);
+
 				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
-				const columns = this.stats && this.stats.spreads ? ['rank', 'rankSpread', 'item', 'score', 'ci'] : ['rank', 'item', 'score'];
-				const widths = { rank: 90, rankSpread: 150, item: null, score: 90, ci: 110 };
-				const headers = columns.map(key => {
-					const sort = this.sortState.column === key ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
-					const content = this.string(key) + (this.sortState.column === key ? arrow : '');
-					const style = widths[key] ? `width:${widths[key]}px` : '';
-					return `<th scope="col" tabindex="0" aria-sort="${sort}" data-sort="${key}" style="${style}">${content}</th>`;
-				}).join('');
-				elements.results.innerHTML = `<div class="header"><h2>${this.string('resultsTitle')}</h2></div><div style="margin-bottom:.5rem;text-align:right"><input type="search" id="resultFilter" placeholder="${this.string('filter')}" value="${this.filterTerm || ''}" style="width:200px;font-size:.9rem;padding:6px"></div><table class="dense"><thead><tr>${headers}</tr></thead><tbody>${ranking.map(x => {
-					const percent = range === 0 ? 100 : Math.round(5 + 95 * (this.scores[x] - min) / range);
-					const itemCell = `<td>${new Option(this.items[x]).innerHTML}</td>`;
-					const scoreCell = `<td style="background:linear-gradient(to right,var(--highlight-bg) ${percent}%,transparent ${percent}%)">${Math.round(this.scores[x])}</td>`;
-					if (!this.stats || !this.stats.spreads) return `<tr><td>${ranks[x]}</td>${itemCell}${scoreCell}</tr>`;
-					const spread = this.stats.spreads[x], ci = this.stats.cis[x];
-					const N = this.items.length;
-					const left = N > 1 ? (spread[0] - 1) / (N - 1) * 100 : 0;
-					const width = N > 1 ? (spread[1] - spread[0]) / (N - 1) * 100 : 100;
-					const isLastPoint = spread[0] === spread[1] && spread[0] === N;
-					const barStyle = isLastPoint ? `right:0;width:${width}%` : `left:${left}%;width:${width}%`;
-					return `<tr><td>${ranks[x]}</td><td style="white-space:nowrap">${spread[0]}&nbsp;↔&nbsp;${spread[1]}<div class="spread-track"><div class="spread-bar" style="${barStyle}"></div></div></td>${itemCell}${scoreCell}<td style="white-space:nowrap">±&nbsp;${Math.round(ci)}</td></tr>`;
-				}).join('')}</tbody></table>`;
-				this.display('results');
+				const getSortIcon = (col) => this.sortState.column === col ? arrow : '';
+				const getSortState = (col) => this.sortState.column === col ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
+
+				const lb = document.createElement('div');
+				lb.className = 'leaderboard';
+				lb.setAttribute('role', 'table');
+				lb.innerHTML = `
+					<div class="lb-header" role="row">
+						<div class="lb-col-rank" role="columnheader" tabindex="0" aria-sort="${getSortState('rank')}" data-sort="rank">${this.string('rank')}${getSortIcon('rank')}</div>
+						<div class="lb-col-item" role="columnheader" tabindex="0" aria-sort="${getSortState('item')}" data-sort="item">${this.string('item')}${getSortIcon('item')}</div>
+						<div class="lb-col-score" role="columnheader" tabindex="0" aria-sort="${getSortState('score')}" data-sort="score" style="justify-content: flex-end;">${this.string('score')}${getSortIcon('score')}</div>
+					</div>
+					<div class="lb-body" role="rowgroup"></div>
+				`;
+				const body = lb.querySelector('.lb-body');
+				const hasStats = this.stats && this.stats.spreads;
+
+				const itemMatches = Array(this.items.length).fill(0);
+				this.matches.forEach(m => { itemMatches[m.a]++; itemMatches[m.b]++; });
+
+				ranking.forEach(x => {
+					const row = document.createElement('div');
+					row.className = 'lb-row';
+					const rank = ranks[x];
+					const item = this.items[x];
+					const score = Math.round(this.scores[x]);
+					const ci = hasStats ? Math.round(this.stats.cis[x]) : null;
+					const spread = hasStats ? `${this.stats.spreads[x][0]} - ${this.stats.spreads[x][1]}` : null;
+
+					row.innerHTML = `
+						<div class="lb-main" role="button" tabindex="0">
+							<div class="lb-col-rank">
+								<span class="chevron">›</span>
+								<span>${rank}</span>
+							</div>
+							<div class="lb-col-item">${new Option(item).innerHTML}</div>
+							<div class="lb-col-score">
+								${score}
+								${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}
+							</div>
+						</div>
+						<div class="lb-details">
+							<div class="detail-grid">
+								${spread ? `
+								<div class="detail-item">
+									<span class="detail-label">${this.string('rankSpread')}</span>
+									<span class="detail-value">${spread}</span>
+								</div>` : ''}
+								<div class="detail-item">
+									<span class="detail-label">${this.string('matches')}</span>
+									<span class="detail-value">${itemMatches[x]}</span>
+								</div>
+							</div>
+						</div>
+					`;
+					const main = row.querySelector('.lb-main');
+					const toggle = () => row.classList.toggle('expanded');
+					main.onclick = toggle;
+					main.onkeydown = (e) => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }};
+					body.appendChild(row);
+				});
+				elements.results.appendChild(lb);
+
+				elements.resultFilter = document.getElementById('resultFilter');
 				elements.resultFilter.oninput = event => this.filterResults(event.target.value);
 				if (this.filterTerm) this.filterResults(this.filterTerm);
+
+				this.display('results');
 				elements.announcer.textContent = this.string('resultsReady');
 				this.save();
 			}
