@@ -1161,6 +1161,16 @@
 					const score = Math.round(this.scores[x]);
 					const ci = hasStats ? Math.round(this.stats.cis[x]) : null;
 					const spread = hasStats ? `${this.stats.spreads[x][0]} - ${this.stats.spreads[x][1]}` : null;
+					let spreadBar = '';
+					if (hasStats) {
+						// Calculate the visual representation of the rank spread
+						const [min, max] = this.stats.spreads[x];
+						const total = this.items.length;
+						// Position and width are percentages of the total range
+						const pMin = total > 1 ? ((min - 1) / (total - 1)) * 100 : 0;
+						const pWidth = total > 1 ? ((max - min) / (total - 1)) * 100 : 100;
+						spreadBar = `<div class="spread-track" title="${spread}"><div class="spread-bar" style="left:${pMin}%;width:${pWidth}%"></div></div>`;
+					}
 
 					row.innerHTML = `
 						<div class="lb-main" role="button" tabindex="0">
@@ -1180,6 +1190,7 @@
 								<div class="detail-item">
 									<span class="detail-label">${this.string('rankSpread')}</span>
 									<span class="detail-value">${spread}</span>
+									${spreadBar}
 								</div>` : ''}
 								<div class="detail-item">
 									<span class="detail-label">${this.string('matches')}</span>
