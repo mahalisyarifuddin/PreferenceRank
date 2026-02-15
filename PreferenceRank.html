@@ -744,28 +744,12 @@
 			}
 			constructor(count) {
 				this.count = count;
-				this.stack = [];
+				this.stack = [{
+					arr: Array.from({ length: count }, (_, i) => i),
+					state: 0 // 0: initial, 1: left pushed, 2: right pushed, 3: merging
+				}];
 				this.history = [];
 				this.pending = null;
-				this.mergeSort(Array.from({ length: count }, (_, i) => i));
-			}
-			
-			mergeSort(arr) {
-				if (arr.length <= 1) {
-					this.stack.push({ type: 'return', value: arr });
-					return;
-				}
-				const mid = arr.length >> 1;
-				this.stack.push({ 
-					type: 'merge', 
-					leftStart: this.stack.length + 1,
-					rightStart: -1,
-					left: null,
-					right: null
-				});
-				this.mergeSort(arr.slice(mid));
-				this.stack[this.stack.length - 1].rightStart = this.stack.length;
-				this.mergeSort(arr.slice(0, mid));
 			}
 			
 			snap() { 
@@ -794,7 +778,7 @@
 			next(state, result) {
 				if (this.pending && result !== undefined) {
 					const frame = this.stack[this.stack.length - 1];
-					if (frame && frame.type === 'merge' && frame.comparing) {
+					if (frame && frame.state === 3 && frame.comparing) {
 						const [a, b] = this.pending;
 						const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
 						frame.lastWinner = winner;
@@ -806,28 +790,39 @@
 				while (this.stack.length) {
 					const frame = this.stack[this.stack.length - 1];
 					
-					if (frame.type === 'return') {
-						const value = frame.value;
+					if (frame.arr.length <= 1) {
+						const value = frame.arr;
 						this.stack.pop();
 						if (this.stack.length) {
 							const parent = this.stack[this.stack.length - 1];
-							if (parent.type === 'merge') {
-								if (!parent.left) parent.left = value;
-								else parent.right = value;
-							}
-						} else {
-							return null; // Done
+							if (parent.state === 1) parent.left = value;
+							else if (parent.state === 2) parent.right = value;
 						}
 						continue;
 					}
 					
-					if (frame.type === 'merge') {
-						if (!frame.left || !frame.right) continue;
-						
-						if (!frame.i) frame.i = 0;
-						if (!frame.j) frame.j = 0;
-						if (!frame.result) frame.result = [];
-						
+					if (frame.state === 0) {
+						frame.state = 1;
+						const mid = frame.arr.length >> 1;
+						this.stack.push({ arr: frame.arr.slice(0, mid), state: 0 });
+						continue;
+					}
+
+					if (frame.state === 1) {
+						frame.state = 2;
+						const mid = frame.arr.length >> 1;
+						this.stack.push({ arr: frame.arr.slice(mid), state: 0 });
+						continue;
+					}
+
+					if (frame.state === 2) {
+						frame.state = 3;
+						frame.i = 0;
+						frame.j = 0;
+						frame.result = [];
+					}
+
+					if (frame.state === 3) {
 						while (frame.i < frame.left.length && frame.j < frame.right.length) {
 							if (frame.lastWinner !== undefined) {
 								if (frame.lastWinner === frame.left[frame.i]) {
@@ -849,8 +844,14 @@
 						while (frame.i < frame.left.length) frame.result.push(frame.left[frame.i++]);
 						while (frame.j < frame.right.length) frame.result.push(frame.right[frame.j++]);
 						
+						const value = frame.result;
 						this.stack.pop();
-						this.stack.push({ type: 'return', value: frame.result });
+						if (this.stack.length) {
+							const parent = this.stack[this.stack.length - 1];
+							if (parent.state === 1) parent.left = value;
+							else if (parent.state === 2) parent.right = value;
+						}
+						continue;
 					}
 				}
 				
@@ -967,7 +968,7 @@
 				Object.assign(this, battle);
 				this.scores = Object.values(battle.scores);
 				this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
-				Object.assign(this.provider, battle.provider);
+				if (!(battle.providerType === 'quick' && battle.provider.stack?.[0]?.type)) Object.assign(this.provider, battle.provider);
 				elements.allowTies.checked = this.allowTies;
 				elements.quickRank.checked = battle.providerType === 'quick';
 				this.setTies(this.allowTies);
