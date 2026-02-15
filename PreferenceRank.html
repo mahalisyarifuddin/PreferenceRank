@@ -684,20 +684,36 @@
 				const L = Matrix.cholesky(invSubH);
 				if (!L) return { cis, spreads: null };
 				const ranks = Array.from({ length: N }, () => []), M = 500;
+				let nextZ = null;
+				const gaussian = () => {
+					if (nextZ !== null) { const v = nextZ; nextZ = null; return v; }
+					let u = 0, v = 0;
+					while (u === 0) u = Math.random();
+					while (v === 0) v = Math.random();
+					const R = Math.sqrt(-2.0 * Math.log(u)), ang = 2.0 * Math.PI * v;
+					nextZ = R * Math.sin(ang);
+					return R * Math.cos(ang);
+				};
+				const N_1 = N - 1, Z = new Float64Array(N_1), delta = new Float64Array(N_1), sampleTheta = new Float64Array(N), indices = new Int32Array(N), sampleScores = new Float64Array(N);
 				for (let k = 0; k < M; k++) {
-					const Z = Array.from({ length: N - 1 }, () => {
-						let u = 0, v = 0;
-						while (u === 0) u = Math.random();
-						while (v === 0) v = Math.random();
-						return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-					});
-					const delta = Array(N - 1).fill(0);
-					for (let i = 0; i < N - 1; i++) for (let j = 0; j <= i; j++) delta[i] += L[i][j] * Z[j] * multiplier;
-					const sampleTheta = theta.map((t, i) => i < N - 1 ? t + delta[i] : t);
-					const avg = sampleTheta.reduce((a, b) => a + b, 0) / N;
-					const sampleScores = sampleTheta.map(t => 1000 + (t - avg) / factor);
-					const indices = Array.from({ length: N }, (_, i) => i).sort((a, b) => sampleScores[b] - sampleScores[a]);
-					indices.forEach((origIndex, rank) => ranks[origIndex].push(rank + 1));
+					for (let i = 0; i < N_1; i++) Z[i] = gaussian();
+					delta.fill(0);
+					for (let i = 0; i < N_1; i++) {
+						let s = 0; for (let j = 0; j <= i; j++) s += L[i][j] * Z[j];
+						delta[i] = s * multiplier;
+					}
+					let sum = 0;
+					for (let i = 0; i < N; i++) {
+						const v = i < N_1 ? theta[i] + delta[i] : theta[i];
+						sampleTheta[i] = v; sum += v;
+					}
+					const avg = sum / N;
+					for (let i = 0; i < N; i++) {
+						sampleScores[i] = 1000 + (sampleTheta[i] - avg) / factor;
+						indices[i] = i;
+					}
+					indices.sort((a, b) => sampleScores[b] - sampleScores[a]);
+					for (let i = 0; i < N; i++) ranks[indices[i]].push(i + 1);
 				}
 				const spreads = ranks.map(r => { r.sort((a, b) => a - b); return [r[Math.floor(M * 0.1)], r[Math.floor(M * 0.9)]]; });
 				return { cis, spreads };
