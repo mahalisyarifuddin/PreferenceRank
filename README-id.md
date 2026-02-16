@@ -26,7 +26,7 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 - **Masukan Fleksibel**: Urutkan apa saja—karakter, makanan, film, destinasi, dan lainnya.
 - **Dua Mode Peringkat**: Pilih antara "Peringkat Penuh" yang komprehensif atau "Peringkat Cepat" yang cerdas (lihat detail di atas).
 - **Penilaian Ilmiah**: Menggunakan sistem peringkat Elo Bradley-Terry untuk hasil yang akurat.
-- **Estimasi Ketidakpastian**: Menampilkan keyakinan peringkat dengan rincian "Rentang Peringkat" dan "Interval Keyakinan (IK)", berguna untuk memahami stabilitas di Peringkat Cepat.
+- **Estimasi Ketidakpastian**: Menampilkan keyakinan peringkat dengan rincian "Rentang Peringkat" dan "Interval Keyakinan (IK)", tersedia di mode **Peringkat Cepat** dan **Peringkat Penuh**.
 - **Jumlah Pertarungan**: Melihat jumlah pertarungan yang diikuti oleh setiap item untuk wawasan lebih mendalam.
 - **Urungkan dan Seri**: Batalkan pilihan terakhir Anda dengan mudah atau izinkan hasil seri dalam pemeringkatan.
 - **Ringan**: Satu berkas HTML tanpa dependensi eksternal, sehingga portabel dan cepat.
