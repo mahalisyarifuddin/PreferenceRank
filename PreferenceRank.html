@@ -402,8 +402,8 @@
 		}
 		#sessionModal {
 			position: absolute;
-			inset: 0; background:
-			var(--surface);
+			inset: 0;
+			background: var(--surface);
 			z-index: 10;
 			display: flex;
 			flex-direction: column;
@@ -411,6 +411,27 @@
 			justify-content: center;
 			padding: 2rem;
 			text-align: center;
+			animation: fadeIn .3s ease-out;
+		}
+		@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+		.session-icon {
+			color: var(--primary);
+			font-size: 4rem;
+			margin-bottom: 1rem;
+			opacity: .9;
+			line-height: 1;
+		}
+		#sessionTitle {
+			font-size: 1.5rem;
+			margin-bottom: 0.5rem;
+		}
+		#sessionMessage {
+			color: var(--text);
+			font-size: 1rem;
+			line-height: 1.6;
+			margin: 0 0 2.5rem;
+			max-width: 480px;
+			opacity: .8;
 		}
 		#sessionButtons {
 			display: flex;
@@ -420,6 +441,9 @@
 		}
 		#sessionButtons button {
 			flex: 1;
+			padding: 0.75rem 1rem;
+			font-size: 1rem;
+			font-weight: 500;
 		}
 		.visually-hidden {
 			position: absolute;
@@ -452,8 +476,9 @@
 <body>
 	<div class="container">
 		<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
+			<div class="session-icon">↺</div>
 			<h2 id="sessionTitle"></h2>
-			<p id="sessionMessage" style="margin:1rem 0 2rem;line-height:1.5"></p>
+			<p id="sessionMessage"></p>
 			<div id="sessionButtons">
 				<button id="sessionContinue" class="primary"></button>
 				<button id="sessionNew" class="secondary"></button>
@@ -603,52 +628,53 @@
 		const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
 
 		const Matrix = {
-			zeros: (r, c) => Array.from({ length: r }, () => Array(c).fill(0)),
-			identity: (n) => Array.from({ length: n }, (_, i) => Array(n).fill(0).map((_, j) => i === j ? 1 : 0)),
-			multiply: (A, B) => {
-				const rA = A.length, cA = A[0].length, rB = B.length, cB = B[0].length;
-				if (cA !== rB) throw new Error('Dimension mismatch');
-				const C = Matrix.zeros(rA, cB);
-				for (let i = 0; i < rA; i++) for (let j = 0; j < cB; j++) for (let k = 0; k < cA; k++) C[i][j] += A[i][k] * B[k][j];
-				return C;
+			zeros: (r, c) => ({ rows: r, cols: c, data: new Float64Array(r * c) }),
+			identity: (n) => {
+				const m = Matrix.zeros(n, n);
+				for (let i = 0; i < n; i++) m.data[i * n + i] = 1;
+				return m;
 			},
 			cholesky: (A) => {
-				const n = A.length, L = Matrix.zeros(n, n);
+				const n = A.rows, L = Matrix.zeros(n, n), aData = A.data, lData = L.data;
 				for (let i = 0; i < n; i++) {
 					for (let j = 0; j <= i; j++) {
 						let sum = 0;
-						for (let k = 0; k < j; k++) sum += L[i][k] * L[j][k];
+						for (let k = 0; k < j; k++) sum += lData[i * n + k] * lData[j * n + k];
 						if (i === j) {
-							const val = A[i][i] - sum;
+							const val = aData[i * n + i] - sum;
 							if (val <= 0) return null;
-							L[i][j] = Math.sqrt(val);
-						} else L[i][j] = (1 / L[j][j] * (A[i][j] - sum));
+							lData[i * n + j] = Math.sqrt(val);
+						} else lData[i * n + j] = (1 / lData[j * n + j] * (aData[i * n + j] - sum));
 					}
 				}
 				return L;
 			},
 			inverse: (A) => {
-				const n = A.length, M = A.map(row => [...row]), I = Matrix.identity(n);
+				const n = A.rows, M = new Float64Array(A.data), I = new Float64Array(n * n);
+				for (let i = 0; i < n; i++) I[i * n + i] = 1;
 				for (let i = 0; i < n; i++) {
-					let pivot = M[i][i], k = i;
+					let pivot = M[i * n + i], k = i;
 					if (Math.abs(pivot) < 1e-10) {
 						k = i + 1;
-						while (k < n && Math.abs(M[k][i]) < 1e-10) k++;
-						if (k == n) return null;
-						[M[i], M[k]] = [M[k], M[i]];
-						[I[i], I[k]] = [I[k], I[i]];
-						pivot = M[i][i];
+						while (k < n && Math.abs(M[k * n + i]) < 1e-10) k++;
+						if (k === n) return null;
+						for (let j = 0; j < n; j++) {
+							const [tM, tI] = [M[i * n + j], I[i * n + j]];
+							M[i * n + j] = M[k * n + j]; M[k * n + j] = tM;
+							I[i * n + j] = I[k * n + j]; I[k * n + j] = tI;
+						}
+						pivot = M[i * n + i];
 					}
 					const invPivot = 1 / pivot;
-					for (let j = 0; j < n; j++) { M[i][j] *= invPivot; I[i][j] *= invPivot; }
+					for (let j = 0; j < n; j++) { M[i * n + j] *= invPivot; I[i * n + j] *= invPivot; }
 					for (let l = 0; l < n; l++) {
 						if (l !== i) {
-							const f = M[l][i];
-							for (let j = 0; j < n; j++) { M[l][j] -= f * M[i][j]; I[l][j] -= f * I[i][j]; }
+							const f = M[l * n + i];
+							for (let j = 0; j < n; j++) { M[l * n + j] -= f * M[i * n + j]; I[l * n + j] -= f * I[i * n + j]; }
 						}
 					}
 				}
-				return I;
+				return { rows: n, cols: n, data: I };
 			}
 		};
 
@@ -657,33 +683,42 @@
 				const N = items.length;
 				if (N < 2) return null;
 				const factor = Math.log(10) / 400;
-				const theta = scores.map(s => s * factor);
-				const H = Matrix.zeros(N, N), n_matches = Matrix.zeros(N, N);
-				matches.forEach(m => { n_matches[m.a][m.b]++; n_matches[m.b][m.a]++; });
+				const theta = new Float64Array(N);
+				for (let i = 0; i < N; i++) theta[i] = scores[i] * factor;
+				const H = new Float64Array(N * N), n_matches = new Int32Array(N * N);
+				matches.forEach(m => { n_matches[m.a * N + m.b]++; n_matches[m.b * N + m.a]++; });
 				for (let i = 0; i < N; i++) {
 					for (let j = i + 1; j < N; j++) {
-						if (n_matches[i][j] > 0) {
+						const count = n_matches[i * N + j];
+						if (count > 0) {
 							const prob = 1 / (1 + Math.exp(-(theta[i] - theta[j])));
-							const weight = n_matches[i][j] * prob * (1 - prob);
-							H[i][j] = -weight; H[j][i] = -weight; H[i][i] += weight; H[j][j] += weight;
+							const weight = count * prob * (1 - prob), negWeight = -weight;
+							H[i * N + j] = negWeight; H[j * N + i] = negWeight;
+							H[i * N + i] += weight; H[j * N + j] += weight;
 						}
 					}
 				}
-				const subH = H.slice(0, N - 1).map(row => row.slice(0, N - 1));
-				for (let i = 0; i < N - 1; i++) subH[i][i] += 1e-9;
+				const N_1 = N - 1, subH = Matrix.zeros(N_1, N_1);
+				for (let i = 0; i < N_1; i++) {
+					for (let j = 0; j < N_1; j++) subH.data[i * N_1 + j] = H[i * N + j];
+					subH.data[i * N_1 + i] += 1e-9;
+				}
 				const invSubH = Matrix.inverse(subH);
 				if (!invSubH) return null;
-				const Cov = Matrix.zeros(N, N);
-				for (let i = 0; i < N - 1; i++) for (let j = 0; j < N - 1; j++) Cov[i][j] = invSubH[i][j];
-				const cis = [], multiplier = 0.11;
+				const cis = new Float64Array(N), multiplier = 0.11, invData = invSubH.data;
 				for (let i = 0; i < N; i++) {
-					let variance = 0, v = Array(N).fill(-1 / N); v[i] += 1;
-					for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) variance += v[r] * Cov[r][c] * v[c];
-					cis.push(multiplier * Math.sqrt(variance) / factor);
+					let variance = 0;
+					for (let r = 0; r < N_1; r++) {
+						const vr = (r === i ? 1 : 0) - 1 / N;
+						let sumRow = 0;
+						for (let c = 0; c < N_1; c++) sumRow += invData[r * N_1 + c] * ((c === i ? 1 : 0) - 1 / N);
+						variance += vr * sumRow;
+					}
+					cis[i] = multiplier * Math.sqrt(Math.max(0, variance)) / factor;
 				}
 				const L = Matrix.cholesky(invSubH);
-				if (!L) return { cis, spreads: null };
-				const ranks = Array.from({ length: N }, () => []), M = 500;
+				if (!L) return { cis: Array.from(cis), spreads: null };
+				const M = 500, allRanks = new Int32Array(N * M);
 				let nextZ = null;
 				const gaussian = () => {
 					if (nextZ !== null) { const v = nextZ; nextZ = null; return v; }
@@ -694,12 +729,12 @@
 					nextZ = R * Math.sin(ang);
 					return R * Math.cos(ang);
 				};
-				const N_1 = N - 1, Z = new Float64Array(N_1), delta = new Float64Array(N_1), sampleTheta = new Float64Array(N), indices = new Int32Array(N), sampleScores = new Float64Array(N);
+				const Z = new Float64Array(N_1), delta = new Float64Array(N_1), sampleTheta = new Float64Array(N), indices = new Int32Array(N), sampleScores = new Float64Array(N), lData = L.data;
 				for (let k = 0; k < M; k++) {
 					for (let i = 0; i < N_1; i++) Z[i] = gaussian();
-					delta.fill(0);
 					for (let i = 0; i < N_1; i++) {
-						let s = 0; for (let j = 0; j <= i; j++) s += L[i][j] * Z[j];
+						let s = 0, i_offset = i * N_1;
+						for (let j = 0; j <= i; j++) s += lData[i_offset + j] * Z[j];
 						delta[i] = s * multiplier;
 					}
 					let sum = 0;
@@ -713,10 +748,15 @@
 						indices[i] = i;
 					}
 					indices.sort((a, b) => sampleScores[b] - sampleScores[a]);
-					for (let i = 0; i < N; i++) ranks[indices[i]].push(i + 1);
+					for (let r = 0; r < N; r++) allRanks[indices[r] * M + k] = r + 1;
 				}
-				const spreads = ranks.map(r => { r.sort((a, b) => a - b); return [r[Math.floor(M * 0.1)], r[Math.floor(M * 0.9)]]; });
-				return { cis, spreads };
+				const spreads = [], rowBuffer = new Int32Array(M);
+				for (let i = 0; i < N; i++) {
+					for (let k = 0; k < M; k++) rowBuffer[k] = allRanks[i * M + k];
+					rowBuffer.sort();
+					spreads.push([rowBuffer[Math.floor(M * 0.1)], rowBuffer[Math.floor(M * 0.9)]]);
+				}
+				return { cis: Array.from(cis), spreads };
 			}
 		}
 
@@ -737,33 +777,27 @@
 		class QuickPairProvider {
 			static estimate(count) {
 				if (count <= 1) return 0;
-				if (count === 2) return 1;
-				if (count === 3) return 3;
-				// Improved estimation: n*log2(n) - n*0.91 + 2
-				return Math.max(0, Math.round(count * Math.log2(count) - count * 0.91 + 2));
+				return Math.ceil(count * Math.log2(count) - 1.44 * count + 3.3);
 			}
 			constructor(count) {
 				this.count = count;
-				this.stack = [{
-					arr: Array.from({ length: count }, (_, i) => i),
-					state: 0 // 0: initial, 1: left pushed, 2: right pushed, 3: merging
-				}];
+				this.stack = [{ items: Array.from({ length: count }, (_, i) => i), state: 0 }];
 				this.history = [];
 				this.pending = null;
 			}
 			
 			snap() { 
 				return {
-					stack: structuredClone(this.stack),
+					stack: JSON.parse(JSON.stringify(this.stack)),
 					pending: this.pending,
-					history: structuredClone(this.history)
+					history: JSON.parse(JSON.stringify(this.history))
 				};
 			}
 			
 			restore(snapshot) { 
-				this.stack = structuredClone(snapshot.stack);
+				this.stack = snapshot.stack;
 				this.pending = snapshot.pending;
-				this.history = structuredClone(snapshot.history);
+				this.history = snapshot.history;
 			}
 			
 			unmark(pair) { 
@@ -778,9 +812,10 @@
 			next(state, result) {
 				if (this.pending && result !== undefined) {
 					const frame = this.stack[this.stack.length - 1];
-					if (frame && frame.state === 3 && frame.comparing) {
+					if (frame.comparing) {
 						const [a, b] = this.pending;
 						const winner = result === 0.5 ? (state.swapped ? b : a) : result === 1 ? a : b;
+						frame.lastResult = winner === a;
 						frame.lastWinner = winner;
 						delete frame.comparing;
 					}
@@ -790,74 +825,129 @@
 				while (this.stack.length) {
 					const frame = this.stack[this.stack.length - 1];
 					
-					if (frame.arr.length <= 1) {
-						const value = frame.arr;
-						this.stack.pop();
-						if (this.stack.length) {
-							const parent = this.stack[this.stack.length - 1];
-							if (parent.state === 1) parent.left = value;
-							else if (parent.state === 2) parent.right = value;
+					if (frame.state === 0) { // Init
+						if (frame.items.length <= 1) {
+							this.returnResult(frame.items);
+							continue;
 						}
-						continue;
-					}
-					
-					if (frame.state === 0) {
-						frame.state = 1;
-						const mid = frame.arr.length >> 1;
-						this.stack.push({ arr: frame.arr.slice(0, mid), state: 0 });
-						continue;
+						frame.pairs = [];
+						frame.odd = null;
+						const n = frame.items.length;
+						for (let i = 0; i < Math.floor(n / 2); i++) frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
+						if (n % 2 === 1) frame.odd = frame.items[n - 1];
+						frame.winners = []; frame.losers = []; frame.pairIndex = 0; frame.state = 1;
 					}
 
-					if (frame.state === 1) {
-						frame.state = 2;
-						const mid = frame.arr.length >> 1;
-						this.stack.push({ arr: frame.arr.slice(mid), state: 0 });
-						continue;
-					}
-
-					if (frame.state === 2) {
-						frame.state = 3;
-						frame.i = 0;
-						frame.j = 0;
-						frame.result = [];
-					}
-
-					if (frame.state === 3) {
-						while (frame.i < frame.left.length && frame.j < frame.right.length) {
-							if (frame.lastWinner !== undefined) {
-								if (frame.lastWinner === frame.left[frame.i]) {
-									frame.result.push(frame.left[frame.i]);
-									frame.i++;
-								} else {
-									frame.result.push(frame.right[frame.j]);
-									frame.j++;
-								}
-								delete frame.lastWinner;
+					if (frame.state === 1) { // Compare pairs
+						if (frame.pairIndex < frame.pairs.length) {
+							if (frame.lastResult !== undefined) {
+								const [a, b] = frame.pairs[frame.pairIndex];
+								if (frame.lastWinner === a) { frame.winners.push(a); frame.losers.push(b); }
+								else { frame.winners.push(b); frame.losers.push(a); }
+								delete frame.lastResult; delete frame.lastWinner;
+								frame.pairIndex++;
 							} else {
-								this.pending = [frame.left[frame.i], frame.right[frame.j]];
+								this.pending = frame.pairs[frame.pairIndex];
 								frame.comparing = true;
 								this.history.push(this.snap());
 								return this.pending;
 							}
+						} else {
+							frame.state = 2;
+							this.stack.push({ items: frame.winners, state: 0 });
+							continue;
 						}
-						
-						while (frame.i < frame.left.length) frame.result.push(frame.left[frame.i++]);
-						while (frame.j < frame.right.length) frame.result.push(frame.right[frame.j++]);
-						
-						const value = frame.result;
-						this.stack.pop();
-						if (this.stack.length) {
-							const parent = this.stack[this.stack.length - 1];
-							if (parent.state === 1) parent.left = value;
-							else if (parent.state === 2) parent.right = value;
+						continue;
+					}
+
+					if (frame.state === 2) { // Recursion returned
+                        if (!frame.sortedWinners) return null; // Error
+						frame.mainChain = [frame.losers[frame.winners.indexOf(frame.sortedWinners[0])], frame.sortedWinners[0]];
+						frame.loserMap = {};
+						for(let i=0; i<frame.winners.length; i++) frame.loserMap[frame.winners[i]] = frame.losers[i];
+						for (let i = 1; i < frame.sortedWinners.length; i++) frame.mainChain.push(frame.sortedWinners[i]);
+
+						const jacobsthal = [1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365];
+						frame.insertionOrder = [];
+						let jIdx = 1, covered = 1;
+						while (covered < frame.sortedWinners.length) {
+							let target = jacobsthal[jIdx];
+							if (target > frame.sortedWinners.length) target = frame.sortedWinners.length;
+							for (let k = target; k > covered; k--) frame.insertionOrder.push(frame.sortedWinners[k-1]);
+							covered = target; jIdx++;
+						}
+						frame.insertIndex = 0; frame.state = 3;
+					}
+
+					if (frame.state === 3) { // Insertion
+						if (frame.insertIndex < frame.insertionOrder.length) {
+							if (!frame.binarySearchState) {
+								const winner = frame.insertionOrder[frame.insertIndex];
+								const loser = frame.loserMap[winner];
+								frame.currentLoser = loser;
+								frame.binarySearchState = { min: 0, max: frame.mainChain.indexOf(winner), mid: -1 };
+							}
+							const bs = frame.binarySearchState;
+							if (bs.min < bs.max) {
+								if (frame.lastResult !== undefined) {
+									if (frame.lastWinner === frame.currentLoser) bs.min = bs.mid + 1;
+									else bs.max = bs.mid;
+									delete frame.lastResult; delete frame.lastWinner;
+								} else {
+									bs.mid = Math.floor((bs.min + bs.max) / 2);
+									this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
+									frame.comparing = true;
+									this.history.push(this.snap());
+									return this.pending;
+								}
+							}
+							if (bs.min >= bs.max) {
+								frame.mainChain.splice(bs.min, 0, frame.currentLoser);
+								delete frame.binarySearchState; frame.insertIndex++;
+							}
+						} else {
+							if (frame.odd !== null && !frame.oddInserted) {
+								if (!frame.binarySearchState) {
+									frame.currentLoser = frame.odd;
+									frame.binarySearchState = { min: 0, max: frame.mainChain.length, mid: -1 };
+								}
+								const bs = frame.binarySearchState;
+								if (bs.min < bs.max) {
+									if (frame.lastResult !== undefined) {
+										if (frame.lastWinner === frame.currentLoser) bs.min = bs.mid + 1;
+										else bs.max = bs.mid;
+										delete frame.lastResult; delete frame.lastWinner;
+									} else {
+										bs.mid = Math.floor((bs.min + bs.max) / 2);
+										this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
+										frame.comparing = true;
+										this.history.push(this.snap());
+										return this.pending;
+									}
+								}
+								if (bs.min >= bs.max) {
+									frame.mainChain.splice(bs.min, 0, frame.currentLoser);
+									delete frame.binarySearchState; frame.oddInserted = true;
+								}
+							} else {
+								this.returnResult(frame.mainChain);
+								continue;
+							}
 						}
 						continue;
 					}
 				}
-				
 				return null;
 			}
 			
+			returnResult(result) {
+				this.stack.pop();
+				if (this.stack.length) {
+					const parent = this.stack[this.stack.length - 1];
+					if (parent.state === 2) parent.sortedWinners = result;
+				}
+			}
+
 			getProgress(step) { 
 				return `${step}/~${Math.max(step, QuickPairProvider.estimate(this.count))}`;
 			}
@@ -968,7 +1058,7 @@
 				Object.assign(this, battle);
 				this.scores = Object.values(battle.scores);
 				this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
-				if (!(battle.providerType === 'quick' && battle.provider.stack?.[0]?.type)) Object.assign(this.provider, battle.provider);
+				if (!(battle.providerType === 'quick' && !battle.provider.stack?.[0]?.items)) Object.assign(this.provider, battle.provider);
 				elements.allowTies.checked = this.allowTies;
 				elements.quickRank.checked = battle.providerType === 'quick';
 				this.setTies(this.allowTies);
@@ -1166,7 +1256,7 @@
 				const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 				const ranks = []; baseRanking.forEach((x, index) => ranks[x] = index + 1);
 				if (dirty || !this.stats) {
-					this.stats = this.provider instanceof FullPairProvider ? null : Stats.calculate(this.items, this.matches, this.scores);
+					this.stats = Stats.calculate(this.items, this.matches, this.scores);
 				}
 				const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 				const sorters = {
