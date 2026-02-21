@@ -494,7 +494,7 @@
 	<div class="container">
 		<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
 			<div class="session-card">
-				<div class="session-icon">↺</div>
+				<div class="session-icon">&#x21BA;</div>
 				<h2 id="sessionTitle"></h2>
 				<p id="sessionMessage"></p>
 				<div id="sessionButtons">
@@ -571,9 +571,9 @@
 				shortcutLeft: 'Left Arrow',
 				shortcutRight: 'Right Arrow',
 				shortcutTie: 'Up/Down Arrow',
-				shortcutUndo: 'Ctrl/⌘ + Z',
-				tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
-				tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
+				shortcutUndo: 'Ctrl/\u2318 + Z',
+				tipTie: 'Keyboard Shortcuts:<br><kbd>\u2190</kbd> Choose left<br><kbd>\u2192</kbd> Choose right<br><kbd>\u2191</kbd>/<kbd>\u2193</kbd> Tie<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Undo',
+				tipNoTie: 'Keyboard Shortcuts:<br><kbd>\u2190</kbd> Choose left<br><kbd>\u2192</kbd> Choose right<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Undo',
 				resultsTitle: 'Results',
 				rank: 'Rank',
 				item: 'Item',
@@ -592,7 +592,7 @@
 				estMatches: ' (~{count} comparisons)',
 				rankSpread: 'Rank Spread',
 				matches: 'Matches',
-				ci: 'CI (±)',
+				ci: 'CI (\u00b1)',
 				filter: 'Filter items...'
 			},
 			id: {
@@ -619,9 +619,9 @@
 				shortcutLeft: 'Panah Kiri',
 				shortcutRight: 'Panah Kanan',
 				shortcutTie: 'Panah Atas/Bawah',
-				shortcutUndo: 'Ctrl/⌘ + Z',
-				tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
-				tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
+				shortcutUndo: 'Ctrl/\u2318 + Z',
+				tipTie: 'Pintasan Papan Ketik:<br><kbd>\u2190</kbd> Pilih kiri<br><kbd>\u2192</kbd> Pilih kanan<br><kbd>\u2191</kbd>/<kbd>\u2193</kbd> Seri<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Urungkan',
+				tipNoTie: 'Pintasan Papan Ketik:<br><kbd>\u2190</kbd> Pilih kiri<br><kbd>\u2192</kbd> Pilih kanan<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Urungkan',
 				resultsTitle: 'Hasil',
 				rank: 'Peringkat',
 				item: 'Nama',
@@ -640,7 +640,7 @@
 				estMatches: ' (~{count} perbandingan)',
 				rankSpread: 'Rentang Peringkat',
 				matches: 'Pertandingan',
-				ci: 'IK (±)',
+				ci: 'IK (\u00b1)',
 				filter: 'Cari pilihan...'
 			}
 		};
@@ -844,7 +844,7 @@
 				while (this.stack.length) {
 					const frame = this.stack[this.stack.length - 1];
 					
-					if (frame.state === 0) { // Init
+					if (frame.state === 0) {
 						if (frame.items.length <= 1) {
 							this.returnResult(frame.items);
 							continue;
@@ -857,7 +857,7 @@
 						frame.winners = []; frame.losers = []; frame.pairIndex = 0; frame.state = 1;
 					}
 
-					if (frame.state === 1) { // Compare pairs
+					if (frame.state === 1) {
 						if (frame.pairIndex < frame.pairs.length) {
 							if (frame.lastResult !== undefined) {
 								const [a, b] = frame.pairs[frame.pairIndex];
@@ -879,8 +879,8 @@
 						continue;
 					}
 
-					if (frame.state === 2) { // Recursion returned
-                        if (!frame.sortedWinners) return null; // Error
+					if (frame.state === 2) {
+                        if (!frame.sortedWinners) return null;
 						frame.mainChain = [frame.losers[frame.winners.indexOf(frame.sortedWinners[0])], frame.sortedWinners[0]];
 						frame.loserMap = {};
 						for(let i=0; i<frame.winners.length; i++) frame.loserMap[frame.winners[i]] = frame.losers[i];
@@ -898,7 +898,7 @@
 						frame.insertIndex = 0; frame.state = 3;
 					}
 
-					if (frame.state === 3) { // Insertion
+					if (frame.state === 3) {
 						if (frame.insertIndex < frame.insertionOrder.length) {
 							if (!frame.binarySearchState) {
 								const winner = frame.insertionOrder[frame.insertIndex];
@@ -1014,7 +1014,7 @@
 				elements.theme.setAttribute('aria-label', this.string('themeLabel'));
 				elements.items.placeholder = this.string('placeholderItems');
 				['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key => elements[key].textContent = this.string(key));
-				elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
+				elements.start.title = `${this.string('start')} (Ctrl/\u2318 + Enter)`;
 				elements.left.title = this.string('shortcutLeft');
 				elements.right.title = this.string('shortcutRight');
 				elements.tie.title = this.string('shortcutTie');
@@ -1089,7 +1089,7 @@
 			getItems() {
 				const lines = elements.items.value.split('\n').map(line => line.trim()).filter(Boolean);
 				if (!lines.length) return [];
-				const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
+				const patterns = [/^\d+[\.\)]\s+/, /^[-*\u2022]\s+/];
 				return lines.map(line => {
 					const pattern = patterns.find(p => p.test(line));
 					return pattern ? line.replace(pattern, '') : line;
@@ -1169,41 +1169,69 @@
 			recalculateScores() {
 				if (!this.dirty && this.scores && this.scores.length === this.items.length) return;
 				const n = this.items.length;
-				const wins = Array(n).fill(0);
-				const matchCount = Array.from({ length: n }, () => Array(n).fill(0));
-				
-				this.matches.forEach(({ a, b, result }) => {
+				if (n === 0) return;
+
+				const wins = new Float64Array(n);
+
+				const pairIndexMap = new Map();
+				const nijArr = [];
+				const adjJ   = Array.from({length: n}, () => []);
+				const adjIdx = Array.from({length: n}, () => []);
+
+				for (const { a, b, result } of this.matches) {
 					wins[a] += result;
 					wins[b] += 1 - result;
-					matchCount[a][b] += 1;
-					matchCount[b][a] += 1;
-				});
-				
-				// Bradley-Terry MM algorithm
-				let strength = Array(n).fill(1);
-				for (let iter = 0; iter < 50; iter++) {
-					const newStrength = Array(n);
-					let maxDiff = 0;
-					
-					for (let i = 0; i < n; i++) {
-						let denom = 0;
-						for (let j = 0; j < n; j++) {
-							if (i !== j && matchCount[i][j] > 0) {
-								denom += matchCount[i][j] / (strength[i] + strength[j]);
-							}
-						}
-						newStrength[i] = denom > 0 ? (wins[i] + 0.5) / denom : strength[i];
-						maxDiff = Math.max(maxDiff, Math.abs(newStrength[i] - strength[i]));
+					const lo = a < b ? a : b, hi = a < b ? b : a;
+					const key = lo * n + hi;
+					let pi = pairIndexMap.get(key);
+					if (pi === undefined) {
+						pi = nijArr.length;
+						pairIndexMap.set(key, pi);
+						nijArr.push(0);
+						adjJ[lo].push(hi); adjIdx[lo].push(pi);
+						adjJ[hi].push(lo); adjIdx[hi].push(pi);
 					}
-					
-					strength = newStrength;
-					if (maxDiff < 1e-6) break;
+					nijArr[pi]++;
 				}
-				
-				// Convert to Elo scale
-				const logs = strength.map(s => Math.log(Math.max(s, 1e-10)));
-				const avg = logs.reduce((a, b) => a + b, 0) / n;
-				this.scores = logs.map(v => 1000 + 400 * (v - avg) / Math.log(10));
+
+				const nij = new Float64Array(nijArr);
+				const adjJT   = adjJ.map(a => new Int32Array(a));
+				const adjIdxT = adjIdx.map(a => new Int32Array(a));
+
+				const ALPHA = 0.5;
+				const strength    = new Float64Array(n).fill(1.0);
+				const newStrength = new Float64Array(n);
+
+				for (let iter = 0; iter < 500; iter++) {
+					for (let i = 0; i < n; i++) {
+						let denom = ALPHA / (strength[i] + 1.0);
+						const js = adjJT[i], idxs = adjIdxT[i], deg = js.length;
+						for (let k = 0; k < deg; k++) {
+							denom += nij[idxs[k]] / (strength[i] + strength[js[k]]);
+						}
+						newStrength[i] = (wins[i] + ALPHA) / denom;
+					}
+
+					let logSum = 0;
+					for (let i = 0; i < n; i++) logSum += Math.log(newStrength[i]);
+					const scale = Math.exp(-logSum / n);
+
+					let maxRel = 0;
+					for (let i = 0; i < n; i++) {
+						newStrength[i] *= scale;
+						const diff = Math.abs(newStrength[i] - strength[i]);
+						if (diff > maxRel * newStrength[i]) maxRel = diff / newStrength[i];
+						strength[i] = newStrength[i];
+					}
+					if (maxRel < 1e-12) break;
+				}
+
+				const LOG10 = Math.log(10);
+				let logAvg = 0;
+				const logs = new Float64Array(n);
+				for (let i = 0; i < n; i++) { logs[i] = Math.log(strength[i]); logAvg += logs[i]; }
+				logAvg /= n;
+				this.scores = Array.from(logs, v => 1000 + 400 * (v - logAvg) / LOG10);
 				this.dirty = false;
 			}
 
@@ -1301,7 +1329,7 @@
 				filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" value="${this.filterTerm || ''}" style="width:200px;font-size:.9rem;padding:6px">`;
 				elements.results.appendChild(filterDiv);
 
-				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
+				const arrow = this.sortState.direction === 'asc' ? ' \u25b2' : ' \u25bc';
 				const getSortIcon = (col) => this.sortState.column === col ? arrow : '';
 				const getSortState = (col) => this.sortState.column === col ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
 
@@ -1332,10 +1360,8 @@
 					const spread = hasStats ? `${this.stats.spreads[x][0]} - ${this.stats.spreads[x][1]}` : null;
 					let spreadBar = '';
 					if (hasStats) {
-						// Calculate the visual representation of the rank spread
 						const [min, max] = this.stats.spreads[x];
 						const total = this.items.length;
-						// Position and width are percentages of the total range
 						const pMin = total > 1 ? ((min - 1) / (total - 1)) * 100 : 0;
 						const pWidth = total > 1 ? ((max - min) / (total - 1)) * 100 : 100;
 						spreadBar = `<div class="spread-track" title="${spread}"><div class="spread-bar" style="left:${pMin}%;width:${pWidth}%"></div></div>`;
@@ -1344,13 +1370,13 @@
 					row.innerHTML = `
 						<div class="lb-main" role="button" tabindex="0">
 							<div class="lb-col-rank">
-								<span class="chevron">›</span>
+								<span class="chevron">&#x203a;</span>
 								<span>${rank}</span>
 							</div>
 							<div class="lb-col-item">${new Option(item).innerHTML}</div>
 							<div class="lb-col-score">
 								${score}
-								${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}
+								${ci !== null ? `<span class="ci-badge">\u00b1${ci}</span>` : ''}
 							</div>
 						</div>
 						<div class="lb-details">
@@ -1407,7 +1433,7 @@
 					const row = [ranks[x]];
 					if (hasStats) row.push(`${this.stats.spreads[x][0]}-${this.stats.spreads[x][1]}`);
 					row.push(this.items[x], Math.round(this.scores[x]));
-					if (hasStats) row.push(`±${Math.round(this.stats.cis[x])}`);
+					if (hasStats) row.push(`\u00b1${Math.round(this.stats.cis[x])}`);
 					return row.join('\t');
 				});
 				navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
