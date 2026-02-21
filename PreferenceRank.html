@@ -790,7 +790,7 @@
 				}
 			}
 			next(state) { return this.pairs[state.step]; }
-			getProgress(state) { return `${state.step}/${this.pairs.length}`; }
+			getProgress(step) { return `${step}/${this.pairs.length}`; }
 		}
 
 		class QuickPairProvider {
@@ -817,14 +817,9 @@
 				this.pending = snapshot.pending;
 			}
 			
-			unmark(pair) { 
+			unmark(pair) {
 				if (this.history.length) {
-					const popped = this.history.pop();
-					if (this.history.length) {
-						this.restore(this.history[this.history.length - 1]);
-					} else {
-						this.restore(popped);
-					}
+					this.restore(this.history.pop());
 				}
 			}
 			
