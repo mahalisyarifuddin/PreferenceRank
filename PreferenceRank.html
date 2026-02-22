@@ -544,7 +544,10 @@
 		</div>
 	</div>
 	<script>
-		try{const d=JSON.parse(localStorage.getItem('preferenceRankData'));d?.settings?.theme&&d.settings.theme!=='auto'&&(document.documentElement.className=d.settings.theme)}catch(e){}
+		try {
+			const initialData = JSON.parse(localStorage.getItem('preferenceRankData'));
+			initialData?.settings?.theme && initialData.settings.theme !== 'auto' && (document.documentElement.className = initialData.settings.theme);
+		} catch (error) {}
 
 		const text = {
 			en: {
@@ -647,151 +650,195 @@
 		const elements = new Proxy({}, { get: (_, id) => document.getElementById(id) });
 
 		const Matrix = {
-			zeros: (r, c) => ({ rows: r, cols: c, data: new Float64Array(r * c) }),
-			identity: (n) => {
-				const m = Matrix.zeros(n, n);
-				for (let i = 0; i < n; i++) m.data[i * n + i] = 1;
-				return m;
+			zeros: (rowCount, columnCount) => ({ rows: rowCount, cols: columnCount, data: new Float64Array(rowCount * columnCount) }),
+			identity: (size) => {
+				const matrix = Matrix.zeros(size, size);
+				for (let i = 0; i < size; i++) matrix.data[i * size + i] = 1;
+				return matrix;
 			},
-			cholesky: (A) => {
-				const n = A.rows, L = Matrix.zeros(n, n), aData = A.data, lData = L.data;
-				for (let i = 0; i < n; i++) {
+			cholesky: (inputMatrix) => {
+				const size = inputMatrix.rows;
+				const lowerTriangular = Matrix.zeros(size, size);
+				const inputData = inputMatrix.data;
+				const resultData = lowerTriangular.data;
+				for (let i = 0; i < size; i++) {
 					for (let j = 0; j <= i; j++) {
 						let sum = 0;
-						for (let k = 0; k < j; k++) sum += lData[i * n + k] * lData[j * n + k];
-						if (i === j) {
-							const val = aData[i * n + i] - sum;
-							if (val <= 0) return null;
-							lData[i * n + j] = Math.sqrt(val);
-						} else lData[i * n + j] = (1 / lData[j * n + j] * (aData[i * n + j] - sum));
+						for (let k = 0; k < j; k++) sum += resultData[i * size + k] * resultData[j * size + k];
+						resultData[i * size + j] = i === j ? (() => {
+							const val = inputData[i * size + i] - sum;
+							return val <= 0 ? null : Math.sqrt(val);
+						})() : (1 / resultData[j * size + j] * (inputData[i * size + j] - sum));
+						if (resultData[i * size + j] === null) return null;
 					}
 				}
-				return L;
+				return lowerTriangular;
 			},
-			inverse: (A) => {
-				const n = A.rows, M = new Float64Array(A.data), I = new Float64Array(n * n);
-				for (let i = 0; i < n; i++) I[i * n + i] = 1;
-				for (let i = 0; i < n; i++) {
-					let pivot = M[i * n + i], k = i;
+			inverse: (inputMatrix) => {
+				const size = inputMatrix.rows;
+				const matrixData = new Float64Array(inputMatrix.data);
+				const inverseData = new Float64Array(size * size);
+				for (let i = 0; i < size; i++) inverseData[i * size + i] = 1;
+				for (let i = 0; i < size; i++) {
+					let pivot = matrixData[i * size + i];
+					let pivotIndex = i;
 					if (Math.abs(pivot) < 1e-10) {
-						k = i + 1;
-						while (k < n && Math.abs(M[k * n + i]) < 1e-10) k++;
-						if (k === n) return null;
-						for (let j = 0; j < n; j++) {
-							const [tM, tI] = [M[i * n + j], I[i * n + j]];
-							M[i * n + j] = M[k * n + j]; M[k * n + j] = tM;
-							I[i * n + j] = I[k * n + j]; I[k * n + j] = tI;
+						pivotIndex = i + 1;
+						while (pivotIndex < size && Math.abs(matrixData[pivotIndex * size + i]) < 1e-10) pivotIndex++;
+						if (pivotIndex === size) return null;
+						for (let j = 0; j < size; j++) {
+							const tempMatrix = matrixData[i * size + j];
+							const tempInverse = inverseData[i * size + j];
+							matrixData[i * size + j] = matrixData[pivotIndex * size + j];
+							matrixData[pivotIndex * size + j] = tempMatrix;
+							inverseData[i * size + j] = inverseData[pivotIndex * size + j];
+							inverseData[pivotIndex * size + j] = tempInverse;
 						}
-						pivot = M[i * n + i];
+						pivot = matrixData[i * size + i];
 					}
-					const invPivot = 1 / pivot;
-					for (let j = 0; j < n; j++) { M[i * n + j] *= invPivot; I[i * n + j] *= invPivot; }
-					for (let l = 0; l < n; l++) {
-						if (l !== i) {
-							const f = M[l * n + i];
-							for (let j = 0; j < n; j++) { M[l * n + j] -= f * M[i * n + j]; I[l * n + j] -= f * I[i * n + j]; }
+					const inversePivot = 1 / pivot;
+					for (let j = 0; j < size; j++) {
+						matrixData[i * size + j] *= inversePivot;
+						inverseData[i * size + j] *= inversePivot;
+					}
+					for (let rowIndex = 0; rowIndex < size; rowIndex++) {
+						if (rowIndex !== i) {
+							const factor = matrixData[rowIndex * size + i];
+							for (let j = 0; j < size; j++) {
+								matrixData[rowIndex * size + j] -= factor * matrixData[i * size + j];
+								inverseData[rowIndex * size + j] -= factor * inverseData[i * size + j];
+							}
 						}
 					}
 				}
-				return { rows: n, cols: n, data: I };
+				return { rows: size, cols: size, data: inverseData };
 			}
 		};
 
 		class Stats {
 			static calculate(items, matches, scores) {
-				const N = items.length;
-				if (N < 2) return null;
-				const factor = Math.log(10) / 400;
-				const theta = new Float64Array(N);
-				for (let i = 0; i < N; i++) theta[i] = scores[i] * factor;
+				const itemCount = items.length;
+				if (itemCount < 2) return null;
+				const scoreFactor = Math.log(10) / 400;
+				const parameters = new Float64Array(itemCount);
+				for (let i = 0; i < itemCount; i++) parameters[i] = scores[i] * scoreFactor;
 
-				const invSubH = Stats.buildHessian(N, matches, theta);
-				if (!invSubH) return null;
+				const inverseSubHessian = Stats.buildHessian(itemCount, matches, parameters);
+				if (!inverseSubHessian) return null;
 
-				const cis = Stats.calculateCI(N, invSubH, factor);
+				const confidenceIntervals = Stats.calculateCI(itemCount, inverseSubHessian, scoreFactor);
 
-				const L = Matrix.cholesky(invSubH);
-				if (!L) return { cis: Array.from(cis), spreads: null };
+				const choleskyFactor = Matrix.cholesky(inverseSubHessian);
+				if (!choleskyFactor) return { cis: Array.from(confidenceIntervals), spreads: null };
 
-				const spreads = Stats.simulateRanks(N, theta, L, factor);
-				return { cis: Array.from(cis), spreads };
+				const spreads = Stats.simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor);
+				return { cis: Array.from(confidenceIntervals), spreads };
 			}
 
-			static buildHessian(N, matches, theta) {
-				const H = new Float64Array(N * N), n_matches = new Int32Array(N * N);
-				matches.forEach(m => { n_matches[m.a * N + m.b]++; n_matches[m.b * N + m.a]++; });
-				for (let i = 0; i < N; i++) {
-					for (let j = i + 1; j < N; j++) {
-						const count = n_matches[i * N + j];
+			static buildHessian(itemCount, matches, parameters) {
+				const hessian = new Float64Array(itemCount * itemCount);
+				const matchCounts = new Int32Array(itemCount * itemCount);
+				matches.forEach(m => { matchCounts[m.a * itemCount + m.b]++; matchCounts[m.b * itemCount + m.a]++; });
+				for (let i = 0; i < itemCount; i++) {
+					for (let j = i + 1; j < itemCount; j++) {
+						const count = matchCounts[i * itemCount + j];
 						if (count > 0) {
-							const prob = 1 / (1 + Math.exp(-(theta[i] - theta[j])));
-							const weight = count * prob * (1 - prob), negWeight = -weight;
-							H[i * N + j] = negWeight; H[j * N + i] = negWeight;
-							H[i * N + i] += weight; H[j * N + j] += weight;
+							const probability = 1 / (1 + Math.exp(-(parameters[i] - parameters[j])));
+							const weight = count * probability * (1 - probability);
+							const negativeWeight = -weight;
+							hessian[i * itemCount + j] = negativeWeight;
+							hessian[j * itemCount + i] = negativeWeight;
+							hessian[i * itemCount + i] += weight;
+							hessian[j * itemCount + j] += weight;
 						}
 					}
 				}
-				const N_1 = N - 1, subH = Matrix.zeros(N_1, N_1);
-				for (let i = 0; i < N_1; i++) {
-					for (let j = 0; j < N_1; j++) subH.data[i * N_1 + j] = H[i * N + j];
-					subH.data[i * N_1 + i] += 1e-9;
+				const itemCountMinusOne = itemCount - 1;
+				const subHessian = Matrix.zeros(itemCountMinusOne, itemCountMinusOne);
+				for (let i = 0; i < itemCountMinusOne; i++) {
+					for (let j = 0; j < itemCountMinusOne; j++) {
+						subHessian.data[i * itemCountMinusOne + j] = hessian[i * itemCount + j];
+					}
+					subHessian.data[i * itemCountMinusOne + i] += 1e-9;
 				}
-				return Matrix.inverse(subH);
+				return Matrix.inverse(subHessian);
 			}
 
-			static calculateCI(N, invSubH, factor) {
-				const N_1 = N - 1, cis = new Float64Array(N), multiplier = 0.11, invData = invSubH.data;
-				for (let i = 0; i < N; i++) {
+			static calculateCI(itemCount, inverseSubHessian, scoreFactor) {
+				const itemCountMinusOne = itemCount - 1;
+				const confidenceIntervals = new Float64Array(itemCount);
+				const multiplier = 0.11;
+				const inverseData = inverseSubHessian.data;
+				for (let i = 0; i < itemCount; i++) {
 					let variance = 0;
-					for (let r = 0; r < N_1; r++) {
-						const vr = (r === i ? 1 : 0) - 1 / N;
+					for (let r = 0; r < itemCountMinusOne; r++) {
+						const vRow = (r === i ? 1 : 0) - 1 / itemCount;
 						let sumRow = 0;
-						for (let c = 0; c < N_1; c++) sumRow += invData[r * N_1 + c] * ((c === i ? 1 : 0) - 1 / N);
-						variance += vr * sumRow;
+						for (let c = 0; c < itemCountMinusOne; c++) {
+							sumRow += inverseData[r * itemCountMinusOne + c] * ((c === i ? 1 : 0) - 1 / itemCount);
+						}
+						variance += vRow * sumRow;
 					}
-					cis[i] = multiplier * Math.sqrt(Math.max(0, variance)) / factor;
+					confidenceIntervals[i] = multiplier * Math.sqrt(Math.max(0, variance)) / scoreFactor;
 				}
-				return cis;
+				return confidenceIntervals;
 			}
 
-			static simulateRanks(N, theta, L, factor) {
-				const N_1 = N - 1, M = 500, allRanks = new Int32Array(N * M), multiplier = 0.11;
-				let nextZ = null;
+			static simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor) {
+				const itemCountMinusOne = itemCount - 1;
+				const simulationCount = 500;
+				const simulationRanks = new Int32Array(itemCount * simulationCount);
+				const multiplier = 0.11;
+				let nextGaussian = null;
 				const gaussian = () => {
-					if (nextZ !== null) { const v = nextZ; nextZ = null; return v; }
-					let u = 0, v = 0;
-					while (u === 0) u = Math.random();
-					while (v === 0) v = Math.random();
-					const R = Math.sqrt(-2.0 * Math.log(u)), ang = 2.0 * Math.PI * v;
-					nextZ = R * Math.sin(ang);
-					return R * Math.cos(ang);
+					if (nextGaussian !== null) {
+						const value = nextGaussian;
+						nextGaussian = null;
+						return value;
+					}
+					let uniform1 = 0;
+					let uniform2 = 0;
+					while (uniform1 === 0) uniform1 = Math.random();
+					while (uniform2 === 0) uniform2 = Math.random();
+					const radius = Math.sqrt(-2.0 * Math.log(uniform1));
+					const angle = 2.0 * Math.PI * uniform2;
+					nextGaussian = radius * Math.sin(angle);
+					return radius * Math.cos(angle);
 				};
-				const Z = new Float64Array(N_1), delta = new Float64Array(N_1), sampleTheta = new Float64Array(N), indices = new Int32Array(N), sampleScores = new Float64Array(N), lData = L.data;
-				for (let k = 0; k < M; k++) {
-					for (let i = 0; i < N_1; i++) Z[i] = gaussian();
-					for (let i = 0; i < N_1; i++) {
-						let s = 0, i_offset = i * N_1;
-						for (let j = 0; j <= i; j++) s += lData[i_offset + j] * Z[j];
-						delta[i] = s * multiplier;
+				const gaussianVector = new Float64Array(itemCountMinusOne);
+				const parameterDelta = new Float64Array(itemCountMinusOne);
+				const sampleParameters = new Float64Array(itemCount);
+				const rankIndices = new Int32Array(itemCount);
+				const sampleScores = new Float64Array(itemCount);
+				const choleskyData = choleskyFactor.data;
+				for (let simulationIndex = 0; simulationIndex < simulationCount; simulationIndex++) {
+					for (let i = 0; i < itemCountMinusOne; i++) gaussianVector[i] = gaussian();
+					for (let i = 0; i < itemCountMinusOne; i++) {
+						let sum = 0;
+						const iOffset = i * itemCountMinusOne;
+						for (let j = 0; j <= i; j++) sum += choleskyData[iOffset + j] * gaussianVector[j];
+						parameterDelta[i] = sum * multiplier;
 					}
-					let sum = 0;
-					for (let i = 0; i < N; i++) {
-						const v = i < N_1 ? theta[i] + delta[i] : theta[i];
-						sampleTheta[i] = v; sum += v;
+					let parameterSum = 0;
+					for (let i = 0; i < itemCount; i++) {
+						const value = i < itemCountMinusOne ? parameters[i] + parameterDelta[i] : parameters[i];
+						sampleParameters[i] = value;
+						parameterSum += value;
 					}
-					const avg = sum / N;
-					for (let i = 0; i < N; i++) {
-						sampleScores[i] = 1000 + (sampleTheta[i] - avg) / factor;
-						indices[i] = i;
+					const parameterAverage = parameterSum / itemCount;
+					for (let i = 0; i < itemCount; i++) {
+						sampleScores[i] = 1000 + (sampleParameters[i] - parameterAverage) / scoreFactor;
+						rankIndices[i] = i;
 					}
-					indices.sort((a, b) => sampleScores[b] - sampleScores[a]);
-					for (let r = 0; r < N; r++) allRanks[indices[r] * M + k] = r + 1;
+					rankIndices.sort((a, b) => sampleScores[b] - sampleScores[a]);
+					for (let r = 0; r < itemCount; r++) simulationRanks[rankIndices[r] * simulationCount + simulationIndex] = r + 1;
 				}
-				const spreads = [], rowBuffer = new Int32Array(M);
-				for (let i = 0; i < N; i++) {
-					for (let k = 0; k < M; k++) rowBuffer[k] = allRanks[i * M + k];
+				const spreads = [];
+				const rowBuffer = new Int32Array(simulationCount);
+				for (let i = 0; i < itemCount; i++) {
+					for (let k = 0; k < simulationCount; k++) rowBuffer[k] = simulationRanks[i * simulationCount + k];
 					rowBuffer.sort();
-					spreads.push([rowBuffer[Math.floor(M * 0.1)], rowBuffer[Math.floor(M * 0.9)]]);
+					spreads.push([rowBuffer[Math.floor(simulationCount * 0.1)], rowBuffer[Math.floor(simulationCount * 0.9)]]);
 				}
 				return spreads;
 			}
@@ -865,107 +912,99 @@
 						}
 						frame.pairs = [];
 						frame.odd = null;
-						const n = frame.items.length;
-						for (let i = 0; i < Math.floor(n / 2); i++)
+						const itemCount = frame.items.length;
+						for (let i = 0; i < Math.floor(itemCount / 2); i++) {
 							frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
-						if (n % 2 === 1) frame.odd = frame.items[n - 1];
-						frame.winners = []; frame.losers = []; frame.pairIndex = 0; frame.state = 1;
+						}
+						(itemCount % 2 === 1) && (frame.odd = frame.items[itemCount - 1]);
+						frame.winners = [];
+						frame.losers = [];
+						frame.pairIndex = 0;
+						frame.state = 1;
 					}
 
 					if (frame.state === 1) {
-						if (frame.pairIndex < frame.pairs.length) {
-							if (frame.lastResult !== undefined) {
-								const [a, b] = frame.pairs[frame.pairIndex];
-								if (frame.lastWinner === a) { frame.winners.push(a); frame.losers.push(b); }
-								else { frame.winners.push(b); frame.losers.push(a); }
-								delete frame.lastResult; delete frame.lastWinner;
-								frame.pairIndex++;
-							} else {
-								// Return the pair without snapshotting here — the snap
-								// happens at the top of the NEXT call when the result arrives.
-								this.pending = frame.pairs[frame.pairIndex];
-								frame.comparing = true;
-								return this.pending;
-							}
-						} else {
+						const hasRemainingPairs = frame.pairIndex < frame.pairs.length;
+						if (!hasRemainingPairs) {
 							frame.state = 2;
 							this.stack.push({ items: frame.winners, state: 0 });
 							continue;
 						}
-						continue;
+						if (frame.lastResult !== undefined) {
+							const [itemA, itemB] = frame.pairs[frame.pairIndex];
+							const isWinnerA = frame.lastWinner === itemA;
+							frame.winners.push(isWinnerA ? itemA : itemB);
+							frame.losers.push(isWinnerA ? itemB : itemA);
+							delete frame.lastResult;
+							delete frame.lastWinner;
+							frame.pairIndex++;
+							continue;
+						}
+						this.pending = frame.pairs[frame.pairIndex];
+						frame.comparing = true;
+						return this.pending;
 					}
 
 					if (frame.state === 2) {
 						if (!frame.sortedWinners) return null;
 						frame.mainChain = [frame.losers[frame.winners.indexOf(frame.sortedWinners[0])], frame.sortedWinners[0]];
 						frame.loserMap = {};
-						for (let i = 0; i < frame.winners.length; i++) frame.loserMap[frame.winners[i]] = frame.losers[i];
-						for (let i = 1; i < frame.sortedWinners.length; i++) frame.mainChain.push(frame.sortedWinners[i]);
-
-						const jacobsthal = [1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365];
-						frame.insertionOrder = [];
-						let jIdx = 1, covered = 1;
-						while (covered < frame.sortedWinners.length) {
-							let target = jacobsthal[jIdx];
-							if (target > frame.sortedWinners.length) target = frame.sortedWinners.length;
-							for (let k = target; k > covered; k--) frame.insertionOrder.push(frame.sortedWinners[k - 1]);
-							covered = target; jIdx++;
+						for (let i = 0; i < frame.winners.length; i++) {
+							frame.loserMap[frame.winners[i]] = frame.losers[i];
 						}
-						frame.insertIndex = 0; frame.state = 3;
+						for (let i = 1; i < frame.sortedWinners.length; i++) {
+							frame.mainChain.push(frame.sortedWinners[i]);
+						}
+
+						const jacobsthalSequence = [1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365];
+						frame.insertionOrder = [];
+						let jacobsthalIndex = 1;
+						let coveredCount = 1;
+						while (coveredCount < frame.sortedWinners.length) {
+							let targetCount = jacobsthalSequence[jacobsthalIndex];
+							(targetCount > frame.sortedWinners.length) && (targetCount = frame.sortedWinners.length);
+							for (let k = targetCount; k > coveredCount; k--) {
+								frame.insertionOrder.push(frame.sortedWinners[k - 1]);
+							}
+							coveredCount = targetCount;
+							jacobsthalIndex++;
+						}
+						frame.insertIndex = 0;
+						frame.state = 3;
 					}
 
 					if (frame.state === 3) {
-						if (frame.insertIndex < frame.insertionOrder.length) {
-							if (!frame.binarySearchState) {
-								const winner = frame.insertionOrder[frame.insertIndex];
-								frame.currentLoser = frame.loserMap[winner];
-								frame.binarySearchState = { min: 0, max: frame.mainChain.indexOf(winner), mid: -1 };
-							}
-							const bs = frame.binarySearchState;
-							if (bs.min < bs.max) {
-								if (frame.lastResult !== undefined) {
-									if (frame.lastWinner === frame.currentLoser) bs.min = bs.mid + 1;
-									else bs.max = bs.mid;
-									delete frame.lastResult; delete frame.lastWinner;
-								} else {
-									bs.mid = (bs.min + bs.max) >> 1;
-									this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
-									frame.comparing = true;
-									return this.pending;
-								}
-							}
-							if (bs.min >= bs.max) {
-								frame.mainChain.splice(bs.min, 0, frame.currentLoser);
-								delete frame.binarySearchState; frame.insertIndex++;
-							}
-						} else {
-							if (frame.odd !== null && !frame.oddInserted) {
-								if (!frame.binarySearchState) {
-									frame.currentLoser = frame.odd;
-									frame.binarySearchState = { min: 0, max: frame.mainChain.length, mid: -1 };
-								}
-								const bs = frame.binarySearchState;
-								if (bs.min < bs.max) {
-									if (frame.lastResult !== undefined) {
-										if (frame.lastWinner === frame.currentLoser) bs.min = bs.mid + 1;
-										else bs.max = bs.mid;
-										delete frame.lastResult; delete frame.lastWinner;
-									} else {
-										bs.mid = (bs.min + bs.max) >> 1;
-										this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
-										frame.comparing = true;
-										return this.pending;
-									}
-								}
-								if (bs.min >= bs.max) {
-									frame.mainChain.splice(bs.min, 0, frame.currentLoser);
-									delete frame.binarySearchState; frame.oddInserted = true;
-								}
-							} else {
-								this.returnResult(frame.mainChain);
+						const isInsertingMain = frame.insertIndex < frame.insertionOrder.length;
+						const isInsertingOdd = !isInsertingMain && frame.odd !== null && !frame.oddInserted;
+						if (!isInsertingMain && !isInsertingOdd) {
+							this.returnResult(frame.mainChain);
+							continue;
+						}
+						if (!frame.binarySearchState) {
+							const winner = isInsertingMain ? frame.insertionOrder[frame.insertIndex] : null;
+							frame.currentLoser = isInsertingMain ? frame.loserMap[winner] : frame.odd;
+							frame.binarySearchState = {
+								min: 0,
+								max: isInsertingMain ? frame.mainChain.indexOf(winner) : frame.mainChain.length,
+								mid: -1
+							};
+						}
+						const binarySearch = frame.binarySearchState;
+						if (binarySearch.min < binarySearch.max) {
+							if (frame.lastResult !== undefined) {
+								frame.lastWinner === frame.currentLoser ? (binarySearch.min = binarySearch.mid + 1) : (binarySearch.max = binarySearch.mid);
+								delete frame.lastResult;
+								delete frame.lastWinner;
 								continue;
 							}
+							binarySearch.mid = (binarySearch.min + binarySearch.max) >> 1;
+							this.pending = [frame.currentLoser, frame.mainChain[binarySearch.mid]];
+							frame.comparing = true;
+							return this.pending;
 						}
+						frame.mainChain.splice(binarySearch.min, 0, frame.currentLoser);
+						delete frame.binarySearchState;
+						isInsertingMain ? frame.insertIndex++ : (frame.oddInserted = true);
 						continue;
 					}
 				}
@@ -1050,12 +1089,11 @@
 			load() {
 				try {
 					const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-					if (data) {
-						if (data.settings) { this.theme(data.settings.theme); this.lang(data.settings.language); }
-						if (data.inputValue) { elements.items.value = data.inputValue; this.updateInputState(); }
-						if (data.battle) data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle);
-						else this.display('inputSection');
-					}
+					data && (() => {
+						data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language));
+						data.inputValue && (elements.items.value = data.inputValue, this.updateInputState());
+						data.battle ? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle)) : this.display('inputSection');
+					})();
 				} catch { localStorage.removeItem('preferenceRankData'); }
 			}
 
@@ -1180,73 +1218,79 @@
 			resume() { this.pair ? (this.display('battleSection'), this.render()) : this.results(); }
 
 			recalculateScores() {
-				if (!this.dirty && this.scores && this.scores.length === this.items.length) return;
-				const n = this.items.length;
-				if (n === 0) return;
+				const itemCount = this.items.length;
+				const shouldSkip = (!this.dirty && this.scores?.length === itemCount) || itemCount === 0;
+				shouldSkip || (() => {
+					const wins = new Float64Array(itemCount);
+					const pairIndexMap = new Map();
+					const matchCountArray = [];
+					const adjacencyItems = Array.from({ length: itemCount }, () => []);
+					const adjacencyIndices = Array.from({ length: itemCount }, () => []);
 
-				const wins = new Float64Array(n);
+					this.matches.forEach(({ a, b, result }) => {
+						wins[a] += result;
+						wins[b] += 1 - result;
+						const low = a < b ? a : b;
+						const high = a < b ? b : a;
+						const key = low * itemCount + high;
+						const pairIndex = pairIndexMap.has(key) ? pairIndexMap.get(key) : (() => {
+							const newIndex = matchCountArray.length;
+							pairIndexMap.set(key, newIndex);
+							matchCountArray.push(0);
+							adjacencyItems[low].push(high);
+							adjacencyIndices[low].push(newIndex);
+							adjacencyItems[high].push(low);
+							adjacencyIndices[high].push(newIndex);
+							return newIndex;
+						})();
+						matchCountArray[pairIndex]++;
+					});
 
-				const pairIndexMap = new Map();
-				const nijArr = [];
-				const adjJ   = Array.from({length: n}, () => []);
-				const adjIdx = Array.from({length: n}, () => []);
+					const matchCounts = new Float64Array(matchCountArray);
+					const adjacentItemsTyped = adjacencyItems.map(a => new Int32Array(a));
+					const adjacentIndicesTyped = adjacencyIndices.map(a => new Int32Array(a));
 
-				for (const { a, b, result } of this.matches) {
-					wins[a] += result;
-					wins[b] += 1 - result;
-					const lo = a < b ? a : b, hi = a < b ? b : a;
-					const key = lo * n + hi;
-					let pi = pairIndexMap.get(key);
-					if (pi === undefined) {
-						pi = nijArr.length;
-						pairIndexMap.set(key, pi);
-						nijArr.push(0);
-						adjJ[lo].push(hi); adjIdx[lo].push(pi);
-						adjJ[hi].push(lo); adjIdx[hi].push(pi);
-					}
-					nijArr[pi]++;
-				}
+					const PRIOR = 0.5;
+					const strength = new Float64Array(itemCount).fill(1.0);
+					const newStrength = new Float64Array(itemCount);
 
-				const nij = new Float64Array(nijArr);
-				const adjJT   = adjJ.map(a => new Int32Array(a));
-				const adjIdxT = adjIdx.map(a => new Int32Array(a));
-
-				const ALPHA = 0.5;
-				const strength    = new Float64Array(n).fill(1.0);
-				const newStrength = new Float64Array(n);
-
-				for (let iter = 0; iter < 500; iter++) {
-					for (let i = 0; i < n; i++) {
-						let denom = ALPHA / (strength[i] + 1.0);
-						const js = adjJT[i], idxs = adjIdxT[i], deg = js.length;
-						for (let k = 0; k < deg; k++) {
-							denom += nij[idxs[k]] / (strength[i] + strength[js[k]]);
+					let maxRelativeError = 1.0;
+					for (let iteration = 0; iteration < 100 && maxRelativeError > 1e-12; iteration++) {
+						for (let i = 0; i < itemCount; i++) {
+							let denominator = PRIOR / (strength[i] + 1.0);
+							const neighbors = adjacentItemsTyped[i];
+							const indices = adjacentIndicesTyped[i];
+							for (let k = 0; k < neighbors.length; k++) {
+								denominator += matchCounts[indices[k]] / (strength[i] + strength[neighbors[k]]);
+							}
+							newStrength[i] = (wins[i] + PRIOR) / denominator;
 						}
-						newStrength[i] = (wins[i] + ALPHA) / denom;
+
+						let logSum = 0;
+						for (let i = 0; i < itemCount; i++) logSum += Math.log(newStrength[i]);
+						const scaleFactor = Math.exp(-logSum / itemCount);
+
+						maxRelativeError = 0;
+						for (let i = 0; i < itemCount; i++) {
+							newStrength[i] *= scaleFactor;
+							maxRelativeError = Math.max(maxRelativeError, Math.abs(newStrength[i] - strength[i]) / newStrength[i]);
+							strength[i] = newStrength[i];
+						}
 					}
 
-					let logSum = 0;
-					for (let i = 0; i < n; i++) logSum += Math.log(newStrength[i]);
-					const scale = Math.exp(-logSum / n);
-
-					let maxRel = 0;
-					for (let i = 0; i < n; i++) {
-						newStrength[i] *= scale;
-						const rel = Math.abs(newStrength[i] - strength[i]) / newStrength[i];
-						if (rel > maxRel) maxRel = rel;
-						strength[i] = newStrength[i];
+					const LOG_TEN = Math.log(10);
+					let logAverage = 0;
+					const itemLogs = new Float64Array(itemCount);
+					for (let i = 0; i < itemCount; i++) {
+						itemLogs[i] = Math.log(strength[i]);
+						logAverage += itemLogs[i];
 					}
-					if (maxRel < 1e-12) break;
-				}
-
-				const LOG10 = Math.log(10);
-				let logAvg = 0;
-				const logs = new Float64Array(n);
-				for (let i = 0; i < n; i++) { logs[i] = Math.log(strength[i]); logAvg += logs[i]; }
-				logAvg /= n;
-				this.scores = Array.from(logs, v => 1000 + 400 * (v - logAvg) / LOG10);
-				this.dirty = false;
+					logAverage /= itemCount;
+					this.scores = Array.from(itemLogs, logValue => 1000 + 400 * (logValue - logAverage) / LOG_TEN);
+					this.dirty = false;
+				})();
 			}
+
 
 			choose(winner) {
 				if (this.busy || elements.battleSection.classList.contains('hidden')) return;
@@ -1485,23 +1529,22 @@
 			}
 
 			key(event) {
-				if (event.repeat) return;
+				const isRepeating = event.repeat;
+				if (isRepeating) return;
 				const { key, ctrlKey, metaKey, shiftKey } = event;
-				if (key === 'Enter' && (ctrlKey || metaKey) && !elements.inputSection.classList.contains('hidden') && !elements.start.disabled) {
-					event.preventDefault();
-					elements.start.click();
-					return;
-				}
+				const isModifierPressed = ctrlKey || metaKey;
+				const isInputVisible = !elements.inputSection.classList.contains('hidden');
+				const isStartEnabled = !elements.start.disabled;
+				(key === 'Enter' && isModifierPressed && isInputVisible && isStartEnabled) && (event.preventDefault(), elements.start.click());
+				if (key === 'Enter' && isModifierPressed && isInputVisible && isStartEnabled) return;
 				const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
-				if (!action) return;
-				if (!elements.inputSection.classList.contains('hidden')) return;
-				if (/^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
-				if (action === 'undo') {
-					if ((ctrlKey || metaKey) && !shiftKey) { event.preventDefault(); elements.undo.click(); }
-				} else if (!elements.battleSection.classList.contains('hidden') && (action !== 'tie' || this.allowTies)) {
-					event.preventDefault();
-					elements[action].click();
-				}
+				const shouldIgnore = !action || isInputVisible || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+				if (shouldIgnore) return;
+				const isUndoAction = action === 'undo';
+				const isBattleVisible = !elements.battleSection.classList.contains('hidden');
+				const isTieAllowed = action !== 'tie' || this.allowTies;
+				(isUndoAction && isModifierPressed && !shiftKey) && (event.preventDefault(), elements.undo.click());
+				(!isUndoAction && isBattleVisible && isTieAllowed) && (event.preventDefault(), elements[action].click());
 			}
 		}
 		new PreferenceRank();
