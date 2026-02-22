@@ -704,6 +704,20 @@
 				const factor = Math.log(10) / 400;
 				const theta = new Float64Array(N);
 				for (let i = 0; i < N; i++) theta[i] = scores[i] * factor;
+
+				const invSubH = Stats.buildHessian(N, matches, theta);
+				if (!invSubH) return null;
+
+				const cis = Stats.calculateCI(N, invSubH, factor);
+
+				const L = Matrix.cholesky(invSubH);
+				if (!L) return { cis: Array.from(cis), spreads: null };
+
+				const spreads = Stats.simulateRanks(N, theta, L, factor);
+				return { cis: Array.from(cis), spreads };
+			}
+
+			static buildHessian(N, matches, theta) {
 				const H = new Float64Array(N * N), n_matches = new Int32Array(N * N);
 				matches.forEach(m => { n_matches[m.a * N + m.b]++; n_matches[m.b * N + m.a]++; });
 				for (let i = 0; i < N; i++) {
@@ -722,9 +736,11 @@
 					for (let j = 0; j < N_1; j++) subH.data[i * N_1 + j] = H[i * N + j];
 					subH.data[i * N_1 + i] += 1e-9;
 				}
-				const invSubH = Matrix.inverse(subH);
-				if (!invSubH) return null;
-				const cis = new Float64Array(N), multiplier = 0.11, invData = invSubH.data;
+				return Matrix.inverse(subH);
+			}
+
+			static calculateCI(N, invSubH, factor) {
+				const N_1 = N - 1, cis = new Float64Array(N), multiplier = 0.11, invData = invSubH.data;
 				for (let i = 0; i < N; i++) {
 					let variance = 0;
 					for (let r = 0; r < N_1; r++) {
@@ -735,9 +751,11 @@
 					}
 					cis[i] = multiplier * Math.sqrt(Math.max(0, variance)) / factor;
 				}
-				const L = Matrix.cholesky(invSubH);
-				if (!L) return { cis: Array.from(cis), spreads: null };
-				const M = 500, allRanks = new Int32Array(N * M);
+				return cis;
+			}
+
+			static simulateRanks(N, theta, L, factor) {
+				const N_1 = N - 1, M = 500, allRanks = new Int32Array(N * M), multiplier = 0.11;
 				let nextZ = null;
 				const gaussian = () => {
 					if (nextZ !== null) { const v = nextZ; nextZ = null; return v; }
@@ -775,7 +793,7 @@
 					rowBuffer.sort();
 					spreads.push([rowBuffer[Math.floor(M * 0.1)], rowBuffer[Math.floor(M * 0.9)]]);
 				}
-				return { cis: Array.from(cis), spreads };
+				return spreads;
 			}
 		}
 
