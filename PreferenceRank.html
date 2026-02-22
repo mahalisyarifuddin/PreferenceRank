@@ -80,16 +80,9 @@
 			width: 100%;
 			position: relative;
 		}
-		.hidden {
-			display: none !important;
-		}
-		h1, h2, label {
-			margin: .5rem 0;
-			display: block;
-		}
-		label {
-			font-weight: 700;
-		}
+		.hidden { display: none !important; }
+		h1, h2, label { margin: .5rem 0; display: block; }
+		label { font-weight: 700; }
 		input, select, textarea, button {
 			background: var(--surface);
 			border: 1px solid var(--border);
@@ -103,391 +96,78 @@
 			outline: 2px solid var(--primary);
 			outline-offset: 2px;
 		}
-		textarea {
-			font-family: monospace;
-			min-height: 80px;
-			resize: vertical;
-		}
-		button {
-			cursor: pointer;
-			transition: background .1s;
-		}
-		button:disabled {
-			background: var(--muted) !important;
-			cursor: not-allowed;
-			opacity: .6;
-		}
-		.primary {
-			background: var(--primary);
-			border: none;
-			color: var(--on-primary);
-		}
-		.primary:hover:not(:disabled) {
-			background: var(--hover);
-		}
-		.secondary:hover:not(:disabled) {
-			background: var(--muted);
-		}
-		.count {
-			font-size: .85rem;
-			margin-top: .25rem;
-			text-align: right;
-			opacity: .8;
-		}
-		.error {
-			color: var(--danger);
-			font-size: .9rem;
-			margin-top: .5rem;
-			display: block;
-		}
-		.selectors {
-			position: absolute;
-			right: 2rem;
-			top: 1rem;
-			display: flex;
-			gap: 8px;
-		}
-		.selectors select {
-			width: auto;
-			font-size: .9rem;
-		}
-		.row {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			margin: .75rem 0;
-		}
-		.row input {
-			width: auto;
-		}
-		.row label {
-			margin: 0;
-		}
-		.actions {
-			display: flex;
-			flex-direction: column;
-			gap: 10px;
-			margin-top: 1rem;
-		}
-		#battle, #tieWrap, #restartWrap {
-			display: flex;
-			gap: 1rem;
-			margin-top: 1rem;
-		}
-		#battle button, #tieWrap button {
-			flex: 1;
-			font-size: 1.2rem;
-			min-height: 100px;
-		}
-		#progress {
-			font-size: 1.1rem;
-			margin-top: 1rem;
-			text-align: center;
-		}
-		.track {
-			background: var(--muted);
-			border-radius: 4px;
-			height: 6px;
-			margin: 8px auto 0;
-			max-width: 200px;
-			overflow: hidden;
-		}
-		.fill {
-			background: var(--primary);
-			height: 100%;
-			width: 0;
-		}
-		#tips {
-			background: var(--background);
-			border: 1px solid var(--border);
-			border-radius: 4px;
-			font-size: .85rem;
-			line-height: 1.5;
-			margin-top: 15px;
-			opacity: .9;
-			padding: 8px;
-			text-align: center;
-		}
-		#results {
-			overflow-x: auto;
-		}
-		kbd {
-			background: var(--surface);
-			border: 1px solid var(--border);
-			border-radius: 3px;
-			box-shadow: 0 1px 1px #0003;
-			display: inline-block;
-			font-family: monospace;
-			font-size: .9em;
-			margin: 0 3px;
-			padding: 2px 5px;
-		}
-		#cancel, #toggle {
-			background: none;
-			border: 1px solid var(--border);
-			color: var(--text);
-			cursor: pointer;
-			display: block;
-			font-size: .9rem;
-			margin: 1rem auto;
-			padding: 5px 15px;
-			width: auto;
-		}
-		#cancel:hover {
-			background: var(--muted);
-		}
-		#cancel.confirming {
-			border-color: var(--danger);
-			color: var(--danger);
-		}
-		#toggle {
-			border: none;
-			color: var(--primary);
-			text-decoration: underline;
-		}
-		.leaderboard {
-			border: 1px solid var(--border);
-			border-radius: 8px;
-			background: var(--surface);
-			overflow: hidden;
-			margin-top: 1rem;
-		}
-		.lb-header {
-			display: flex;
-			padding: 1rem;
-			background: var(--background);
-			border-bottom: 1px solid var(--border);
-			font-weight: 600;
-			color: var(--text);
-			font-size: .9rem;
-		}
-		.lb-header > div {
-			cursor: pointer;
-			user-select: none;
-			display: flex;
-			align-items: center;
-			gap: .5rem;
-		}
-		.lb-header > div:hover {
-			color: var(--primary);
-		}
-		.lb-row {
-			border-bottom: 1px solid var(--border);
-		}
-		.lb-row:last-child {
-			border-bottom: none;
-		}
-		.lb-main {
-			display: flex;
-			padding: 1rem;
-			align-items: center;
-			cursor: pointer;
-			background: var(--surface);
-		}
-		.lb-main:hover {
-			background: var(--muted);
-		}
-		.lb-col-rank {
-			flex: 0 0 90px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			font-weight: bold;
-		}
-		.lb-col-item {
-			flex: 1;
-			font-weight: 500;
-		}
-		.lb-col-score {
-			flex: 0 0 120px;
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-		.lb-details {
-			display: none;
-			background: var(--background);
-			padding: 1rem 1rem 1rem calc(1rem + 85px);
-			border-top: 1px solid var(--border);
-			font-size: .9rem;
-		}
-		.lb-row.expanded .lb-details {
-			display: block;
-		}
-		.lb-row.expanded .chevron {
-			transform: rotate(90deg);
-		}
-		.chevron {
-			display: inline-block;
-			transition: transform .2s;
-			font-size: .8rem;
-			color: var(--text);
-			opacity: .6;
-		}
-		.detail-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-			gap: 1.5rem;
-		}
-		.detail-item {
-			display: flex;
-			flex-direction: column;
-			gap: .25rem;
-		}
-		.detail-label {
-			font-size: .75rem;
-			color: var(--text);
-			opacity: .7;
-			font-weight: 600;
-		}
-		.detail-value {
-			font-size: 1.1rem;
-			font-weight: 500;
-		}
-		.ci-badge {
-			color: var(--text);
-			opacity: .6;
-			font-size: .85rem;
-			margin-left: 4px;
-		}
+		textarea { font-family: monospace; min-height: 80px; resize: vertical; }
+		button { cursor: pointer; transition: background .1s; }
+		button:disabled { background: var(--muted) !important; cursor: not-allowed; opacity: .6; }
+		.primary { background: var(--primary); border: none; color: var(--on-primary); }
+		.primary:hover:not(:disabled) { background: var(--hover); }
+		.secondary:hover:not(:disabled) { background: var(--muted); }
+		.count { font-size: .85rem; margin-top: .25rem; text-align: right; opacity: .8; }
+		.error { color: var(--danger); font-size: .9rem; margin-top: .5rem; display: block; }
+		.selectors { position: absolute; right: 2rem; top: 1rem; display: flex; gap: 8px; }
+		.selectors select { width: auto; font-size: .9rem; }
+		.row { display: flex; align-items: center; gap: 10px; margin: .75rem 0; }
+		.row input { width: auto; }
+		.row label { margin: 0; }
+		.actions { display: flex; flex-direction: column; gap: 10px; margin-top: 1rem; }
+		#battle, #tieWrap, #restartWrap { display: flex; gap: 1rem; margin-top: 1rem; }
+		#battle button, #tieWrap button { flex: 1; font-size: 1.2rem; min-height: 100px; }
+		#progress { font-size: 1.1rem; margin-top: 1rem; text-align: center; }
+		.track { background: var(--muted); border-radius: 4px; height: 6px; margin: 8px auto 0; max-width: 200px; overflow: hidden; }
+		.fill { background: var(--primary); height: 100%; width: 0; }
+		#tips { background: var(--background); border: 1px solid var(--border); border-radius: 4px; font-size: .85rem; line-height: 1.5; margin-top: 15px; opacity: .9; padding: 8px; text-align: center; }
+		#results { overflow-x: auto; }
+		kbd { background: var(--surface); border: 1px solid var(--border); border-radius: 3px; box-shadow: 0 1px 1px #0003; display: inline-block; font-family: monospace; font-size: .9em; margin: 0 3px; padding: 2px 5px; }
+		#cancel, #toggle { background: none; border: 1px solid var(--border); color: var(--text); cursor: pointer; display: block; font-size: .9rem; margin: 1rem auto; padding: 5px 15px; width: auto; }
+		#cancel:hover { background: var(--muted); }
+		#cancel.confirming { border-color: var(--danger); color: var(--danger); }
+		#toggle { border: none; color: var(--primary); text-decoration: underline; }
+		.leaderboard { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow: hidden; margin-top: 1rem; }
+		.lb-header { display: flex; padding: 1rem; background: var(--background); border-bottom: 1px solid var(--border); font-weight: 600; color: var(--text); font-size: .9rem; }
+		.lb-header > div { cursor: pointer; user-select: none; display: flex; align-items: center; gap: .5rem; }
+		.lb-header > div:hover { color: var(--primary); }
+		.lb-row { border-bottom: 1px solid var(--border); }
+		.lb-row:last-child { border-bottom: none; }
+		.lb-main { display: flex; padding: 1rem; align-items: center; cursor: pointer; background: var(--surface); }
+		.lb-main:hover { background: var(--muted); }
+		.lb-col-rank { flex: 0 0 90px; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+		.lb-col-item { flex: 1; font-weight: 500; }
+		.lb-col-score { flex: 0 0 120px; text-align: right; font-variant-numeric: tabular-nums; }
+		.lb-details { display: none; background: var(--background); padding: 1rem 1rem 1rem calc(1rem + 85px); border-top: 1px solid var(--border); font-size: .9rem; }
+		.lb-row.expanded .lb-details { display: block; }
+		.lb-row.expanded .chevron { transform: rotate(90deg); }
+		.chevron { display: inline-block; transition: transform .2s; font-size: .8rem; color: var(--text); opacity: .6; }
+		.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; }
+		.detail-item { display: flex; flex-direction: column; gap: .25rem; }
+		.detail-label { font-size: .75rem; color: var(--text); opacity: .7; font-weight: 600; }
+		.detail-value { font-size: 1.1rem; font-weight: 500; }
+		.ci-badge { color: var(--text); opacity: .6; font-size: .85rem; margin-left: 4px; }
 		@media (max-width: 600px) {
-			.lb-header, .lb-main {
-				padding: .75rem;
-			}
-			.lb-col-rank { flex: 0 0 90px; }
-			.lb-col-score { flex: 0 0 90px; }
+			.lb-header, .lb-main { padding: .75rem; }
+			.lb-col-rank { flex: 0 0 90px; } .lb-col-score { flex: 0 0 90px; }
 			.lb-details { padding-left: 1rem; }
 		}
-		.header {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			position: relative;
-			min-height: 40px;
-			margin-bottom: 1rem;
-		}
-		.header #undo {
-			position: absolute;
-			left: 0;
-			top: 50%;
-			transform: translateY(-50%);
-		}
-		.header #copy {
-			position: absolute;
-			right: 0;
-			top: 50%;
-			transform: translateY(-50%);
-		}
-		#undo, #copy {
-			width: auto;
-		}
-		.selected {
-			background: var(--primary) !important;
-			color: var(--on-primary) !important;
-		}
+		.header { display: flex; justify-content: center; align-items: center; position: relative; min-height: 40px; margin-bottom: 1rem; }
+		.header #undo { position: absolute; left: 0; top: 50%; transform: translateY(-50%); }
+		.header #copy { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+		#undo, #copy { width: auto; }
+		.selected { background: var(--primary) !important; color: var(--on-primary) !important; }
 		@media (max-width: 768px) {
-			body {
-				padding: .75rem;
-			}
-			.container {
-				padding: 1.5rem;
-			}
-			.selectors {
-				position: static;
-				justify-content: flex-end;
-				margin-bottom: .5rem;
-			}
-			#battle, #tieWrap, #restartWrap {
-				flex-direction: column;
-			}
+			body { padding: .75rem; } .container { padding: 1.5rem; }
+			.selectors { position: static; justify-content: flex-end; margin-bottom: .5rem; }
+			#battle, #tieWrap, #restartWrap { flex-direction: column; }
 		}
-		#sessionModal {
-			position: fixed;
-			inset: 0;
-			background: rgba(0, 0, 0, 0.4);
-			backdrop-filter: blur(4px);
-			z-index: 20;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			animation: fadeIn .3s ease-out;
-		}
-		.session-card {
-			background: var(--surface);
-			border: 1px solid var(--border);
-			border-radius: 16px;
-			box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-			padding: 2.5rem 2rem;
-			max-width: 480px;
-			width: 90%;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			text-align: center;
-		}
+		#sessionModal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 20; display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease-out; }
+		.session-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); padding: 2.5rem 2rem; max-width: 480px; width: 90%; display: flex; flex-direction: column; align-items: center; text-align: center; }
 		@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-		.session-icon {
-			width: 5rem;
-			height: 5rem;
-			border-radius: 50%;
-			background: var(--highlight-bg);
-			color: var(--primary);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 2.5rem;
-			margin-bottom: 1.5rem;
-			line-height: 1;
-		}
-		#sessionTitle {
-			font-size: 1.5rem;
-			margin-bottom: 0.5rem;
-		}
-		#sessionMessage {
-			color: var(--text);
-			font-size: 1rem;
-			line-height: 1.6;
-			margin: 0 0 2.5rem;
-			max-width: 480px;
-			opacity: .8;
-		}
-		#sessionButtons {
-			display: flex;
-			gap: 1rem;
-			width: 100%;
-			max-width: 400px;
-		}
-		#sessionButtons button {
-			flex: 1;
-			padding: 0.75rem 1rem;
-			font-size: 1rem;
-			font-weight: 500;
-		}
-		.visually-hidden {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			padding: 0;
-			margin: -1px;
-			overflow: hidden;
-			clip: rect(0, 0, 0, 0);
-			white-space: nowrap;
-			border: 0;
-		}
-		.spread-track {
-			background: var(--muted);
-			border-radius: 2px;
-			height: 4px;
-			margin-top: 4px;
-			overflow: hidden;
-			position: relative;
-			width: 100%;
-		}
-		.spread-bar {
-			background: var(--primary);
-			height: 100%;
-			min-width: 2px;
-			position: absolute;
-		}
+		.session-icon { width: 5rem; height: 5rem; border-radius: 50%; background: var(--highlight-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1; }
+		#sessionTitle { font-size: 1.5rem; margin-bottom: 0.5rem; }
+		#sessionMessage { color: var(--text); font-size: 1rem; line-height: 1.6; margin: 0 0 2.5rem; max-width: 480px; opacity: .8; }
+		#sessionButtons { display: flex; gap: 1rem; width: 100%; max-width: 400px; }
+		#sessionButtons button { flex: 1; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 500; }
+		.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+		.spread-track { background: var(--muted); border-radius: 2px; height: 4px; margin-top: 4px; overflow: hidden; position: relative; width: 100%; }
+		.spread-bar { background: var(--primary); height: 100%; min-width: 2px; position: absolute; }
 	</style>
 </head>
 <body>
@@ -574,9 +254,9 @@
 				shortcutLeft: 'Left Arrow',
 				shortcutRight: 'Right Arrow',
 				shortcutTie: 'Up/Down Arrow',
-				shortcutUndo: 'Ctrl/\u2318 + Z',
-				tipTie: 'Keyboard Shortcuts:<br><kbd>\u2190</kbd> Choose left<br><kbd>\u2192</kbd> Choose right<br><kbd>\u2191</kbd>/<kbd>\u2193</kbd> Tie<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Undo',
-				tipNoTie: 'Keyboard Shortcuts:<br><kbd>\u2190</kbd> Choose left<br><kbd>\u2192</kbd> Choose right<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Undo',
+				shortcutUndo: 'Ctrl/⌘ + Z',
+				tipTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>↑</kbd>/<kbd>↓</kbd> Tie<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
+				tipNoTie: 'Keyboard Shortcuts:<br><kbd>←</kbd> Choose left<br><kbd>→</kbd> Choose right<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Undo',
 				resultsTitle: 'Results',
 				rank: 'Rank',
 				item: 'Item',
@@ -595,7 +275,7 @@
 				estMatches: ' (~{count} comparisons)',
 				rankSpread: 'Rank Spread',
 				matches: 'Matches',
-				ci: 'CI (\u00b1)',
+				ci: 'CI (±)',
 				filter: 'Filter items...'
 			},
 			id: {
@@ -622,9 +302,9 @@
 				shortcutLeft: 'Panah Kiri',
 				shortcutRight: 'Panah Kanan',
 				shortcutTie: 'Panah Atas/Bawah',
-				shortcutUndo: 'Ctrl/\u2318 + Z',
-				tipTie: 'Pintasan Papan Ketik:<br><kbd>\u2190</kbd> Pilih kiri<br><kbd>\u2192</kbd> Pilih kanan<br><kbd>\u2191</kbd>/<kbd>\u2193</kbd> Seri<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Urungkan',
-				tipNoTie: 'Pintasan Papan Ketik:<br><kbd>\u2190</kbd> Pilih kiri<br><kbd>\u2192</kbd> Pilih kanan<br><kbd>Ctrl/\u2318</kbd>+<kbd>Z</kbd> Urungkan',
+				shortcutUndo: 'Ctrl/⌘ + Z',
+				tipTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>↑</kbd>/<kbd>↓</kbd> Seri<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
+				tipNoTie: 'Pintasan Papan Ketik:<br><kbd>←</kbd> Pilih kiri<br><kbd>→</kbd> Pilih kanan<br><kbd>Ctrl/⌘</kbd>+<kbd>Z</kbd> Urungkan',
 				resultsTitle: 'Hasil',
 				rank: 'Peringkat',
 				item: 'Nama',
@@ -643,7 +323,7 @@
 				estMatches: ' (~{count} perbandingan)',
 				rankSpread: 'Rentang Peringkat',
 				matches: 'Pertandingan',
-				ci: 'IK (\u00b1)',
+				ci: 'IK (±)',
 				filter: 'Cari pilihan...'
 			}
 		};
@@ -722,19 +402,14 @@
 				const scoreFactor = Math.log(10) / 400;
 				const parameters = new Float64Array(itemCount);
 				for (let i = 0; i < itemCount; i++) parameters[i] = scores[i] * scoreFactor;
-
 				const inverseSubHessian = Stats.buildHessian(itemCount, matches, parameters);
 				if (!inverseSubHessian) return null;
-
 				const confidenceIntervals = Stats.calculateCI(itemCount, inverseSubHessian, scoreFactor);
-
 				const choleskyFactor = Matrix.cholesky(inverseSubHessian);
 				if (!choleskyFactor) return { cis: Array.from(confidenceIntervals), spreads: null };
-
 				const spreads = Stats.simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor);
 				return { cis: Array.from(confidenceIntervals), spreads };
 			}
-
 			static buildHessian(itemCount, matches, parameters) {
 				const hessian = new Float64Array(itemCount * itemCount);
 				const matchCounts = new Int32Array(itemCount * itemCount);
@@ -763,7 +438,6 @@
 				}
 				return Matrix.inverse(subHessian);
 			}
-
 			static calculateCI(itemCount, inverseSubHessian, scoreFactor) {
 				const itemCountMinusOne = itemCount - 1;
 				const confidenceIntervals = new Float64Array(itemCount);
@@ -783,7 +457,6 @@
 				}
 				return confidenceIntervals;
 			}
-
 			static simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor) {
 				const itemCountMinusOne = itemCount - 1;
 				const simulationCount = 500;
@@ -861,41 +534,45 @@
 		class QuickPairProvider {
 			static estimate(count) {
 				if (count <= 1) return 0;
-				return Math.ceil(count * Math.log2(count) - 1.44 * count + 3.3);
+				let total = 0;
+				for (let k = 2; k <= count; k++) total += Math.ceil(Math.log2(3 * k / 4));
+				return total;
 			}
+
 			constructor(count) {
 				this.count = count;
+				this._est = QuickPairProvider.estimate(count); // cache
 				this.stack = [{ items: Array.from({ length: count }, (_, i) => i), state: 0 }];
 				this.history = [];
 				this.pending = null;
 			}
 
-			snap() {
-				return {
-					stack: structuredClone(this.stack),
-					pending: this.pending
-				};
+			_cloneFrame(f) {
+				const c = Object.assign({}, f);
+				if (f.items) c.items = f.items.slice();
+				if (f.pairs) c.pairs = f.pairs.slice();
+				if (f.winners) c.winners = f.winners.slice();
+				if (f.losers) c.losers = f.losers.slice();
+				if (f.mainChain) c.mainChain = f.mainChain.slice();
+				if (f.insertionOrder) c.insertionOrder = f.insertionOrder.slice();
+				if (f.sortedWinners) c.sortedWinners = f.sortedWinners.slice();
+				if (f.loserMap) c.loserMap = Object.assign({}, f.loserMap);
+				if (f.binarySearchState) c.binarySearchState = Object.assign({}, f.binarySearchState);
+				return c;
 			}
 
-			restore(snapshot) {
-				this.stack = snapshot.stack;
-				this.pending = snapshot.pending;
-			}
+			snap() { return { stack: this.stack.map(f => this._cloneFrame(f)), pending: this.pending }; }
+			restore(snapshot) { this.stack = snapshot.stack; this.pending = snapshot.pending; }
+			unmark() { if (this.history.length) this.restore(this.history.pop()); }
 
-			unmark(pair) {
-				if (this.history.length) {
-					this.restore(this.history.pop());
-				}
-			}
-
-			next(state, result) {
-				if (this.pending && result !== undefined) {
+			next(_, result) {
+				if (this.pending !== null && result !== undefined) {
 					this.history.push(this.snap());
+					const [a, b] = this.pending;
+					const winner = result === 1 ? a : result === 0 ? b : a; // ties: treat first as winner
 					const frame = this.stack[this.stack.length - 1];
 					if (frame.comparing) {
-						const [a, b] = this.pending;
-						const winner = result === 1 ? a : result === 0 ? b : a;
-						frame.lastResult = winner === a;
+						frame.lastResult = (winner === a);
 						frame.lastWinner = winner;
 						delete frame.comparing;
 					}
@@ -906,122 +583,108 @@
 					const frame = this.stack[this.stack.length - 1];
 
 					if (frame.state === 0) {
-						if (frame.items.length <= 1) {
-							this.returnResult(frame.items);
-							continue;
-						}
+						const n = frame.items.length;
+						if (n <= 1) { this._returnResult(frame.items); continue; }
+						const half = n >> 1;
 						frame.pairs = [];
-						frame.odd = null;
-						const itemCount = frame.items.length;
-						for (let i = 0; i < Math.floor(itemCount / 2); i++) {
+						for (let i = 0; i < half; i++)
 							frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
-						}
-						(itemCount % 2 === 1) && (frame.odd = frame.items[itemCount - 1]);
-						frame.winners = [];
-						frame.losers = [];
-						frame.pairIndex = 0;
+						frame.odd = (n & 1) ? frame.items[n - 1] : null;
+						frame.winners = []; frame.losers = []; frame.pairIndex = 0;
 						frame.state = 1;
 					}
 
 					if (frame.state === 1) {
-						const hasRemainingPairs = frame.pairIndex < frame.pairs.length;
-						if (!hasRemainingPairs) {
-							frame.state = 2;
-							this.stack.push({ items: frame.winners, state: 0 });
-							continue;
-						}
-						if (frame.lastResult !== undefined) {
-							const [itemA, itemB] = frame.pairs[frame.pairIndex];
-							const isWinnerA = frame.lastWinner === itemA;
-							frame.winners.push(isWinnerA ? itemA : itemB);
-							frame.losers.push(isWinnerA ? itemB : itemA);
-							delete frame.lastResult;
-							delete frame.lastWinner;
+						if (frame.lastWinner !== undefined) {
+							const [a, b] = frame.pairs[frame.pairIndex];
+							const aWon = frame.lastWinner === a;
+							frame.winners.push(aWon ? a : b);
+							frame.losers.push(aWon ? b : a);
+							delete frame.lastWinner; delete frame.lastResult;
 							frame.pairIndex++;
-							continue;
 						}
-						this.pending = frame.pairs[frame.pairIndex];
-						frame.comparing = true;
-						return this.pending;
-					}
-
-					if (frame.state === 2) {
-						if (!frame.sortedWinners) return null;
-						frame.mainChain = [frame.losers[frame.winners.indexOf(frame.sortedWinners[0])], frame.sortedWinners[0]];
-						frame.loserMap = {};
-						for (let i = 0; i < frame.winners.length; i++) {
-							frame.loserMap[frame.winners[i]] = frame.losers[i];
-						}
-						for (let i = 1; i < frame.sortedWinners.length; i++) {
-							frame.mainChain.push(frame.sortedWinners[i]);
-						}
-
-						const jacobsthalSequence = [1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365];
-						frame.insertionOrder = [];
-						let jacobsthalIndex = 1;
-						let coveredCount = 1;
-						while (coveredCount < frame.sortedWinners.length) {
-							let targetCount = jacobsthalSequence[jacobsthalIndex];
-							(targetCount > frame.sortedWinners.length) && (targetCount = frame.sortedWinners.length);
-							for (let k = targetCount; k > coveredCount; k--) {
-								frame.insertionOrder.push(frame.sortedWinners[k - 1]);
-							}
-							coveredCount = targetCount;
-							jacobsthalIndex++;
-						}
-						frame.insertIndex = 0;
-						frame.state = 3;
-					}
-
-					if (frame.state === 3) {
-						const isInsertingMain = frame.insertIndex < frame.insertionOrder.length;
-						const isInsertingOdd = !isInsertingMain && frame.odd !== null && !frame.oddInserted;
-						if (!isInsertingMain && !isInsertingOdd) {
-							this.returnResult(frame.mainChain);
-							continue;
-						}
-						if (!frame.binarySearchState) {
-							const winner = isInsertingMain ? frame.insertionOrder[frame.insertIndex] : null;
-							frame.currentLoser = isInsertingMain ? frame.loserMap[winner] : frame.odd;
-							frame.binarySearchState = {
-								min: 0,
-								max: isInsertingMain ? frame.mainChain.indexOf(winner) : frame.mainChain.length,
-								mid: -1
-							};
-						}
-						const binarySearch = frame.binarySearchState;
-						if (binarySearch.min < binarySearch.max) {
-							if (frame.lastResult !== undefined) {
-								frame.lastWinner === frame.currentLoser ? (binarySearch.min = binarySearch.mid + 1) : (binarySearch.max = binarySearch.mid);
-								delete frame.lastResult;
-								delete frame.lastWinner;
-								continue;
-							}
-							binarySearch.mid = (binarySearch.min + binarySearch.max) >> 1;
-							this.pending = [frame.currentLoser, frame.mainChain[binarySearch.mid]];
+						if (frame.pairIndex < frame.pairs.length) {
+							this.pending = frame.pairs[frame.pairIndex];
 							frame.comparing = true;
 							return this.pending;
 						}
-						frame.mainChain.splice(binarySearch.min, 0, frame.currentLoser);
+						frame.state = 2;
+						this.stack.push({ items: frame.winners.slice(), state: 0 });
+						continue;
+					}
+
+					if (frame.state === 2) {
+						if (!frame.sortedWinners) continue;
+						const sw = frame.sortedWinners;
+
+						frame.loserMap = {};
+						for (let i = 0; i < frame.winners.length; i++)
+							frame.loserMap[frame.winners[i]] = frame.losers[i];
+
+						frame.mainChain = [frame.loserMap[sw[0]], ...sw];
+
+						frame.insertionOrder = [];
+						if (sw.length > 1) {
+							const J = [1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365, 2731, 5461, 10923, 21845, 43691];
+							let ji = 1, covered = 1;
+							while (covered < sw.length) {
+								while (ji >= J.length) J.push(2 * J[J.length - 1] + (J.length & 1 ? 1 : -1));
+								const t = Math.min(J[ji], sw.length);
+								for (let k = t; k > covered; k--) frame.insertionOrder.push(sw[k - 1]);
+								covered = t; ji++;
+							}
+						}
+						frame.insertIdx = 0; frame.state = 3;
+						continue;
+					}
+
+					if (frame.state === 3) {
+						if (frame.binarySearchState && frame.lastWinner !== undefined) {
+							const bs = frame.binarySearchState;
+							frame.lastWinner === frame.currentLoser
+								? (bs.min = bs.mid + 1) : (bs.max = bs.mid);
+							delete frame.lastWinner; delete frame.lastResult;
+						}
+
+						const inMain = frame.insertIdx < frame.insertionOrder.length;
+						const inOdd = !inMain && frame.odd !== null && !frame.oddInserted;
+
+						if (!inMain && !inOdd) { this._returnResult(frame.mainChain); continue; }
+
+						if (!frame.binarySearchState) {
+							const winner = inMain ? frame.insertionOrder[frame.insertIdx] : null;
+							frame.currentLoser = inMain ? frame.loserMap[winner] : frame.odd;
+							frame.binarySearchState = {
+								min: 0,
+								max: inMain ? frame.mainChain.indexOf(winner) : frame.mainChain.length,
+								mid: 0
+							};
+						}
+
+						const bs = frame.binarySearchState;
+						if (bs.min < bs.max) {
+							bs.mid = (bs.min + bs.max) >> 1;
+							this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
+							frame.comparing = true;
+							return this.pending;
+						}
+
+						frame.mainChain.splice(bs.min, 0, frame.currentLoser);
 						delete frame.binarySearchState;
-						isInsertingMain ? frame.insertIndex++ : (frame.oddInserted = true);
+						inMain ? frame.insertIdx++ : (frame.oddInserted = true);
 						continue;
 					}
 				}
 				return null;
 			}
 
-			returnResult(result) {
+			_returnResult(result) {
 				this.stack.pop();
-				if (this.stack.length) {
-					const parent = this.stack[this.stack.length - 1];
-					if (parent.state === 2) parent.sortedWinners = result;
-				}
+				if (this.stack.length)
+					this.stack[this.stack.length - 1].sortedWinners = result.slice();
 			}
 
-			getProgress(step) {
-				return `${step}/~${Math.max(step, QuickPairProvider.estimate(this.count))}`;
-			}
+			getProgress(step) { return `${step}/~${Math.max(step, this._est)}`; }
 		}
 
 		class PreferenceRank {
@@ -1066,7 +729,7 @@
 				elements.theme.setAttribute('aria-label', this.string('themeLabel'));
 				elements.items.placeholder = this.string('placeholderItems');
 				['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key => elements[key].textContent = this.string(key));
-				elements.start.title = `${this.string('start')} (Ctrl/\u2318 + Enter)`;
+				elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
 				elements.left.title = this.string('shortcutLeft');
 				elements.right.title = this.string('shortcutRight');
 				elements.tie.title = this.string('shortcutTie');
@@ -1140,7 +803,7 @@
 			getItems() {
 				const lines = elements.items.value.split('\n').map(line => line.trim()).filter(Boolean);
 				if (!lines.length) return [];
-				const patterns = [/^\d+[\.\)]\s+/, /^[-*\u2022]\s+/];
+				const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
 				return lines.map(line => {
 					const pattern = patterns.find(p => p.test(line));
 					return pattern ? line.replace(pattern, '') : line;
@@ -1386,7 +1049,7 @@
 				filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" value="${this.filterTerm || ''}" style="width:200px;font-size:.9rem;padding:6px">`;
 				elements.results.appendChild(filterDiv);
 
-				const arrow = this.sortState.direction === 'asc' ? ' \u25b2' : ' \u25bc';
+				const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
 				const getSortIcon = (col) => this.sortState.column === col ? arrow : '';
 				const getSortState = (col) => this.sortState.column === col ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
 
@@ -1433,7 +1096,7 @@
 							<div class="lb-col-item">${new Option(item).innerHTML}</div>
 							<div class="lb-col-score">
 								${score}
-								${ci !== null ? `<span class="ci-badge">\u00b1${ci}</span>` : ''}
+								${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}
 							</div>
 						</div>
 						<div class="lb-details">
@@ -1490,7 +1153,7 @@
 					const row = [ranks[x]];
 					if (hasStats) row.push(`${this.stats.spreads[x][0]}-${this.stats.spreads[x][1]}`);
 					row.push(this.items[x], Math.round(this.scores[x]));
-					if (hasStats) row.push(`\u00b1${Math.round(this.stats.cis[x])}`);
+					if (hasStats) row.push(`±${Math.round(this.stats.cis[x])}`);
 					return row.join('\t');
 				});
 				navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
