@@ -1042,28 +1042,17 @@
 				}
 
 				_cloneFrame(f) {
-					const c = Object.assign({}, f);
-					if (f.items)
-						c.items = f.items.slice();
-					if (f.pairs)
-						c.pairs = f.pairs.slice();
-					if (f.winners)
-						c.winners = f.winners.slice();
-					if (f.losers)
-						c.losers = f.losers.slice();
-					if (f.mainChain)
-						c.mainChain = f.mainChain.slice();
-					if (f.insertionOrder)
-						c.insertionOrder = f.insertionOrder.slice();
-					if (f.sortedWinners)
-						c.sortedWinners = f.sortedWinners.slice();
-					if (f.loserMap)
-						c.loserMap = Object.assign({}, f.loserMap);
-					if (f.binarySearchState)
-						c.binarySearchState = Object.assign({}, f.binarySearchState);
-					if (f.posMap)
-						c.posMap = new Map(f.posMap);
-					return c;
+					const ARRAY_PROPS = ['items', 'pairs', 'winners', 'losers', 'mainChain', 'insertionOrder', 'sortedWinners'];
+					const clone = Object.assign({}, f);
+
+					for (const prop of ARRAY_PROPS) {
+					if (prop in f) clone[prop] = f[prop].slice();
+					}
+					if (f.loserMap) clone.loserMap = Object.assign({}, f.loserMap);
+					if (f.binarySearchState) clone.binarySearchState = Object.assign({}, f.binarySearchState);
+					if (f.posMap) clone.posMap = new Map(f.posMap);
+
+					return clone;
 				}
 
 				snap() {
@@ -1521,7 +1510,7 @@
 						wins[a] += result;
 						wins[b] += 1 - result;
 						const lo = a < b ? a : b
-						  , hi = a < b ? b : a;
+							, hi = a < b ? b : a;
 						const key = lo * itemCount + hi;
 						const pairIndex = pairIndexMap.has(key) ? pairIndexMap.get(key) : (()=>{
 							const idx = matchCountArray.length;
