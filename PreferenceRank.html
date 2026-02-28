@@ -494,13 +494,8 @@
 			}
 
 			@keyframes fadeIn {
-				from {
-					opacity: 0;
-				}
-
-				to {
-					opacity: 1;
-				}
+				from { opacity: 0; }
+				to   { opacity: 1; }
 			}
 
 			.session-icon {
@@ -749,24 +744,23 @@
 					filter: 'Cari pilihan...'
 				}
 			};
-			const elements = new Proxy({},{
-				get: (_,id)=>document.getElementById(id)
+
+			const elements = new Proxy({}, {
+				get: (_, id) => document.getElementById(id)
 			});
 
 			const Matrix = {
-				zeros: (rowCount,columnCount)=>({
+				zeros: (rowCount, columnCount) => ({
 					rows: rowCount,
 					cols: columnCount,
 					data: new Float64Array(rowCount * columnCount)
 				}),
-				identity: (size)=>{
+				identity: (size) => {
 					const matrix = Matrix.zeros(size, size);
-					for (let i = 0; i < size; i++)
-						matrix.data[i * size + i] = 1;
+					for (let i = 0; i < size; i++) matrix.data[i * size + i] = 1;
 					return matrix;
-				}
-				,
-				cholesky: (inputMatrix)=>{
+				},
+				cholesky: (inputMatrix) => {
 					const size = inputMatrix.rows;
 					const lowerTriangular = Matrix.zeros(size, size);
 					const inputData = inputMatrix.data;
@@ -776,24 +770,19 @@
 							let sum = 0;
 							for (let k = 0; k < j; k++)
 								sum += resultData[i * size + k] * resultData[j * size + k];
-							resultData[i * size + j] = i === j ? (()=>{
-								const val = inputData[i * size + i] - sum;
-								return val <= 0 ? null : Math.sqrt(val);
-							}
-							)() : (1 / resultData[j * size + j] * (inputData[i * size + j] - sum));
-							if (resultData[i * size + j] === null)
-								return null;
+							resultData[i * size + j] = i === j
+								? (() => { const val = inputData[i * size + i] - sum; return val <= 0 ? null : Math.sqrt(val); })()
+								: (1 / resultData[j * size + j] * (inputData[i * size + j] - sum));
+							if (resultData[i * size + j] === null) return null;
 						}
 					}
 					return lowerTriangular;
-				}
-				,
-				inverse: (inputMatrix)=>{
+				},
+				inverse: (inputMatrix) => {
 					const size = inputMatrix.rows;
 					const matrixData = new Float64Array(inputMatrix.data);
 					const inverseData = new Float64Array(size * size);
-					for (let i = 0; i < size; i++)
-						inverseData[i * size + i] = 1;
+					for (let i = 0; i < size; i++) inverseData[i * size + i] = 1;
 					for (let i = 0; i < size; i++) {
 						let pivot = matrixData[i * size + i];
 						let pivotIndex = i;
@@ -801,14 +790,13 @@
 							pivotIndex = i + 1;
 							while (pivotIndex < size && Math.abs(matrixData[pivotIndex * size + i]) < 1e-10)
 								pivotIndex++;
-							if (pivotIndex === size)
-								return null;
+							if (pivotIndex === size) return null;
 							for (let j = 0; j < size; j++) {
-								const tempMatrix = matrixData[i * size + j];
+								const tempMatrix  = matrixData[i * size + j];
 								const tempInverse = inverseData[i * size + j];
-								matrixData[i * size + j] = matrixData[pivotIndex * size + j];
+								matrixData[i * size + j]         = matrixData[pivotIndex * size + j];
 								matrixData[pivotIndex * size + j] = tempMatrix;
-								inverseData[i * size + j] = inverseData[pivotIndex * size + j];
+								inverseData[i * size + j]         = inverseData[pivotIndex * size + j];
 								inverseData[pivotIndex * size + j] = tempInverse;
 							}
 							pivot = matrixData[i * size + i];
@@ -828,53 +816,41 @@
 							}
 						}
 					}
-					return {
-						rows: size,
-						cols: size,
-						data: inverseData
-					};
+					return { rows: size, cols: size, data: inverseData };
 				}
 			};
 
 			class Stats {
 				static calculate(items, matches, scores) {
 					const itemCount = items.length;
-					if (itemCount < 2)
-						return null;
+					if (itemCount < 2) return null;
 					const scoreFactor = Math.log(10) / 400;
 					const parameters = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++)
 						parameters[i] = scores[i] * scoreFactor;
 					const inverseSubHessian = Stats.buildHessian(itemCount, matches, parameters);
-					if (!inverseSubHessian)
-						return null;
+					if (!inverseSubHessian) return null;
 					const confidenceIntervals = Stats.calculateCI(itemCount, inverseSubHessian, scoreFactor);
 					const choleskyFactor = Matrix.cholesky(inverseSubHessian);
 					if (!choleskyFactor)
-						return {
-							cis: Array.from(confidenceIntervals),
-							spreads: null
-						};
+						return { cis: Array.from(confidenceIntervals), spreads: null };
 					const spreads = Stats.simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor);
-					return {
-						cis: Array.from(confidenceIntervals),
-						spreads
-					};
+					return { cis: Array.from(confidenceIntervals), spreads };
 				}
+
 				static buildHessian(itemCount, matches, parameters) {
 					const hessian = new Float64Array(itemCount * itemCount);
 					const matchCounts = new Int32Array(itemCount * itemCount);
-					matches.forEach(m=>{
+					matches.forEach(m => {
 						matchCounts[m.a * itemCount + m.b]++;
 						matchCounts[m.b * itemCount + m.a]++;
-					}
-					);
+					});
 					for (let i = 0; i < itemCount; i++) {
 						for (let j = i + 1; j < itemCount; j++) {
 							const count = matchCounts[i * itemCount + j];
 							if (count > 0) {
-								const probability = 1 / (1 + Math.exp(-(parameters[i] - parameters[j])));
-								const weight = count * probability * (1 - probability);
+								const probability  = 1 / (1 + Math.exp(-(parameters[i] - parameters[j])));
+								const weight       = count * probability * (1 - probability);
 								const negativeWeight = -weight;
 								hessian[i * itemCount + j] = negativeWeight;
 								hessian[j * itemCount + i] = negativeWeight;
@@ -886,92 +862,81 @@
 					const itemCountMinusOne = itemCount - 1;
 					const subHessian = Matrix.zeros(itemCountMinusOne, itemCountMinusOne);
 					for (let i = 0; i < itemCountMinusOne; i++) {
-						for (let j = 0; j < itemCountMinusOne; j++) {
+						for (let j = 0; j < itemCountMinusOne; j++)
 							subHessian.data[i * itemCountMinusOne + j] = hessian[i * itemCount + j];
-						}
 						subHessian.data[i * itemCountMinusOne + i] += 1e-9;
 					}
 					return Matrix.inverse(subHessian);
 				}
+
 				static calculateCI(itemCount, inverseSubHessian, scoreFactor) {
 					const itemCountMinusOne = itemCount - 1;
 					const confidenceIntervals = new Float64Array(itemCount);
-					const multiplier = 0.11;
-					const inverseData = inverseSubHessian.data;
+					const multiplier    = 0.11;
+					const inverseData   = inverseSubHessian.data;
 					for (let i = 0; i < itemCount; i++) {
 						let variance = 0;
 						for (let r = 0; r < itemCountMinusOne; r++) {
 							const vRow = (r === i ? 1 : 0) - 1 / itemCount;
 							let sumRow = 0;
-							for (let c = 0; c < itemCountMinusOne; c++) {
+							for (let c = 0; c < itemCountMinusOne; c++)
 								sumRow += inverseData[r * itemCountMinusOne + c] * ((c === i ? 1 : 0) - 1 / itemCount);
-							}
 							variance += vRow * sumRow;
 						}
 						confidenceIntervals[i] = multiplier * Math.sqrt(Math.max(0, variance)) / scoreFactor;
 					}
 					return confidenceIntervals;
 				}
+
 				static simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor) {
 					const itemCountMinusOne = itemCount - 1;
-					const simulationCount = 500;
-					const simulationRanks = new Int32Array(itemCount * simulationCount);
-					const multiplier = 0.11;
+					const simulationCount   = 500;
+					const simulationRanks   = new Int32Array(itemCount * simulationCount);
+					const multiplier        = 0.11;
 					let nextGaussian = null;
-					const gaussian = ()=>{
-						if (nextGaussian !== null) {
-							const value = nextGaussian;
-							nextGaussian = null;
-							return value;
-						}
-						let uniform1 = 0;
-						let uniform2 = 0;
-						while (uniform1 === 0)
-							uniform1 = Math.random();
-						while (uniform2 === 0)
-							uniform2 = Math.random();
-						const radius = Math.sqrt(-2.0 * Math.log(uniform1));
-						const angle = 2.0 * Math.PI * uniform2;
-						nextGaussian = radius * Math.sin(angle);
-						return radius * Math.cos(angle);
-					}
-					;
-					const gaussianVector = new Float64Array(itemCountMinusOne);
-					const parameterDelta = new Float64Array(itemCountMinusOne);
+					const gaussian = () => {
+						if (nextGaussian !== null) { const v = nextGaussian; nextGaussian = null; return v; }
+						let u1 = 0, u2 = 0;
+						while (u1 === 0) u1 = Math.random();
+						while (u2 === 0) u2 = Math.random();
+						const r = Math.sqrt(-2.0 * Math.log(u1));
+						const a = 2.0 * Math.PI * u2;
+						nextGaussian = r * Math.sin(a);
+						return r * Math.cos(a);
+					};
+					const gaussianVector  = new Float64Array(itemCountMinusOne);
+					const parameterDelta  = new Float64Array(itemCountMinusOne);
 					const sampleParameters = new Float64Array(itemCount);
-					const rankIndices = new Int32Array(itemCount);
-					const sampleScores = new Float64Array(itemCount);
-					const choleskyData = choleskyFactor.data;
-					for (let simulationIndex = 0; simulationIndex < simulationCount; simulationIndex++) {
-						for (let i = 0; i < itemCountMinusOne; i++)
-							gaussianVector[i] = gaussian();
+					const rankIndices     = new Int32Array(itemCount);
+					const sampleScores    = new Float64Array(itemCount);
+					const choleskyData    = choleskyFactor.data;
+					for (let sim = 0; sim < simulationCount; sim++) {
+						for (let i = 0; i < itemCountMinusOne; i++) gaussianVector[i] = gaussian();
 						for (let i = 0; i < itemCountMinusOne; i++) {
 							let sum = 0;
-							const iOffset = i * itemCountMinusOne;
-							for (let j = 0; j <= i; j++)
-								sum += choleskyData[iOffset + j] * gaussianVector[j];
+							const iOff = i * itemCountMinusOne;
+							for (let j = 0; j <= i; j++) sum += choleskyData[iOff + j] * gaussianVector[j];
 							parameterDelta[i] = sum * multiplier;
 						}
-						let parameterSum = 0;
+						let paramSum = 0;
 						for (let i = 0; i < itemCount; i++) {
-							const value = i < itemCountMinusOne ? parameters[i] + parameterDelta[i] : parameters[i];
-							sampleParameters[i] = value;
-							parameterSum += value;
+							const v = i < itemCountMinusOne ? parameters[i] + parameterDelta[i] : parameters[i];
+							sampleParameters[i] = v;
+							paramSum += v;
 						}
-						const parameterAverage = parameterSum / itemCount;
+						const paramAvg = paramSum / itemCount;
 						for (let i = 0; i < itemCount; i++) {
-							sampleScores[i] = 1000 + (sampleParameters[i] - parameterAverage) / scoreFactor;
+							sampleScores[i] = 1000 + (sampleParameters[i] - paramAvg) / scoreFactor;
 							rankIndices[i] = i;
 						}
-						rankIndices.sort((a,b)=>sampleScores[b] - sampleScores[a]);
+						rankIndices.sort((a, b) => sampleScores[b] - sampleScores[a]);
 						for (let r = 0; r < itemCount; r++)
-							simulationRanks[rankIndices[r] * simulationCount + simulationIndex] = r + 1;
+							simulationRanks[rankIndices[r] * simulationCount + sim] = r + 1;
 					}
 					const spreads = [];
 					const rowBuffer = new Int32Array(simulationCount);
 					for (let i = 0; i < itemCount; i++) {
-						for (let k = 0; k < simulationCount; k++)
-							rowBuffer[k] = simulationRanks[i * simulationCount + k];
+						for (let k = 0; k < simulationCount; k++) rowBuffer[k] = simulationRanks[i * simulationCount + k];
 						rowBuffer.sort();
 						spreads.push([rowBuffer[Math.floor(simulationCount * 0.1)], rowBuffer[Math.floor(simulationCount * 0.9)]]);
 					}
@@ -980,33 +945,26 @@
 			}
 
 			class FullPairProvider {
-				static estimate(count) {
-					return count * (count - 1) / 2;
-				}
+				static estimate(count) { return count * (count - 1) / 2; }
 				constructor(count) {
 					this.pairs = [];
-					for (let index = 0; index < count; index++)
-						for (let j = index + 1; j < count; j++)
-							this.pairs.push([index, j]);
-					for (let index = this.pairs.length; index--; ) {
-						const j = Math.random() * (index + 1) | 0;
-						[this.pairs[index],this.pairs[j]] = [this.pairs[j], this.pairs[index]];
+					for (let i = 0; i < count; i++)
+						for (let j = i + 1; j < count; j++)
+							this.pairs.push([i, j]);
+					for (let i = this.pairs.length; i--;) {
+						const j = Math.random() * (i + 1) | 0;
+						[this.pairs[i], this.pairs[j]] = [this.pairs[j], this.pairs[i]];
 					}
 				}
-				next(state) {
-					return this.pairs[state.step];
-				}
-				getProgress(step) {
-					return `${step}/${this.pairs.length}`;
-				}
+				next(state) { return this.pairs[state.step]; }
+				getProgress(step) { return `${step}/${this.pairs.length}`; }
 			}
 
 			function jacobsthalThresholds(limit) {
-				let a = 1
-				  , b = 1;
+				let a = 1, b = 1;
 				const out = [b];
 				while (b < limit) {
-					[a,b] = [b, b + 2 * a];
+					[a, b] = [b, b + 2 * a];
 					out.push(b);
 				}
 				return out;
@@ -1014,8 +972,7 @@
 
 			class QuickPairProvider {
 				static estimate(count) {
-					if (count <= 1)
-						return 0;
+					if (count <= 1) return 0;
 					let total = 0;
 					for (let k = 2; k <= count; k++)
 						total += Math.ceil(Math.log2(3 * k / 4));
@@ -1024,106 +981,78 @@
 
 				constructor(count) {
 					this.count = count;
-					this._est = QuickPairProvider.estimate(count);
-					this.stack = [{
-						items: Array.from({
-							length: count
-						}, (_,i)=>i),
-						state: 0
-					}];
-					this.history = [];
+					this._est  = QuickPairProvider.estimate(count);
+					this._results = [];
+					this._initStack();
+				}
+
+				_initStack() {
+					this.stack   = [{ items: Array.from({ length: this.count }, (_, i) => i), state: 0 }];
 					this.pending = null;
 				}
 
-				_cloneFrame(f) {
-					const ARRAY_PROPS = ['items', 'pairs', 'winners', 'losers', 'mainChain', 'insertionOrder', 'sortedWinners'];
-					const clone = Object.assign({}, f);
-
-					for (const prop of ARRAY_PROPS) {
-					if (prop in f) clone[prop] = f[prop].slice();
-					}
-					if (f.loserMap) clone.loserMap = Object.assign({}, f.loserMap);
-					if (f.binarySearchState) clone.binarySearchState = Object.assign({}, f.binarySearchState);
-					if (f.posMap) clone.posMap = new Map(f.posMap);
-
-					return clone;
-				}
-
-				snap() {
-					return {
-						stack: this.stack.map(f=>this._cloneFrame(f)),
-						pending: this.pending
-					};
-				}
-				restore(snapshot) {
-					this.stack = snapshot.stack;
-					this.pending = snapshot.pending;
-				}
 				unmark() {
-					if (this.history.length)
-						this.restore(this.history.pop());
+					if (!this._results.length) return;
+					const log = this._results.slice(0, -1);
+					this._results = [];
+					this._initStack();
+					this._runMachine();
+					for (const r of log) {
+						this._applyResult(r);
+						this._runMachine();
+					}
 				}
 
-				next(_, result) {
-					if (this.pending !== null && result !== undefined) {
-						this.history.push(this.snap());
-						const [a,b] = this.pending;
-						const winner = result === 1 ? a : result === 0 ? b : a;
-						const frame = this.stack[this.stack.length - 1];
-						if (frame.comparing) {
-							frame.lastResult = (winner === a);
-							frame.lastWinner = winner;
-							delete frame.comparing;
-						}
-						this.pending = null;
+				_applyResult(result) {
+					const [a, b]  = this.pending;
+					const winner  = result === 1 ? a : result === 0 ? b : a;
+					const frame   = this.stack[this.stack.length - 1];
+					if (frame.comparing) {
+						frame.lastWinner = winner;
+						delete frame.comparing;
 					}
+					this.pending = null;
+				}
 
+				_runMachine() {
 					while (this.stack.length) {
 						const frame = this.stack[this.stack.length - 1];
 
 						if (frame.state === 0) {
 							const n = frame.items.length;
-							if (n <= 1) {
-								this._returnResult(frame.items);
-								continue;
-							}
+							if (n <= 1) { this._returnResult(frame.items); continue; }
 							const half = n >> 1;
-							frame.pairs = [];
+							frame.pairs     = [];
 							for (let i = 0; i < half; i++)
 								frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
-							frame.odd = (n & 1) ? frame.items[n - 1] : null;
-							frame.winners = [];
-							frame.losers = [];
+							frame.odd       = (n & 1) ? frame.items[n - 1] : null;
+							frame.winners   = [];
+							frame.losers    = [];
 							frame.pairIndex = 0;
-							frame.state = 1;
+							frame.state     = 1;
 						}
 
 						if (frame.state === 1) {
 							if (frame.lastWinner !== undefined) {
-								const [a,b] = frame.pairs[frame.pairIndex];
-								const aWon = frame.lastWinner === a;
+								const [a, b] = frame.pairs[frame.pairIndex];
+								const aWon   = frame.lastWinner === a;
 								frame.winners.push(aWon ? a : b);
 								frame.losers.push(aWon ? b : a);
 								delete frame.lastWinner;
-								delete frame.lastResult;
 								frame.pairIndex++;
 							}
 							if (frame.pairIndex < frame.pairs.length) {
-								this.pending = frame.pairs[frame.pairIndex];
-								frame.comparing = true;
-								return this.pending;
+								this.pending     = frame.pairs[frame.pairIndex];
+								frame.comparing  = true;
+								return;
 							}
 							frame.state = 2;
-							this.stack.push({
-								items: frame.winners.slice(),
-								state: 0
-							});
+							this.stack.push({ items: frame.winners.slice(), state: 0 });
 							continue;
 						}
 
 						if (frame.state === 2) {
-							if (!frame.sortedWinners)
-								continue;
+							if (!frame.sortedWinners) continue;
 
 							const sw = frame.sortedWinners;
 
@@ -1134,7 +1063,7 @@
 							frame.mainChain = [frame.loserMap[sw[0]], ...sw];
 
 							frame.posMap = new Map();
-							frame.mainChain.forEach((item,idx)=>frame.posMap.set(item, idx));
+							frame.mainChain.forEach((item, idx) => frame.posMap.set(item, idx));
 
 							frame.insertionOrder = [];
 							if (sw.length > 1) {
@@ -1145,59 +1074,48 @@
 									for (let k = t; k > covered; k--)
 										frame.insertionOrder.push(sw[k - 1]);
 									covered = t;
-									if (covered >= sw.length)
-										break;
+									if (covered >= sw.length) break;
 								}
 							}
 
-							frame.insertIdx = 0;
+							frame.insertIdx  = 0;
 							frame.oddInserted = false;
-							frame.state = 3;
+							frame.state       = 3;
 							continue;
 						}
 
 						if (frame.state === 3) {
 							if (frame.binarySearchState && frame.lastWinner !== undefined) {
 								const bs = frame.binarySearchState;
-								frame.lastWinner === frame.currentLoser ? (bs.min = bs.mid + 1) : (bs.max = bs.mid);
+								frame.lastWinner === frame.currentLoser
+									? (bs.min = bs.mid + 1)
+									: (bs.max = bs.mid);
 								delete frame.lastWinner;
-								delete frame.lastResult;
 							}
 
 							const inMain = frame.insertIdx < frame.insertionOrder.length;
-							const inOdd = !inMain && frame.odd !== null && !frame.oddInserted;
+							const inOdd  = !inMain && frame.odd !== null && !frame.oddInserted;
 
-							if (!inMain && !inOdd) {
-								this._returnResult(frame.mainChain);
-								continue;
-							}
+							if (!inMain && !inOdd) { this._returnResult(frame.mainChain); continue; }
 
 							if (!frame.binarySearchState) {
-								const pairedWinner = inMain ? frame.insertionOrder[frame.insertIdx] : null;
-								frame.currentLoser = inMain ? frame.loserMap[pairedWinner] : frame.odd;
-
-								const upperBound = inMain ? frame.posMap.get(pairedWinner) : frame.mainChain.length;
-
-								frame.binarySearchState = {
-									min: 0,
-									max: upperBound,
-									mid: 0
-								};
+								const pairedWinner  = inMain ? frame.insertionOrder[frame.insertIdx] : null;
+								frame.currentLoser  = inMain ? frame.loserMap[pairedWinner] : frame.odd;
+								const upperBound    = inMain ? frame.posMap.get(pairedWinner) : frame.mainChain.length;
+								frame.binarySearchState = { min: 0, max: upperBound, mid: 0 };
 							}
 
 							const bs = frame.binarySearchState;
 							if (bs.min < bs.max) {
-								bs.mid = (bs.min + bs.max) >> 1;
-								this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
+								bs.mid          = (bs.min + bs.max) >> 1;
+								this.pending    = [frame.currentLoser, frame.mainChain[bs.mid]];
 								frame.comparing = true;
-								return this.pending;
+								return;
 							}
 
 							frame.mainChain.splice(bs.min, 0, frame.currentLoser);
-
-							for (const [k,v] of frame.posMap)
-								if (v >= bs.min)
-									frame.posMap.set(k, v + 1);
+							for (const [k, v] of frame.posMap)
+								if (v >= bs.min) frame.posMap.set(k, v + 1);
 							frame.posMap.set(frame.currentLoser, bs.min);
 
 							delete frame.binarySearchState;
@@ -1205,13 +1123,21 @@
 							continue;
 						}
 					}
-					return null;
 				}
 
 				_returnResult(result) {
 					this.stack.pop();
 					if (this.stack.length)
 						this.stack[this.stack.length - 1].sortedWinners = result.slice();
+				}
+
+				next(_, result) {
+					if (this.pending !== null && result !== undefined) {
+						this._results.push(result);
+						this._applyResult(result);
+					}
+					this._runMachine();
+					return this.pending;
 				}
 
 				getProgress(step) {
@@ -1226,73 +1152,44 @@
 						matches: [],
 						history: [],
 						swaps: {},
-						sortState: {
-							column: 'rank',
-							direction: 'asc'
-						},
+						sortState: { column: 'rank', direction: 'asc' },
 						dirty: true
 					});
 					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
 					const events = {
-						start: 'start',
-						restartBattle: 'start',
-						restartNew: 'reset',
-						undo: 'undo',
-						copy: 'copyResults',
-						toggle: 'toggleHelp',
-						cancel: 'cancel',
-						sessionContinue: 'restoreSession',
-						sessionNew: 'startNewSession',
-						resume: 'resume'
+						start: 'start', restartBattle: 'start', restartNew: 'reset',
+						undo: 'undo', copy: 'copyResults', toggle: 'toggleHelp',
+						cancel: 'cancel', sessionContinue: 'restoreSession',
+						sessionNew: 'startNewSession', resume: 'resume'
 					};
-					Object.entries(events).forEach(([id,fn])=>elements[id].onclick = ()=>this[fn]());
-					['left', 'right', 'tie'].forEach(id=>elements[id].onclick = ()=>this.choose(id));
-					elements.language.onchange = event=>{
-						this.lang(event.target.value);
-						this.save();
-					}
-					;
-					elements.theme.onchange = event=>{
-						this.theme(event.target.value);
-						this.save();
-					}
-					;
-					elements.allowTies.onchange = event=>this.setTies(event.target.checked);
-					elements.quickRank.onchange = ()=>this.updateInputState();
-					elements.items.oninput = ()=>{
-						this.updateInputState();
-						this.saveInput();
-					}
-					;
-					elements.results.onclick = event=>{
-						const header = event.target.closest('.lb-header > div');
-						if (header && header.dataset.sort)
-							this.sortResults(header.dataset.sort);
-					}
-					;
-					elements.results.onkeydown = event=>{
-						if (event.key === 'Enter' || event.key === ' ') {
-							const header = event.target.closest('.lb-header > div');
-							if (header && header.dataset.sort) {
-								event.preventDefault();
-								this.sortResults(header.dataset.sort);
-							}
+					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
+					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
+					elements.language.onchange = e => { this.lang(e.target.value); this.save(); };
+					elements.theme.onchange    = e => { this.theme(e.target.value); this.save(); };
+					elements.allowTies.onchange = e => this.setTies(e.target.checked);
+					elements.quickRank.onchange = () => this.updateInputState();
+					elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
+					elements.results.onclick = e => {
+						const header = e.target.closest('.lb-header > div');
+						if (header && header.dataset.sort) this.sortResults(header.dataset.sort);
+					};
+					elements.results.onkeydown = e => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							const header = e.target.closest('.lb-header > div');
+							if (header && header.dataset.sort) { e.preventDefault(); this.sortResults(header.dataset.sort); }
 						}
-					}
-					;
-					document.onkeydown = event=>this.key(event);
+					};
+					document.onkeydown = e => this.key(e);
 					this.theme('auto');
 					this.lang(this.language);
 					this.load();
 				}
 
-				string(key) {
-					return text[this.language]?.[key] ?? key;
-				}
+				string(key) { return text[this.language]?.[key] ?? key; }
 
-				theme(themeName) {
-					document.documentElement.className = themeName === 'auto' ? '' : themeName;
-					elements.theme.value = themeName;
+				theme(name) {
+					document.documentElement.className = name === 'auto' ? '' : name;
+					elements.theme.value = name;
 				}
 
 				lang(language) {
@@ -1300,27 +1197,24 @@
 					elements.language.setAttribute('aria-label', this.string('languageLabel'));
 					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
 					elements.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>elements[key].textContent = this.string(key));
+					['title','labelItems','labelTies','labelQuick','start','resume','cancel','tie','undo','copy','restartBattle','restartNew']
+						.forEach(key => elements[key].textContent = this.string(key));
 					elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
-					elements.left.title = this.string('shortcutLeft');
+					elements.left.title  = this.string('shortcutLeft');
 					elements.right.title = this.string('shortcutRight');
-					elements.tie.title = this.string('shortcutTie');
-					elements.undo.title = `${this.string('undo')} (${this.string('shortcutUndo')})`;
-					[...elements.theme.options].forEach(option=>option.textContent = this.string(option.value + 'Theme'));
+					elements.tie.title   = this.string('shortcutTie');
+					elements.undo.title  = `${this.string('undo')} (${this.string('shortcutUndo')})`;
+					[...elements.theme.options].forEach(o => o.textContent = this.string(o.value + 'Theme'));
 					this.updateHelp();
 					this.updateProgress();
 					this.updateCount();
-					if (!elements.results.classList.contains('hidden'))
-						this.results();
+					if (!elements.results.classList.contains('hidden')) this.results();
 				}
 
 				save() {
 					localStorage.setItem('preferenceRankData', JSON.stringify({
 						inputValue: elements.items.value,
-						settings: {
-							theme: elements.theme.value,
-							language: this.language
-						},
+						settings: { theme: elements.theme.value, language: this.language },
 						battle: this.provider ? {
 							...this,
 							provider: this.provider,
@@ -1332,14 +1226,13 @@
 				load() {
 					try {
 						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-						data && (()=>{
-							data.settings && (this.theme(data.settings.theme),
-							this.lang(data.settings.language));
-							data.inputValue && (elements.items.value = data.inputValue,
-							this.updateInputState());
-							data.battle ? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle)) : this.display('inputSection');
-						}
-						)();
+						data && (() => {
+							data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language));
+							data.inputValue && (elements.items.value = data.inputValue, this.updateInputState());
+							data.battle
+								? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle))
+								: this.display('inputSection');
+						})();
 					} catch {
 						localStorage.removeItem('preferenceRankData');
 					}
@@ -1347,10 +1240,10 @@
 
 				prompt(battle) {
 					this.pending = battle;
-					elements.sessionTitle.textContent = this.string('resumeTitle');
+					elements.sessionTitle.textContent   = this.string('resumeTitle');
 					elements.sessionMessage.textContent = this.string('resumeMessage');
 					elements.sessionContinue.textContent = this.string('resumeConfirm');
-					elements.sessionNew.textContent = this.string('resumeNew');
+					elements.sessionNew.textContent     = this.string('resumeNew');
 					elements.sessionModal.classList.remove('hidden');
 					elements.inputSection.classList.add('hidden');
 					elements.sessionContinue.focus();
@@ -1365,7 +1258,7 @@
 				startNewSession() {
 					elements.sessionModal.classList.add('hidden');
 					this.pending = null;
-					elements.items.value = '';
+					elements.items.value      = '';
 					elements.allowTies.checked = false;
 					elements.quickRank.checked = false;
 					this.updateInputState();
@@ -1381,40 +1274,35 @@
 					elements.allowTies.checked = this.allowTies;
 					elements.quickRank.checked = battle.providerType === 'quick';
 					this.setTies(this.allowTies);
-					this.pair ? (this.display('battleSection'),
-					this.render(),
-					this.updateProgress(),
-					elements.undo.disabled = !this.history.length) : this.matches.length ? this.results() : this.display('inputSection');
+					this.pair
+						? (this.display('battleSection'), this.render(), this.updateProgress(), elements.undo.disabled = !this.history.length)
+						: this.matches.length ? this.results() : this.display('inputSection');
 				}
 
 				saveInput() {
 					clearTimeout(this.saveTimeout);
-					this.saveTimeout = setTimeout(()=>this.save(), 500);
+					this.saveTimeout = setTimeout(() => this.save(), 500);
 				}
 
 				getItems() {
-					const lines = elements.items.value.split('\n').map(line=>line.trim()).filter(Boolean);
-					if (!lines.length)
-						return [];
+					const lines = elements.items.value.split('\n').map(l => l.trim()).filter(Boolean);
+					if (!lines.length) return [];
 					const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
-					return lines.map(line=>{
-						const pattern = patterns.find(p=>p.test(line));
-						return pattern ? line.replace(pattern, '') : line;
-					}
-					);
+					return lines.map(line => {
+						const p = patterns.find(p => p.test(line));
+						return p ? line.replace(p, '') : line;
+					});
 				}
 
-				updateInputState() {
-					const items = this.getItems();
-					this.check(items);
-					this.updateCount(items);
-				}
+				updateInputState() { const items = this.getItems(); this.check(items); this.updateCount(items); }
 
 				updateCount(items) {
-					const list = items || this.getItems();
+					const list  = items || this.getItems();
 					const count = list.length;
-					const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
-					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
+					const type  = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
+					elements.itemCount.textContent =
+						this.string('itemsCount').replace('{count}', count) +
+						this.string('estMatches').replace('{count}', type.estimate(count));
 				}
 
 				setTies(enabled) {
@@ -1431,23 +1319,17 @@
 					elements.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
 				}
 
-				toggleHelp() {
-					elements.tips.classList.toggle('hidden');
-					this.updateHelp();
-				}
+				toggleHelp() { elements.tips.classList.toggle('hidden'); this.updateHelp(); }
 
 				check(items) {
 					const valid = new Set(items || this.getItems()).size >= 2;
 					elements.start.disabled = !valid;
-					if (valid) {
-						elements.error.classList.add('hidden');
-						elements.items.removeAttribute('aria-invalid');
-					}
+					if (valid) { elements.error.classList.add('hidden'); elements.items.removeAttribute('aria-invalid'); }
 					elements.resume.classList.toggle('hidden', !this.provider);
 				}
 
 				start() {
-					const raw = this.getItems();
+					const raw    = this.getItems();
 					const unique = [...new Set(raw)];
 					if (raw.length > unique.length) {
 						elements.items.value = unique.join('\n');
@@ -1460,16 +1342,9 @@
 					Object.assign(this, {
 						items: unique,
 						scores: Array(unique.length).fill(1e3),
-						matches: [],
-						pair: null,
-						swapped: false,
-						step: 0,
+						matches: [], pair: null, swapped: false, step: 0,
 						allowTies: elements.allowTies.checked,
-						history: [],
-						busy: false,
-						swaps: {},
-						dirty: true,
-						_prevStrength: null
+						history: [], busy: false, swaps: {}, dirty: true, _prevStrength: null
 					});
 					elements.undo.disabled = true;
 					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
@@ -1480,99 +1355,78 @@
 					this.save();
 				}
 
-				resume() {
-					this.pair ? (this.display('battleSection'),
-					this.render()) : this.results();
-				}
+				resume() { this.pair ? (this.display('battleSection'), this.render()) : this.results(); }
 
 				recalculateScores() {
 					const itemCount = this.items.length;
-					if (this.dirty === false && this.scores?.length === itemCount || itemCount === 0)
-						return;
+					if ((this.dirty === false && this.scores?.length === itemCount) || itemCount === 0) return;
 
-					const wins = new Float64Array(itemCount);
-					const pairIndexMap = new Map();
+					const wins           = new Float64Array(itemCount);
+					const pairIndexMap   = new Map();
 					const matchCountArray = [];
-					const adjacencyItems = Array.from({
-						length: itemCount
-					}, ()=>[]);
-					const adjacencyIndices = Array.from({
-						length: itemCount
-					}, ()=>[]);
+					const adjacencyItems   = Array.from({ length: itemCount }, () => []);
+					const adjacencyIndices = Array.from({ length: itemCount }, () => []);
 
-					this.matches.forEach(({a, b, result})=>{
+					this.matches.forEach(({ a, b, result }) => {
 						wins[a] += result;
 						wins[b] += 1 - result;
-						const lo = a < b ? a : b
-							, hi = a < b ? b : a;
+						const lo  = a < b ? a : b, hi = a < b ? b : a;
 						const key = lo * itemCount + hi;
-						const pairIndex = pairIndexMap.has(key) ? pairIndexMap.get(key) : (()=>{
+						const pairIndex = pairIndexMap.has(key) ? pairIndexMap.get(key) : (() => {
 							const idx = matchCountArray.length;
 							pairIndexMap.set(key, idx);
 							matchCountArray.push(0);
-							adjacencyItems[lo].push(hi);
-							adjacencyIndices[lo].push(idx);
-							adjacencyItems[hi].push(lo);
-							adjacencyIndices[hi].push(idx);
+							adjacencyItems[lo].push(hi);   adjacencyIndices[lo].push(idx);
+							adjacencyItems[hi].push(lo);   adjacencyIndices[hi].push(idx);
 							return idx;
-						}
-						)();
+						})();
 						matchCountArray[pairIndex]++;
-					}
-					);
+					});
 
-					const matchCounts = new Float64Array(matchCountArray);
-					const adjacentItems = adjacencyItems.map(a=>new Int32Array(a));
-					const adjacentIndices = adjacencyIndices.map(a=>new Int32Array(a));
+					const matchCounts     = new Float64Array(matchCountArray);
+					const adjacentItems   = adjacencyItems.map(a => new Int32Array(a));
+					const adjacentIndices = adjacencyIndices.map(a => new Int32Array(a));
 
-					const PRIOR = 0.5;
-
+					const PRIOR    = 0.5;
 					const strength = new Float64Array(itemCount);
-					const prevOk = this._prevStrength && this._prevStrength.length === itemCount;
+					const prevOk   = this._prevStrength && this._prevStrength.length === itemCount;
 					if (prevOk) {
-						for (let i = 0; i < itemCount; i++)
-							strength[i] = this._prevStrength[i];
+						for (let i = 0; i < itemCount; i++) strength[i] = this._prevStrength[i];
 					} else {
 						const totalMatches = new Float64Array(itemCount);
-						this.matches.forEach(({a, b})=>{
-							totalMatches[a]++;
-							totalMatches[b]++;
-						}
-						);
+						this.matches.forEach(({ a, b }) => { totalMatches[a]++; totalMatches[b]++; });
 						let logSum = 0;
 						for (let i = 0; i < itemCount; i++) {
-							strength[i] = totalMatches[i] > 0 ? (wins[i] + PRIOR) / (totalMatches[i] + 2 * PRIOR) : 0.5;
+							strength[i] = totalMatches[i] > 0
+								? (wins[i] + PRIOR) / (totalMatches[i] + 2 * PRIOR)
+								: 0.5;
 							logSum += Math.log(strength[i]);
 						}
 						const scale = Math.exp(-logSum / itemCount);
-						for (let i = 0; i < itemCount; i++)
-							strength[i] *= scale;
+						for (let i = 0; i < itemCount; i++) strength[i] *= scale;
 					}
 
 					const newStrength = new Float64Array(itemCount);
 					let maxRelativeError = 1.0;
 
-					for (let iteration = 0; iteration < 300 && maxRelativeError > 1e-13; iteration++) {
+					for (let iteration = 0; iteration < 300 && maxRelativeError > 1e-9; iteration++) {
 						for (let i = 0; i < itemCount; i++) {
 							let denom = PRIOR / (strength[i] + 1.0);
 							const neighbors = adjacentItems[i];
-							const indices = adjacentIndices[i];
+							const indices   = adjacentIndices[i];
 							for (let k = 0; k < neighbors.length; k++)
 								denom += matchCounts[indices[k]] / (strength[i] + strength[neighbors[k]]);
 							newStrength[i] = (wins[i] + PRIOR) / denom;
 						}
-
 						let logSum = 0;
-						for (let i = 0; i < itemCount; i++)
-							logSum += Math.log(newStrength[i]);
+						for (let i = 0; i < itemCount; i++) logSum += Math.log(newStrength[i]);
 						const scaleFactor = Math.exp(-logSum / itemCount);
 
 						maxRelativeError = 0;
 						for (let i = 0; i < itemCount; i++) {
 							newStrength[i] *= scaleFactor;
 							const relErr = Math.abs(newStrength[i] - strength[i]) / newStrength[i];
-							if (relErr > maxRelativeError)
-								maxRelativeError = relErr;
+							if (relErr > maxRelativeError) maxRelativeError = relErr;
 							strength[i] = newStrength[i];
 						}
 					}
@@ -1587,88 +1441,73 @@
 						logAvg += itemLogs[i];
 					}
 					logAvg /= itemCount;
-					this.scores = Array.from(itemLogs, v=>1000 + 400 * (v - logAvg) / LOG_TEN);
+					this.scores = Array.from(itemLogs, v => 1000 + 400 * (v - logAvg) / LOG_TEN);
 					this.dirty = false;
 				}
 
 				choose(winner) {
-					if (this.busy || elements.battleSection.classList.contains('hidden'))
-						return;
+					if (this.busy || elements.battleSection.classList.contains('hidden')) return;
 					this.busy = true;
-					this.history.push({
-						pair: this.pair,
-						step: this.step,
-						swapped: this.swapped
-					});
-					const [a,b] = this.pair;
+					this.history.push({ pair: this.pair, step: this.step, swapped: this.swapped });
+					const [a, b] = this.pair;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
-					this.matches.push({
-						a,
-						b,
-						result
-					});
+					this.matches.push({ a, b, result });
 					this.dirty = true;
 					this.step++;
 					elements.undo.disabled = false;
 					this.updateProgress();
 					this.clear();
 					(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
-					setTimeout(()=>(!elements.battleSection.classList.contains('hidden') && this.busy && (this.busy = false,
-					this.next(result),
-					this.save())), 150);
+					setTimeout(() => (
+						!elements.battleSection.classList.contains('hidden') && this.busy &&
+						(this.busy = false, this.next(result), this.save())
+					), 150);
 				}
 
 				next(result) {
 					this.clear();
 					const nextPair = this.provider.next(this, result);
-					if (!nextPair)
-						return this.pair = null,
-						this.results();
-					this.pair = nextPair;
+					if (!nextPair) return this.pair = null, this.results();
+					this.pair    = nextPair;
 					this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
 					this.render();
 				}
 
 				render() {
-					let[a,b] = this.pair;
-					if (this.swapped)
-						[a,b] = [b, a];
-					elements.left.textContent = this.items[a];
+					let [a, b] = this.pair;
+					if (this.swapped) [a, b] = [b, a];
+					elements.left.textContent  = this.items[a];
 					elements.right.textContent = this.items[b];
 					this.updateProgress();
 					elements.announcer.textContent = this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]);
 				}
 
 				updateProgress() {
-					const progress = this.provider ? this.provider.getProgress(this.step) : '0/0';
+					const progress  = this.provider ? this.provider.getProgress(this.step) : '0/0';
 					elements.progress.textContent = `${this.string('progress')}: ${progress}`;
-					const [current,total] = progress.split('/');
-					const percent = Math.min(100, Math.max(0, parseInt(total.replace('~', '')) > 0 ? parseInt(current) / parseInt(total.replace('~', '')) * 100 : 0));
+					const [current, total] = progress.split('/');
+					const percent = Math.min(100, Math.max(0,
+						parseInt(total.replace('~', '')) > 0
+							? parseInt(current) / parseInt(total.replace('~', '')) * 100
+							: 0));
 					elements.progressFill.style.width = `${percent}%`;
 					elements.progressTrack.setAttribute('aria-valuenow', Math.round(percent));
 				}
 
-				clear() {
-					['left', 'right', 'tie'].forEach(id=>elements[id].classList.remove('selected'));
-				}
+				clear() { ['left','right','tie'].forEach(id => elements[id].classList.remove('selected')); }
 
 				filterResults(term) {
 					this.filterTerm = term;
 					const lower = term.toLowerCase();
-					const rows = elements.results.querySelectorAll('.lb-row');
-					rows.forEach(row=>{
-						const text = row.querySelector('.lb-col-item').textContent.toLowerCase();
-						row.classList.toggle('hidden', !text.includes(lower));
-					}
-					);
+					elements.results.querySelectorAll('.lb-row').forEach(row => {
+						const t = row.querySelector('.lb-col-item').textContent.toLowerCase();
+						row.classList.toggle('hidden', !t.includes(lower));
+					});
 				}
 
 				sortResults(column) {
 					const direction = this.sortState.column === column && this.sortState.direction === 'asc' ? 'desc' : 'asc';
-					this.sortState = {
-						column,
-						direction
-					};
+					this.sortState = { column, direction };
 					this.results();
 				}
 
@@ -1676,19 +1515,19 @@
 					const dirty = this.dirty;
 					this.recalculateScores();
 					elements.results.parentElement.append(elements.undo, elements.copy);
-					const baseRanking = [...this.scores.keys()].sort((a,b)=>this.scores[b] - this.scores[a]);
+					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
-					baseRanking.forEach((x,index)=>ranks[x] = index + 1);
-					if (dirty || !this.stats) {
-						this.stats = Stats.calculate(this.items, this.matches, this.scores);
-					}
+					baseRanking.forEach((x, i) => ranks[x] = i + 1);
+					if (dirty || !this.stats) this.stats = Stats.calculate(this.items, this.matches, this.scores);
 					const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 					const sorters = {
-						rank: (a,b)=>(this.scores[b] - this.scores[a]) * sortDir,
-						rankSpread: (a,b)=>this.stats && this.stats.spreads ? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir : 0,
-						item: (a,b)=>this.items[a].localeCompare(this.items[b]) * sortDir,
-						score: (a,b)=>(this.scores[a] - this.scores[b]) * sortDir,
-						ci: (a,b)=>this.stats && this.stats.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
+						rank:       (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
+						rankSpread: (a, b) => this.stats?.spreads
+							? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir
+							: 0,
+						item:  (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
+						score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
+						ci:    (a, b) => this.stats?.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
 					};
 					this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column] || sorters.rank);
 					const ranking = this.currentRanking;
@@ -1702,13 +1541,14 @@
 					elements.results.appendChild(headerWrapper);
 
 					const filterDiv = document.createElement('div');
-					filterDiv.style.cssText = "margin-bottom:.5rem;text-align:right";
+					filterDiv.style.cssText = 'margin-bottom:.5rem;text-align:right';
 					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" value="${this.filterTerm || ''}" style="width:200px;font-size:.9rem;padding:6px">`;
 					elements.results.appendChild(filterDiv);
 
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
-					const getSortIcon = (col)=>this.sortState.column === col ? arrow : '';
-					const getSortState = (col)=>this.sortState.column === col ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
+					const getSortIcon  = col => this.sortState.column === col ? arrow : '';
+					const getSortState = col => this.sortState.column === col
+						? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
 
 					const lb = document.createElement('div');
 					lb.className = 'leaderboard';
@@ -1717,83 +1557,55 @@
 					<div class="lb-header" role="row">
 						<div class="lb-col-rank" role="columnheader" tabindex="0" aria-sort="${getSortState('rank')}" data-sort="rank">${this.string('rank')}${getSortIcon('rank')}</div>
 						<div class="lb-col-item" role="columnheader" tabindex="0" aria-sort="${getSortState('item')}" data-sort="item">${this.string('item')}${getSortIcon('item')}</div>
-						<div class="lb-col-score" role="columnheader" tabindex="0" aria-sort="${getSortState('score')}" data-sort="score" style="justify-content: flex-end;">${this.string('score')}${getSortIcon('score')}</div>
+						<div class="lb-col-score" role="columnheader" tabindex="0" aria-sort="${getSortState('score')}" data-sort="score" style="justify-content:flex-end">${this.string('score')}${getSortIcon('score')}</div>
 					</div>
-					<div class="lb-body" role="rowgroup"></div>
-				`;
-					const body = lb.querySelector('.lb-body');
+					<div class="lb-body" role="rowgroup"></div>`;
+
+					const body     = lb.querySelector('.lb-body');
 					const hasStats = this.stats && this.stats.spreads;
 
 					const itemMatches = Array(this.items.length).fill(0);
-					this.matches.forEach(m=>{
-						itemMatches[m.a]++;
-						itemMatches[m.b]++;
-					}
-					);
+					this.matches.forEach(m => { itemMatches[m.a]++; itemMatches[m.b]++; });
 
-					ranking.forEach(x=>{
-						const row = document.createElement('div');
+					ranking.forEach(x => {
+						const row   = document.createElement('div');
 						row.className = 'lb-row';
-						const rank = ranks[x];
-						const item = this.items[x];
+						const rank  = ranks[x];
+						const item  = this.items[x];
 						const score = Math.round(this.scores[x]);
-						const ci = hasStats ? Math.round(this.stats.cis[x]) : null;
+						const ci    = hasStats ? Math.round(this.stats.cis[x]) : null;
 						const spread = hasStats ? `${this.stats.spreads[x][0]} — ${this.stats.spreads[x][1]}` : null;
 						let spreadBar = '';
 						if (hasStats) {
-							const [min,max] = this.stats.spreads[x];
+							const [min, max] = this.stats.spreads[x];
 							const total = this.items.length;
-							const pMin = total > 1 ? ((min - 1) / (total - 1)) * 100 : 0;
+							const pMin  = total > 1 ? ((min - 1) / (total - 1)) * 100 : 0;
 							const pWidth = total > 1 ? ((max - min) / (total - 1)) * 100 : 100;
 							spreadBar = `<div class="spread-track" title="${spread}"><div class="spread-bar" style="left:${pMin}%;width:${pWidth}%"></div></div>`;
 						}
-
 						row.innerHTML = `
 						<div class="lb-main" role="button" tabindex="0">
-							<div class="lb-col-rank">
-								<span class="chevron">&#x203a;</span>
-								<span>${rank}</span>
-							</div>
+							<div class="lb-col-rank"><span class="chevron">&#x203a;</span><span>${rank}</span></div>
 							<div class="lb-col-item">${new Option(item).innerHTML}</div>
-							<div class="lb-col-score">
-								${score}
-								${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}
-							</div>
+							<div class="lb-col-score">${score}${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}</div>
 						</div>
 						<div class="lb-details">
 							<div class="detail-grid">
-								${spread ? `
-								<div class="detail-item">
-									<span class="detail-label">${this.string('rankSpread')}</span>
-									<span class="detail-value">${spread}</span>
-									${spreadBar}
-								</div>` : ''}
-								<div class="detail-item">
-									<span class="detail-label">${this.string('matches')}</span>
-									<span class="detail-value">${itemMatches[x]}</span>
-								</div>
+								${spread ? `<div class="detail-item"><span class="detail-label">${this.string('rankSpread')}</span><span class="detail-value">${spread}</span>${spreadBar}</div>` : ''}
+								<div class="detail-item"><span class="detail-label">${this.string('matches')}</span><span class="detail-value">${itemMatches[x]}</span></div>
 							</div>
-						</div>
-					`;
-						const main = row.querySelector('.lb-main');
-						const toggle = ()=>row.classList.toggle('expanded');
-						main.onclick = toggle;
-						main.onkeydown = (e)=>{
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								toggle();
-							}
-						}
-						;
+						</div>`;
+						const main   = row.querySelector('.lb-main');
+						const toggle = () => row.classList.toggle('expanded');
+						main.onclick   = toggle;
+						main.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
 						body.appendChild(row);
-					}
-					);
-					elements.results.appendChild(lb);
+					});
 
+					elements.results.appendChild(lb);
 					elements.resultFilter = document.getElementById('resultFilter');
-					elements.resultFilter.oninput = event=>this.filterResults(event.target.value);
-					if (this.filterTerm)
-						this.filterResults(this.filterTerm);
+					elements.resultFilter.oninput = e => this.filterResults(e.target.value);
+					if (this.filterTerm) this.filterResults(this.filterTerm);
 
 					this.display('results');
 					elements.announcer.textContent = this.string('resultsReady');
@@ -1801,64 +1613,56 @@
 				}
 
 				display(section) {
-					['inputSection', 'battleSection', 'results'].forEach(id=>elements[id].classList.toggle('hidden', id !== section));
+					['inputSection','battleSection','results'].forEach(id =>
+						elements[id].classList.toggle('hidden', id !== section));
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
 					elements.undo.classList.toggle('hidden', section === 'inputSection');
 					elements.copy.classList.toggle('hidden', section !== 'results');
-					if (section === 'battleSection')
-						elements.battleSection.before(elements.undo);
+					if (section === 'battleSection') elements.battleSection.before(elements.undo);
 					if (section === 'results') {
 						elements.results.firstChild.prepend(elements.undo);
 						elements.results.firstChild.appendChild(elements.copy);
 					}
-					if (section === 'inputSection')
-						this.check();
-					const focusTarget = {
-						battleSection: elements.left,
-						results: elements.restartBattle,
-						inputSection: elements.items
-					}[section];
-					focusTarget && setTimeout(()=>focusTarget.focus(), 50);
+					if (section === 'inputSection') this.check();
+					const focusTarget = { battleSection: elements.left, results: elements.restartBattle, inputSection: elements.items }[section];
+					focusTarget && setTimeout(() => focusTarget.focus(), 50);
 				}
 
 				copyResults() {
-					const baseRanking = [...this.scores.keys()].sort((a,b)=>this.scores[b] - this.scores[a]);
+					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
-					baseRanking.forEach((x,index)=>ranks[x] = index + 1);
-					const ranking = this.currentRanking || baseRanking;
+					baseRanking.forEach((x, i) => ranks[x] = i + 1);
+					const ranking  = this.currentRanking || baseRanking;
 					const hasStats = this.stats && this.stats.spreads;
-					const headers = (hasStats ? ['rank', 'rankSpread', 'item', 'score', 'ci'] : ['rank', 'item', 'score']).map(k=>this.string(k)).join('\t');
-					const lines = ranking.map(x=>{
+					const headers  = (hasStats
+						? ['rank','rankSpread','item','score','ci']
+						: ['rank','item','score']).map(k => this.string(k)).join('\t');
+					const lines = ranking.map(x => {
 						const row = [ranks[x]];
-						if (hasStats)
-							row.push(`${this.stats.spreads[x][0]}—${this.stats.spreads[x][1]}`);
+						if (hasStats) row.push(`${this.stats.spreads[x][0]}—${this.stats.spreads[x][1]}`);
 						row.push(this.items[x], Math.round(this.scores[x]));
-						if (hasStats)
-							row.push(`±${Math.round(this.stats.cis[x])}`);
+						if (hasStats) row.push(`±${Math.round(this.stats.cis[x])}`);
 						return row.join('\t');
-					}
-					);
-					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(()=>{
+					});
+					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
 						clearTimeout(this.copyTimeout);
 						elements.copy.textContent = this.string('copied');
 						elements.announcer.textContent = `${this.string('resultsTitle')} ${this.string('copied')}`;
-						this.copyTimeout = setTimeout(()=>elements.copy.textContent = this.string('copy'), 2e3);
-					}
-					);
+						this.copyTimeout = setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
+					});
 				}
 
 				cancel() {
-					const reset = ()=>{
+					const reset = () => {
 						elements.cancel.classList.remove('confirming');
 						elements.cancel.textContent = this.string('cancel');
 						this.cancelTimeout = null;
-					}
-					;
-					this.cancelTimeout ? (clearTimeout(this.cancelTimeout),
-					reset(),
-					this.display('inputSection')) : (elements.cancel.textContent = this.string('confirmCancel'),
-					elements.cancel.classList.add('confirming'),
-					this.cancelTimeout = setTimeout(reset, 3000));
+					};
+					this.cancelTimeout
+						? (clearTimeout(this.cancelTimeout), reset(), this.display('inputSection'))
+						: (elements.cancel.textContent = this.string('confirmCancel'),
+						   elements.cancel.classList.add('confirming'),
+						   this.cancelTimeout = setTimeout(reset, 3000));
 				}
 
 				undo() {
@@ -1866,12 +1670,8 @@
 						const last = this.history.pop();
 						this.matches.pop();
 						this.dirty = true;
-						Object.assign(this, {
-							step: last.step,
-							pair: last.pair,
-							swapped: last.swapped
-						});
-						this.provider.unmark?.(last.pair);
+						Object.assign(this, { step: last.step, pair: last.pair, swapped: last.swapped });
+						this.provider.unmark?.();
 						this.render();
 						this.display('battleSection');
 						elements.undo.disabled = !this.history.length;
@@ -1880,14 +1680,7 @@
 				}
 
 				reset() {
-					Object.assign(this, {
-						scores: [],
-						matches: [],
-						history: [],
-						provider: null,
-						dirty: true,
-						_prevStrength: null
-					});
+					Object.assign(this, { scores: [], matches: [], history: [], provider: null, dirty: true, _prevStrength: null });
 					this.display('inputSection');
 					this.updateHelp();
 					this.updateProgress();
@@ -1895,38 +1688,23 @@
 				}
 
 				key(event) {
-					const isRepeating = event.repeat;
-					if (isRepeating)
-						return;
-					const {key, ctrlKey, metaKey, shiftKey} = event;
-					const isModifierPressed = ctrlKey || metaKey;
-					const isInputVisible = !elements.inputSection.classList.contains('hidden');
-					const isStartEnabled = !elements.start.disabled;
-					(key === 'Enter' && isModifierPressed && isInputVisible && isStartEnabled) && (event.preventDefault(),
-					elements.start.click());
-					if (key === 'Enter' && isModifierPressed && isInputVisible && isStartEnabled)
-						return;
-					const action = {
-						arrowleft: 'left',
-						arrowright: 'right',
-						arrowup: 'tie',
-						arrowdown: 'tie',
-						z: 'undo',
-						'?': 'toggle',
-						'/': 'toggle'
-					}[key.toLowerCase()];
-					const shouldIgnore = !action || isInputVisible || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
-					if (shouldIgnore)
-						return;
-					const isUndoAction = action === 'undo';
+					if (event.repeat) return;
+					const { key, ctrlKey, metaKey, shiftKey } = event;
+					const isModifier       = ctrlKey || metaKey;
+					const isInputVisible   = !elements.inputSection.classList.contains('hidden');
+					const isStartEnabled   = !elements.start.disabled;
+					if (key === 'Enter' && isModifier && isInputVisible && isStartEnabled) {
+						event.preventDefault(); elements.start.click(); return;
+					}
+					const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
+					if (!action || isInputVisible || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
 					const isBattleVisible = !elements.battleSection.classList.contains('hidden');
-					const isTieAllowed = action !== 'tie' || this.allowTies;
-					(isUndoAction && isModifierPressed && !shiftKey) && (event.preventDefault(),
-					elements.undo.click());
-					(!isUndoAction && isBattleVisible && isTieAllowed) && (event.preventDefault(),
-					elements[action].click());
+					const isTieAllowed    = action !== 'tie' || this.allowTies;
+					if (action === 'undo' && isModifier && !shiftKey) { event.preventDefault(); elements.undo.click(); }
+					if (action !== 'undo' && isBattleVisible && isTieAllowed) { event.preventDefault(); elements[action].click(); }
 				}
 			}
+
 			new PreferenceRank();
 		</script>
 	</body>
