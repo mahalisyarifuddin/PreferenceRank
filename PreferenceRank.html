@@ -1207,7 +1207,7 @@
 					[...elements.theme.options].forEach(o => o.textContent = this.string(o.value + 'Theme'));
 					this.updateHelp();
 					this.updateProgress();
-					this.updateCount();
+					this.updateInputState();
 					if (!elements.results.classList.contains('hidden')) this.results();
 				}
 
@@ -1623,7 +1623,7 @@
 						elements.results.firstChild.prepend(elements.undo);
 						elements.results.firstChild.appendChild(elements.copy);
 					}
-					if (section === 'inputSection') this.check();
+					if (section === 'inputSection') this.updateInputState();
 					const focusTarget = { battleSection: elements.left, results: elements.restartBattle, inputSection: elements.items }[section];
 					focusTarget && setTimeout(() => focusTarget.focus(), 50);
 				}
