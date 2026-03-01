@@ -1057,7 +1057,7 @@
 
 							const loserOf = new Int32Array(this.count).fill(-1);
 							for (let i = 0; i < swLen; i++)
-								loserOf[sw[i]] = frame.losers[i];
+								loserOf[frame.winners[i]] = frame.losers[i];
 
 							const posOf = new Int32Array(this.count).fill(-1);
 							const mainChain = [loserOf[sw[0]], ...sw];
@@ -1385,10 +1385,16 @@
 						return row;
 					});
 
-					const s = new Float64Array(n).fill(1.0);
-					const prevLogS = new Float64Array(n);
 					const PRIOR = 0.5;
 					const INV_LOG10 = 400 / Math.log(10);
+
+					const s = new Float64Array(n);
+					if (this.scores.length === n)
+						for (let i = 0; i < n; i++) s[i] = Math.exp((this.scores[i] - 1000) / INV_LOG10);
+					else
+						s.fill(1.0);
+
+					const prevLogS = new Float64Array(n);
 
 					for (let iter = 0; iter < 1000; iter++) {
 						for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
