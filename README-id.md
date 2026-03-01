@@ -17,6 +17,9 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 - **Peringkat Cepat:** Menggunakan **Algoritma Ford-Johnson** (Merge-Insertion Sort) untuk pembuatan pasangan yang efisien, dikombinasikan dengan **skor murni Bradley-Terry** untuk representasi yang akurat. Pendekatan yang dioptimalkan ini meminimalkan perbandingan (Pertarungan ≈ N log₂ N - 1.44 N + 3.3) dengan melewati langkah pemurnian yang berlebihan sembari menjaga kualitas peringkat statistik.
     - *Contoh:* Untuk 50 item, Peringkat Cepat menggunakan ~215 pertarungan vs. 1225 untuk Peringkat Penuh (penghematan ~80%).
 
+## Detail Teknis
+PreferenceRank menggunakan **algoritma Newton-Raphson** untuk menemukan Maximum Likelihood Estimate (MLE) bagi model Bradley-Terry. Dibandingkan dengan algoritma MM (Minorization-Maximization) standar, Newton-Raphson menawarkan konvergensi kuadratik, yang biasanya mencapai presisi tinggi dalam kurang dari 10 iterasi, memastikan perhitungan skor yang cepat dan akurat bahkan untuk kumpulan data yang lebih besar.
+
 ## Cara Menggunakan
 1. Unduh berkas `PreferenceRank.html` dari repositori.
 2. Buka berkas tersebut di peramban web modern apa pun.

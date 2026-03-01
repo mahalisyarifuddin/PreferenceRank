@@ -1361,87 +1361,69 @@
 					const itemCount = this.items.length;
 					if ((this.dirty === false && this.scores?.length === itemCount) || itemCount === 0) return;
 
-					const wins           = new Float64Array(itemCount);
-					const pairIndexMap   = new Map();
-					const matchCountArray = [];
-					const adjacencyItems   = Array.from({ length: itemCount }, () => []);
-					const adjacencyIndices = Array.from({ length: itemCount }, () => []);
-
+					const wins = new Float64Array(itemCount);
+					const matchCounts = new Int32Array(itemCount * itemCount);
 					this.matches.forEach(({ a, b, result }) => {
 						wins[a] += result;
 						wins[b] += 1 - result;
-						const lo  = a < b ? a : b, hi = a < b ? b : a;
-						const key = lo * itemCount + hi;
-						const pairIndex = pairIndexMap.has(key) ? pairIndexMap.get(key) : (() => {
-							const idx = matchCountArray.length;
-							pairIndexMap.set(key, idx);
-							matchCountArray.push(0);
-							adjacencyItems[lo].push(hi);   adjacencyIndices[lo].push(idx);
-							adjacencyItems[hi].push(lo);   adjacencyIndices[hi].push(idx);
-							return idx;
-						})();
-						matchCountArray[pairIndex]++;
+						matchCounts[a * itemCount + b]++;
+						matchCounts[b * itemCount + a]++;
 					});
 
-					const matchCounts     = new Float64Array(matchCountArray);
-					const adjacentItems   = adjacencyItems.map(a => new Int32Array(a));
-					const adjacentIndices = adjacencyIndices.map(a => new Int32Array(a));
+					const logScores = new Float64Array(itemCount);
+					const PRIOR = 0.1;
 
-					const PRIOR    = 0.5;
-					const strength = new Float64Array(itemCount);
-					const prevOk   = this._prevStrength && this._prevStrength.length === itemCount;
-					if (prevOk) {
-						for (let i = 0; i < itemCount; i++) strength[i] = this._prevStrength[i];
-					} else {
-						const totalMatches = new Float64Array(itemCount);
-						this.matches.forEach(({ a, b }) => { totalMatches[a]++; totalMatches[b]++; });
-						let logSum = 0;
+					for (let iteration = 0; iteration < 100; iteration++) {
+						const gradient = new Float64Array(itemCount);
+						const hessian  = new Float64Array(itemCount * itemCount);
+
 						for (let i = 0; i < itemCount; i++) {
-							strength[i] = totalMatches[i] > 0
-								? (wins[i] + PRIOR) / (totalMatches[i] + 2 * PRIOR)
-								: 0.5;
-							logSum += Math.log(strength[i]);
+							gradient[i] = wins[i];
+
+							for (let j = 0; j < itemCount; j++) {
+								const n = matchCounts[i * itemCount + j];
+								if (i === j || n === 0) continue;
+
+								const prob = 1 / (1 + Math.exp(-(logScores[i] - logScores[j])));
+								gradient[i] -= n * prob;
+
+								const weight = n * prob * (1 - prob);
+								hessian[i * itemCount + i] += weight;
+								hessian[i * itemCount + j] -= weight;
+							}
 						}
-						const scale = Math.exp(-logSum / itemCount);
-						for (let i = 0; i < itemCount; i++) strength[i] *= scale;
+
+						const dim = itemCount - 1;
+						const subHessian = Matrix.zeros(dim, dim);
+						for (let i = 0; i < dim; i++) {
+							for (let j = 0; j < dim; j++)
+								subHessian.data[i * dim + j] = hessian[i * itemCount + j];
+							subHessian.data[i * dim + i] += PRIOR;
+						}
+
+						const inv = Matrix.inverse(subHessian);
+						if (!inv) break;
+
+						const delta = new Float64Array(itemCount);
+						for (let i = 0; i < dim; i++)
+							for (let j = 0; j < dim; j++)
+								delta[i] += inv.data[i * dim + j] * gradient[j];
+
+						let maxDelta = 0;
+						for (let i = 0; i < dim; i++) {
+							logScores[i] += delta[i];
+							maxDelta = Math.max(maxDelta, Math.abs(delta[i]));
+						}
+
+						let sum = 0;
+						for (let i = 0; i < itemCount; i++) sum += logScores[i];
+						const avg = sum / itemCount;
+						for (let i = 0; i < itemCount; i++) logScores[i] -= avg;
+
+						if (maxDelta < 1e-9) break;
 					}
 
-					const newStrength = new Float64Array(itemCount);
-					let maxRelativeError = 1.0;
-
-					for (let iteration = 0; iteration < 300 && maxRelativeError > 1e-9; iteration++) {
-						for (let i = 0; i < itemCount; i++) {
-							let denom = PRIOR / (strength[i] + 1.0);
-							const neighbors = adjacentItems[i];
-							const indices   = adjacentIndices[i];
-							for (let k = 0; k < neighbors.length; k++)
-								denom += matchCounts[indices[k]] / (strength[i] + strength[neighbors[k]]);
-							newStrength[i] = (wins[i] + PRIOR) / denom;
-						}
-						let logSum = 0;
-						for (let i = 0; i < itemCount; i++) logSum += Math.log(newStrength[i]);
-						const scaleFactor = Math.exp(-logSum / itemCount);
-
-						maxRelativeError = 0;
-						for (let i = 0; i < itemCount; i++) {
-							newStrength[i] *= scaleFactor;
-							const relErr = Math.abs(newStrength[i] - strength[i]) / newStrength[i];
-							if (relErr > maxRelativeError) maxRelativeError = relErr;
-							strength[i] = newStrength[i];
-						}
-					}
-
-					this._prevStrength = strength.slice();
-
-					const LOG_TEN = Math.log(10);
-					let logAvg = 0;
-					const itemLogs = new Float64Array(itemCount);
-					for (let i = 0; i < itemCount; i++) {
-						itemLogs[i] = Math.log(strength[i]);
-						logAvg += itemLogs[i];
-					}
-					logAvg /= itemCount;
-					this.scores = Array.from(itemLogs, v => 1000 + 400 * (v - logAvg) / LOG_TEN);
+					this.scores = Array.from(logScores, v => 1000 + v * (400 / Math.log(10)));
 					this.dirty = false;
 				}
 
