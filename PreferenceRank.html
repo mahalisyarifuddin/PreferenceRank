@@ -821,14 +821,14 @@
 			};
 
 			class Stats {
-				static calculate(items, matches, scores) {
+				static calculate(items, scores, matchCounts) {
 					const itemCount = items.length;
 					if (itemCount < 2) return null;
 					const scoreFactor = Math.log(10) / 400;
 					const parameters = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++)
-						parameters[i] = scores[i] * scoreFactor;
-					const inverseSubHessian = Stats.buildHessian(itemCount, matches, parameters);
+						parameters[i] = (scores[i] - 1000) * scoreFactor;
+					const inverseSubHessian = Stats.buildHessian(itemCount, matchCounts, parameters);
 					if (!inverseSubHessian) return null;
 					const confidenceIntervals = Stats.calculateCI(itemCount, inverseSubHessian, scoreFactor);
 					const choleskyFactor = Matrix.cholesky(inverseSubHessian);
@@ -838,13 +838,8 @@
 					return { cis: Array.from(confidenceIntervals), spreads };
 				}
 
-				static buildHessian(itemCount, matches, parameters) {
+				static buildHessian(itemCount, matchCounts, parameters) {
 					const hessian = new Float64Array(itemCount * itemCount);
-					const matchCounts = new Int32Array(itemCount * itemCount);
-					matches.forEach(m => {
-						matchCounts[m.a * itemCount + m.b]++;
-						matchCounts[m.b * itemCount + m.a]++;
-					});
 					const PRIOR = 0.5;
 					for (let i = 0; i < itemCount; i++) {
 						for (let j = i + 1; j < itemCount; j++) {
@@ -1372,62 +1367,38 @@
 						matchCounts[a * itemCount + b]++;
 						matchCounts[b * itemCount + a]++;
 					});
+					this.matchCounts = matchCounts;
 
-					const logScores = new Float64Array(itemCount);
+					let s = new Float64Array(itemCount).fill(1.0);
 					const PRIOR = 0.5;
 
-					for (let iteration = 0; iteration < 100; iteration++) {
-						const gradient = new Float64Array(itemCount);
-						const hessian  = new Float64Array(itemCount * itemCount);
-
+					for (let iteration = 0; iteration < 1000; iteration++) {
+						let prevS = new Float64Array(s);
 						for (let i = 0; i < itemCount; i++) {
-							gradient[i] = wins[i] + PRIOR;
-							hessian[i * itemCount + i] = 0;
+							let denom = 0;
 							for (let j = 0; j < itemCount; j++) {
 								const n = matchCounts[i * itemCount + j];
 								if (i === j || n === 0) continue;
-								const prob = 1 / (1 + Math.exp(-(logScores[i] - logScores[j])));
-								gradient[i] -= n * prob;
-								const weight = n * prob * (1 - prob);
-								hessian[i * itemCount + i] += weight;
-								hessian[i * itemCount + j] -= weight;
+								denom += n / (s[i] + s[j]);
 							}
-							const pProb = 1 / (1 + Math.exp(-logScores[i]));
-							gradient[i] -= 2 * PRIOR * pProb;
-							hessian[i * itemCount + i] += 2 * PRIOR * pProb * (1 - pProb);
+							denom += 1 / (s[i] + 1);
+							s[i] = (wins[i] + PRIOR) / denom;
 						}
 
-						const dim = itemCount - 1;
-						const subHessian = Matrix.zeros(dim, dim);
-						for (let i = 0; i < dim; i++) {
-							for (let j = 0; j < dim; j++)
-								subHessian.data[i * dim + j] = hessian[i * itemCount + j];
-							subHessian.data[i * dim + i] += 1e-9;
+						let sumLog = 0;
+						for (let i = 0; i < itemCount; i++) sumLog += Math.log(s[i]);
+						const avgLog = sumLog / itemCount;
+						let maxChange = 0;
+						for (let i = 0; i < itemCount; i++) {
+							const nextSi = s[i] / Math.exp(avgLog);
+							maxChange = Math.max(maxChange, Math.abs(Math.log(nextSi) - Math.log(prevS[i])));
+							s[i] = nextSi;
 						}
 
-						const inv = Matrix.inverse(subHessian);
-						if (!inv) break;
-
-						const delta = new Float64Array(itemCount);
-						for (let i = 0; i < dim; i++)
-							for (let j = 0; j < dim; j++)
-								delta[i] += inv.data[i * dim + j] * gradient[j];
-
-						let maxDelta = 0;
-						for (let i = 0; i < dim; i++) {
-							logScores[i] += delta[i];
-							maxDelta = Math.max(maxDelta, Math.abs(delta[i]));
-						}
-
-						let sum = 0;
-						for (let i = 0; i < itemCount; i++) sum += logScores[i];
-						const avg = sum / itemCount;
-						for (let i = 0; i < itemCount; i++) logScores[i] -= avg;
-
-						if (maxDelta < 1e-9) break;
+						if (maxChange < 1e-9) break;
 					}
 
-					this.scores = Array.from(logScores, v => 1000 + v * (400 / Math.log(10)));
+					this.scores = Array.from(s, v => 1000 + Math.log(v) * (400 / Math.log(10)));
 					this.dirty = false;
 				}
 
@@ -1504,7 +1475,7 @@
 					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
 					baseRanking.forEach((x, i) => ranks[x] = i + 1);
-					if (dirty || !this.stats) this.stats = Stats.calculate(this.items, this.matches, this.scores);
+					if (dirty || !this.stats) this.stats = Stats.calculate(this.items, this.scores, this.matchCounts);
 					const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 					const sorters = {
 						rank:       (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
