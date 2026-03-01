@@ -17,6 +17,9 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation. This optimized approach minimizes comparisons (Battles ≈ N log₂ N - 1.44 N + 3.3) by skipping redundant refinement steps while maintaining statistical ranking quality.
     - *Example:* For 50 items, Quick Rank uses ~215 battles vs. 1225 for Full Rank (~80% reduction).
 
+## Technical Details
+PreferenceRank uses the **Newton-Raphson algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. Compared to the standard MM (Minorization-Maximization) algorithm, Newton-Raphson offers quadratic convergence, typically reaching high precision in fewer than 10 iterations, ensuring rapid and accurate score calculations even for larger datasets.
+
 ## Quick Start
 1. Download the `PreferenceRank.html` file from the repository.
 2. Open the file in any modern web browser.
