@@ -20,6 +20,8 @@ PreferenceRank offers two distinct modes to sort your items:
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
 
+Based on a **knee point analysis**, the convergence threshold is set to `1e-7`. This value provides an average reduction of ~48% in iteration counts compared to higher precision (`1e-12`) while ensuring log-strength errors (~10⁻⁷) remain well below the threshold for affecting rounded integer Elo scores.
+
 ## Quick Start
 1. Download the `PreferenceRank.html` file from the repository.
 2. Open the file in any modern web browser.
