@@ -845,6 +845,7 @@
 						matchCounts[m.a * itemCount + m.b]++;
 						matchCounts[m.b * itemCount + m.a]++;
 					});
+					const PRIOR = 0.5;
 					for (let i = 0; i < itemCount; i++) {
 						for (let j = i + 1; j < itemCount; j++) {
 							const count = matchCounts[i * itemCount + j];
@@ -858,6 +859,8 @@
 								hessian[j * itemCount + j] += weight;
 							}
 						}
+						const pProb = 1 / (1 + Math.exp(-parameters[i]));
+						hessian[i * itemCount + i] += 2 * PRIOR * pProb * (1 - pProb);
 					}
 					const itemCountMinusOne = itemCount - 1;
 					const subHessian = Matrix.zeros(itemCountMinusOne, itemCountMinusOne);
@@ -1371,26 +1374,27 @@
 					});
 
 					const logScores = new Float64Array(itemCount);
-					const PRIOR = 0.1;
+					const PRIOR = 0.5;
 
 					for (let iteration = 0; iteration < 100; iteration++) {
 						const gradient = new Float64Array(itemCount);
 						const hessian  = new Float64Array(itemCount * itemCount);
 
 						for (let i = 0; i < itemCount; i++) {
-							gradient[i] = wins[i];
-
+							gradient[i] = wins[i] + PRIOR;
+							hessian[i * itemCount + i] = 0;
 							for (let j = 0; j < itemCount; j++) {
 								const n = matchCounts[i * itemCount + j];
 								if (i === j || n === 0) continue;
-
 								const prob = 1 / (1 + Math.exp(-(logScores[i] - logScores[j])));
 								gradient[i] -= n * prob;
-
 								const weight = n * prob * (1 - prob);
 								hessian[i * itemCount + i] += weight;
 								hessian[i * itemCount + j] -= weight;
 							}
+							const pProb = 1 / (1 + Math.exp(-logScores[i]));
+							gradient[i] -= 2 * PRIOR * pProb;
+							hessian[i * itemCount + i] += 2 * PRIOR * pProb * (1 - pProb);
 						}
 
 						const dim = itemCount - 1;
@@ -1398,7 +1402,7 @@
 						for (let i = 0; i < dim; i++) {
 							for (let j = 0; j < dim; j++)
 								subHessian.data[i * dim + j] = hessian[i * itemCount + j];
-							subHessian.data[i * dim + i] += PRIOR;
+							subHessian.data[i * dim + i] += 1e-9;
 						}
 
 						const inv = Matrix.inverse(subHessian);
