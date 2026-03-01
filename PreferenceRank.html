@@ -1395,7 +1395,7 @@
 							s[i] = nextSi;
 						}
 
-						if (maxChange < 1e-9) break;
+						if (maxChange < 1e-7) break;
 					}
 
 					this.scores = Array.from(s, v => 1000 + Math.log(v) * (400 / Math.log(10)));
