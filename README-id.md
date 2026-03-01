@@ -18,7 +18,7 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
     - *Contoh:* Untuk 50 item, Peringkat Cepat menggunakan ~215 pertarungan vs. 1225 untuk Peringkat Penuh (penghematan ~80%).
 
 ## Detail Teknis
-PreferenceRank menggunakan **algoritma Newton-Raphson** untuk menemukan Maximum Likelihood Estimate (MLE) bagi model Bradley-Terry. Dibandingkan dengan algoritma MM (Minorization-Maximization) standar, Newton-Raphson menawarkan konvergensi kuadratik, yang biasanya mencapai presisi tinggi dalam kurang dari 10 iterasi, memastikan perhitungan skor yang cepat dan akurat bahkan untuk kumpulan data yang lebih besar.
+PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) bagi model Bradley-Terry. Pendekatan iteratif ini menjamin konvergensi dan perhitungan skor yang efisien ($O(N^2)$ per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi dari operasi matriks.
 
 ## Cara Menggunakan
 1. Unduh berkas `PreferenceRank.html` dari repositori.
