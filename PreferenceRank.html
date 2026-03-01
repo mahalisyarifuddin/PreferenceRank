@@ -1387,6 +1387,7 @@
 
 					const PRIOR = 0.5;
 					const INV_LOG10 = 400 / Math.log(10);
+					const convergenceThreshold = 1e-7;
 
 					const s = new Float64Array(n);
 					if (this.scores.length === n)
@@ -1416,7 +1417,7 @@
 							const d = Math.abs(Math.log(s[i]) - prevLogS[i]);
 							if (d > maxDelta) maxDelta = d;
 						}
-						if (maxDelta < 1e-7) break;
+						if (maxDelta < convergenceThreshold) break;
 					}
 
 					this.scores = Array.from(s, v => 1000 + Math.log(v) * INV_LOG10);
