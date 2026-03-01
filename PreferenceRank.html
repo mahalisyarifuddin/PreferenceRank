@@ -1053,32 +1053,36 @@
 							if (!frame.sortedWinners) continue;
 
 							const sw = frame.sortedWinners;
+							const swLen = sw.length;
 
-							frame.loserMap = {};
-							for (let i = 0; i < frame.winners.length; i++)
-								frame.loserMap[frame.winners[i]] = frame.losers[i];
+							const loserOf = new Int32Array(this.count).fill(-1);
+							for (let i = 0; i < swLen; i++)
+								loserOf[sw[i]] = frame.losers[i];
 
-							frame.mainChain = [frame.loserMap[sw[0]], ...sw];
+							const posOf = new Int32Array(this.count).fill(-1);
+							const mainChain = [loserOf[sw[0]], ...sw];
+							for (let i = 0; i < mainChain.length; i++) posOf[mainChain[i]] = i;
 
-							frame.posMap = new Map();
-							frame.mainChain.forEach((item, idx) => frame.posMap.set(item, idx));
-
-							frame.insertionOrder = [];
-							if (sw.length > 1) {
-								const J = jacobsthalThresholds(sw.length);
+							const insertionOrder = [];
+							if (swLen > 1) {
+								const J = jacobsthalThresholds(swLen);
 								let covered = 1;
 								for (let ji = 1; ji < J.length; ji++) {
-									const t = Math.min(J[ji], sw.length);
+									const t = Math.min(J[ji], swLen);
 									for (let k = t; k > covered; k--)
-										frame.insertionOrder.push(sw[k - 1]);
+										insertionOrder.push(sw[k - 1]);
 									covered = t;
-									if (covered >= sw.length) break;
+									if (covered >= swLen) break;
 								}
 							}
 
-							frame.insertIdx  = 0;
-							frame.oddInserted = false;
-							frame.state       = 3;
+							frame.loserOf        = loserOf;
+							frame.posOf          = posOf;
+							frame.mainChain      = mainChain;
+							frame.insertionOrder = insertionOrder;
+							frame.insertIdx      = 0;
+							frame.oddInserted    = false;
+							frame.state          = 3;
 							continue;
 						}
 
@@ -1098,8 +1102,8 @@
 
 							if (!frame.binarySearchState) {
 								const pairedWinner  = inMain ? frame.insertionOrder[frame.insertIdx] : null;
-								frame.currentLoser  = inMain ? frame.loserMap[pairedWinner] : frame.odd;
-								const upperBound    = inMain ? frame.posMap.get(pairedWinner) : frame.mainChain.length;
+								frame.currentLoser  = inMain ? frame.loserOf[pairedWinner] : frame.odd;
+								const upperBound    = inMain ? frame.posOf[pairedWinner] : frame.mainChain.length;
 								frame.binarySearchState = { min: 0, max: upperBound, mid: 0 };
 							}
 
@@ -1111,10 +1115,13 @@
 								return;
 							}
 
-							frame.mainChain.splice(bs.min, 0, frame.currentLoser);
-							for (const [k, v] of frame.posMap)
-								if (v >= bs.min) frame.posMap.set(k, v + 1);
-							frame.posMap.set(frame.currentLoser, bs.min);
+							const insertPos = bs.min;
+							frame.mainChain.splice(insertPos, 0, frame.currentLoser);
+							const chain = frame.mainChain;
+							const posOf = frame.posOf;
+							for (let i = insertPos + 1; i < chain.length; i++)
+								posOf[chain[i]] = i;
+							posOf[frame.currentLoser] = insertPos;
 
 							delete frame.binarySearchState;
 							inMain ? frame.insertIdx++ : (frame.oddInserted = true);
@@ -1356,49 +1363,57 @@
 				resume() { this.pair ? (this.display('battleSection'), this.render()) : this.results(); }
 
 				recalculateScores() {
-					const itemCount = this.items.length;
-					if ((this.dirty === false && this.scores?.length === itemCount) || itemCount === 0) return;
+					const n = this.items.length;
+					if ((this.dirty === false && this.scores?.length === n) || n === 0) return;
 
-					const wins = new Float64Array(itemCount);
-					const matchCounts = new Int32Array(itemCount * itemCount);
-					this.matches.forEach(({ a, b, result }) => {
+					const wins = new Float64Array(n);
+					const matchCounts = new Int32Array(n * n);
+					for (const { a, b, result } of this.matches) {
 						wins[a] += result;
 						wins[b] += 1 - result;
-						matchCounts[a * itemCount + b]++;
-						matchCounts[b * itemCount + a]++;
-					});
+						matchCounts[a * n + b]++;
+						matchCounts[b * n + a]++;
+					}
 					this.matchCounts = matchCounts;
 
-					let s = new Float64Array(itemCount).fill(1.0);
-					const PRIOR = 0.5;
+					const adj = Array.from({ length: n }, (_, i) => {
+						const row = [];
+						for (let j = 0; j < n; j++) {
+							const c = matchCounts[i * n + j];
+							if (c > 0) row.push(j, c);
+						}
+						return row;
+					});
 
-					for (let iteration = 0; iteration < 1000; iteration++) {
-						let prevS = new Float64Array(s);
-						for (let i = 0; i < itemCount; i++) {
-							let denom = 0;
-							for (let j = 0; j < itemCount; j++) {
-								const n = matchCounts[i * itemCount + j];
-								if (i === j || n === 0) continue;
-								denom += n / (s[i] + s[j]);
-							}
-							denom += 1 / (s[i] + 1);
+					const s = new Float64Array(n).fill(1.0);
+					const prevLogS = new Float64Array(n);
+					const PRIOR = 0.5;
+					const INV_LOG10 = 400 / Math.log(10);
+
+					for (let iter = 0; iter < 1000; iter++) {
+						for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
+
+						for (let i = 0; i < n; i++) {
+							const row = adj[i];
+							let denom = 1 / (s[i] + 1);
+							for (let k = 0; k < row.length; k += 2)
+								denom += row[k + 1] / (s[i] + s[row[k]]);
 							s[i] = (wins[i] + PRIOR) / denom;
 						}
 
 						let sumLog = 0;
-						for (let i = 0; i < itemCount; i++) sumLog += Math.log(s[i]);
-						const avgLog = sumLog / itemCount;
-						let maxChange = 0;
-						for (let i = 0; i < itemCount; i++) {
-							const nextSi = s[i] / Math.exp(avgLog);
-							maxChange = Math.max(maxChange, Math.abs(Math.log(nextSi) - Math.log(prevS[i])));
-							s[i] = nextSi;
+						for (let i = 0; i < n; i++) sumLog += Math.log(s[i]);
+						const scale = Math.exp(sumLog / n);
+						let maxDelta = 0;
+						for (let i = 0; i < n; i++) {
+							s[i] /= scale;
+							const d = Math.abs(Math.log(s[i]) - prevLogS[i]);
+							if (d > maxDelta) maxDelta = d;
 						}
-
-						if (maxChange < 1e-7) break;
+						if (maxDelta < 1e-7) break;
 					}
 
-					this.scores = Array.from(s, v => 1000 + Math.log(v) * (400 / Math.log(10)));
+					this.scores = Array.from(s, v => 1000 + Math.log(v) * INV_LOG10);
 					this.dirty = false;
 				}
 
