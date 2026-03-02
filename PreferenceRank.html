@@ -870,7 +870,7 @@
 				static calculateCI(itemCount, inverseSubHessian, scoreFactor) {
 					const itemCountMinusOne = itemCount - 1;
 					const confidenceIntervals = new Float64Array(itemCount);
-					const multiplier    = 0.11;
+					const multiplier    = 0.1257;
 					const inverseData   = inverseSubHessian.data;
 					for (let i = 0; i < itemCount; i++) {
 						let variance = 0;
@@ -890,7 +890,7 @@
 					const itemCountMinusOne = itemCount - 1;
 					const simulationCount   = 500;
 					const simulationRanks   = new Int32Array(itemCount * simulationCount);
-					const multiplier        = 0.11;
+					const multiplier        = 0.1257;
 					let nextGaussian = null;
 					const gaussian = () => {
 						if (nextGaussian !== null) { const v = nextGaussian; nextGaussian = null; return v; }
