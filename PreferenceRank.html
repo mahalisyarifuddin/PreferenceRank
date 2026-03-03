@@ -785,36 +785,38 @@
 					const inverseData = new Float64Array(size * size);
 					for (let i = 0; i < size; i++) inverseData[i * size + i] = 1;
 					for (let i = 0; i < size; i++) {
-						let pivot = matrixData[i * size + i];
+						const offsetI = i * size;
+						let pivotValue = matrixData[offsetI + i];
 						let pivotIndex = i;
-						if (Math.abs(pivot) < 1e-10) {
-							pivotIndex = i + 1;
-							while (pivotIndex < size && Math.abs(matrixData[pivotIndex * size + i]) < 1e-10)
-								pivotIndex++;
-							if (pivotIndex === size) return null;
-							for (let j = 0; j < size; j++) {
-								const tempMatrix  = matrixData[i * size + j];
-								const tempInverse = inverseData[i * size + j];
-								matrixData[i * size + j]         = matrixData[pivotIndex * size + j];
-								matrixData[pivotIndex * size + j] = tempMatrix;
-								inverseData[i * size + j]         = inverseData[pivotIndex * size + j];
-								inverseData[pivotIndex * size + j] = tempInverse;
-							}
-							pivot = matrixData[i * size + i];
-						}
-						const inversePivot = 1 / pivot;
-						for (let j = 0; j < size; j++) {
-							matrixData[i * size + j] *= inversePivot;
-							inverseData[i * size + j] *= inversePivot;
-						}
-						for (let rowIndex = 0; rowIndex < size; rowIndex++) {
-							if (rowIndex !== i) {
-								const factor = matrixData[rowIndex * size + i];
-								for (let j = 0; j < size; j++) {
-									matrixData[rowIndex * size + j] -= factor * matrixData[i * size + j];
-									inverseData[rowIndex * size + j] -= factor * inverseData[i * size + j];
+						if (Math.abs(pivotValue) < 1e-10) {
+							for (let k = i + 1; k < size; k++) {
+								const val = matrixData[k * size + i];
+								if (Math.abs(val) > Math.abs(pivotValue)) {
+									pivotValue = val;
+									pivotIndex = k;
 								}
 							}
+							if (Math.abs(pivotValue) < 1e-10) return null;
+							const offsetP = pivotIndex * size;
+							for (let j = 0; j < size; j++) {
+								let temp = matrixData[offsetI + j];
+								matrixData[offsetI + j] = matrixData[offsetP + j];
+								matrixData[offsetP + j] = temp;
+								temp = inverseData[offsetI + j];
+								inverseData[offsetI + j] = inverseData[offsetP + j];
+								inverseData[offsetP + j] = temp;
+							}
+						}
+						const invPivot = 1 / pivotValue;
+						for (let j = i + 1; j < size; j++) matrixData[offsetI + j] *= invPivot;
+						for (let j = 0; j < size; j++) inverseData[offsetI + j] *= invPivot;
+						for (let rowIndex = 0; rowIndex < size; rowIndex++) {
+							if (rowIndex === i) continue;
+							const offsetR = rowIndex * size;
+							const factor = matrixData[offsetR + i];
+							if (factor === 0) continue;
+							for (let j = i + 1; j < size; j++) matrixData[offsetR + j] -= factor * matrixData[offsetI + j];
+							for (let j = 0; j < size; j++) inverseData[offsetR + j] -= factor * inverseData[offsetI + j];
 						}
 					}
 					return { rows: size, cols: size, data: inverseData };
