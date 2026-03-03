@@ -569,7 +569,8 @@
 				position: absolute;
 			}
 		</style>
-	</head>
+	<base target="_blank">
+</head>
 	<body>
 		<div class="container">
 			<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
@@ -959,11 +960,15 @@
 			}
 
 			function jacobsthalThresholds(limit) {
-				let a = 1, b = 1;
-				const out = [b];
-				while (b < limit) {
-					[a, b] = [b, b + 2 * a];
-					out.push(b);
+				const out = [1];
+				let pow2 = 2;
+				let n = 1;
+				while (true) {
+					const jn = (pow2 + (n & 1 ? 1 : -1)) / 3;
+					if (jn > limit) break;
+					out.push(jn | 0);
+					pow2 <<= 1;
+					n++;
 				}
 				return out;
 			}
@@ -979,13 +984,13 @@
 
 				constructor(count) {
 					this.count = count;
-					this._est  = QuickPairProvider.estimate(count);
+					this._est = QuickPairProvider.estimate(count);
 					this._results = [];
 					this._initStack();
 				}
 
 				_initStack() {
-					this.stack   = [{ items: Array.from({ length: this.count }, (_, i) => i), state: 0 }];
+					this.stack = [{ items: Array.from({ length: this.count }, (_, i) => i), state: 0 }];
 					this.pending = null;
 				}
 
@@ -1002,9 +1007,9 @@
 				}
 
 				_applyResult(result) {
-					const [a, b]  = this.pending;
-					const winner  = result === 1 ? a : result === 0 ? b : a;
-					const frame   = this.stack[this.stack.length - 1];
+					const [a, b] = this.pending;
+					const winner = result === 1 ? a : result === 0 ? b : a;
+					const frame = this.stack[this.stack.length - 1];
 					if (frame.comparing) {
 						frame.lastWinner = winner;
 						delete frame.comparing;
@@ -1020,28 +1025,28 @@
 							const n = frame.items.length;
 							if (n <= 1) { this._returnResult(frame.items); continue; }
 							const half = n >> 1;
-							frame.pairs     = [];
+							frame.pairs = [];
 							for (let i = 0; i < half; i++)
 								frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
-							frame.odd       = (n & 1) ? frame.items[n - 1] : null;
-							frame.winners   = [];
-							frame.losers    = [];
+							frame.odd = (n & 1) ? frame.items[n - 1] : null;
+							frame.winners = [];
+							frame.losers = [];
 							frame.pairIndex = 0;
-							frame.state     = 1;
+							frame.state = 1;
 						}
 
 						if (frame.state === 1) {
 							if (frame.lastWinner !== undefined) {
 								const [a, b] = frame.pairs[frame.pairIndex];
-								const aWon   = frame.lastWinner === a;
+								const aWon = frame.lastWinner === a;
 								frame.winners.push(aWon ? a : b);
 								frame.losers.push(aWon ? b : a);
 								delete frame.lastWinner;
 								frame.pairIndex++;
 							}
 							if (frame.pairIndex < frame.pairs.length) {
-								this.pending     = frame.pairs[frame.pairIndex];
-								frame.comparing  = true;
+								this.pending = frame.pairs[frame.pairIndex];
+								frame.comparing = true;
 								return;
 							}
 							frame.state = 2;
@@ -1050,7 +1055,7 @@
 						}
 
 						if (frame.state === 2) {
-							if (!frame.sortedWinners) continue;
+							if (!frame.sortedWinners) return;
 
 							const sw = frame.sortedWinners;
 							const swLen = sw.length;
@@ -1076,13 +1081,13 @@
 								}
 							}
 
-							frame.loserOf        = loserOf;
-							frame.posOf          = posOf;
-							frame.mainChain      = mainChain;
+							frame.loserOf = loserOf;
+							frame.posOf = posOf;
+							frame.mainChain = mainChain;
 							frame.insertionOrder = insertionOrder;
-							frame.insertIdx      = 0;
-							frame.oddInserted    = false;
-							frame.state          = 3;
+							frame.insertIdx = 0;
+							frame.oddInserted = false;
+							frame.state = 3;
 							continue;
 						}
 
@@ -1096,21 +1101,21 @@
 							}
 
 							const inMain = frame.insertIdx < frame.insertionOrder.length;
-							const inOdd  = !inMain && frame.odd !== null && !frame.oddInserted;
+							const inOdd = !inMain && frame.odd !== null && !frame.oddInserted;
 
 							if (!inMain && !inOdd) { this._returnResult(frame.mainChain); continue; }
 
 							if (!frame.binarySearchState) {
-								const pairedWinner  = inMain ? frame.insertionOrder[frame.insertIdx] : null;
-								frame.currentLoser  = inMain ? frame.loserOf[pairedWinner] : frame.odd;
-								const upperBound    = inMain ? frame.posOf[pairedWinner] : frame.mainChain.length;
+								const pairedWinner = inMain ? frame.insertionOrder[frame.insertIdx] : null;
+								frame.currentLoser = inMain ? frame.loserOf[pairedWinner] : frame.odd;
+								const upperBound = inMain ? frame.posOf[pairedWinner] : frame.mainChain.length;
 								frame.binarySearchState = { min: 0, max: upperBound, mid: 0 };
 							}
 
 							const bs = frame.binarySearchState;
 							if (bs.min < bs.max) {
-								bs.mid          = (bs.min + bs.max) >> 1;
-								this.pending    = [frame.currentLoser, frame.mainChain[bs.mid]];
+								bs.mid = (bs.min + bs.max) >> 1;
+								this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
 								frame.comparing = true;
 								return;
 							}
@@ -1170,7 +1175,7 @@
 					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
 					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
 					elements.language.onchange = e => { this.lang(e.target.value); this.save(); };
-					elements.theme.onchange    = e => { this.theme(e.target.value); this.save(); };
+					elements.theme.onchange = e => { this.theme(e.target.value); this.save(); };
 					elements.allowTies.onchange = e => this.setTies(e.target.checked);
 					elements.quickRank.onchange = () => this.updateInputState();
 					elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
@@ -1202,13 +1207,13 @@
 					elements.language.setAttribute('aria-label', this.string('languageLabel'));
 					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
 					elements.items.placeholder = this.string('placeholderItems');
-					['title','labelItems','labelTies','labelQuick','start','resume','cancel','tie','undo','copy','restartBattle','restartNew']
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew']
 						.forEach(key => elements[key].textContent = this.string(key));
 					elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
-					elements.left.title  = this.string('shortcutLeft');
+					elements.left.title = this.string('shortcutLeft');
 					elements.right.title = this.string('shortcutRight');
-					elements.tie.title   = this.string('shortcutTie');
-					elements.undo.title  = `${this.string('undo')} (${this.string('shortcutUndo')})`;
+					elements.tie.title = this.string('shortcutTie');
+					elements.undo.title = `${this.string('undo')} (${this.string('shortcutUndo')})`;
 					[...elements.theme.options].forEach(o => o.textContent = this.string(o.value + 'Theme'));
 					this.updateHelp();
 					this.updateProgress();
@@ -1245,10 +1250,10 @@
 
 				prompt(battle) {
 					this.pending = battle;
-					elements.sessionTitle.textContent   = this.string('resumeTitle');
+					elements.sessionTitle.textContent = this.string('resumeTitle');
 					elements.sessionMessage.textContent = this.string('resumeMessage');
 					elements.sessionContinue.textContent = this.string('resumeConfirm');
-					elements.sessionNew.textContent     = this.string('resumeNew');
+					elements.sessionNew.textContent = this.string('resumeNew');
 					elements.sessionModal.classList.remove('hidden');
 					elements.inputSection.classList.add('hidden');
 					elements.sessionContinue.focus();
@@ -1263,7 +1268,7 @@
 				startNewSession() {
 					elements.sessionModal.classList.add('hidden');
 					this.pending = null;
-					elements.items.value      = '';
+					elements.items.value = '';
 					elements.allowTies.checked = false;
 					elements.quickRank.checked = false;
 					this.updateInputState();
@@ -1302,9 +1307,9 @@
 				updateInputState() { const items = this.getItems(); this.check(items); this.updateCount(items); }
 
 				updateCount(items) {
-					const list  = items || this.getItems();
+					const list = items || this.getItems();
 					const count = list.length;
-					const type  = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
+					const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
 					elements.itemCount.textContent =
 						this.string('itemsCount').replace('{count}', count) +
 						this.string('estMatches').replace('{count}', type.estimate(count));
@@ -1334,7 +1339,7 @@
 				}
 
 				start() {
-					const raw    = this.getItems();
+					const raw = this.getItems();
 					const unique = [...new Set(raw)];
 					if (raw.length > unique.length) {
 						elements.items.value = unique.join('\n');
@@ -1447,7 +1452,7 @@
 					this.clear();
 					const nextPair = this.provider.next(this, result);
 					if (!nextPair) return this.pair = null, this.results();
-					this.pair    = nextPair;
+					this.pair = nextPair;
 					this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
 					this.render();
 				}
@@ -1455,14 +1460,14 @@
 				render() {
 					let [a, b] = this.pair;
 					if (this.swapped) [a, b] = [b, a];
-					elements.left.textContent  = this.items[a];
+					elements.left.textContent = this.items[a];
 					elements.right.textContent = this.items[b];
 					this.updateProgress();
 					elements.announcer.textContent = this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]);
 				}
 
 				updateProgress() {
-					const progress  = this.provider ? this.provider.getProgress(this.step) : '0/0';
+					const progress = this.provider ? this.provider.getProgress(this.step) : '0/0';
 					elements.progress.textContent = `${this.string('progress')}: ${progress}`;
 					const [current, total] = progress.split('/');
 					const percent = Math.min(100, Math.max(0,
@@ -1473,7 +1478,7 @@
 					elements.progressTrack.setAttribute('aria-valuenow', Math.round(percent));
 				}
 
-				clear() { ['left','right','tie'].forEach(id => elements[id].classList.remove('selected')); }
+				clear() { ['left', 'right', 'tie'].forEach(id => elements[id].classList.remove('selected')); }
 
 				filterResults(term) {
 					this.filterTerm = term;
@@ -1500,13 +1505,13 @@
 					if (dirty || !this.stats) this.stats = Stats.calculate(this.items, this.scores, this.matchCounts);
 					const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 					const sorters = {
-						rank:       (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
+						rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
 						rankSpread: (a, b) => this.stats?.spreads
 							? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir
 							: 0,
-						item:  (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
+						item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
 						score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
-						ci:    (a, b) => this.stats?.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
+						ci: (a, b) => this.stats?.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
 					};
 					this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column] || sorters.rank);
 					const ranking = this.currentRanking;
@@ -1525,7 +1530,7 @@
 					elements.results.appendChild(filterDiv);
 
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
-					const getSortIcon  = col => this.sortState.column === col ? arrow : '';
+					const getSortIcon = col => this.sortState.column === col ? arrow : '';
 					const getSortState = col => this.sortState.column === col
 						? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
 
@@ -1540,25 +1545,25 @@
 					</div>
 					<div class="lb-body" role="rowgroup"></div>`;
 
-					const body     = lb.querySelector('.lb-body');
+					const body = lb.querySelector('.lb-body');
 					const hasStats = this.stats && this.stats.spreads;
 
 					const itemMatches = Array(this.items.length).fill(0);
 					this.matches.forEach(m => { itemMatches[m.a]++; itemMatches[m.b]++; });
 
 					ranking.forEach(x => {
-						const row   = document.createElement('div');
+						const row = document.createElement('div');
 						row.className = 'lb-row';
-						const rank  = ranks[x];
-						const item  = this.items[x];
+						const rank = ranks[x];
+						const item = this.items[x];
 						const score = Math.round(this.scores[x]);
-						const ci    = hasStats ? Math.round(this.stats.cis[x]) : null;
+						const ci = hasStats ? Math.round(this.stats.cis[x]) : null;
 						const spread = hasStats ? `${this.stats.spreads[x][0]} — ${this.stats.spreads[x][1]}` : null;
 						let spreadBar = '';
 						if (hasStats) {
 							const [min, max] = this.stats.spreads[x];
 							const total = this.items.length;
-							const pMin  = total > 1 ? ((min - 1) / (total - 1)) * 100 : 0;
+							const pMin = total > 1 ? ((min - 1) / (total - 1)) * 100 : 0;
 							const pWidth = total > 1 ? ((max - min) / (total - 1)) * 100 : 100;
 							spreadBar = `<div class="spread-track" title="${spread}"><div class="spread-bar" style="left:${pMin}%;width:${pWidth}%"></div></div>`;
 						}
@@ -1574,9 +1579,9 @@
 								<div class="detail-item"><span class="detail-label">${this.string('matches')}</span><span class="detail-value">${itemMatches[x]}</span></div>
 							</div>
 						</div>`;
-						const main   = row.querySelector('.lb-main');
+						const main = row.querySelector('.lb-main');
 						const toggle = () => row.classList.toggle('expanded');
-						main.onclick   = toggle;
+						main.onclick = toggle;
 						main.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
 						body.appendChild(row);
 					});
@@ -1592,7 +1597,7 @@
 				}
 
 				display(section) {
-					['inputSection','battleSection','results'].forEach(id =>
+					['inputSection', 'battleSection', 'results'].forEach(id =>
 						elements[id].classList.toggle('hidden', id !== section));
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
 					elements.undo.classList.toggle('hidden', section === 'inputSection');
@@ -1611,11 +1616,11 @@
 					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
 					baseRanking.forEach((x, i) => ranks[x] = i + 1);
-					const ranking  = this.currentRanking || baseRanking;
+					const ranking = this.currentRanking || baseRanking;
 					const hasStats = this.stats && this.stats.spreads;
-					const headers  = (hasStats
-						? ['rank','rankSpread','item','score','ci']
-						: ['rank','item','score']).map(k => this.string(k)).join('\t');
+					const headers = (hasStats
+						? ['rank', 'rankSpread', 'item', 'score', 'ci']
+						: ['rank', 'item', 'score']).map(k => this.string(k)).join('\t');
 					const lines = ranking.map(x => {
 						const row = [ranks[x]];
 						if (hasStats) row.push(`${this.stats.spreads[x][0]}—${this.stats.spreads[x][1]}`);
@@ -1640,8 +1645,8 @@
 					this.cancelTimeout
 						? (clearTimeout(this.cancelTimeout), reset(), this.display('inputSection'))
 						: (elements.cancel.textContent = this.string('confirmCancel'),
-						   elements.cancel.classList.add('confirming'),
-						   this.cancelTimeout = setTimeout(reset, 3000));
+							elements.cancel.classList.add('confirming'),
+							this.cancelTimeout = setTimeout(reset, 3000));
 				}
 
 				undo() {
@@ -1669,16 +1674,16 @@
 				key(event) {
 					if (event.repeat) return;
 					const { key, ctrlKey, metaKey, shiftKey } = event;
-					const isModifier       = ctrlKey || metaKey;
-					const isInputVisible   = !elements.inputSection.classList.contains('hidden');
-					const isStartEnabled   = !elements.start.disabled;
+					const isModifier = ctrlKey || metaKey;
+					const isInputVisible = !elements.inputSection.classList.contains('hidden');
+					const isStartEnabled = !elements.start.disabled;
 					if (key === 'Enter' && isModifier && isInputVisible && isStartEnabled) {
 						event.preventDefault(); elements.start.click(); return;
 					}
 					const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
 					if (!action || isInputVisible || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
 					const isBattleVisible = !elements.battleSection.classList.contains('hidden');
-					const isTieAllowed    = action !== 'tie' || this.allowTies;
+					const isTieAllowed = action !== 'tie' || this.allowTies;
 					if (action === 'undo' && isModifier && !shiftKey) { event.preventDefault(); elements.undo.click(); }
 					if (action !== 'undo' && isBattleVisible && isTieAllowed) { event.preventDefault(); elements[action].click(); }
 				}
