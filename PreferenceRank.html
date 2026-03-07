@@ -763,21 +763,24 @@
 				},
 				cholesky: (inputMatrix) => {
 					const size = inputMatrix.rows;
-					const lowerTriangular = Matrix.zeros(size, size);
 					const inputData = inputMatrix.data;
-					const resultData = lowerTriangular.data;
+					const resultData = new Float64Array(size * size);
 					for (let i = 0; i < size; i++) {
+						const offsetI = i * size;
 						for (let j = 0; j <= i; j++) {
 							let sum = 0;
-							for (let k = 0; k < j; k++)
-								sum += resultData[i * size + k] * resultData[j * size + k];
-							resultData[i * size + j] = i === j
-								? (() => { const val = inputData[i * size + i] - sum; return val <= 0 ? null : Math.sqrt(val); })()
-								: (1 / resultData[j * size + j] * (inputData[i * size + j] - sum));
-							if (resultData[i * size + j] === null) return null;
+							const offsetJ = j * size;
+							for (let k = 0; k < j; k++) sum += resultData[offsetI + k] * resultData[offsetJ + k];
+							const val = inputData[offsetI + j] - sum;
+							if (i === j) {
+								if (val <= 0) return null;
+								resultData[offsetI + j] = Math.sqrt(val);
+							} else {
+								resultData[offsetI + j] = val / resultData[offsetJ + j];
+							}
 						}
 					}
-					return lowerTriangular;
+					return { rows: size, cols: size, data: resultData };
 				},
 				inverse: (inputMatrix) => {
 					const size = inputMatrix.rows;
@@ -870,13 +873,12 @@
 						hessian[i * itemCount + i] += 2 * PRIOR * pProb * (1 - pProb);
 					}
 					const itemCountMinusOne = itemCount - 1;
-					const subHessian = Matrix.zeros(itemCountMinusOne, itemCountMinusOne);
+					const data = new Float64Array(itemCountMinusOne * itemCountMinusOne);
 					for (let i = 0; i < itemCountMinusOne; i++) {
-						for (let j = 0; j < itemCountMinusOne; j++)
-							subHessian.data[i * itemCountMinusOne + j] = hessian[i * itemCount + j];
-						subHessian.data[i * itemCountMinusOne + i] += 1e-9;
+						data.set(hessian.subarray(i * itemCount, i * itemCount + itemCountMinusOne), i * itemCountMinusOne);
+						data[i * itemCountMinusOne + i] += 1e-9;
 					}
-					return Matrix.inverse(subHessian);
+					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
 				}
 
 				static calculateCI(itemCount, inverseSubHessian, scoreFactor) {
