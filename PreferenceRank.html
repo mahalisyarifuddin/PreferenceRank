@@ -974,18 +974,18 @@
 				getProgress(step) { return `${step}/${this.pairs.length}`; }
 			}
 
+			const JACOBSTHAL = (() => {
+				const seq = [1];
+				let a = 1, b = 3;
+				while (b < 2147483647) { seq.push(b); [a, b] = [b, b + 2 * a]; }
+				seq.push(b);
+				return seq;
+			})();
+
 			function jacobsthalThresholds(limit) {
-				const out = [1];
-				let pow2 = 8;
-				let n = 3;
-				while (true) {
-					const jn = (pow2 + (n & 1 ? 1 : -1)) / 3 | 0;
-					out.push(jn);
-					if (jn >= limit) break;
-					pow2 *= 2;
-					n++;
-				}
-				return out;
+				for (let i = 1; i < JACOBSTHAL.length; i++)
+					if (JACOBSTHAL[i] >= limit) return JACOBSTHAL.slice(0, i + 1);
+				return JACOBSTHAL.slice();
 			}
 
 			class QuickPairProvider {
@@ -1001,6 +1001,7 @@
 					this.count = count;
 					this._est = QuickPairProvider.estimate(count);
 					this._results = [];
+					this._pair = [0, 0];
 					this._initStack();
 				}
 
@@ -1022,7 +1023,7 @@
 				}
 
 				_applyResult(result) {
-					const [a, b] = this.pending;
+					const a = this.pending[0], b = this.pending[1];
 					const winner = result === 1 ? a : result === 0 ? b : a;
 					const frame = this.stack[this.stack.length - 1];
 					if (frame.comparing) {
@@ -1040,27 +1041,29 @@
 							const n = frame.items.length;
 							if (n <= 1) { this._returnResult(frame.items); continue; }
 							const half = n >> 1;
-							frame.pairs = [];
-							for (let i = 0; i < half; i++)
-								frame.pairs.push([frame.items[2 * i], frame.items[2 * i + 1]]);
+							frame.halfLen = half;
 							frame.odd = (n & 1) ? frame.items[n - 1] : null;
-							frame.winners = [];
-							frame.losers = [];
+							frame.winners = new Array(half);
+							frame.losers  = new Array(half);
 							frame.pairIndex = 0;
 							frame.state = 1;
 						}
 
 						if (frame.state === 1) {
 							if (frame.lastWinner !== undefined) {
-								const [a, b] = frame.pairs[frame.pairIndex];
+								const pi = frame.pairIndex;
+								const a = frame.items[2 * pi], b = frame.items[2 * pi + 1];
 								const aWon = frame.lastWinner === a;
-								frame.winners.push(aWon ? a : b);
-								frame.losers.push(aWon ? b : a);
+								frame.winners[pi] = aWon ? a : b;
+								frame.losers[pi]  = aWon ? b : a;
 								delete frame.lastWinner;
 								frame.pairIndex++;
 							}
-							if (frame.pairIndex < frame.pairs.length) {
-								this.pending = frame.pairs[frame.pairIndex];
+							if (frame.pairIndex < frame.halfLen) {
+								const pi = frame.pairIndex;
+								this._pair[0] = frame.items[2 * pi];
+								this._pair[1] = frame.items[2 * pi + 1];
+								this.pending = this._pair;
 								frame.comparing = true;
 								return;
 							}
@@ -1130,7 +1133,9 @@
 							const bs = frame.binarySearchState;
 							if (bs.min < bs.max) {
 								bs.mid = (bs.min + bs.max) >> 1;
-								this.pending = [frame.currentLoser, frame.mainChain[bs.mid]];
+								this._pair[0] = frame.currentLoser;
+								this._pair[1] = frame.mainChain[bs.mid];
+								this.pending = this._pair;
 								frame.comparing = true;
 								return;
 							}
