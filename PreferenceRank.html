@@ -775,9 +775,9 @@
 							if (i === j) {
 								if (val <= 0) return null;
 								resultData[offsetI + j] = Math.sqrt(val);
-							} else {
-								resultData[offsetI + j] = val / resultData[offsetJ + j];
+								continue;
 							}
+							resultData[offsetI + j] = val / resultData[offsetJ + j];
 						}
 					}
 					return { rows: size, cols: size, data: resultData };
@@ -846,8 +846,6 @@
 
 				static buildHessian(itemCount, matchCounts, parameters) {
 					const hessian = new Float64Array(itemCount * itemCount);
-					// Bolt: Pre-calculate strengths (exp(p)) to reduce Math.exp calls from O(N^2) to O(N).
-					// This optimization provides a ~2.6x speedup for the Hessian matrix construction.
 					const strengths = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++)
 						strengths[i] = Math.exp(parameters[i]);
@@ -859,8 +857,6 @@
 							if (count > 0) {
 								const sj = strengths[j];
 								const sum = si + sj;
-								// Bolt: Using si * sj / (si + sj)^2 is mathematically equivalent to p * (1-p)
-								// but avoids redundant exponential calculations in the inner loop.
 								const weight = count * si * sj / (sum * sum);
 								const negativeWeight = -weight;
 								hessian[i * itemCount + j] = negativeWeight;
@@ -980,13 +976,13 @@
 
 			function jacobsthalThresholds(limit) {
 				const out = [1];
-				let pow2 = 2;
-				let n = 1;
+				let pow2 = 8;
+				let n = 3;
 				while (true) {
-					const jn = (pow2 + (n & 1 ? 1 : -1)) / 3;
-					if (jn > limit) break;
-					out.push(jn | 0);
-					pow2 <<= 1;
+					const jn = (pow2 + (n & 1 ? 1 : -1)) / 3 | 0;
+					out.push(jn);
+					if (jn >= limit) break;
+					pow2 *= 2;
 					n++;
 				}
 				return out;
@@ -1413,11 +1409,9 @@
 					const INV_LOG10 = 400 / Math.log(10);
 					const convergenceThreshold = 1e-7;
 
-					const s = new Float64Array(n);
+					const s = new Float64Array(n).fill(1.0);
 					if (this.scores.length === n)
 						for (let i = 0; i < n; i++) s[i] = Math.exp((this.scores[i] - 1000) / INV_LOG10);
-					else
-						s.fill(1.0);
 
 					const prevLogS = new Float64Array(n);
 
