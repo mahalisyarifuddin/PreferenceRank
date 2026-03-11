@@ -1380,21 +1380,20 @@
 					if ((this.dirty === false && this.scores?.length === n && this.adj?.length === n) || n === 0) return;
 
 					const wins = new Float64Array(n);
-					const matchCounts = new Int32Array(n * n);
+					// Optimize adjacency list construction by using Maps to collect match results.
+					// This replaces the previous O(N²) dense matrix approach with O(M + N) complexity,
+					// where M is the number of matches, significantly improving performance for large item lists.
+					const adjMaps = Array.from({ length: n }, () => new Map());
 					for (const { a, b, result } of this.matches) {
 						wins[a] += result;
 						wins[b] += 1 - result;
-						matchCounts[a * n + b]++;
-						matchCounts[b * n + a]++;
+						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
+						adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
 					}
-					this.matchCounts = matchCounts;
 
-					this.adj = Array.from({ length: n }, (_, i) => {
+					this.adj = adjMaps.map(map => {
 						const row = [];
-						for (let j = 0; j < n; j++) {
-							const c = matchCounts[i * n + j];
-							if (c > 0) row.push(j, c);
-						}
+						for (const [j, count] of map) row.push(j, count);
 						return row;
 					});
 
