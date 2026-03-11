@@ -827,14 +827,14 @@
 			};
 
 			class Stats {
-				static calculate(items, scores, matchCounts) {
+				static calculate(items, scores, adj) {
 					const itemCount = items.length;
 					if (itemCount < 2) return null;
 					const scoreFactor = Math.log(10) / 400;
 					const parameters = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++)
 						parameters[i] = (scores[i] - 1000) * scoreFactor;
-					const inverseSubHessian = Stats.buildHessian(itemCount, matchCounts, parameters);
+					const inverseSubHessian = Stats.buildHessian(itemCount, adj, parameters);
 					if (!inverseSubHessian) return null;
 					const confidenceIntervals = Stats.calculateCI(itemCount, inverseSubHessian, scoreFactor);
 					const choleskyFactor = Matrix.cholesky(inverseSubHessian);
@@ -844,35 +844,31 @@
 					return { cis: Array.from(confidenceIntervals), spreads };
 				}
 
-				static buildHessian(itemCount, matchCounts, parameters) {
-					const hessian = new Float64Array(itemCount * itemCount);
+				static buildHessian(itemCount, adj, parameters) {
+					const itemCountMinusOne = itemCount - 1;
+					const data = new Float64Array(itemCountMinusOne * itemCountMinusOne);
 					const strengths = new Float64Array(itemCount);
-					for (let i = 0; i < itemCount; i++)
-						strengths[i] = Math.exp(parameters[i]);
+					for (let i = 0; i < itemCount; i++) strengths[i] = Math.exp(parameters[i]);
 					const PRIOR = 0.5;
 					for (let i = 0; i < itemCount; i++) {
 						const si = strengths[i];
-						for (let j = i + 1; j < itemCount; j++) {
-							const count = matchCounts[i * itemCount + j];
-							if (count > 0) {
+						const row = adj[i];
+						for (let k = 0; k < row.length; k += 2) {
+							const j = row[k];
+							const count = row[k + 1];
+							if (j > i) {
 								const sj = strengths[j];
 								const sum = si + sj;
 								const weight = count * si * sj / (sum * sum);
-								const negativeWeight = -weight;
-								hessian[i * itemCount + j] = negativeWeight;
-								hessian[j * itemCount + i] = negativeWeight;
-								hessian[i * itemCount + i] += weight;
-								hessian[j * itemCount + j] += weight;
+								if (i < itemCountMinusOne) {
+									if (j < itemCountMinusOne) data[i * itemCountMinusOne + j] = data[j * itemCountMinusOne + i] = -weight;
+									data[i * itemCountMinusOne + i] += weight;
+								}
+								if (j < itemCountMinusOne) data[j * itemCountMinusOne + j] += weight;
 							}
 						}
 						const pProb = si / (si + 1);
-						hessian[i * itemCount + i] += 2 * PRIOR * pProb * (1 - pProb);
-					}
-					const itemCountMinusOne = itemCount - 1;
-					const data = new Float64Array(itemCountMinusOne * itemCountMinusOne);
-					for (let i = 0; i < itemCountMinusOne; i++) {
-						data.set(hessian.subarray(i * itemCount, i * itemCount + itemCountMinusOne), i * itemCountMinusOne);
-						data[i * itemCountMinusOne + i] += 1e-9;
+						if (i < itemCountMinusOne) data[i * itemCountMinusOne + i] += 2 * PRIOR * pProb * (1 - pProb) + 1e-9;
 					}
 					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
 				}
@@ -904,9 +900,9 @@
 
 				static simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor) {
 					const itemCountMinusOne = itemCount - 1;
-					const simulationCount   = 500;
-					const simulationRanks   = new Int32Array(itemCount * simulationCount);
-					const multiplier        = 0.1257;
+					const simulationCount = 500;
+					const simulationRanks = new Int32Array(itemCount * simulationCount);
+					const multiplier = 0.1257;
 					let nextGaussian = null;
 					const gaussian = () => {
 						if (nextGaussian !== null) { const v = nextGaussian; nextGaussian = null; return v; }
@@ -918,12 +914,12 @@
 						nextGaussian = r * Math.sin(a);
 						return r * Math.cos(a);
 					};
-					const gaussianVector  = new Float64Array(itemCountMinusOne);
-					const parameterDelta  = new Float64Array(itemCountMinusOne);
+					const gaussianVector = new Float64Array(itemCountMinusOne);
+					const parameterDelta = new Float64Array(itemCountMinusOne);
 					const sampleParameters = new Float64Array(itemCount);
-					const rankIndices     = new Int32Array(itemCount);
-					const sampleScores    = new Float64Array(itemCount);
-					const choleskyData    = choleskyFactor.data;
+					const rankIndices = Array.from({ length: itemCount }, (_, i) => i);
+					rankIndices.sort((a, b) => parameters[b] - parameters[a]);
+					const choleskyData = choleskyFactor.data;
 					for (let sim = 0; sim < simulationCount; sim++) {
 						for (let i = 0; i < itemCountMinusOne; i++) gaussianVector[i] = gaussian();
 						for (let i = 0; i < itemCountMinusOne; i++) {
@@ -932,18 +928,9 @@
 							for (let j = 0; j <= i; j++) sum += choleskyData[iOff + j] * gaussianVector[j];
 							parameterDelta[i] = sum * multiplier;
 						}
-						let paramSum = 0;
-						for (let i = 0; i < itemCount; i++) {
-							const v = i < itemCountMinusOne ? parameters[i] + parameterDelta[i] : parameters[i];
-							sampleParameters[i] = v;
-							paramSum += v;
-						}
-						const paramAvg = paramSum / itemCount;
-						for (let i = 0; i < itemCount; i++) {
-							sampleScores[i] = 1000 + (sampleParameters[i] - paramAvg) / scoreFactor;
-							rankIndices[i] = i;
-						}
-						rankIndices.sort((a, b) => sampleScores[b] - sampleScores[a]);
+						for (let i = 0; i < itemCount; i++)
+							sampleParameters[i] = i < itemCountMinusOne ? parameters[i] + parameterDelta[i] : parameters[i];
+						rankIndices.sort((a, b) => sampleParameters[b] - sampleParameters[a]);
 						for (let r = 0; r < itemCount; r++)
 							simulationRanks[rankIndices[r] * simulationCount + sim] = r + 1;
 					}
@@ -1182,6 +1169,7 @@
 						matches: [],
 						history: [],
 						swaps: {},
+						adj: [],
 						sortState: { column: 'rank', direction: 'asc' },
 						dirty: true
 					});
@@ -1389,7 +1377,7 @@
 
 				recalculateScores() {
 					const n = this.items.length;
-					if ((this.dirty === false && this.scores?.length === n) || n === 0) return;
+					if ((this.dirty === false && this.scores?.length === n && this.adj?.length === n) || n === 0) return;
 
 					const wins = new Float64Array(n);
 					const matchCounts = new Int32Array(n * n);
@@ -1401,7 +1389,7 @@
 					}
 					this.matchCounts = matchCounts;
 
-					const adj = Array.from({ length: n }, (_, i) => {
+					this.adj = Array.from({ length: n }, (_, i) => {
 						const row = [];
 						for (let j = 0; j < n; j++) {
 							const c = matchCounts[i * n + j];
@@ -1424,7 +1412,7 @@
 						for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
 
 						for (let i = 0; i < n; i++) {
-							const row = adj[i];
+							const row = this.adj[i];
 							let denom = 1 / (s[i] + 1);
 							for (let k = 0; k < row.length; k += 2)
 								denom += row[k + 1] / (s[i] + s[row[k]]);
@@ -1520,7 +1508,7 @@
 					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
 					baseRanking.forEach((x, i) => ranks[x] = i + 1);
-					if (dirty || !this.stats) this.stats = Stats.calculate(this.items, this.scores, this.matchCounts);
+					if (dirty || !this.stats) this.stats = Stats.calculate(this.items, this.scores, this.adj);
 					const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 					const sorters = {
 						rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
