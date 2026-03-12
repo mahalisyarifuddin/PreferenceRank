@@ -850,9 +850,14 @@
 					const strengths = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++) strengths[i] = Math.exp(parameters[i]);
 					const PRIOR = 0.5;
+					const rowOffsets = new Int32Array(itemCountMinusOne);
+					for (let i = 0; i < itemCountMinusOne; i++) rowOffsets[i] = i * itemCountMinusOne;
+
 					for (let i = 0; i < itemCount; i++) {
 						const si = strengths[i];
 						const row = adj[i];
+						const iInBounds = i < itemCountMinusOne;
+						const iOffset = iInBounds ? rowOffsets[i] : 0;
 						for (let k = 0; k < row.length; k += 2) {
 							const j = row[k];
 							const count = row[k + 1];
@@ -860,15 +865,16 @@
 								const sj = strengths[j];
 								const sum = si + sj;
 								const weight = count * si * sj / (sum * sum);
-								if (i < itemCountMinusOne) {
-									if (j < itemCountMinusOne) data[i * itemCountMinusOne + j] = data[j * itemCountMinusOne + i] = -weight;
-									data[i * itemCountMinusOne + i] += weight;
+								const jInBounds = j < itemCountMinusOne;
+								if (iInBounds) {
+									if (jInBounds) data[iOffset + j] = data[rowOffsets[j] + i] = -weight;
+									data[iOffset + i] += weight;
 								}
-								if (j < itemCountMinusOne) data[j * itemCountMinusOne + j] += weight;
+								if (jInBounds) data[rowOffsets[j] + j] += weight;
 							}
 						}
 						const pProb = si / (si + 1);
-						if (i < itemCountMinusOne) data[i * itemCountMinusOne + i] += 2 * PRIOR * pProb * (1 - pProb) + 1e-9;
+						if (iInBounds) data[iOffset + i] += 2 * PRIOR * pProb * (1 - pProb) + 1e-9;
 					}
 					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
 				}
@@ -930,6 +936,7 @@
 						}
 						for (let i = 0; i < itemCount; i++)
 							sampleParameters[i] = i < itemCountMinusOne ? parameters[i] + parameterDelta[i] : parameters[i];
+
 						rankIndices.sort((a, b) => sampleParameters[b] - sampleParameters[a]);
 						for (let r = 0; r < itemCount; r++)
 							simulationRanks[rankIndices[r] * simulationCount + sim] = r + 1;
