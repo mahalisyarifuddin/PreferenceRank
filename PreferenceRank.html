@@ -309,6 +309,10 @@
 				color: var(--primary);
 			}
 
+			.lb-header .lb-col-score {
+				justify-content: flex-end;
+			}
+
 			.lb-row {
 				border-bottom: 1px solid var(--border);
 			}
@@ -550,6 +554,17 @@
 				clip: rect(0, 0, 0, 0);
 				white-space: nowrap;
 				border: 0;
+			}
+
+			.filter-wrap {
+				margin-bottom: .5rem;
+				text-align: right;
+			}
+
+			#resultFilter {
+				width: 200px;
+				font-size: .9rem;
+				padding: 6px;
 			}
 
 			.spread-track {
@@ -1537,8 +1552,8 @@
 					elements.results.appendChild(headerWrapper);
 
 					const filterDiv = document.createElement('div');
-					filterDiv.style.cssText = 'margin-bottom:.5rem;text-align:right';
-					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" value="${this.filterTerm || ''}" style="width:200px;font-size:.9rem;padding:6px">`;
+					filterDiv.className = 'filter-wrap';
+					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" aria-label="${this.string('filter')}" value="${this.filterTerm || ''}">`;
 					elements.results.appendChild(filterDiv);
 
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
@@ -1553,7 +1568,7 @@
 					<div class="lb-header" role="row">
 						<div class="lb-col-rank" role="columnheader" tabindex="0" aria-sort="${getSortState('rank')}" data-sort="rank">${this.string('rank')}${getSortIcon('rank')}</div>
 						<div class="lb-col-item" role="columnheader" tabindex="0" aria-sort="${getSortState('item')}" data-sort="item">${this.string('item')}${getSortIcon('item')}</div>
-						<div class="lb-col-score" role="columnheader" tabindex="0" aria-sort="${getSortState('score')}" data-sort="score" style="justify-content:flex-end">${this.string('score')}${getSortIcon('score')}</div>
+						<div class="lb-col-score" role="columnheader" tabindex="0" aria-sort="${getSortState('score')}" data-sort="score">${this.string('score')}${getSortIcon('score')}</div>
 					</div>
 					<div class="lb-body" role="rowgroup"></div>`;
 
