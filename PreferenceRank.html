@@ -1204,6 +1204,7 @@
 					};
 					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
 					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
+					['left', 'right', 'tie'].forEach(id => elements[id].addEventListener('mousedown', e => e.preventDefault()));
 					elements.language.onchange = e => { this.lang(e.target.value); this.save(); };
 					elements.theme.onchange = e => { this.theme(e.target.value); this.save(); };
 					elements.allowTies.onchange = e => this.setTies(e.target.checked);
@@ -1402,9 +1403,6 @@
 					if ((this.dirty === false && this.scores?.length === n && this.adj?.length === n) || n === 0) return;
 
 					const wins = new Float64Array(n);
-					// Optimize adjacency list construction by using Maps to collect match results.
-					// This replaces the previous O(N²) dense matrix approach with O(M + N) complexity,
-					// where M is the number of matches, significantly improving performance for large item lists.
 					const adjMaps = Array.from({ length: n }, () => new Map());
 					for (const { a, b, result } of this.matches) {
 						wins[a] += result;
@@ -1712,7 +1710,7 @@
 					const isBattleVisible = !elements.battleSection.classList.contains('hidden');
 					const isTieAllowed = action !== 'tie' || this.allowTies;
 					if (action === 'undo' && isModifier && !shiftKey) { event.preventDefault(); elements.undo.click(); }
-					if (action !== 'undo' && isBattleVisible && isTieAllowed) { event.preventDefault(); elements[action].click(); }
+					if (action !== 'undo' && isBattleVisible && isTieAllowed) { event.preventDefault(); elements[action].click(); document.activeElement?.blur(); }
 				}
 			}
 
