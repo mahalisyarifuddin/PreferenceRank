@@ -826,15 +826,19 @@
 							}
 						}
 						const invPivot = 1 / pivotValue;
-						for (let j = i + 1; j < size; j++) matrixData[offsetI + j] *= invPivot;
-						for (let j = 0; j < size; j++) inverseData[offsetI + j] *= invPivot;
+						const rowI = matrixData.subarray(offsetI, offsetI + size);
+						const invRowI = inverseData.subarray(offsetI, offsetI + size);
+						for (let j = i + 1; j < size; j++) rowI[j] *= invPivot;
+						for (let j = 0; j < size; j++) invRowI[j] *= invPivot;
 						for (let rowIndex = 0; rowIndex < size; rowIndex++) {
 							if (rowIndex === i) continue;
 							const offsetR = rowIndex * size;
 							const factor = matrixData[offsetR + i];
 							if (factor === 0) continue;
-							for (let j = i + 1; j < size; j++) matrixData[offsetR + j] -= factor * matrixData[offsetI + j];
-							for (let j = 0; j < size; j++) inverseData[offsetR + j] -= factor * inverseData[offsetI + j];
+							const rowR = matrixData.subarray(offsetR, offsetR + size);
+							const invRowR = inverseData.subarray(offsetR, offsetR + size);
+							for (let j = i + 1; j < size; j++) rowR[j] -= factor * rowI[j];
+							for (let j = 0; j < size; j++) invRowR[j] -= factor * invRowI[j];
 						}
 					}
 					return { rows: size, cols: size, data: inverseData };
@@ -873,23 +877,28 @@
 						const row = adj[i];
 						const iInBounds = i < itemCountMinusOne;
 						const iOffset = iInBounds ? rowOffsets[i] : 0;
-						for (let k = 0; k < row.length; k += 2) {
+						for (let k = 0, len = row.length; k < len; k += 2) {
 							const j = row[k];
-							const count = row[k + 1];
 							if (j > i) {
+								const count = row[k + 1];
 								const sj = strengths[j];
 								const sum = si + sj;
 								const weight = count * si * sj / (sum * sum);
 								const jInBounds = j < itemCountMinusOne;
 								if (iInBounds) {
-									if (jInBounds) data[iOffset + j] = data[rowOffsets[j] + i] = -weight;
+									if (jInBounds) {
+										data[iOffset + j] = -weight;
+										data[rowOffsets[j] + i] = -weight;
+									}
 									data[iOffset + i] += weight;
 								}
 								if (jInBounds) data[rowOffsets[j] + j] += weight;
 							}
 						}
-						const pProb = si / (si + 1);
-						if (iInBounds) data[iOffset + i] += 2 * PRIOR * pProb * (1 - pProb) + 1e-9;
+						if (iInBounds) {
+							const pProb = si / (si + 1);
+							data[iOffset + i] += 2 * PRIOR * pProb * (1 - pProb) + 1e-9;
+						}
 					}
 					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
 				}
@@ -941,12 +950,14 @@
 					const rankIndices = Array.from({ length: itemCount }, (_, i) => i);
 					rankIndices.sort((a, b) => parameters[b] - parameters[a]);
 					const choleskyData = choleskyFactor.data;
+					const choleskyRows = Array.from({ length: itemCountMinusOne }, (_, i) =>
+						choleskyData.subarray(i * itemCountMinusOne, (i + 1) * itemCountMinusOne));
 					for (let sim = 0; sim < simulationCount; sim++) {
 						for (let i = 0; i < itemCountMinusOne; i++) gaussianVector[i] = gaussian();
 						for (let i = 0; i < itemCountMinusOne; i++) {
 							let sum = 0;
-							const iOff = i * itemCountMinusOne;
-							for (let j = 0; j <= i; j++) sum += choleskyData[iOff + j] * gaussianVector[j];
+							const row = choleskyRows[i];
+							for (let j = 0; j <= i; j++) sum += row[j] * gaussianVector[j];
 							parameterDelta[i] = sum * multiplier;
 						}
 						for (let i = 0; i < itemCount; i++)
@@ -1432,9 +1443,10 @@
 
 						for (let i = 0; i < n; i++) {
 							const row = this.adj[i];
-							let denom = 1 / (s[i] + 1);
-							for (let k = 0; k < row.length; k += 2)
-								denom += row[k + 1] / (s[i] + s[row[k]]);
+							const si = s[i];
+							let denom = 1 / (si + 1);
+							for (let k = 0, len = row.length; k < len; k += 2)
+								denom += row[k + 1] / (si + s[row[k]]);
 							s[i] = (wins[i] + PRIOR) / denom;
 						}
 
