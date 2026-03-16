@@ -868,37 +868,30 @@
 					const data = new Float64Array(itemCountMinusOne * itemCountMinusOne);
 					const strengths = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++) strengths[i] = Math.exp(parameters[i]);
-					const PRIOR = 0.5;
 					const rowOffsets = new Int32Array(itemCountMinusOne);
 					for (let i = 0; i < itemCountMinusOne; i++) rowOffsets[i] = i * itemCountMinusOne;
 
-					for (let i = 0; i < itemCount; i++) {
+					for (let i = 0; i < itemCountMinusOne; i++) {
 						const si = strengths[i];
 						const row = adj[i];
-						const iInBounds = i < itemCountMinusOne;
-						const iOffset = iInBounds ? rowOffsets[i] : 0;
+						const iOffset = rowOffsets[i];
+						let diagI = 0;
 						for (let k = 0, len = row.length; k < len; k += 2) {
 							const j = row[k];
 							if (j > i) {
-								const count = row[k + 1];
 								const sj = strengths[j];
-								const sum = si + sj;
-								const weight = count * si * sj / (sum * sum);
-								const jInBounds = j < itemCountMinusOne;
-								if (iInBounds) {
-									if (jInBounds) {
-										data[iOffset + j] = -weight;
-										data[rowOffsets[j] + i] = -weight;
-									}
-									data[iOffset + i] += weight;
+								const weight = (row[k + 1] * si * sj) / ((si + sj) * (si + sj));
+								if (j < itemCountMinusOne) {
+									const jOffset = rowOffsets[j];
+									data[iOffset + j] = -weight;
+									data[jOffset + i] = -weight;
+									data[jOffset + j] += weight;
 								}
-								if (jInBounds) data[rowOffsets[j] + j] += weight;
+								diagI += weight;
 							}
 						}
-						if (iInBounds) {
-							const pProb = si / (si + 1);
-							data[iOffset + i] += 2 * PRIOR * pProb * (1 - pProb) + 1e-9;
-						}
+						const siPlusOne = si + 1;
+						data[iOffset + i] += diagI + si / (siPlusOne * siPlusOne) + 1e-9;
 					}
 					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
 				}
