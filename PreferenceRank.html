@@ -992,6 +992,8 @@
 				}
 				next(state) { return this.pairs[state.step]; }
 				getProgress(step) { return `${step}/${this.pairs.length}`; }
+				snap() { return null; }
+				restore() {}
 			}
 
 			const JACOBSTHAL = (() => {
@@ -1020,7 +1022,6 @@
 				constructor(count) {
 					this.count = count;
 					this._est = QuickPairProvider.estimate(count);
-					this._results = [];
 					this._pair = [0, 0];
 					this._initStack();
 				}
@@ -1030,16 +1031,11 @@
 					this.pending = null;
 				}
 
-				unmark() {
-					if (!this._results.length) return;
-					const log = this._results.slice(0, -1);
-					this._results = [];
-					this._initStack();
-					this._runMachine();
-					for (const r of log) {
-						this._applyResult(r);
-						this._runMachine();
-					}
+				snap() { return structuredClone({ stack: this.stack, pending: this.pending }); }
+
+				restore(state) {
+					this.stack = state.stack;
+					this.pending = state.pending;
 				}
 
 				_applyResult(result) {
@@ -1183,11 +1179,10 @@
 
 				next(_, result) {
 					if (this.pending !== null && result !== undefined) {
-						this._results.push(result);
 						this._applyResult(result);
 					}
 					this._runMachine();
-					return this.pending;
+					return this.pending ? [...this.pending] : null;
 				}
 
 				getProgress(step) {
@@ -1469,7 +1464,7 @@
 				choose(winner) {
 					if (this.busy || elements.battleSection.classList.contains('hidden')) return;
 					this.busy = true;
-					this.history.push({ pair: this.pair, step: this.step, swapped: this.swapped });
+					this.history.push({ pair: this.pair, step: this.step, swapped: this.swapped, state: this.provider.snap() });
 					const [a, b] = this.pair;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
 					this.matches.push({ a, b, result });
@@ -1692,7 +1687,7 @@
 						this.matches.pop();
 						this.dirty = true;
 						Object.assign(this, { step: last.step, pair: last.pair, swapped: last.swapped });
-						this.provider.unmark?.();
+						this.provider.restore(last.state);
 						this.render();
 						this.display('battleSection');
 						elements.undo.disabled = !this.history.length;
