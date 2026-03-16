@@ -780,19 +780,21 @@
 					const size = inputMatrix.rows;
 					const inputData = inputMatrix.data;
 					const resultData = new Float64Array(size * size);
+					const rowViews = new Array(size);
+					for (let i = 0; i < size; i++) rowViews[i] = resultData.subarray(i * size, (i + 1) * size);
 					for (let i = 0; i < size; i++) {
-						const offsetI = i * size;
+						const rowI = rowViews[i];
 						for (let j = 0; j <= i; j++) {
 							let sum = 0;
-							const offsetJ = j * size;
-							for (let k = 0; k < j; k++) sum += resultData[offsetI + k] * resultData[offsetJ + k];
-							const val = inputData[offsetI + j] - sum;
+							const rowJ = rowViews[j];
+							for (let k = 0; k < j; k++) sum += rowI[k] * rowJ[k];
+							const val = inputData[i * size + j] - sum;
 							if (i === j) {
 								if (val <= 0) return null;
-								resultData[offsetI + j] = Math.sqrt(val);
+								rowI[j] = Math.sqrt(val);
 								continue;
 							}
-							resultData[offsetI + j] = val / resultData[offsetJ + j];
+							rowI[j] = val / rowJ[j];
 						}
 					}
 					return { rows: size, cols: size, data: resultData };
@@ -802,9 +804,14 @@
 					const matrixData = new Float64Array(inputMatrix.data);
 					const inverseData = new Float64Array(size * size);
 					for (let i = 0; i < size; i++) inverseData[i * size + i] = 1;
+					const rowViews = new Array(size);
+					const invRowViews = new Array(size);
 					for (let i = 0; i < size; i++) {
-						const offsetI = i * size;
-						let pivotValue = matrixData[offsetI + i];
+						rowViews[i] = matrixData.subarray(i * size, (i + 1) * size);
+						invRowViews[i] = inverseData.subarray(i * size, (i + 1) * size);
+					}
+					for (let i = 0; i < size; i++) {
+						let pivotValue = matrixData[i * size + i];
 						let pivotIndex = i;
 						if (Math.abs(pivotValue) < 1e-10) {
 							for (let k = i + 1; k < size; k++) {
@@ -815,6 +822,7 @@
 								}
 							}
 							if (Math.abs(pivotValue) < 1e-10) return null;
+							const offsetI = i * size;
 							const offsetP = pivotIndex * size;
 							for (let j = 0; j < size; j++) {
 								let temp = matrixData[offsetI + j];
@@ -826,17 +834,16 @@
 							}
 						}
 						const invPivot = 1 / pivotValue;
-						const rowI = matrixData.subarray(offsetI, offsetI + size);
-						const invRowI = inverseData.subarray(offsetI, offsetI + size);
+						const rowI = rowViews[i];
+						const invRowI = invRowViews[i];
 						for (let j = i + 1; j < size; j++) rowI[j] *= invPivot;
 						for (let j = 0; j < size; j++) invRowI[j] *= invPivot;
 						for (let rowIndex = 0; rowIndex < size; rowIndex++) {
 							if (rowIndex === i) continue;
-							const offsetR = rowIndex * size;
-							const factor = matrixData[offsetR + i];
+							const factor = matrixData[rowIndex * size + i];
 							if (factor === 0) continue;
-							const rowR = matrixData.subarray(offsetR, offsetR + size);
-							const invRowR = inverseData.subarray(offsetR, offsetR + size);
+							const rowR = rowViews[rowIndex];
+							const invRowR = invRowViews[rowIndex];
 							for (let j = i + 1; j < size; j++) rowR[j] -= factor * rowI[j];
 							for (let j = 0; j < size; j++) invRowR[j] -= factor * invRowI[j];
 						}
@@ -947,11 +954,12 @@
 						choleskyData.subarray(i * itemCountMinusOne, (i + 1) * itemCountMinusOne));
 					for (let sim = 0; sim < simulationCount; sim++) {
 						const offset = sim * itemCountMinusOne;
+						const gView = gaussians.subarray(offset, offset + itemCountMinusOne);
 						for (let i = 0; i < itemCountMinusOne; i++) {
 							let sum = 0;
 							const row = choleskyRows[i];
-							// ⚡ Bolt: Direct indexing of pre-calculated Gaussians
-							for (let j = 0; j <= i; j++) sum += row[j] * gaussians[offset + j];
+							// ⚡ Bolt: Use pre-calculated Gaussian subarray for faster indexing
+							for (let j = 0; j <= i; j++) sum += row[j] * gView[j];
 							parameterDelta[i] = sum;
 						}
 						// ⚡ Bolt: Removed ternary branch by splitting last item assignment
