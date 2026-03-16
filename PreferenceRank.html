@@ -933,18 +933,18 @@
 					const simulationCount = 500;
 					const simulationRanks = new Int32Array(itemCount * simulationCount);
 					const multiplier = 0.1257;
-					let nextGaussian = null;
-					const gaussian = () => {
-						if (nextGaussian !== null) { const v = nextGaussian; nextGaussian = null; return v; }
+					const totalGaussians = simulationCount * itemCountMinusOne;
+					const gaussians = new Float64Array(totalGaussians);
+					// ⚡ Bolt: Pre-calculate Gaussians with multiplier to save multiplications and function calls in simulation loop
+					for (let i = 0; i < totalGaussians; i += 2) {
 						let u1 = 0, u2 = 0;
 						while (u1 === 0) u1 = Math.random();
 						while (u2 === 0) u2 = Math.random();
-						const r = Math.sqrt(-2.0 * Math.log(u1));
+						const r = Math.sqrt(-2.0 * Math.log(u1)) * multiplier;
 						const a = 2.0 * Math.PI * u2;
-						nextGaussian = r * Math.sin(a);
-						return r * Math.cos(a);
-					};
-					const gaussianVector = new Float64Array(itemCountMinusOne);
+						gaussians[i] = r * Math.cos(a);
+						if (i + 1 < totalGaussians) gaussians[i + 1] = r * Math.sin(a);
+					}
 					const parameterDelta = new Float64Array(itemCountMinusOne);
 					const sampleParameters = new Float64Array(itemCount);
 					const rankIndices = Array.from({ length: itemCount }, (_, i) => i);
@@ -953,26 +953,28 @@
 					const choleskyRows = Array.from({ length: itemCountMinusOne }, (_, i) =>
 						choleskyData.subarray(i * itemCountMinusOne, (i + 1) * itemCountMinusOne));
 					for (let sim = 0; sim < simulationCount; sim++) {
-						for (let i = 0; i < itemCountMinusOne; i++) gaussianVector[i] = gaussian();
+						const offset = sim * itemCountMinusOne;
 						for (let i = 0; i < itemCountMinusOne; i++) {
 							let sum = 0;
 							const row = choleskyRows[i];
-							for (let j = 0; j <= i; j++) sum += row[j] * gaussianVector[j];
-							parameterDelta[i] = sum * multiplier;
+							// ⚡ Bolt: Direct indexing of pre-calculated Gaussians
+							for (let j = 0; j <= i; j++) sum += row[j] * gaussians[offset + j];
+							parameterDelta[i] = sum;
 						}
-						for (let i = 0; i < itemCount; i++)
-							sampleParameters[i] = i < itemCountMinusOne ? parameters[i] + parameterDelta[i] : parameters[i];
-
+						// ⚡ Bolt: Removed ternary branch by splitting last item assignment
+						for (let i = 0; i < itemCountMinusOne; i++)
+							sampleParameters[i] = parameters[i] + parameterDelta[i];
+						sampleParameters[itemCountMinusOne] = parameters[itemCountMinusOne];
 						rankIndices.sort((a, b) => sampleParameters[b] - sampleParameters[a]);
 						for (let r = 0; r < itemCount; r++)
 							simulationRanks[rankIndices[r] * simulationCount + sim] = r + 1;
 					}
 					const spreads = [];
-					const rowBuffer = new Int32Array(simulationCount);
 					for (let i = 0; i < itemCount; i++) {
-						for (let k = 0; k < simulationCount; k++) rowBuffer[k] = simulationRanks[i * simulationCount + k];
-						rowBuffer.sort();
-						spreads.push([rowBuffer[Math.floor(simulationCount * 0.1)], rowBuffer[Math.floor(simulationCount * 0.9)]]);
+						// ⚡ Bolt: Zero-copy subarray sorting for percentile calculation
+						const row = simulationRanks.subarray(i * simulationCount, (i + 1) * simulationCount);
+						row.sort();
+						spreads.push([row[Math.floor(simulationCount * 0.1)], row[Math.floor(simulationCount * 0.9)]]);
 					}
 					return spreads;
 				}
