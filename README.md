@@ -33,6 +33,7 @@ Based on a **knee point analysis**, the convergence threshold is set to `1e-7`. 
 - **Scientific Scoring**: Utilizes the Bradley-Terry Elo rating system for accurate results.
 - **Uncertainty Estimates**: Visualizes ranking confidence with "Rank Spread" and "Confidence Interval (CI)" details, available in both **Quick Rank** and **Full Rank** modes.
 - **Matches Count**: View the number of battles each item participated in for deeper insights.
+- **Experimental Letter Grades**: Optional letter grade system based on Elo scores (S, A, B, C, D, E, F).
 - **Undo and Ties**: Easily undo your last choice or allow for ties in the rankings.
 - **Lightweight**: A single HTML file with no external dependencies, making it portable and fast.
 - **Theme Options**: Choose between light, dark, or auto themes for a personalized experience.
