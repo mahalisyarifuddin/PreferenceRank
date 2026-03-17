@@ -346,8 +346,13 @@
 				font-weight: 500;
 			}
 
+			.lb-col-grade {
+				flex: 0 0 80px;
+				text-align: center;
+			}
+
 			.lb-col-score {
-				flex: 0 0 120px;
+				flex: 0 0 70px;
 				text-align: right;
 				font-variant-numeric: tabular-nums;
 			}
@@ -462,8 +467,12 @@
 					padding: .75rem;
 				}
 
+				.lb-col-grade {
+					flex: 0 0 60px;
+				}
+
 				.lb-col-score {
-					flex: 0 0 90px;
+					flex: 0 0 70px;
 				}
 
 				.lb-details {
@@ -626,6 +635,10 @@
 					<input type="checkbox" id="quickRank">
 					<label for="quickRank" id="labelQuick"></label>
 				</div>
+				<div class="row">
+					<input type="checkbox" id="showGrade">
+					<label for="showGrade" id="labelGrade"></label>
+				</div>
 				<div class="actions">
 					<button id="resume" class="primary hidden"></button>
 					<button id="start" class="primary"></button>
@@ -693,6 +706,7 @@
 					resultsTitle: 'Results',
 					rank: 'Rank',
 					item: 'Item',
+					grade: 'Grade',
 					score: 'Score',
 					compare: 'Compare: {1} vs {2}',
 					resultsReady: 'Ranking complete. Results table is shown.',
@@ -706,6 +720,7 @@
 					resumeConfirm: 'Continue',
 					resumeNew: 'New Session',
 					estMatches: ' (~{count} comparisons)',
+					labelGrade: 'Show Letter Grades (Experimental)',
 					rankSpread: 'Rank Spread',
 					matches: 'Matches',
 					ci: 'CI (±)',
@@ -741,6 +756,7 @@
 					resultsTitle: 'Hasil',
 					rank: 'Peringkat',
 					item: 'Nama',
+					grade: 'Nilai',
 					score: 'Skor',
 					compare: 'Bandingkan: {1} lawan {2}',
 					resultsReady: 'Peringkat selesai. Tabel hasil ditampilkan.',
@@ -754,6 +770,7 @@
 					resumeConfirm: 'Lanjutkan',
 					resumeNew: 'Sesi Baru',
 					estMatches: ' (~{count} perbandingan)',
+					labelGrade: 'Tampilkan Nilai Huruf (Eksperimental)',
 					rankSpread: 'Rentang Peringkat',
 					matches: 'Pertandingan',
 					ci: 'IK (±)',
@@ -1202,7 +1219,8 @@
 						swaps: {},
 						adj: [],
 						sortState: { column: 'rank', direction: 'asc' },
-						dirty: true
+						dirty: true,
+						showGrade: false
 					});
 					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
 					const events = {
@@ -1218,6 +1236,11 @@
 					elements.theme.onchange = e => { this.theme(e.target.value); this.save(); };
 					elements.allowTies.onchange = e => this.setTies(e.target.checked);
 					elements.quickRank.onchange = () => this.updateInputState();
+					elements.showGrade.onchange = e => {
+						this.showGrade = e.target.checked;
+						this.save();
+						if (!elements.results.classList.contains('hidden')) this.results();
+					};
 					elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
 					elements.results.onclick = e => {
 						const header = e.target.closest('.lb-header > div');
@@ -1247,7 +1270,7 @@
 					elements.language.setAttribute('aria-label', this.string('languageLabel'));
 					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
 					elements.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew']
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'labelGrade', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew']
 						.forEach(key => elements[key].textContent = this.string(key));
 					elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
 					elements.left.title = this.string('shortcutLeft');
@@ -1264,7 +1287,7 @@
 				save() {
 					localStorage.setItem('preferenceRankData', JSON.stringify({
 						inputValue: elements.items.value,
-						settings: { theme: elements.theme.value, language: this.language },
+						settings: { theme: elements.theme.value, language: this.language, showGrade: this.showGrade },
 						battle: this.provider ? {
 							...this,
 							provider: this.provider,
@@ -1277,7 +1300,12 @@
 					try {
 						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
 						data && (() => {
-							data.settings && (this.theme(data.settings.theme), this.lang(data.settings.language));
+							data.settings && (
+								this.theme(data.settings.theme),
+								this.lang(data.settings.language),
+								this.showGrade = !!data.settings.showGrade,
+								elements.showGrade.checked = this.showGrade
+							);
 							data.inputValue && (elements.items.value = data.inputValue, this.updateInputState());
 							data.battle
 								? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle))
@@ -1317,6 +1345,8 @@
 
 				restoreBattle(battle) {
 					Object.assign(this, battle);
+					this.showGrade = !!battle.showGrade;
+					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
 					if (!(battle.providerType === 'quick' && !battle.provider.stack?.[0]?.items))
@@ -1360,6 +1390,10 @@
 					if (!elements.battleSection.classList.contains('hidden'))
 						elements.tieWrap.classList.toggle('hidden', !enabled);
 					this.updateHelp();
+				}
+
+				getGrade(score) {
+					return score >= 1400 ? 'S' : score >= 1200 ? 'A' : score >= 1000 ? 'B' : score >= 800 ? 'C' : score >= 600 ? 'D' : score >= 400 ? 'E' : 'F';
 				}
 
 				updateHelp() {
@@ -1559,6 +1593,7 @@
 							? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir
 							: 0,
 						item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
+						grade: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
 						score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
 						ci: (a, b) => this.stats?.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
 					};
@@ -1590,6 +1625,7 @@
 					<div class="lb-header" role="row">
 						<div class="lb-col-rank" role="columnheader" tabindex="0" aria-sort="${getSortState('rank')}" data-sort="rank">${this.string('rank')}${getSortIcon('rank')}</div>
 						<div class="lb-col-item" role="columnheader" tabindex="0" aria-sort="${getSortState('item')}" data-sort="item">${this.string('item')}${getSortIcon('item')}</div>
+						${this.showGrade ? `<div class="lb-col-grade" role="columnheader" tabindex="0" aria-sort="${getSortState('grade')}" data-sort="grade">${this.string('grade')}${getSortIcon('grade')}</div>` : ''}
 						<div class="lb-col-score" role="columnheader" tabindex="0" aria-sort="${getSortState('score')}" data-sort="score">${this.string('score')}${getSortIcon('score')}</div>
 					</div>
 					<div class="lb-body" role="rowgroup"></div>`;
@@ -1620,6 +1656,7 @@
 						<div class="lb-main" role="button" tabindex="0">
 							<div class="lb-col-rank"><span class="chevron">&#x203a;</span><span>${rank}</span></div>
 							<div class="lb-col-item">${new Option(item).innerHTML}</div>
+							${this.showGrade ? `<div class="lb-col-grade">${this.getGrade(score)}</div>` : ''}
 							<div class="lb-col-score">${score}${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}</div>
 						</div>
 						<div class="lb-details">
@@ -1668,12 +1705,15 @@
 					const ranking = this.currentRanking || baseRanking;
 					const hasStats = this.stats && this.stats.spreads;
 					const headers = (hasStats
-						? ['rank', 'rankSpread', 'item', 'score', 'ci']
-						: ['rank', 'item', 'score']).map(k => this.string(k)).join('\t');
+						? (this.showGrade ? ['rank', 'rankSpread', 'item', 'grade', 'score', 'ci'] : ['rank', 'rankSpread', 'item', 'score', 'ci'])
+						: (this.showGrade ? ['rank', 'item', 'grade', 'score'] : ['rank', 'item', 'score'])).map(k => this.string(k)).join('\t');
 					const lines = ranking.map(x => {
+						const score = Math.round(this.scores[x]);
 						const row = [ranks[x]];
 						if (hasStats) row.push(`${this.stats.spreads[x][0]}—${this.stats.spreads[x][1]}`);
-						row.push(this.items[x], Math.round(this.scores[x]));
+						row.push(this.items[x]);
+						if (this.showGrade) row.push(this.getGrade(score));
+						row.push(score);
 						if (hasStats) row.push(`±${Math.round(this.stats.cis[x])}`);
 						return row.join('\t');
 					});

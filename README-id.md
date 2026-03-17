@@ -33,6 +33,7 @@ Berdasarkan **analisis titik lutut (knee point analysis)**, ambang batas konverg
 - **Penilaian Ilmiah**: Menggunakan sistem peringkat Elo Bradley-Terry untuk hasil yang akurat.
 - **Estimasi Ketidakpastian**: Menampilkan keyakinan peringkat dengan rincian "Rentang Peringkat" dan "Interval Keyakinan (IK)", tersedia di mode **Peringkat Cepat** dan **Peringkat Penuh**.
 - **Jumlah Pertarungan**: Melihat jumlah pertarungan yang diikuti oleh setiap item untuk wawasan lebih mendalam.
+- **Nilai Huruf Eksperimental**: Sistem nilai huruf opsional berdasarkan skor Elo (S, A, B, C, D, E, F).
 - **Urungkan dan Seri**: Batalkan pilihan terakhir Anda dengan mudah atau izinkan hasil seri dalam pemeringkatan.
 - **Ringan**: Satu berkas HTML tanpa dependensi eksternal, sehingga portabel dan cepat.
 - **Opsi Tema**: Pilih antara tema terang, gelap, atau otomatis untuk pengalaman yang dipersonalisasi.
