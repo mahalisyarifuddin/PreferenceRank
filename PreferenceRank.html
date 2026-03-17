@@ -73,6 +73,14 @@
 				padding: 1rem;
 			}
 
+			body.results-mode {
+				display: block;
+			}
+
+			body.results-mode .container {
+				margin: 0 auto;
+			}
+
 			.container {
 				background: var(--surface);
 				border: 1px solid var(--border);
@@ -80,7 +88,6 @@
 				max-width: 720px;
 				padding: 2rem;
 				width: 100%;
-				position: relative;
 			}
 
 			.hidden {
@@ -237,6 +244,11 @@
 			}
 
 			#results {
+				overflow: visible;
+			}
+
+			.lb-wrap {
+				border-radius: 8px;
 				overflow-x: auto;
 			}
 
@@ -283,7 +295,6 @@
 				border: 1px solid var(--border);
 				border-radius: 8px;
 				background: var(--surface);
-				overflow: hidden;
 				margin-top: 1rem;
 			}
 
@@ -295,6 +306,11 @@
 				font-weight: 600;
 				color: var(--text);
 				font-size: .9rem;
+				position: sticky;
+				top: 0;
+				z-index: 10;
+				border-top-left-radius: 8px;
+				border-top-right-radius: 8px;
 			}
 
 			.lb-header > div {
@@ -319,6 +335,11 @@
 
 			.lb-row:last-child {
 				border-bottom: none;
+			}
+
+			.lb-row:last-child .lb-main, .lb-row:last-child.expanded .lb-details {
+				border-bottom-left-radius: 8px;
+				border-bottom-right-radius: 8px;
 			}
 
 			.lb-main {
@@ -1675,7 +1696,10 @@
 						body.appendChild(row);
 					});
 
-					elements.results.appendChild(lb);
+					const lbWrap = document.createElement('div');
+					lbWrap.className = 'lb-wrap';
+					lbWrap.appendChild(lb);
+					elements.results.appendChild(lbWrap);
 					elements.resultFilter = document.getElementById('resultFilter');
 					elements.resultFilter.oninput = e => this.filterResults(e.target.value);
 					if (this.filterTerm) this.filterResults(this.filterTerm);
@@ -1686,6 +1710,7 @@
 				}
 
 				display(section, preventFocus) {
+					document.body.classList.toggle('results-mode', section === 'results');
 					['inputSection', 'battleSection', 'results'].forEach(id =>
 						elements[id].classList.toggle('hidden', id !== section));
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
@@ -1699,7 +1724,7 @@
 						elements.results.firstChild.appendChild(elements.copy);
 					}
 					if (section === 'inputSection') this.updateInputState();
-					const focusTarget = { battleSection: elements.left, results: elements.restartBattle, inputSection: elements.items }[section];
+					const focusTarget = { battleSection: elements.left, inputSection: elements.items }[section];
 					if (focusTarget && !preventFocus) setTimeout(() => focusTarget.focus(), 50);
 				}
 
