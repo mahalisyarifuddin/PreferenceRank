@@ -635,14 +635,14 @@
 					<input type="checkbox" id="quickRank">
 					<label for="quickRank" id="labelQuick"></label>
 				</div>
-				<div class="row">
-					<input type="checkbox" id="showGrade">
-					<label for="showGrade" id="labelGrade"></label>
-				</div>
 				<div class="actions">
 					<button id="resume" class="primary hidden"></button>
 					<button id="start" class="primary"></button>
 				</div>
+			</div>
+			<div id="showGradeRow" class="row hidden">
+				<input type="checkbox" id="showGrade">
+				<label for="showGrade" id="labelGrade"></label>
 			</div>
 			<div id="announcer" class="visually-hidden" aria-live="polite"></div>
 			<button id="undo" class="secondary hidden" disabled></button>
@@ -1232,14 +1232,14 @@
 					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
 					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
 					['left', 'right', 'tie'].forEach(id => elements[id].addEventListener('mousedown', e => e.preventDefault()));
-					elements.language.onchange = e => { this.lang(e.target.value); this.save(); };
+					elements.language.onchange = e => { this.lang(e.target.value, true); this.save(); };
 					elements.theme.onchange = e => { this.theme(e.target.value); this.save(); };
 					elements.allowTies.onchange = e => this.setTies(e.target.checked);
 					elements.quickRank.onchange = () => this.updateInputState();
 					elements.showGrade.onchange = e => {
 						this.showGrade = e.target.checked;
 						this.save();
-						if (!elements.results.classList.contains('hidden')) this.results();
+						if (!elements.results.classList.contains('hidden')) this.results(true);
 					};
 					elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
 					elements.results.onclick = e => {
@@ -1265,7 +1265,7 @@
 					elements.theme.value = name;
 				}
 
-				lang(language) {
+				lang(language, preventFocus) {
 					this.language = elements.language.value = language;
 					elements.language.setAttribute('aria-label', this.string('languageLabel'));
 					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
@@ -1281,7 +1281,7 @@
 					this.updateHelp();
 					this.updateProgress();
 					this.updateInputState();
-					if (!elements.results.classList.contains('hidden')) this.results();
+					if (!elements.results.classList.contains('hidden')) this.results(preventFocus);
 				}
 
 				save() {
@@ -1578,10 +1578,10 @@
 					this.results();
 				}
 
-				results() {
+				results(preventFocus) {
 					const dirty = this.dirty;
 					this.recalculateScores();
-					elements.results.parentElement.append(elements.undo, elements.copy);
+					elements.results.parentElement.append(elements.undo, elements.copy, elements.showGradeRow);
 					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
 					baseRanking.forEach((x, i) => ranks[x] = i + 1);
@@ -1612,6 +1612,9 @@
 					filterDiv.className = 'filter-wrap';
 					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" aria-label="${this.string('filter')}" value="${this.filterTerm || ''}">`;
 					elements.results.appendChild(filterDiv);
+
+					elements.results.appendChild(elements.showGradeRow);
+					elements.showGradeRow.classList.remove('hidden');
 
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
 					const getSortIcon = col => this.sortState.column === col ? arrow : '';
@@ -1677,17 +1680,19 @@
 					elements.resultFilter.oninput = e => this.filterResults(e.target.value);
 					if (this.filterTerm) this.filterResults(this.filterTerm);
 
-					this.display('results');
+					this.display('results', preventFocus);
 					elements.announcer.textContent = this.string('resultsReady');
 					this.save();
 				}
 
-				display(section) {
+				display(section, preventFocus) {
 					['inputSection', 'battleSection', 'results'].forEach(id =>
 						elements[id].classList.toggle('hidden', id !== section));
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
 					elements.undo.classList.toggle('hidden', section === 'inputSection');
 					elements.copy.classList.toggle('hidden', section !== 'results');
+					elements.showGradeRow.classList.toggle('hidden', section !== 'results');
+					if (section !== 'results') elements.results.parentElement.appendChild(elements.showGradeRow);
 					if (section === 'battleSection') elements.battleSection.before(elements.undo);
 					if (section === 'results') {
 						elements.results.firstChild.prepend(elements.undo);
@@ -1695,7 +1700,7 @@
 					}
 					if (section === 'inputSection') this.updateInputState();
 					const focusTarget = { battleSection: elements.left, results: elements.restartBattle, inputSection: elements.items }[section];
-					focusTarget && setTimeout(() => focusTarget.focus(), 50);
+					if (focusTarget && !preventFocus) setTimeout(() => focusTarget.focus(), 50);
 				}
 
 				copyResults() {
