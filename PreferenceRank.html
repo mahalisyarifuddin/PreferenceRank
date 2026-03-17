@@ -983,26 +983,21 @@
 						gaussians[i] = r * Math.cos(a);
 						if (i + 1 < totalGaussians) gaussians[i + 1] = r * Math.sin(a);
 					}
-					const parameterDelta = new Float64Array(itemCountMinusOne);
 					const sampleParameters = new Float64Array(itemCount);
 					const rankIndices = Array.from({ length: itemCount }, (_, i) => i);
 					rankIndices.sort((a, b) => parameters[b] - parameters[a]);
 					const choleskyData = choleskyFactor.data;
-					const choleskyRows = Array.from({ length: itemCountMinusOne }, (_, i) =>
-						choleskyData.subarray(i * itemCountMinusOne, (i + 1) * itemCountMinusOne));
 					for (let sim = 0; sim < simulationCount; sim++) {
-						const offset = sim * itemCountMinusOne;
-						const gView = gaussians.subarray(offset, offset + itemCountMinusOne);
+						const gOffset = sim * itemCountMinusOne;
 						for (let i = 0; i < itemCountMinusOne; i++) {
 							let sum = 0;
-							const row = choleskyRows[i];
-							// ⚡ Bolt: Use pre-calculated Gaussian subarray for faster indexing
-							for (let j = 0; j <= i; j++) sum += row[j] * gView[j];
-							parameterDelta[i] = sum;
+							const rowOffset = i * itemCountMinusOne;
+							// ⚡ Bolt: Direct indexing into flat choleskyData and gaussians buffers avoids subarray creation and reduces GC pressure
+							for (let j = 0; j <= i; j++) sum += choleskyData[rowOffset + j] * gaussians[gOffset + j];
+							// ⚡ Bolt: Consolidating parameterDelta application and sampleParameters update into a single pass
+							sampleParameters[i] = parameters[i] + sum;
 						}
-						// ⚡ Bolt: Removed ternary branch by splitting last item assignment
-						for (let i = 0; i < itemCountMinusOne; i++)
-							sampleParameters[i] = parameters[i] + parameterDelta[i];
+						// ⚡ Bolt: Separate baseline assignment avoids branch inside the loop
 						sampleParameters[itemCountMinusOne] = parameters[itemCountMinusOne];
 						rankIndices.sort((a, b) => sampleParameters[b] - sampleParameters[a]);
 						for (let r = 0; r < itemCount; r++)
@@ -1493,13 +1488,16 @@
 						}
 					}
 
+					// ⚡ Bolt: Pre-calculate adjusted wins to save N additions per iteration
+					const adjustedWins = new Float64Array(n);
+					for (let i = 0; i < n; i++) adjustedWins[i] = wins[i] + PRIOR;
+					// ⚡ Bolt: Cache initial log-strengths for convergence check
 					const prevLogS = new Float64Array(n);
+					for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
 					const logs = new Float64Array(n);
 					const invN = 1 / n;
 
 					for (let iter = 0; iter < 1000; iter++) {
-						for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
-
 						for (let i = 0; i < n; i++) {
 							const row = this.adj[i];
 							const si = s[i];
@@ -1507,7 +1505,7 @@
 							let denom = 1 / (si + 1) + 1e-12;
 							for (let k = 0, len = row.length; k < len; k += 2)
 								denom += row[k + 1] / (si + s[row[k]]);
-							s[i] = (wins[i] + PRIOR) / denom;
+							s[i] = adjustedWins[i] / denom;
 						}
 
 						let sumLog = 0;
@@ -1517,14 +1515,16 @@
 							sumLog += l;
 						}
 
-						// ⚡ Bolt: Pre-calculate logScale to reduce redundant Math.log calls during normalization
+						// ⚡ Bolt: Pre-calculate logScale to reduce redundant Math.log calls during normalization and convergence check
 						const logScale = sumLog * invN;
 						const scale = Math.exp(logScale);
 						let maxDelta = 0;
 						for (let i = 0; i < n; i++) {
 							s[i] /= scale;
-							const d = Math.abs(logs[i] - logScale - prevLogS[i]);
+							const currentLog = logs[i] - logScale;
+							const d = Math.abs(currentLog - prevLogS[i]);
 							if (d > maxDelta) maxDelta = d;
+							prevLogS[i] = currentLog;
 						}
 						if (maxDelta < convergenceThreshold) break;
 					}
