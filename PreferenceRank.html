@@ -635,14 +635,14 @@
 					<input type="checkbox" id="quickRank">
 					<label for="quickRank" id="labelQuick"></label>
 				</div>
-				<div class="row">
-					<input type="checkbox" id="showGrade">
-					<label for="showGrade" id="labelGrade"></label>
-				</div>
 				<div class="actions">
 					<button id="resume" class="primary hidden"></button>
 					<button id="start" class="primary"></button>
 				</div>
+			</div>
+			<div id="showGradeRow" class="row hidden">
+				<input type="checkbox" id="showGrade">
+				<label for="showGrade" id="labelGrade"></label>
 			</div>
 			<div id="announcer" class="visually-hidden" aria-live="polite"></div>
 			<button id="undo" class="secondary hidden" disabled></button>
@@ -1581,7 +1581,7 @@
 				results() {
 					const dirty = this.dirty;
 					this.recalculateScores();
-					elements.results.parentElement.append(elements.undo, elements.copy);
+					elements.results.parentElement.append(elements.undo, elements.copy, elements.showGradeRow);
 					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
 					baseRanking.forEach((x, i) => ranks[x] = i + 1);
@@ -1612,6 +1612,9 @@
 					filterDiv.className = 'filter-wrap';
 					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" aria-label="${this.string('filter')}" value="${this.filterTerm || ''}">`;
 					elements.results.appendChild(filterDiv);
+
+					elements.results.appendChild(elements.showGradeRow);
+					elements.showGradeRow.classList.remove('hidden');
 
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
 					const getSortIcon = col => this.sortState.column === col ? arrow : '';
@@ -1688,6 +1691,8 @@
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
 					elements.undo.classList.toggle('hidden', section === 'inputSection');
 					elements.copy.classList.toggle('hidden', section !== 'results');
+					elements.showGradeRow.classList.toggle('hidden', section !== 'results');
+					if (section !== 'results') elements.results.parentElement.appendChild(elements.showGradeRow);
 					if (section === 'battleSection') elements.battleSection.before(elements.undo);
 					if (section === 'results') {
 						elements.results.firstChild.prepend(elements.undo);
