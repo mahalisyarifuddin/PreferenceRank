@@ -1431,10 +1431,16 @@
 					const convergenceThreshold = 1e-7;
 
 					const s = new Float64Array(n).fill(1.0);
-					if (this.scores.length === n)
-						for (let i = 0; i < n; i++) s[i] = Math.exp((this.scores[i] - 1000) / INV_LOG10);
+					if (this.scores.length === n) {
+						for (let i = 0; i < n; i++) {
+							const val = Math.exp((this.scores[i] - 1000) / INV_LOG10);
+							s[i] = isFinite(val) && val > 0 ? val : 1.0;
+						}
+					}
 
 					const prevLogS = new Float64Array(n);
+					const logs = new Float64Array(n);
+					const invN = 1 / n;
 
 					for (let iter = 0; iter < 1000; iter++) {
 						for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
@@ -1442,19 +1448,27 @@
 						for (let i = 0; i < n; i++) {
 							const row = this.adj[i];
 							const si = s[i];
-							let denom = 1 / (si + 1);
+							// ⚡ Bolt: Added 1e-12 epsilon for extreme numerical stability
+							let denom = 1 / (si + 1) + 1e-12;
 							for (let k = 0, len = row.length; k < len; k += 2)
 								denom += row[k + 1] / (si + s[row[k]]);
 							s[i] = (wins[i] + PRIOR) / denom;
 						}
 
 						let sumLog = 0;
-						for (let i = 0; i < n; i++) sumLog += Math.log(s[i]);
-						const scale = Math.exp(sumLog / n);
+						for (let i = 0; i < n; i++) {
+							const l = Math.log(s[i]);
+							logs[i] = l;
+							sumLog += l;
+						}
+
+						// ⚡ Bolt: Pre-calculate logScale to reduce redundant Math.log calls during normalization
+						const logScale = sumLog * invN;
+						const scale = Math.exp(logScale);
 						let maxDelta = 0;
 						for (let i = 0; i < n; i++) {
 							s[i] /= scale;
-							const d = Math.abs(Math.log(s[i]) - prevLogS[i]);
+							const d = Math.abs(logs[i] - logScale - prevLogS[i]);
 							if (d > maxDelta) maxDelta = d;
 						}
 						if (maxDelta < convergenceThreshold) break;
