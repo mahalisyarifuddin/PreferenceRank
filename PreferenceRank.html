@@ -1232,14 +1232,14 @@
 					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
 					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
 					['left', 'right', 'tie'].forEach(id => elements[id].addEventListener('mousedown', e => e.preventDefault()));
-					elements.language.onchange = e => { this.lang(e.target.value); this.save(); };
+					elements.language.onchange = e => { this.lang(e.target.value, true); this.save(); };
 					elements.theme.onchange = e => { this.theme(e.target.value); this.save(); };
 					elements.allowTies.onchange = e => this.setTies(e.target.checked);
 					elements.quickRank.onchange = () => this.updateInputState();
 					elements.showGrade.onchange = e => {
 						this.showGrade = e.target.checked;
 						this.save();
-						if (!elements.results.classList.contains('hidden')) this.results();
+						if (!elements.results.classList.contains('hidden')) this.results(true);
 					};
 					elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
 					elements.results.onclick = e => {
@@ -1265,7 +1265,7 @@
 					elements.theme.value = name;
 				}
 
-				lang(language) {
+				lang(language, preventFocus) {
 					this.language = elements.language.value = language;
 					elements.language.setAttribute('aria-label', this.string('languageLabel'));
 					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
@@ -1281,7 +1281,7 @@
 					this.updateHelp();
 					this.updateProgress();
 					this.updateInputState();
-					if (!elements.results.classList.contains('hidden')) this.results();
+					if (!elements.results.classList.contains('hidden')) this.results(preventFocus);
 				}
 
 				save() {
@@ -1578,7 +1578,7 @@
 					this.results();
 				}
 
-				results() {
+				results(preventFocus) {
 					const dirty = this.dirty;
 					this.recalculateScores();
 					elements.results.parentElement.append(elements.undo, elements.copy, elements.showGradeRow);
@@ -1680,12 +1680,12 @@
 					elements.resultFilter.oninput = e => this.filterResults(e.target.value);
 					if (this.filterTerm) this.filterResults(this.filterTerm);
 
-					this.display('results');
+					this.display('results', preventFocus);
 					elements.announcer.textContent = this.string('resultsReady');
 					this.save();
 				}
 
-				display(section) {
+				display(section, preventFocus) {
 					['inputSection', 'battleSection', 'results'].forEach(id =>
 						elements[id].classList.toggle('hidden', id !== section));
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
@@ -1700,7 +1700,7 @@
 					}
 					if (section === 'inputSection') this.updateInputState();
 					const focusTarget = { battleSection: elements.left, results: elements.restartBattle, inputSection: elements.items }[section];
-					focusTarget && setTimeout(() => focusTarget.focus(), 50);
+					if (focusTarget && !preventFocus) setTimeout(() => focusTarget.focus(), 50);
 				}
 
 				copyResults() {
