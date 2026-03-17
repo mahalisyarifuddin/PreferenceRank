@@ -1696,10 +1696,7 @@
 						body.appendChild(row);
 					});
 
-					const lbWrap = document.createElement('div');
-					lbWrap.className = 'lb-wrap';
-					lbWrap.appendChild(lb);
-					elements.results.appendChild(lbWrap);
+					elements.results.appendChild(lb);
 					elements.resultFilter = document.getElementById('resultFilter');
 					elements.resultFilter.oninput = e => this.filterResults(e.target.value);
 					if (this.filterTerm) this.filterResults(this.filterTerm);
