@@ -1593,7 +1593,7 @@
 							? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir
 							: 0,
 						item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
-						grade: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
+						grade: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
 						score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
 						ci: (a, b) => this.stats?.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
 					};
