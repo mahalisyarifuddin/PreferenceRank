@@ -983,25 +983,41 @@
 						gaussians[i] = r * Math.cos(a);
 						if (i + 1 < totalGaussians) gaussians[i + 1] = r * Math.sin(a);
 					}
-					const sampleParameters = new Float64Array(itemCount);
+					const sampleParameters = new Float64Array(itemCount * 4);
 					const rankIndices = Array.from({ length: itemCount }, (_, i) => i);
 					rankIndices.sort((a, b) => parameters[b] - parameters[a]);
 					const choleskyData = choleskyFactor.data;
-					for (let sim = 0; sim < simulationCount; sim++) {
-						const gOffset = sim * itemCountMinusOne;
+					// ⚡ Bolt: Simulation loop batched by 4 to reduce choleskyData reads and improve cache performance
+					for (let sim = 0; sim < simulationCount; sim += 4) {
+						const batchSize = Math.min(4, simulationCount - sim);
+						const gOff0 = sim * itemCountMinusOne, gOff1 = gOff0 + itemCountMinusOne, gOff2 = gOff1 + itemCountMinusOne, gOff3 = gOff2 + itemCountMinusOne;
 						for (let i = 0; i < itemCountMinusOne; i++) {
-							let sum = 0;
+							let s0 = 0, s1 = 0, s2 = 0, s3 = 0;
 							const rowOffset = i * itemCountMinusOne;
-							// ⚡ Bolt: Direct indexing into flat choleskyData and gaussians buffers avoids subarray creation and reduces GC pressure
-							for (let j = 0; j <= i; j++) sum += choleskyData[rowOffset + j] * gaussians[gOffset + j];
-							// ⚡ Bolt: Consolidating parameterDelta application and sampleParameters update into a single pass
-							sampleParameters[i] = parameters[i] + sum;
+							for (let j = 0; j <= i; j++) {
+								const c = choleskyData[rowOffset + j];
+								s0 += c * gaussians[gOff0 + j];
+								if (batchSize > 1) s1 += c * gaussians[gOff1 + j];
+								if (batchSize > 2) s2 += c * gaussians[gOff2 + j];
+								if (batchSize > 3) s3 += c * gaussians[gOff3 + j];
+							}
+							sampleParameters[i] = parameters[i] + s0;
+							if (batchSize > 1) sampleParameters[i + itemCount] = parameters[i] + s1;
+							if (batchSize > 2) sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
+							if (batchSize > 3) sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
 						}
-						// ⚡ Bolt: Separate baseline assignment avoids branch inside the loop
 						sampleParameters[itemCountMinusOne] = parameters[itemCountMinusOne];
-						rankIndices.sort((a, b) => sampleParameters[b] - sampleParameters[a]);
-						for (let r = 0; r < itemCount; r++)
-							simulationRanks[rankIndices[r] * simulationCount + sim] = r + 1;
+						if (batchSize > 1) sampleParameters[itemCount * 2 - 1] = parameters[itemCountMinusOne];
+						if (batchSize > 2) sampleParameters[itemCount * 3 - 1] = parameters[itemCountMinusOne];
+						if (batchSize > 3) sampleParameters[itemCount * 4 - 1] = parameters[itemCountMinusOne];
+
+						for (let b = 0; b < batchSize; b++) {
+							const simIdx = sim + b;
+							const offset = b * itemCount;
+							rankIndices.sort((idxA, idxB) => sampleParameters[offset + idxB] - sampleParameters[offset + idxA]);
+							for (let r = 0; r < itemCount; r++)
+								simulationRanks[rankIndices[r] * simulationCount + simIdx] = r + 1;
+						}
 					}
 					const spreads = [];
 					for (let i = 0; i < itemCount; i++) {
