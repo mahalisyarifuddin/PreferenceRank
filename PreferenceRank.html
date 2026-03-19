@@ -987,7 +987,8 @@
 						}
 					}
 					const sampleParameters = new Float64Array(itemCount * 4);
-					const rankIndices = Array.from({ length: itemCount }, (_, i) => i);
+					const rankIndices = new Int32Array(itemCount);
+					for (let i = 0; i < itemCount; i++) rankIndices[i] = i;
 					rankIndices.sort((a, b) => parameters[b] - parameters[a]);
 					const choleskyData = choleskyFactor.data;
 					// ⚡ Bolt: Simulation loop batched by 4 to reduce choleskyData reads and improve cache performance via contiguous Gaussian access
@@ -996,18 +997,33 @@
 						for (let i = 0; i < itemCountMinusOne; i++) {
 							let s0 = 0, s1 = 0, s2 = 0, s3 = 0;
 							const rowOffset = i * itemCountMinusOne;
-							for (let j = 0; j <= i; j++) {
-								const c = choleskyData[rowOffset + j];
-								const gIdx = j * simulationCount + sim;
-								s0 += c * gaussians[gIdx];
-								if (batchSize > 1) s1 += c * gaussians[gIdx + 1];
-								if (batchSize > 2) s2 += c * gaussians[gIdx + 2];
-								if (batchSize > 3) s3 += c * gaussians[gIdx + 3];
+							if (batchSize === 4) {
+								for (let j = 0; j <= i; j++) {
+									const c = choleskyData[rowOffset + j];
+									const gIdx = j * simulationCount + sim;
+									s0 += c * gaussians[gIdx];
+									s1 += c * gaussians[gIdx + 1];
+									s2 += c * gaussians[gIdx + 2];
+									s3 += c * gaussians[gIdx + 3];
+								}
+								sampleParameters[i] = parameters[i] + s0;
+								sampleParameters[i + itemCount] = parameters[i] + s1;
+								sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
+								sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
+							} else {
+								for (let j = 0; j <= i; j++) {
+									const c = choleskyData[rowOffset + j];
+									const gIdx = j * simulationCount + sim;
+									s0 += c * gaussians[gIdx];
+									if (batchSize > 1) s1 += c * gaussians[gIdx + 1];
+									if (batchSize > 2) s2 += c * gaussians[gIdx + 2];
+									if (batchSize > 3) s3 += c * gaussians[gIdx + 3];
+								}
+								sampleParameters[i] = parameters[i] + s0;
+								if (batchSize > 1) sampleParameters[i + itemCount] = parameters[i] + s1;
+								if (batchSize > 2) sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
+								if (batchSize > 3) sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
 							}
-							sampleParameters[i] = parameters[i] + s0;
-							if (batchSize > 1) sampleParameters[i + itemCount] = parameters[i] + s1;
-							if (batchSize > 2) sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
-							if (batchSize > 3) sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
 						}
 						sampleParameters[itemCountMinusOne] = parameters[itemCountMinusOne];
 						if (batchSize > 1) sampleParameters[itemCount * 2 - 1] = parameters[itemCountMinusOne];
