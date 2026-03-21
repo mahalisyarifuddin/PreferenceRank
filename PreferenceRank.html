@@ -1587,16 +1587,26 @@
 					this.updateProgress();
 					this.clear();
 					(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
-					setTimeout(() => (
-						!elements.battleSection.classList.contains('hidden') && this.busy &&
-						(this.busy = false, this.next(result), this.save())
-					), 150);
+					setTimeout(() => {
+						// 🩺 Medic: Process background state updates even if UI is hidden (e.g., user clicked cancel)
+						// to prevent 'busy' deadlocks when resuming sessions later.
+						if (this.busy) {
+							this.busy = false;
+							this.next(result);
+							this.save();
+						}
+					}, 150);
 				}
 
 				next(result) {
 					this.clear();
 					const nextPair = this.provider.next(this, result);
-					if (!nextPair) return this.pair = null, this.results();
+					if (!nextPair) {
+						this.pair = null;
+						// 🩺 Medic: Only auto-redirect to results if the battle UI is currently active
+						if (!elements.battleSection.classList.contains('hidden')) this.results();
+						return;
+					}
 					this.pair = nextPair;
 					this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
 					this.render();
