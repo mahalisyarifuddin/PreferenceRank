@@ -7,7 +7,7 @@
 PreferenceRank adalah alat fleksibel dan ilmiah untuk mengurutkan apa saja sesuai preferensi Anda, terinspirasi dari *character/bias sorter* yang viral, tetapi dikembangkan dengan pendekatan yang lebih terstruktur. Baik itu karakter favorit, makanan, film, atau destinasi wisata, alat ini memastikan hasil pemeringkatan yang akurat dan menyenangkan.
 
 ## Cara Kerja
-PreferenceRank mengurutkan item Anda dengan membandingkannya secara berpasangan. Alat ini menggunakan **sistem peringkat Elo Bradley-Terry varian Arena AI** untuk memberikan skor pada setiap item berdasarkan pilihan Anda, sehingga menghasilkan peringkat yang transparan dan relatif. Skor dihitung pada skala 400 poin dengan rata-rata 1000. Lihat bagian "Mode Peringkat" untuk detail lebih lanjut mengenai metode perbandingan.
+PreferenceRank mengurutkan item Anda dengan membandingkannya secara berpasangan. Alat ini menggunakan **sistem peringkat Elo Bradley-Terry varian berbobot** untuk memberikan skor pada setiap item berdasarkan pilihan Anda, sehingga menghasilkan peringkat yang transparan dan relatif. Skor dihitung pada skala 400 poin dengan rata-rata 1000. Lihat bagian "Mode Peringkat" untuk detail lebih lanjut mengenai metode perbandingan.
 
 ## Mode Peringkat
 PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
@@ -31,7 +31,7 @@ Berdasarkan **analisis titik lutut (knee point analysis)**, ambang batas konverg
 - **Masukan Fleksibel**: Urutkan apa saja—karakter, makanan, film, destinasi, dan lainnya.
 - **Dua Mode Peringkat**: Pilih antara "Peringkat Penuh" yang komprehensif atau "Peringkat Cepat" yang cerdas (lihat detail di atas).
 - **Penilaian Ilmiah**: Menggunakan sistem peringkat Elo Bradley-Terry untuk hasil yang akurat.
-- **Estimasi Ketidakpastian**: Menampilkan keyakinan peringkat dengan rincian "Rentang Peringkat" dan "Interval Keyakinan (IK)" (tingkat kepercayaan 10%), tersedia di mode **Peringkat Cepat** dan **Peringkat Penuh**.
+- **Estimasi Ketidakpastian**: Menampilkan keyakinan peringkat dengan rincian "Rentang Peringkat" dan "Interval Keyakinan (IK)", tersedia di mode **Peringkat Cepat** dan **Peringkat Penuh**.
 - **Jumlah Pertarungan**: Melihat jumlah pertarungan yang diikuti oleh setiap item untuk wawasan lebih mendalam.
 - **Nilai Huruf Eksperimental**: Sistem nilai huruf opsional berdasarkan skor Elo (S, A, B, C, D, E, F).
 - **Urungkan dan Seri**: Batalkan pilihan terakhir Anda dengan mudah atau izinkan hasil seri dalam pemeringkatan.
