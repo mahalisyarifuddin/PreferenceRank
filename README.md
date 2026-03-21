@@ -7,7 +7,7 @@ Sorting made better, powered by science.
 PreferenceRank is a versatile and scientific tool for ranking anything you like, inspired by viral character/bias sorters but enhanced with a more rigorous approach. Rank your favorite characters, foods, movies, or travel destinations with precision and fun.
 
 ## How It Works
-PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rating system**, inspired by the Bradley-Terry model, to assign a score to each item based on your choices. This provides a transparent and relative ranking that adapts with every decision you make. See the "Ranking Modes" section for more details on the comparison methods.
+PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rating system**, specifically the **Arena AI Bradley-Terry variant**, to assign a score to each item based on your choices. This provides a transparent and relative ranking that adapts with every decision you make. Scores are calculated on a 400-point scale with an average of 1000. See the "Ranking Modes" section for more details on the comparison methods.
 
 ## Ranking Modes
 PreferenceRank offers two distinct modes to sort your items:
@@ -31,7 +31,7 @@ Based on a **knee point analysis**, the convergence threshold is set to `1e-7`. 
 - **Flexible Input**: Rank anything—characters, foods, movies, destinations, and more.
 - **Two Ranking Modes**: Choose between a comprehensive "Full Rank" or an intelligent "Quick Rank" (see details above).
 - **Scientific Scoring**: Utilizes the Bradley-Terry Elo rating system for accurate results.
-- **Uncertainty Estimates**: Visualizes ranking confidence with "Rank Spread" and "Confidence Interval (CI)" details, available in both **Quick Rank** and **Full Rank** modes.
+- **Uncertainty Estimates**: Visualizes ranking confidence with "Rank Spread" and "Confidence Interval (CI)" (10% confidence level) details, available in both **Quick Rank** and **Full Rank** modes.
 - **Matches Count**: View the number of battles each item participated in for deeper insights.
 - **Experimental Letter Grades**: Optional letter grade system based on Elo scores (S, A, B, C, D, E, F).
 - **Undo and Ties**: Easily undo your last choice or allow for ties in the rankings.
