@@ -894,7 +894,7 @@
 				static calculate(items, scores, adj) {
 					const itemCount = items.length;
 					if (itemCount < 2) return null;
-					const scoreFactor = 1 / 400;
+					const scoreFactor = Math.log(10) / 400;
 					const parameters = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++)
 						parameters[i] = (scores[i] - 1000) * scoreFactor;
@@ -1518,7 +1518,7 @@
 					});
 
 					const PRIOR = 0.5;
-					const SCALE = 400;
+					const SCALE = 400 / Math.log(10);
 					const convergenceThreshold = 1e-7;
 
 					const s = new Float64Array(n).fill(1.0);
