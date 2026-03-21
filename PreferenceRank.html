@@ -656,6 +656,10 @@
 					<input type="checkbox" id="quickRank">
 					<label for="quickRank" id="labelQuick"></label>
 				</div>
+				<div class="row">
+					<input type="checkbox" id="lengthBias">
+					<label for="lengthBias" id="labelBias"></label>
+				</div>
 				<div class="actions">
 					<button id="resume" class="primary hidden"></button>
 					<button id="start" class="primary"></button>
@@ -707,6 +711,7 @@
 					labelItems: 'Enter items, one per line:',
 					labelTies: 'Allow Ties',
 					labelQuick: 'Use Quick Rank (fewer comparisons)',
+					labelBias: 'Length Bias Correction',
 					duplicate: '{count} duplicate item(s) removed.',
 					itemsCount: '{count} items',
 					start: 'Start Ranking',
@@ -757,6 +762,7 @@
 					labelItems: 'Masukkan pilihan, satu per baris:',
 					labelTies: 'Izinkan Seri',
 					labelQuick: 'Gunakan Peringkat Cepat (lebih sedikit perbandingan)',
+					labelBias: 'Koreksi Bias Panjang Teks',
 					duplicate: '{count} item duplikat dihapus.',
 					itemsCount: '{count} pilihan',
 					start: 'Mulai Peringkat',
@@ -894,7 +900,7 @@
 				static calculate(items, scores, adj) {
 					const itemCount = items.length;
 					if (itemCount < 2) return null;
-					const scoreFactor = Math.log(10) / 400;
+					const scoreFactor = 1 / 400;
 					const parameters = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++)
 						parameters[i] = (scores[i] - 1000) * scoreFactor;
@@ -944,7 +950,7 @@
 				static calculateCI(itemCount, inverseSubHessian, scoreFactor) {
 					const itemCountMinusOne = itemCount - 1;
 					const confidenceIntervals = new Float64Array(itemCount);
-					const multiplier = 0.1257;
+					const multiplier = 1.96;
 					const inverseData = inverseSubHessian.data;
 					const rowSums = new Float64Array(itemCountMinusOne);
 					let totalSum = 0;
@@ -970,7 +976,7 @@
 					const itemCountMinusOne = itemCount - 1;
 					const simulationCount = 500;
 					const simulationRanks = new Int32Array(itemCount * simulationCount);
-					const multiplier = 0.1257;
+					const multiplier = 1.96;
 					const totalGaussians = simulationCount * itemCountMinusOne;
 					const gaussians = new Float64Array(totalGaussians);
 					// ⚡ Bolt: Transposed Gaussian buffer [item][simulation] for contiguous access in batched loops
@@ -1287,6 +1293,7 @@
 					elements.theme.onchange = e => { this.theme(e.target.value); this.save(); };
 					elements.allowTies.onchange = e => this.setTies(e.target.checked);
 					elements.quickRank.onchange = () => this.updateInputState();
+					elements.lengthBias.onchange = () => { this.dirty = true; this.save(); };
 					elements.showGrade.onchange = e => {
 						this.showGrade = e.target.checked;
 						this.save();
@@ -1321,7 +1328,7 @@
 					elements.language.setAttribute('aria-label', this.string('languageLabel'));
 					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
 					elements.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'labelGrade', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew']
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'labelBias', 'labelGrade', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew']
 						.forEach(key => elements[key].textContent = this.string(key));
 					elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
 					elements.left.title = this.string('shortcutLeft');
@@ -1338,7 +1345,12 @@
 				save() {
 					localStorage.setItem('preferenceRankData', JSON.stringify({
 						inputValue: elements.items.value,
-						settings: { theme: elements.theme.value, language: this.language, showGrade: this.showGrade },
+						settings: {
+							theme: elements.theme.value,
+							language: this.language,
+							showGrade: this.showGrade,
+							lengthBias: elements.lengthBias.checked
+						},
 						battle: this.provider ? {
 							...this,
 							provider: this.provider,
@@ -1355,7 +1367,8 @@
 								this.theme(data.settings.theme),
 								this.lang(data.settings.language),
 								this.showGrade = !!data.settings.showGrade,
-								elements.showGrade.checked = this.showGrade
+								elements.showGrade.checked = this.showGrade,
+								elements.lengthBias.checked = !!data.settings.lengthBias
 							);
 							data.inputValue && (elements.items.value = data.inputValue, this.updateInputState());
 							data.battle
@@ -1479,7 +1492,8 @@
 						scores: Array(unique.length).fill(1e3),
 						matches: [], pair: null, swapped: false, step: 0,
 						allowTies: elements.allowTies.checked,
-						history: [], busy: false, swaps: {}, dirty: true, _prevStrength: null
+						history: [], busy: false, swaps: {}, dirty: true, _prevStrength: null,
+						styleWeight: 0
 					});
 					elements.undo.disabled = true;
 					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
@@ -1496,13 +1510,24 @@
 					const n = this.items.length;
 					if ((this.dirty === false && this.scores?.length === n && this.adj?.length === n) || n === 0) return;
 
+					const styleEnabled = elements.lengthBias?.checked;
+					const z = styleEnabled ? new Float64Array(this.items.map(item => item.length)) : null;
+					if (styleEnabled) {
+						let sumZ = 0;
+						for (let i = 0; i < n; i++) sumZ += z[i];
+						const avgZ = sumZ / n;
+						for (let i = 0; i < n; i++) z[i] -= avgZ;
+					}
+
 					const wins = new Float64Array(n);
 					const adjMaps = Array.from({ length: n }, () => new Map());
 					for (const { a, b, result } of this.matches) {
-						wins[a] += result;
-						wins[b] += 1 - result;
-						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
-						adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
+						// Weighted BT: Each win/loss counted twice, each tie split (1 win, 1 loss)
+						const weight = 2;
+						wins[a] += result * weight;
+						wins[b] += (1 - result) * weight;
+						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + weight);
+						adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + weight);
 					}
 
 					this.adj = adjMaps.map(map => {
@@ -1512,13 +1537,13 @@
 					});
 
 					const PRIOR = 0.5;
-					const INV_LOG10 = 400 / Math.log(10);
+					const SCALE = 400;
 					const convergenceThreshold = 1e-7;
 
 					const s = new Float64Array(n).fill(1.0);
 					if (this.scores.length === n) {
 						for (let i = 0; i < n; i++) {
-							const val = Math.exp((this.scores[i] - 1000) / INV_LOG10);
+							const val = Math.exp((this.scores[i] - 1000) / SCALE);
 							s[i] = isFinite(val) && val > 0 ? val : 1.0;
 						}
 					}
@@ -1531,15 +1556,37 @@
 					for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
 					const logs = new Float64Array(n);
 					const invN = 1 / n;
+					let gamma = this.styleWeight || 0;
 
 					for (let iter = 0; iter < 1000; iter++) {
+						if (styleEnabled && iter % 5 === 0 && iter > 0) {
+							let gradient = 0, hessian = 0;
+							for (const { a, b, result } of this.matches) {
+								const weight = 2;
+								const si = s[a], sj = s[b];
+								const za = z[a], zb = z[b];
+								const expBias = Math.exp(gamma * (za - zb));
+								const p = (si * expBias) / (si * expBias + sj);
+								gradient += weight * (result - p) * (za - zb);
+								hessian += weight * p * (1 - p) * (za - zb) * (za - zb);
+							}
+							if (Math.abs(hessian) > 1e-9) {
+								const delta = gradient / (hessian + 1e-9);
+								gamma += Math.max(-0.5, Math.min(0.5, delta));
+							}
+						}
+
 						for (let i = 0; i < n; i++) {
 							const row = this.adj[i];
 							const si = s[i];
 							// ⚡ Bolt: Added 1e-12 epsilon for extreme numerical stability
 							let denom = 1 / (si + 1) + 1e-12;
-							for (let k = 0, len = row.length; k < len; k += 2)
-								denom += row[k + 1] / (si + s[row[k]]);
+							for (let k = 0, len = row.length; k < len; k += 2) {
+								const j = row[k], count = row[k + 1];
+								const expBias = styleEnabled ? Math.exp(gamma * (z[i] - z[j])) : 1;
+								const expBiasInv = styleEnabled ? Math.exp(gamma * (z[j] - z[i])) : 1;
+								denom += count * expBias / (si * expBias + s[j]);
+							}
 							s[i] = adjustedWins[i] / denom;
 						}
 
@@ -1564,7 +1611,8 @@
 						if (maxDelta < convergenceThreshold) break;
 					}
 
-					this.scores = Array.from(s, v => 1000 + Math.log(v) * INV_LOG10);
+					this.scores = Array.from(s, v => 1000 + Math.log(v) * SCALE);
+					this.styleWeight = gamma;
 					this.dirty = false;
 				}
 
