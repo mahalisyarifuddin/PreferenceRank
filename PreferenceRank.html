@@ -90,10 +90,14 @@
 				border: 1px solid var(--border);
 				border-radius: 8px;
 				max-width: 720px;
-				padding: 3rem 2rem 2rem;
+				padding: 2rem;
 				width: 100%;
 				position: relative;
 				margin: 2rem 0;
+			}
+
+			.container.input-mode {
+				padding-top: 3.5rem;
 			}
 
 			.hidden {
@@ -474,7 +478,11 @@
 				}
 
 				.container {
-					padding: 2.5rem 1.25rem 1.25rem;
+					padding: 1.25rem;
+				}
+
+				.container.input-mode {
+					padding-top: 3rem;
 				}
 
 				.selectors {
@@ -626,7 +634,7 @@
 		</style>
 	</head>
 	<body>
-		<div class="container">
+		<div id="container" class="container">
 			<div id="selectors" class="selectors">
 				<select id="language" aria-label="Language">
 					<option value="en">English</option>
@@ -1345,19 +1353,19 @@
 				load() {
 					try {
 						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-						data && (()=>{
+						if (data) {
 							data.settings && (this.theme(data.settings.theme),
 							this.lang(data.settings.language),
 							this.showGrade = !!data.settings.showGrade,
 							elements.showGrade.checked = this.showGrade);
 							data.inputValue && (elements.items.value = data.inputValue,
 							this.updateInputState());
-							data.battle ? (data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle)) : this.display('inputSection');
+							if (data.battle) return data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle);
 						}
-						)();
 					} catch {
 						localStorage.removeItem('preferenceRankData');
 					}
+					this.display('inputSection');
 				}
 				prompt(battle) {
 					this.pending = battle;
@@ -1767,6 +1775,7 @@
 				}
 				display(section, preventFocus) {
 					document.body.classList.toggle('results-mode', section === 'results');
+					elements.container.classList.toggle('input-mode', section === 'inputSection');
 					['inputSection', 'battleSection', 'results'].forEach(id=>elements[id].classList.toggle('hidden', id !== section));
 					elements.selectors.classList.toggle('hidden', section !== 'inputSection');
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
