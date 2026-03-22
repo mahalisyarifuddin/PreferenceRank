@@ -973,7 +973,7 @@
 							}
 						}
 						const siPlusOne = si + 1;
-						data[iOffset + i] += diagI + si / (siPlusOne * siPlusOne) + 1e-9;
+						data[iOffset + i] += diagI + 0.04 * si / (siPlusOne * siPlusOne) + 1e-9;
 					}
 					return Matrix.inverse({
 						rows: itemCountMinusOne,
@@ -1577,7 +1577,7 @@
 				}
 
 				getGrade(score) {
-					return score >= 1400 ? 'S' : score >= 1200 ? 'A' : score >= 1000 ? 'B' : score >= 800 ? 'C' : score >= 600 ? 'D' : score >= 400 ? 'E' : 'F';
+					return score >= 1600 ? 'S' : score >= 1200 ? 'A' : score >= 800 ? 'B' : score >= 400 ? 'C' : score >= 0 ? 'D' : score >= -400 ? 'E' : 'F';
 				}
 
 				updateHelp() {
@@ -1665,7 +1665,7 @@
 					}
 					);
 
-					const PRIOR = 0.5;
+					const PRIOR = 0.02;
 					const INV_LOG10 = 400 / Math.log(10);
 					const convergenceThreshold = 1e-7;
 
@@ -1690,7 +1690,7 @@
 						for (let i = 0; i < n; i++) {
 							const row = this.adj[i];
 							const si = s[i];
-							let denom = 1 / (si + 1) + 1e-12;
+							let denom = 0.04 / (si + 1) + 1e-12;
 							for (let k = 0, len = row.length; k < len; k += 2)
 								denom += row[k + 1] / (si + s[row[k]]);
 							s[i] = adjustedWins[i] / denom;

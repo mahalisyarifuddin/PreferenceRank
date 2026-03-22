@@ -19,7 +19,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
         return row;
     });
 
-    const PRIOR = 0.5;
+    const PRIOR = 0.02;
     const s = new Float64Array(n).fill(1.0);
     const adjustedWins = new Float64Array(n);
     for (let i = 0; i < n; i++) adjustedWins[i] = wins[i] + PRIOR;
@@ -36,7 +36,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
         for (let i = 0; i < n; i++) {
             const row = adj[i];
             const si = s[i];
-            let denom = 1 / (si + 1) + 1e-12;
+            let denom = 0.04 / (si + 1) + 1e-12;
             for (let k = 0, len = row.length; k < len; k += 2)
                 denom += row[k + 1] / (si + s[row[k]]);
             s[i] = adjustedWins[i] / denom;
