@@ -63,7 +63,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
     }
     const end = performance.now();
 
-    const scores = Array.from(s, v => 1000 + Math.log(v) * SCALE);
+    const scores = Array.from(s, v => Math.max(0, 1000 + Math.log(v) * SCALE));
     return { scores, iterations, time: end - start };
 }
 
