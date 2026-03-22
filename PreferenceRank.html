@@ -1429,7 +1429,7 @@
 					this.updateHelp();
 				}
 				getGrade(score) {
-					return score >= 2000 ? 'S' : score >= 1600 ? 'A' : score >= 1200 ? 'B' : score >= 800 ? 'C' : score >= 400 ? 'D' : score > 0 ? 'E' : 'F';
+					return score >= 1795 ? 'S' : score >= 1400 ? 'A' : score >= 1000 ? 'B' : score >= 800 ? 'C' : score >= 600 ? 'D' : score >= 400 ? 'E' : 'F';
 				}
 				updateHelp() {
 					const hidden = elements.tips.classList.contains('hidden');
@@ -1894,7 +1894,7 @@
 					}
 				}
 			}
-			new PreferenceRank();
+			window.app = new PreferenceRank();
 		</script>
 	</body>
 </html>
