@@ -1349,7 +1349,7 @@
 					this.updateHelp();
 				}
 				getGrade(score) {
-					return score >= 1400 ? 'S' : score >= 1200 ? 'A' : score >= 1000 ? 'B' : score >= 800 ? 'C' : score >= 600 ? 'D' : score >= 400 ? 'E' : 'F';
+					return score >= 1600 ? 'S' : score >= 1200 ? 'A' : score >= 800 ? 'B' : score >= 400 ? 'C' : score > 0 ? 'D' : 'F';
 				}
 				updateHelp() {
 					const hidden = elements.tips.classList.contains('hidden');
@@ -1474,7 +1474,17 @@
 						}
 						if (maxDelta < THRESHOLD) break;
 					}
-					this.scores = Array.from(s, v => 1000 + Math.log(v) * INV_LOG10);
+					const rawScores = new Float64Array(n);
+					for (let i = 0; i < n; i++) rawScores[i] = 1000 + Math.log(s[i]) * INV_LOG10;
+					let offset = 0, low = -1000 * n, high = 1000 * n;
+					for (let i = 0; i < 40; i++) {
+						offset = (low + high) / 2;
+						let sum = 0;
+						for (let j = 0; j < n; j++) sum += Math.max(0, rawScores[j] + offset);
+						if (sum > n * 1000) { high = offset; continue; }
+						low = offset;
+					}
+					this.scores = Array.from(rawScores, v => Math.max(0, v + offset));
 					this.dirty = false;
 				}
 				choose(winner) {
