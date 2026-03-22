@@ -1503,8 +1503,8 @@
 					const wins = new Float64Array(n);
 					const adjMaps = Array.from({ length: n }, () => new Map());
 					for (const { a, b, result } of this.matches) {
-						// Weighted BT: Each win/loss counted twice, each tie split (1 win, 1 loss)
-						const weight = 2;
+						// Weighted BT: Each win/loss counted three times, each tie split (1.5 win, 1.5 loss)
+						const weight = 3;
 						wins[a] += result * weight;
 						wins[b] += (1 - result) * weight;
 						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + weight);
