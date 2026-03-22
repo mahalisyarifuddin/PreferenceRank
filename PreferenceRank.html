@@ -1448,7 +1448,7 @@
 				}
 
 				getGrade(score) {
-					return score >= 1300 ? 'S' : score >= 1100 ? 'A' : score >= 900 ? 'B' : score >= 700 ? 'C' : score >= 500 ? 'D' : score >= 300 ? 'E' : 'F';
+					return score >= 1600 ? 'S' : score >= 1200 ? 'A' : score >= 800 ? 'B' : score >= 400 ? 'C' : score >= 0 ? 'D' : score >= -400 ? 'E' : 'F';
 				}
 
 				updateHelp() {
