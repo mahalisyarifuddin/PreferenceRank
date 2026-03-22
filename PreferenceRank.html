@@ -59,7 +59,12 @@
 				box-sizing: border-box;
 				margin: 0;
 				padding: 0;
+				outline-offset: 2px;
 				transition: background-color .3s, color .3s, border-color .3s, outline-color .3s;
+			}
+
+			*:focus-visible {
+				outline: 2px solid var(--primary);
 			}
 
 			body {
@@ -67,7 +72,6 @@
 				color: var(--text);
 				font-family: sans-serif;
 				display: flex;
-				align-items: center;
 				justify-content: center;
 				min-height: 100vh;
 				padding: 1rem;
@@ -78,16 +82,18 @@
 			}
 
 			body.results-mode .container {
-				margin: 0 auto;
+				margin: 2rem auto;
 			}
 
 			.container {
 				background: var(--surface);
 				border: 1px solid var(--border);
 				border-radius: 8px;
-				max-width: 720px;
-				padding: 2rem;
+				max-width: 960px;
+				padding: 3rem 2rem 2rem;
 				width: 100%;
+				position: relative;
+				margin: 2rem 0;
 			}
 
 			.hidden {
@@ -113,10 +119,6 @@
 				width: 100%;
 			}
 
-			input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
-				outline: 2px solid var(--primary);
-				outline-offset: 2px;
-			}
 
 			textarea {
 				font-family: monospace;
@@ -165,10 +167,11 @@
 
 			.selectors {
 				position: absolute;
-				right: 2rem;
+				right: 1.5rem;
 				top: 1rem;
 				display: flex;
 				gap: 8px;
+				z-index: 100;
 			}
 
 			.selectors select {
@@ -439,7 +442,7 @@
 				align-items: center;
 				position: relative;
 				min-height: 40px;
-				margin-bottom: 1rem;
+				margin: 0.5rem 0 1rem;
 			}
 
 			.header #undo {
@@ -471,13 +474,15 @@
 				}
 
 				.container {
-					padding: 1.5rem;
+					padding: 2.5rem 1.25rem 1.25rem;
 				}
 
 				.selectors {
-					position: static;
+					position: absolute;
+					right: 1.25rem;
+					top: 0.75rem;
 					justify-content: flex-end;
-					margin-bottom: .5rem;
+					margin-bottom: 0;
 				}
 
 				#battle, #tieWrap, #restartWrap {
@@ -622,6 +627,17 @@
 	</head>
 	<body>
 		<div class="container">
+			<div class="selectors">
+				<select id="language" aria-label="Language">
+					<option value="en">English</option>
+					<option value="id">Bahasa Indonesia</option>
+				</select>
+				<select id="theme" aria-label="Theme">
+					<option value="auto">Auto</option>
+					<option value="light">Light</option>
+					<option value="dark">Dark</option>
+				</select>
+			</div>
 			<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
 				<div class="session-card">
 					<div class="session-icon">&#x21BA;</div>
@@ -634,17 +650,6 @@
 				</div>
 			</div>
 			<div id="inputSection">
-				<div class="selectors">
-					<select id="language" aria-label="Language">
-						<option value="en">English</option>
-						<option value="id">Bahasa Indonesia</option>
-					</select>
-					<select id="theme" aria-label="Theme">
-						<option value="auto"></option>
-						<option value="light"></option>
-						<option value="dark"></option>
-					</select>
-				</div>
 				<h1 id="title"></h1>
 				<div class="group">
 					<label for="items" id="labelItems"></label>
@@ -704,7 +709,7 @@
 					title: 'PreferenceRank',
 					languageLabel: 'Language',
 					themeLabel: 'Theme',
-					autoTheme: 'Auto Theme',
+					autoTheme: 'Auto',
 					lightTheme: 'Light',
 					darkTheme: 'Dark',
 					labelItems: 'Enter items, one per line:',
@@ -744,7 +749,7 @@
 					resumeConfirm: 'Continue',
 					resumeNew: 'New Session',
 					estMatches: ' (~{count} comparisons)',
-					labelGrade: 'Show Letter Grades (Experimental)',
+					labelGrade: 'Show Letter Grades',
 					rankSpread: 'Rank Spread',
 					matches: 'Matches',
 					ci: 'CI (±)',
@@ -754,7 +759,7 @@
 					title: 'PreferenceRank',
 					languageLabel: 'Bahasa',
 					themeLabel: 'Tema',
-					autoTheme: 'Tema Otomatis',
+					autoTheme: 'Otomatis',
 					lightTheme: 'Terang',
 					darkTheme: 'Gelap',
 					labelItems: 'Masukkan pilihan, satu per baris:',
@@ -794,7 +799,7 @@
 					resumeConfirm: 'Lanjutkan',
 					resumeNew: 'Sesi Baru',
 					estMatches: ' (~{count} perbandingan)',
-					labelGrade: 'Tampilkan Nilai Huruf (Eksperimental)',
+					labelGrade: 'Tampilkan Nilai Huruf',
 					rankSpread: 'Rentang Peringkat',
 					matches: 'Pertandingan',
 					ci: 'IK (±)',
