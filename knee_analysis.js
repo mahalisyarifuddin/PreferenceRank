@@ -6,7 +6,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
     const wins = new Float64Array(n);
     const adjMaps = Array.from({ length: n }, () => new Map());
     for (const { a, b, result } of matches) {
-        const weight = 2;
+        const weight = 1;
         wins[a] += result * weight;
         wins[b] += (1 - result) * weight;
         adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + weight);
@@ -19,7 +19,8 @@ function runBT(n, matches, threshold, maxIter = 20000) {
         return row;
     });
 
-    const PRIOR = 0.5;
+    const PRIOR = 0.04;
+    const PHANTOM_WEIGHT = 0.08;
     const s = new Float64Array(n).fill(1.0);
     const adjustedWins = new Float64Array(n);
     for (let i = 0; i < n; i++) adjustedWins[i] = wins[i] + PRIOR;
@@ -36,7 +37,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
         for (let i = 0; i < n; i++) {
             const row = adj[i];
             const si = s[i];
-            let denom = 1 / (si + 1) + 1e-12;
+            let denom = PHANTOM_WEIGHT / (si + 1) + 1e-12;
             for (let k = 0, len = row.length; k < len; k += 2)
                 denom += row[k + 1] / (si + s[row[k]]);
             s[i] = adjustedWins[i] / denom;

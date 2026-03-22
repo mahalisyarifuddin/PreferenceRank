@@ -7,7 +7,7 @@ Sorting made better, powered by science.
 PreferenceRank is a versatile and scientific tool for ranking anything you like, inspired by viral character/bias sorters but enhanced with a more rigorous approach. Rank your favorite characters, foods, movies, or travel destinations with precision and fun.
 
 ## How It Works
-PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rating system**, specifically a **weighted Bradley-Terry variant**, to assign a score to each item based on your choices. This provides a transparent and relative ranking that adapts with every decision you make. Scores are calculated on a 400-point scale with an average of 1000. See the "Ranking Modes" section for more details on the comparison methods.
+PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rating system** based on the **pure Bradley-Terry model** to assign a score to each item based on your choices. This provides a transparent and relative ranking that adapts with every decision you make. Scores are calculated on a 400-point scale with an average of 1000. See the "Ranking Modes" section for more details on the comparison methods.
 
 ## Ranking Modes
 PreferenceRank offers two distinct modes to sort your items:
