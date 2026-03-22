@@ -936,7 +936,8 @@
 							}
 						}
 						const siPlusOne = si + 1;
-						data[iOffset + i] += diagI + si / (siPlusOne * siPlusOne) + 1e-9;
+						const PRIOR = itemCount * 0.0875;
+						data[iOffset + i] += diagI + (PRIOR * 2) * si / (siPlusOne * siPlusOne) + 1e-9;
 					}
 					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
 				}
@@ -1503,8 +1504,8 @@
 					const wins = new Float64Array(n);
 					const adjMaps = Array.from({ length: n }, () => new Map());
 					for (const { a, b, result } of this.matches) {
-						// Weighted BT: Each win/loss counted twice, each tie split (1 win, 1 loss)
-						const weight = 2;
+						// Standard BT: Each win/loss counted once, each tie split (0.5 win, 0.5 loss)
+						const weight = 1;
 						wins[a] += result * weight;
 						wins[b] += (1 - result) * weight;
 						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + weight);
@@ -1517,7 +1518,7 @@
 						return row;
 					});
 
-					const PRIOR = 0.5;
+					const PRIOR = n * 0.0875;
 					const SCALE = 400 / Math.log(10);
 					const convergenceThreshold = 1e-7;
 
@@ -1543,7 +1544,7 @@
 							const row = this.adj[i];
 							const si = s[i];
 							// ⚡ Bolt: Added 1e-12 epsilon for extreme numerical stability
-							let denom = 1 / (si + 1) + 1e-12;
+							let denom = (PRIOR * 2) / (si + 1) + 1e-12;
 							for (let k = 0, len = row.length; k < len; k += 2)
 								denom += row[k + 1] / (si + s[row[k]]);
 							s[i] = adjustedWins[i] / denom;
