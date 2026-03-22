@@ -936,7 +936,7 @@
 							}
 						}
 						const siPlusOne = si + 1;
-						const PRIOR = itemCount * 0.2;
+						const PRIOR = itemCount * 0.0825;
 						data[iOffset + i] += diagI + (PRIOR * 2) * si / (siPlusOne * siPlusOne) + 1e-9;
 					}
 					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
@@ -1449,7 +1449,7 @@
 				}
 
 				getGrade(score) {
-					return score >= 1600 ? 'S' : score >= 1200 ? 'A' : score >= 800 ? 'B' : score >= 400 ? 'C' : score >= 0 ? 'D' : 'F';
+					return score >= 1300 ? 'S' : score >= 1100 ? 'A' : score >= 900 ? 'B' : score >= 700 ? 'C' : score >= 500 ? 'D' : score >= 300 ? 'E' : 'F';
 				}
 
 				updateHelp() {
@@ -1504,8 +1504,8 @@
 					const wins = new Float64Array(n);
 					const adjMaps = Array.from({ length: n }, () => new Map());
 					for (const { a, b, result } of this.matches) {
-						// Weighted BT: Each win/loss counted three times, each tie split (1.5 win, 1.5 loss)
-						const weight = 3;
+						// Standard BT: Each win/loss counted once, each tie split (0.5 win, 0.5 loss)
+						const weight = 1;
 						wins[a] += result * weight;
 						wins[b] += (1 - result) * weight;
 						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + weight);
@@ -1518,7 +1518,7 @@
 						return row;
 					});
 
-					const PRIOR = n * 0.2;
+					const PRIOR = n * 0.0825;
 					const SCALE = 400 / Math.log(10);
 					const convergenceThreshold = 1e-7;
 
