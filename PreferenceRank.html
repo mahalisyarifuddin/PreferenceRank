@@ -89,7 +89,7 @@
 				background: var(--surface);
 				border: 1px solid var(--border);
 				border-radius: 8px;
-				max-width: 960px;
+				max-width: 720px;
 				padding: 3rem 2rem 2rem;
 				width: 100%;
 				position: relative;
@@ -627,7 +627,7 @@
 	</head>
 	<body>
 		<div class="container">
-			<div class="selectors">
+			<div id="selectors" class="selectors">
 				<select id="language" aria-label="Language">
 					<option value="en">English</option>
 					<option value="id">Bahasa Indonesia</option>
@@ -1768,6 +1768,7 @@
 				display(section, preventFocus) {
 					document.body.classList.toggle('results-mode', section === 'results');
 					['inputSection', 'battleSection', 'results'].forEach(id=>elements[id].classList.toggle('hidden', id !== section));
+					elements.selectors.classList.toggle('hidden', section !== 'inputSection');
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
 					elements.undo.classList.toggle('hidden', section === 'inputSection');
 					elements.copy.classList.toggle('hidden', section !== 'results');
