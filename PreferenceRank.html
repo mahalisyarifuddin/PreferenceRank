@@ -59,12 +59,7 @@
 				box-sizing: border-box;
 				margin: 0;
 				padding: 0;
-				outline-offset: 2px;
 				transition: background-color .3s, color .3s, border-color .3s, outline-color .3s;
-			}
-
-			*:focus-visible {
-				outline: 2px solid var(--primary);
 			}
 
 			body {
@@ -72,6 +67,7 @@
 				color: var(--text);
 				font-family: sans-serif;
 				display: flex;
+				align-items: center;
 				justify-content: center;
 				min-height: 100vh;
 				padding: 1rem;
@@ -82,7 +78,7 @@
 			}
 
 			body.results-mode .container {
-				margin: 2rem auto;
+				margin: 0 auto;
 			}
 
 			.container {
@@ -92,12 +88,6 @@
 				max-width: 720px;
 				padding: 2rem;
 				width: 100%;
-				position: relative;
-				margin: 2rem 0;
-			}
-
-			.container.input-mode {
-				padding-top: 3.5rem;
 			}
 
 			.hidden {
@@ -123,6 +113,10 @@
 				width: 100%;
 			}
 
+			input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+				outline: 2px solid var(--primary);
+				outline-offset: 2px;
+			}
 
 			textarea {
 				font-family: monospace;
@@ -171,11 +165,10 @@
 
 			.selectors {
 				position: absolute;
-				right: 1.5rem;
+				right: 2rem;
 				top: 1rem;
 				display: flex;
 				gap: 8px;
-				z-index: 100;
 			}
 
 			.selectors select {
@@ -446,7 +439,7 @@
 				align-items: center;
 				position: relative;
 				min-height: 40px;
-				margin: 0rem 0 1rem;
+				margin-bottom: 1rem;
 			}
 
 			.header #undo {
@@ -478,19 +471,13 @@
 				}
 
 				.container {
-					padding: 1.25rem;
-				}
-
-				.container.input-mode {
-					padding-top: 3rem;
+					padding: 1.5rem;
 				}
 
 				.selectors {
-					position: absolute;
-					right: 1.25rem;
-					top: 0.75rem;
+					position: static;
 					justify-content: flex-end;
-					margin-bottom: 0;
+					margin-bottom: .5rem;
 				}
 
 				#battle, #tieWrap, #restartWrap {
@@ -541,13 +528,8 @@
 			}
 
 			@keyframes fadeIn {
-				from {
-					opacity: 0;
-				}
-
-				to {
-					opacity: 1;
-				}
+				from { opacity: 0; }
+				to   { opacity: 1; }
 			}
 
 			.session-icon {
@@ -632,7 +614,8 @@
 				position: absolute;
 			}
 		</style>
-	</head>
+	<base target="_blank">
+</head>
 	<body>
 		<div id="container" class="container">
 			<div id="selectors" class="selectors">
@@ -712,6 +695,7 @@
 				const initialData = JSON.parse(localStorage.getItem('preferenceRankData'));
 				initialData?.settings?.theme && initialData.settings.theme !== 'auto' && (document.documentElement.className = initialData.settings.theme);
 			} catch (error) {}
+
 			const text = {
 				en: {
 					title: 'PreferenceRank',
@@ -814,59 +798,50 @@
 					filter: 'Cari pilihan...'
 				}
 			};
-			const elements = new Proxy({},{
-				get: (_,id)=>document.getElementById(id)
+
+			const elements = new Proxy({}, {
+				get: (_, id) => document.getElementById(id)
 			});
+
 			const Matrix = {
-				zeros: (rowCount,columnCount)=>({
+				zeros: (rowCount, columnCount) => ({
 					rows: rowCount,
 					cols: columnCount,
 					data: new Float64Array(rowCount * columnCount)
 				}),
-				identity: (size)=>{
+				identity: (size) => {
 					const matrix = Matrix.zeros(size, size);
-					for (let i = 0; i < size; i++)
-						matrix.data[i * size + i] = 1;
+					for (let i = 0; i < size; i++) matrix.data[i * size + i] = 1;
 					return matrix;
-				}
-				,
-				cholesky: (inputMatrix)=>{
+				},
+				cholesky: (inputMatrix) => {
 					const size = inputMatrix.rows;
 					const inputData = inputMatrix.data;
 					const resultData = new Float64Array(size * size);
 					const rowViews = new Array(size);
-					for (let i = 0; i < size; i++)
-						rowViews[i] = resultData.subarray(i * size, (i + 1) * size);
+					for (let i = 0; i < size; i++) rowViews[i] = resultData.subarray(i * size, (i + 1) * size);
 					for (let i = 0; i < size; i++) {
 						const rowI = rowViews[i];
 						for (let j = 0; j <= i; j++) {
 							let sum = 0;
 							const rowJ = rowViews[j];
-							for (let k = 0; k < j; k++)
-								sum += rowI[k] * rowJ[k];
+							for (let k = 0; k < j; k++) sum += rowI[k] * rowJ[k];
 							const val = inputData[i * size + j] - sum;
 							if (i === j) {
-								if (val <= 0)
-									return null;
+								if (val <= 0) return null;
 								rowI[j] = Math.sqrt(val);
 								continue;
 							}
 							rowI[j] = val / rowJ[j];
 						}
 					}
-					return {
-						rows: size,
-						cols: size,
-						data: resultData
-					};
-				}
-				,
-				inverse: (inputMatrix)=>{
+					return { rows: size, cols: size, data: resultData };
+				},
+				inverse: (inputMatrix) => {
 					const size = inputMatrix.rows;
 					const matrixData = new Float64Array(inputMatrix.data);
 					const inverseData = new Float64Array(size * size);
-					for (let i = 0; i < size; i++)
-						inverseData[i * size + i] = 1;
+					for (let i = 0; i < size; i++) inverseData[i * size + i] = 1;
 					const rowViews = new Array(size);
 					const invRowViews = new Array(size);
 					for (let i = 0; i < size; i++) {
@@ -884,8 +859,7 @@
 									pivotIndex = k;
 								}
 							}
-							if (Math.abs(pivotValue) < 1e-10)
-								return null;
+							if (Math.abs(pivotValue) < 1e-10) return null;
 							const offsetI = i * size;
 							const offsetP = pivotIndex * size;
 							for (let j = 0; j < size; j++) {
@@ -900,65 +874,48 @@
 						const invPivot = 1 / pivotValue;
 						const rowI = rowViews[i];
 						const invRowI = invRowViews[i];
-						for (let j = i + 1; j < size; j++)
-							rowI[j] *= invPivot;
-						for (let j = 0; j < size; j++)
-							invRowI[j] *= invPivot;
+						for (let j = i + 1; j < size; j++) rowI[j] *= invPivot;
+						for (let j = 0; j < size; j++) invRowI[j] *= invPivot;
 						for (let rowIndex = 0; rowIndex < size; rowIndex++) {
-							if (rowIndex === i)
-								continue;
+							if (rowIndex === i) continue;
 							const factor = matrixData[rowIndex * size + i];
-							if (factor === 0)
-								continue;
+							if (factor === 0) continue;
 							const rowR = rowViews[rowIndex];
 							const invRowR = invRowViews[rowIndex];
-							for (let j = i + 1; j < size; j++)
-								rowR[j] -= factor * rowI[j];
-							for (let j = 0; j < size; j++)
-								invRowR[j] -= factor * invRowI[j];
+							for (let j = i + 1; j < size; j++) rowR[j] -= factor * rowI[j];
+							for (let j = 0; j < size; j++) invRowR[j] -= factor * invRowI[j];
 						}
 					}
-					return {
-						rows: size,
-						cols: size,
-						data: inverseData
-					};
+					return { rows: size, cols: size, data: inverseData };
 				}
 			};
+
 			class Stats {
 				static calculate(items, scores, adj) {
 					const itemCount = items.length;
-					if (itemCount < 2)
-						return null;
+					if (itemCount < 2) return null;
 					const scoreFactor = Math.log(10) / 400;
 					const parameters = new Float64Array(itemCount);
 					for (let i = 0; i < itemCount; i++)
 						parameters[i] = (scores[i] - 1000) * scoreFactor;
 					const inverseSubHessian = Stats.buildHessian(itemCount, adj, parameters);
-					if (!inverseSubHessian)
-						return null;
+					if (!inverseSubHessian) return null;
 					const confidenceIntervals = Stats.calculateCI(itemCount, inverseSubHessian, scoreFactor);
 					const choleskyFactor = Matrix.cholesky(inverseSubHessian);
 					if (!choleskyFactor)
-						return {
-							cis: Array.from(confidenceIntervals),
-							spreads: null
-						};
+						return { cis: Array.from(confidenceIntervals), spreads: null };
 					const spreads = Stats.simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor);
-					return {
-						cis: Array.from(confidenceIntervals),
-						spreads
-					};
+					return { cis: Array.from(confidenceIntervals), spreads };
 				}
+
 				static buildHessian(itemCount, adj, parameters) {
 					const itemCountMinusOne = itemCount - 1;
 					const data = new Float64Array(itemCountMinusOne * itemCountMinusOne);
 					const strengths = new Float64Array(itemCount);
-					for (let i = 0; i < itemCount; i++)
-						strengths[i] = Math.exp(parameters[i]);
+					for (let i = 0; i < itemCount; i++) strengths[i] = Math.exp(parameters[i]);
 					const rowOffsets = new Int32Array(itemCountMinusOne);
-					for (let i = 0; i < itemCountMinusOne; i++)
-						rowOffsets[i] = i * itemCountMinusOne;
+					for (let i = 0; i < itemCountMinusOne; i++) rowOffsets[i] = i * itemCountMinusOne;
+
 					for (let i = 0; i < itemCountMinusOne; i++) {
 						const si = strengths[i];
 						const row = adj[i];
@@ -981,12 +938,9 @@
 						const siPlusOne = si + 1;
 						data[iOffset + i] += diagI + si / (siPlusOne * siPlusOne) + 1e-9;
 					}
-					return Matrix.inverse({
-						rows: itemCountMinusOne,
-						cols: itemCountMinusOne,
-						data
-					});
+					return Matrix.inverse({ rows: itemCountMinusOne, cols: itemCountMinusOne, data });
 				}
+
 				static calculateCI(itemCount, inverseSubHessian, scoreFactor) {
 					const itemCountMinusOne = itemCount - 1;
 					const confidenceIntervals = new Float64Array(itemCount);
@@ -997,19 +951,21 @@
 					for (let r = 0; r < itemCountMinusOne; r++) {
 						let rs = 0;
 						const offset = r * itemCountMinusOne;
-						for (let c = 0; c < itemCountMinusOne; c++)
-							rs += inverseData[offset + c];
+						for (let c = 0; c < itemCountMinusOne; c++) rs += inverseData[offset + c];
 						rowSums[r] = rs;
 						totalSum += rs;
 					}
 					const invN = 1 / itemCount;
 					const commonTerm = totalSum * invN * invN;
 					for (let i = 0; i < itemCount; i++) {
-						const variance = i < itemCountMinusOne ? inverseData[i * itemCountMinusOne + i] - 2 * rowSums[i] * invN + commonTerm : commonTerm;
+						const variance = i < itemCountMinusOne
+							? inverseData[i * itemCountMinusOne + i] - 2 * rowSums[i] * invN + commonTerm
+							: commonTerm;
 						confidenceIntervals[i] = multiplier * Math.sqrt(Math.max(0, variance)) / scoreFactor;
 					}
 					return confidenceIntervals;
 				}
+
 				static simulateRanks(itemCount, parameters, choleskyFactor, scoreFactor) {
 					const itemCountMinusOne = itemCount - 1;
 					const simulationCount = 500;
@@ -1017,35 +973,29 @@
 					const multiplier = 0.1257;
 					const totalGaussians = simulationCount * itemCountMinusOne;
 					const gaussians = new Float64Array(totalGaussians);
+					// ⚡ Bolt: Transposed Gaussian buffer [item][simulation] for contiguous access in batched loops
 					for (let j = 0; j < itemCountMinusOne; j++) {
 						const offset = j * simulationCount;
 						for (let sim = 0; sim < simulationCount; sim += 2) {
-							let u1 = 0
-							  , u2 = 0;
-							while (u1 === 0)
-								u1 = Math.random();
-							while (u2 === 0)
-								u2 = Math.random();
+							let u1 = 0, u2 = 0;
+							while (u1 === 0) u1 = Math.random();
+							while (u2 === 0) u2 = Math.random();
 							const r = Math.sqrt(-2.0 * Math.log(u1)) * multiplier;
 							const a = 2.0 * Math.PI * u2;
 							gaussians[offset + sim] = r * Math.cos(a);
-							if (sim + 1 < simulationCount)
-								gaussians[offset + sim + 1] = r * Math.sin(a);
+							if (sim + 1 < simulationCount) gaussians[offset + sim + 1] = r * Math.sin(a);
 						}
 					}
 					const sampleParameters = new Float64Array(itemCount * 4);
 					const rankIndices = new Int32Array(itemCount);
-					for (let i = 0; i < itemCount; i++)
-						rankIndices[i] = i;
-					rankIndices.sort((a,b)=>parameters[b] - parameters[a]);
+					for (let i = 0; i < itemCount; i++) rankIndices[i] = i;
+					rankIndices.sort((a, b) => parameters[b] - parameters[a]);
 					const choleskyData = choleskyFactor.data;
+					// ⚡ Bolt: Simulation loop batched by 4 to reduce choleskyData reads and improve cache performance via contiguous Gaussian access
 					for (let sim = 0; sim < simulationCount; sim += 4) {
 						const batchSize = Math.min(4, simulationCount - sim);
 						for (let i = 0; i < itemCountMinusOne; i++) {
-							let s0 = 0
-							  , s1 = 0
-							  , s2 = 0
-							  , s3 = 0;
+							let s0 = 0, s1 = 0, s2 = 0, s3 = 0;
 							const rowOffset = i * itemCountMinusOne;
 							if (batchSize === 4) {
 								for (let j = 0; j <= i; j++) {
@@ -1060,44 +1010,37 @@
 								sampleParameters[i + itemCount] = parameters[i] + s1;
 								sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
 								sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
-							} else {
-								for (let j = 0; j <= i; j++) {
-									const c = choleskyData[rowOffset + j];
-									const gIdx = j * simulationCount + sim;
-									s0 += c * gaussians[gIdx];
-									if (batchSize > 1)
-										s1 += c * gaussians[gIdx + 1];
-									if (batchSize > 2)
-										s2 += c * gaussians[gIdx + 2];
-									if (batchSize > 3)
-										s3 += c * gaussians[gIdx + 3];
-								}
-								sampleParameters[i] = parameters[i] + s0;
-								if (batchSize > 1)
-									sampleParameters[i + itemCount] = parameters[i] + s1;
-								if (batchSize > 2)
-									sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
-								if (batchSize > 3)
-									sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
+								continue;
 							}
+							for (let j = 0; j <= i; j++) {
+								const c = choleskyData[rowOffset + j];
+								const gIdx = j * simulationCount + sim;
+								s0 += c * gaussians[gIdx];
+								if (batchSize > 1) s1 += c * gaussians[gIdx + 1];
+								if (batchSize > 2) s2 += c * gaussians[gIdx + 2];
+								if (batchSize > 3) s3 += c * gaussians[gIdx + 3];
+							}
+							sampleParameters[i] = parameters[i] + s0;
+							if (batchSize > 1) sampleParameters[i + itemCount] = parameters[i] + s1;
+							if (batchSize > 2) sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
+							if (batchSize > 3) sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
 						}
 						sampleParameters[itemCountMinusOne] = parameters[itemCountMinusOne];
-						if (batchSize > 1)
-							sampleParameters[itemCount * 2 - 1] = parameters[itemCountMinusOne];
-						if (batchSize > 2)
-							sampleParameters[itemCount * 3 - 1] = parameters[itemCountMinusOne];
-						if (batchSize > 3)
-							sampleParameters[itemCount * 4 - 1] = parameters[itemCountMinusOne];
+						if (batchSize > 1) sampleParameters[itemCount * 2 - 1] = parameters[itemCountMinusOne];
+						if (batchSize > 2) sampleParameters[itemCount * 3 - 1] = parameters[itemCountMinusOne];
+						if (batchSize > 3) sampleParameters[itemCount * 4 - 1] = parameters[itemCountMinusOne];
+
 						for (let b = 0; b < batchSize; b++) {
 							const simIdx = sim + b;
 							const offset = b * itemCount;
-							rankIndices.sort((idxA,idxB)=>sampleParameters[offset + idxB] - sampleParameters[offset + idxA]);
+							rankIndices.sort((idxA, idxB) => sampleParameters[offset + idxB] - sampleParameters[offset + idxA]);
 							for (let r = 0; r < itemCount; r++)
 								simulationRanks[rankIndices[r] * simulationCount + simIdx] = r + 1;
 						}
 					}
 					const spreads = [];
 					for (let i = 0; i < itemCount; i++) {
+						// ⚡ Bolt: Zero-copy subarray sorting for percentile calculation
 						const row = simulationRanks.subarray(i * simulationCount, (i + 1) * simulationCount);
 						row.sort();
 						spreads.push([row[Math.floor(simulationCount * 0.1)], row[Math.floor(simulationCount * 0.9)]]);
@@ -1105,135 +1048,219 @@
 					return spreads;
 				}
 			}
+
 			class FullPairProvider {
-				static estimate(count) {
-					return count * (count - 1) / 2;
-				}
+				static estimate(count) { return count * (count - 1) / 2; }
 				constructor(count) {
 					this.pairs = [];
 					for (let i = 0; i < count; i++)
 						for (let j = i + 1; j < count; j++)
 							this.pairs.push([i, j]);
-					for (let i = this.pairs.length; i--; ) {
+					for (let i = this.pairs.length; i--;) {
 						const j = Math.random() * (i + 1) | 0;
-						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
+						[this.pairs[i], this.pairs[j]] = [this.pairs[j], this.pairs[i]];
 					}
 				}
-				next(state) {
-					return this.pairs[state.step];
-				}
-				getProgress(step) {
-					return `${step}/${this.pairs.length}`;
-				}
-				snap() {
-					return null;
-				}
+				next(state) { return this.pairs[state.step]; }
+				getProgress(step) { return `${step}/${this.pairs.length}`; }
+				snap() { return null; }
 				restore() {}
 			}
-			function *fjSort(items) {
-				const n = items.length;
-				if (n <= 1)
-					return items.slice();
-				const half = n >> 1;
-				const winners = new Array(half)
-				  , losers = new Array(half);
-				for (let i = 0; i < half; i++) {
-					const a = items[2 * i]
-					  , b = items[2 * i + 1];
-					const w = yield[a, b];
-					if (w === a) {
-						winners[i] = a;
-						losers[i] = b;
-					} else {
-						winners[i] = b;
-						losers[i] = a;
-					}
-				}
-				const sorted = yield*fjSort(winners);
-				const loserOf = new Map(winners.map((w,i)=>[w, losers[i]]));
-				const chain = [loserOf.get(sorted[0]), ...sorted];
-				const m = sorted.length;
-				let jPrev = 1
-				  , jA = 1
-				  , jB = 3;
-				while (jPrev < m) {
-					const jT = Math.min(jB, m);
-					for (let k = jT; k > jPrev; k--) {
-						const bk = loserOf.get(sorted[k - 1]);
-						let lo = 0
-						  , hi = chain.indexOf(sorted[k - 1]);
-						while (lo < hi) {
-							const mid = (lo + hi) >> 1;
-							const w = yield[bk, chain[mid]];
-							if (w === bk)
-								lo = mid + 1;
-							else
-								hi = mid;
-						}
-						chain.splice(lo, 0, bk);
-					}
-					jPrev = jT;
-					[jA,jB] = [jB, jB + 2 * jA];
-				}
-				if (n & 1) {
-					const odd = items[n - 1];
-					let lo = 0
-					  , hi = chain.length;
-					while (lo < hi) {
-						const mid = (lo + hi) >> 1;
-						const w = yield[odd, chain[mid]];
-						if (w === odd)
-							lo = mid + 1;
-						else
-							hi = mid;
-					}
-					chain.splice(lo, 0, odd);
-				}
-				return chain;
+
+			const JACOBSTHAL = (() => {
+				const seq = [1];
+				let a = 1, b = 3;
+				while (b < 2147483647) { seq.push(b); [a, b] = [b, b + 2 * a]; }
+				seq.push(b);
+				return seq;
+			})();
+
+			function jacobsthalThresholds(limit) {
+				for (let i = 1; i < JACOBSTHAL.length; i++)
+					if (JACOBSTHAL[i] >= limit) return JACOBSTHAL.slice(0, i + 1);
+				return JACOBSTHAL.slice();
 			}
+
 			class QuickPairProvider {
 				static estimate(count) {
-					if (count <= 1)
-						return 0;
+					if (count <= 1) return 0;
 					let total = 0;
 					for (let k = 2; k <= count; k++)
 						total += Math.ceil(Math.log2(3 * k / 4));
 					return total;
 				}
+
 				constructor(count) {
 					this.count = count;
 					this._est = QuickPairProvider.estimate(count);
-					this._start();
+					this._pair = [0, 0];
+					this._initStack();
 				}
-				_start(matches) {
-					const items = Array.from({
-						length: this.count
-					}, (_,i)=>i);
-					this._gen = fjSort(items);
-					let step = this._gen.next();
-					this._cur = step.done ? null : step.value;
-					if (matches) {
-						for (const {result} of matches) {
-							if (!this._cur)
-								break;
-							const [a,b] = this._cur;
-							step = this._gen.next(result === 0 ? b : a);
-							this._cur = step.done ? null : step.value;
+
+				_initStack() {
+					this.stack = [{ items: Array.from({ length: this.count }, (_, i) => i), state: 0 }];
+					this.pending = null;
+				}
+
+				snap() { return structuredClone({ stack: this.stack, pending: this.pending }); }
+
+				restore(state) {
+					this.stack = state.stack;
+					this.pending = state.pending;
+				}
+
+				_applyResult(result) {
+					const a = this.pending[0], b = this.pending[1];
+					const winner = result === 1 ? a : result === 0 ? b : a;
+					const frame = this.stack[this.stack.length - 1];
+					if (frame.comparing) {
+						frame.lastWinner = winner;
+						delete frame.comparing;
+					}
+					this.pending = null;
+				}
+
+				_runMachine() {
+					while (this.stack.length) {
+						const frame = this.stack[this.stack.length - 1];
+
+						if (frame.state === 0) {
+							const n = frame.items.length;
+							if (n <= 1) { this._returnResult(frame.items); continue; }
+							const half = n >> 1;
+							frame.halfLen = half;
+							frame.odd = (n & 1) ? frame.items[n - 1] : null;
+							frame.winners = new Array(half);
+							frame.losers  = new Array(half);
+							frame.pairIndex = 0;
+							frame.state = 1;
+						}
+
+						if (frame.state === 1) {
+							if (frame.lastWinner !== undefined) {
+								const pi = frame.pairIndex;
+								const a = frame.items[2 * pi], b = frame.items[2 * pi + 1];
+								const aWon = frame.lastWinner === a;
+								frame.winners[pi] = aWon ? a : b;
+								frame.losers[pi]  = aWon ? b : a;
+								delete frame.lastWinner;
+								frame.pairIndex++;
+							}
+							if (frame.pairIndex < frame.halfLen) {
+								const pi = frame.pairIndex;
+								this._pair[0] = frame.items[2 * pi];
+								this._pair[1] = frame.items[2 * pi + 1];
+								this.pending = this._pair;
+								frame.comparing = true;
+								return;
+							}
+							frame.state = 2;
+							this.stack.push({ items: frame.winners.slice(), state: 0 });
+							continue;
+						}
+
+						if (frame.state === 2) {
+							if (!frame.sortedWinners) return;
+
+							const sw = frame.sortedWinners;
+							const swLen = sw.length;
+
+							const loserOf = new Int32Array(this.count).fill(-1);
+							for (let i = 0; i < swLen; i++)
+								loserOf[frame.winners[i]] = frame.losers[i];
+
+							const posOf = new Int32Array(this.count).fill(-1);
+							const mainChain = [loserOf[sw[0]], ...sw];
+							for (let i = 0; i < mainChain.length; i++) posOf[mainChain[i]] = i;
+
+							const insertionOrder = [];
+							if (swLen > 1) {
+								const J = jacobsthalThresholds(swLen);
+								let covered = 1;
+								for (let ji = 1; ji < J.length; ji++) {
+									const t = Math.min(J[ji], swLen);
+									for (let k = t; k > covered; k--)
+										insertionOrder.push(sw[k - 1]);
+									covered = t;
+									if (covered >= swLen) break;
+								}
+							}
+
+							frame.loserOf = loserOf;
+							frame.posOf = posOf;
+							frame.mainChain = mainChain;
+							frame.insertionOrder = insertionOrder;
+							frame.insertIdx = 0;
+							frame.oddInserted = false;
+							frame.state = 3;
+							continue;
+						}
+
+						if (frame.state === 3) {
+							if (frame.binarySearchState && frame.lastWinner !== undefined) {
+								const bs = frame.binarySearchState;
+								frame.lastWinner === frame.currentLoser
+									? (bs.min = bs.mid + 1)
+									: (bs.max = bs.mid);
+								delete frame.lastWinner;
+							}
+
+							const inMain = frame.insertIdx < frame.insertionOrder.length;
+							const inOdd = !inMain && frame.odd !== null && !frame.oddInserted;
+
+							if (!inMain && !inOdd) { this._returnResult(frame.mainChain); continue; }
+
+							if (!frame.binarySearchState) {
+								const pairedWinner = inMain ? frame.insertionOrder[frame.insertIdx] : null;
+								frame.currentLoser = inMain ? frame.loserOf[pairedWinner] : frame.odd;
+								const upperBound = inMain ? frame.posOf[pairedWinner] : frame.mainChain.length;
+								frame.binarySearchState = { min: 0, max: upperBound, mid: 0 };
+							}
+
+							const bs = frame.binarySearchState;
+							if (bs.min < bs.max) {
+								bs.mid = (bs.min + bs.max) >> 1;
+								this._pair[0] = frame.currentLoser;
+								this._pair[1] = frame.mainChain[bs.mid];
+								this.pending = this._pair;
+								frame.comparing = true;
+								return;
+							}
+
+							const insertPos = bs.min;
+							frame.mainChain.splice(insertPos, 0, frame.currentLoser);
+							const chain = frame.mainChain;
+							const posOf = frame.posOf;
+							for (let i = insertPos + 1; i < chain.length; i++)
+								posOf[chain[i]] = i;
+							posOf[frame.currentLoser] = insertPos;
+
+							delete frame.binarySearchState;
+							inMain ? frame.insertIdx++ : (frame.oddInserted = true);
+							continue;
 						}
 					}
 				}
-				next(_, result) {
-					if (result !== undefined && this._cur) {
-						const [a,b] = this._cur;
-						const step = this._gen.next(result === 0 ? b : a);
-						this._cur = step.done ? null : step.value;
-					}
-					return this._cur ? [this._cur[0], this._cur[1]] : null;
+
+				_returnResult(result) {
+					this.stack.pop();
+					if (this.stack.length)
+						this.stack[this.stack.length - 1].sortedWinners = result.slice();
 				}
+
+				next(_, result) {
+					if (this.pending !== null && result !== undefined) {
+						this._applyResult(result);
+					}
+					this._runMachine();
+					return this.pending ? [...this.pending] : null;
+				}
+
 				getProgress(step) {
 					return `${step}/~${Math.max(step, this._est)}`;
 				}
 			}
+
 			class PreferenceRank {
 				constructor() {
 					Object.assign(this, {
@@ -1242,107 +1269,76 @@
 						history: [],
 						swaps: {},
 						adj: [],
-						sortState: {
-							column: 'rank',
-							direction: 'asc'
-						},
+						sortState: { column: 'rank', direction: 'asc' },
 						dirty: true,
 						showGrade: false
 					});
 					this.language = navigator.language.startsWith('id') ? 'id' : 'en';
 					const events = {
-						start: 'start',
-						restartBattle: 'start',
-						restartNew: 'reset',
-						undo: 'undo',
-						copy: 'copyResults',
-						toggle: 'toggleHelp',
-						cancel: 'cancel',
-						sessionContinue: 'restoreSession',
-						sessionNew: 'startNewSession',
-						resume: 'resume'
+						start: 'start', restartBattle: 'start', restartNew: 'reset',
+						undo: 'undo', copy: 'copyResults', toggle: 'toggleHelp',
+						cancel: 'cancel', sessionContinue: 'restoreSession',
+						sessionNew: 'startNewSession', resume: 'resume'
 					};
-					Object.entries(events).forEach(([id,fn])=>elements[id].onclick = ()=>this[fn]());
-					['left', 'right', 'tie'].forEach(id=>elements[id].onclick = ()=>this.choose(id));
-					['left', 'right', 'tie'].forEach(id=>elements[id].addEventListener('mousedown', e=>e.preventDefault()));
-					elements.language.onchange = e=>{
-						this.lang(e.target.value, true);
-						this.save();
-					}
-					;
-					elements.theme.onchange = e=>{
-						this.theme(e.target.value);
-						this.save();
-					}
-					;
-					elements.allowTies.onchange = e=>this.setTies(e.target.checked);
-					elements.quickRank.onchange = ()=>this.updateInputState();
-					elements.showGrade.onchange = e=>{
+					Object.entries(events).forEach(([id, fn]) => elements[id].onclick = () => this[fn]());
+					['left', 'right', 'tie'].forEach(id => elements[id].onclick = () => this.choose(id));
+					['left', 'right', 'tie'].forEach(id => elements[id].addEventListener('mousedown', e => e.preventDefault()));
+					elements.language.onchange = e => { this.lang(e.target.value, true); this.save(); };
+					elements.theme.onchange = e => { this.theme(e.target.value); this.save(); };
+					elements.allowTies.onchange = e => this.setTies(e.target.checked);
+					elements.quickRank.onchange = () => this.updateInputState();
+					elements.showGrade.onchange = e => {
 						this.showGrade = e.target.checked;
 						this.save();
-						if (!elements.results.classList.contains('hidden'))
-							this.results(true);
-					}
-					;
-					elements.items.oninput = ()=>{
-						this.updateInputState();
-						this.saveInput();
-					}
-					;
-					elements.results.onclick = e=>{
+						if (!elements.results.classList.contains('hidden')) this.results(true);
+					};
+					elements.items.oninput = () => { this.updateInputState(); this.saveInput(); };
+					elements.results.onclick = e => {
 						const header = e.target.closest('.lb-header > div');
-						if (header && header.dataset.sort)
-							this.sortResults(header.dataset.sort);
-					}
-					;
-					elements.results.onkeydown = e=>{
+						if (header && header.dataset.sort) this.sortResults(header.dataset.sort);
+					};
+					elements.results.onkeydown = e => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							const header = e.target.closest('.lb-header > div');
-							if (header && header.dataset.sort) {
-								e.preventDefault();
-								this.sortResults(header.dataset.sort);
-							}
+							if (header && header.dataset.sort) { e.preventDefault(); this.sortResults(header.dataset.sort); }
 						}
-					}
-					;
-					document.onkeydown = e=>this.key(e);
+					};
+					document.onkeydown = e => this.key(e);
 					this.theme('auto');
 					this.lang(this.language);
 					this.load();
 				}
-				string(key) {
-					return text[this.language]?.[key] ?? key;
-				}
+
+				string(key) { return text[this.language]?.[key] ?? key; }
+
 				theme(name) {
 					document.documentElement.className = name === 'auto' ? '' : name;
 					elements.theme.value = name;
 				}
+
 				lang(language, preventFocus) {
 					this.language = elements.language.value = language;
 					elements.language.setAttribute('aria-label', this.string('languageLabel'));
 					elements.theme.setAttribute('aria-label', this.string('themeLabel'));
 					elements.items.placeholder = this.string('placeholderItems');
-					['title', 'labelItems', 'labelTies', 'labelQuick', 'labelGrade', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew'].forEach(key=>elements[key].textContent = this.string(key));
+					['title', 'labelItems', 'labelTies', 'labelQuick', 'labelGrade', 'start', 'resume', 'cancel', 'tie', 'undo', 'copy', 'restartBattle', 'restartNew']
+						.forEach(key => elements[key].textContent = this.string(key));
 					elements.start.title = `${this.string('start')} (Ctrl/⌘ + Enter)`;
 					elements.left.title = this.string('shortcutLeft');
 					elements.right.title = this.string('shortcutRight');
 					elements.tie.title = this.string('shortcutTie');
 					elements.undo.title = `${this.string('undo')} (${this.string('shortcutUndo')})`;
-					[...elements.theme.options].forEach(o=>o.textContent = this.string(o.value + 'Theme'));
+					[...elements.theme.options].forEach(o => o.textContent = this.string(o.value + 'Theme'));
 					this.updateHelp();
 					this.updateProgress();
 					this.updateInputState();
-					if (!elements.results.classList.contains('hidden'))
-						this.results(preventFocus);
+					if (!elements.results.classList.contains('hidden')) this.results(preventFocus);
 				}
+
 				save() {
 					localStorage.setItem('preferenceRankData', JSON.stringify({
 						inputValue: elements.items.value,
-						settings: {
-							theme: elements.theme.value,
-							language: this.language,
-							showGrade: this.showGrade
-						},
+						settings: { theme: elements.theme.value, language: this.language, showGrade: this.showGrade },
 						battle: this.provider ? {
 							...this,
 							provider: this.provider,
@@ -1350,23 +1346,29 @@
 						} : null
 					}));
 				}
+
 				load() {
 					try {
 						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-						if (data) {
-							data.settings && (this.theme(data.settings.theme),
+						if (!data) { this.display('inputSection'); return; }
+						data.settings && (
+							this.theme(data.settings.theme),
 							this.lang(data.settings.language),
 							this.showGrade = !!data.settings.showGrade,
-							elements.showGrade.checked = this.showGrade);
-							data.inputValue && (elements.items.value = data.inputValue,
-							this.updateInputState());
-							if (data.battle) return data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle);
+							elements.showGrade.checked = this.showGrade
+						);
+						data.inputValue && (elements.items.value = data.inputValue, this.updateInputState());
+						if (data.battle) {
+							data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle);
+							return;
 						}
+						this.display('inputSection');
 					} catch {
 						localStorage.removeItem('preferenceRankData');
+						this.display('inputSection');
 					}
-					this.display('inputSection');
 				}
+
 				prompt(battle) {
 					this.pending = battle;
 					elements.sessionTitle.textContent = this.string('resumeTitle');
@@ -1377,11 +1379,13 @@
 					elements.inputSection.classList.add('hidden');
 					elements.sessionContinue.focus();
 				}
+
 				restoreSession() {
 					elements.sessionModal.classList.add('hidden');
 					this.pending && this.restoreBattle(this.pending);
 					this.pending = null;
 				}
+
 				startNewSession() {
 					elements.sessionModal.classList.add('hidden');
 					this.pending = null;
@@ -1391,78 +1395,86 @@
 					this.updateInputState();
 					this.reset();
 				}
+
 				restoreBattle(battle) {
 					Object.assign(this, battle);
 					this.showGrade = !!battle.showGrade;
 					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
-					if (battle.providerType === 'quick')
-						this.provider._start(this.matches);
-					else
+					if (battle.providerType === 'quick' && battle.provider.stack?.[0]?.items)
 						Object.assign(this.provider, battle.provider);
 					elements.allowTies.checked = this.allowTies;
 					elements.quickRank.checked = battle.providerType === 'quick';
 					this.setTies(this.allowTies);
-					this.pair ? (this.display('battleSection'),
-					this.render(),
-					this.updateProgress(),
-					elements.undo.disabled = !this.history.length) : this.matches.length ? this.results() : this.display('inputSection');
+					if (this.pair) {
+						this.display('battleSection');
+						this.render();
+						this.updateProgress();
+						elements.undo.disabled = !this.history.length;
+						return;
+					}
+					if (this.matches.length) {
+						this.results();
+						return;
+					}
+					this.display('inputSection');
 				}
+
 				saveInput() {
 					clearTimeout(this.saveTimeout);
-					this.saveTimeout = setTimeout(()=>this.save(), 500);
+					this.saveTimeout = setTimeout(() => this.save(), 500);
 				}
+
 				getItems() {
-					const lines = elements.items.value.split('\n').map(l=>l.trim()).filter(Boolean);
-					if (!lines.length)
-						return [];
+					const lines = elements.items.value.split('\n').map(l => l.trim()).filter(Boolean);
+					if (!lines.length) return [];
 					const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
-					return lines.map(line=>{
-						const p = patterns.find(p=>p.test(line));
-						return p ? line.replace(p, '') : line;
-					}
-					);
+					return lines.map(line => {
+						const p = patterns.find(p => p.test(line));
+						if (p) return line.replace(p, '');
+						return line;
+					});
 				}
-				updateInputState() {
-					const items = this.getItems();
-					this.check(items);
-					this.updateCount(items);
-				}
+
+				updateInputState() { const items = this.getItems(); this.check(items); this.updateCount(items); }
+
 				updateCount(items) {
 					const list = items || this.getItems();
 					const count = list.length;
 					const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
-					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
+					elements.itemCount.textContent =
+						this.string('itemsCount').replace('{count}', count) +
+						this.string('estMatches').replace('{count}', type.estimate(count));
 				}
+
 				setTies(enabled) {
 					this.allowTies = enabled;
 					if (!elements.battleSection.classList.contains('hidden'))
 						elements.tieWrap.classList.toggle('hidden', !enabled);
 					this.updateHelp();
 				}
+
 				getGrade(score) {
-					return score >= 1400 ? 'S' : score >= 1200 ? 'A' : score >= 1000 ? 'B' : score >= 800 ? 'C' : score >= 600 ? 'D' : score >= 400 ? 'E' : 'F';
+					return score >= 1500 ? 'S' : score >= 1250 ? 'A' : score >= 1000 ? 'B' : score >= 750 ? 'C' : score >= 500 ? 'D' : score >= 250 ? 'E' : 'F';
 				}
+
 				updateHelp() {
 					const hidden = elements.tips.classList.contains('hidden');
 					elements.toggle.textContent = this.string(hidden ? 'toggleShow' : 'toggleHide');
 					elements.toggle.setAttribute('aria-expanded', !hidden);
 					elements.tips.innerHTML = this.string(this.allowTies ? 'tipTie' : 'tipNoTie');
 				}
-				toggleHelp() {
-					elements.tips.classList.toggle('hidden');
-					this.updateHelp();
-				}
+
+				toggleHelp() { elements.tips.classList.toggle('hidden'); this.updateHelp(); }
+
 				check(items) {
 					const valid = new Set(items || this.getItems()).size >= 2;
 					elements.start.disabled = !valid;
-					if (valid) {
-						elements.error.classList.add('hidden');
-						elements.items.removeAttribute('aria-invalid');
-					}
+					if (valid) { elements.error.classList.add('hidden'); elements.items.removeAttribute('aria-invalid'); }
 					elements.resume.classList.toggle('hidden', !this.provider);
 				}
+
 				start() {
 					const raw = this.getItems();
 					const unique = [...new Set(raw)];
@@ -1477,16 +1489,9 @@
 					Object.assign(this, {
 						items: unique,
 						scores: Array(unique.length).fill(1e3),
-						matches: [],
-						pair: null,
-						swapped: false,
-						step: 0,
+						matches: [], pair: null, swapped: false, step: 0,
 						allowTies: elements.allowTies.checked,
-						history: [],
-						busy: false,
-						swaps: {},
-						dirty: true,
-						_prevStrength: null
+						history: [], busy: false, swaps: {}, dirty: true, _prevStrength: null
 					});
 					elements.undo.disabled = true;
 					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
@@ -1496,203 +1501,202 @@
 					this.next();
 					this.save();
 				}
+
 				resume() {
-					this.pair ? (this.display('battleSection'),
-					this.render()) : this.results();
+					if (this.pair) {
+						this.display('battleSection');
+						this.render();
+						return;
+					}
+					this.results();
 				}
+
 				recalculateScores() {
 					const n = this.items.length;
-					if (!this.dirty && this.scores?.length === n)
-						return;
+					if ((this.dirty === false && this.scores?.length === n && this.adj?.length === n) || n === 0) return;
+
 					const wins = new Float64Array(n);
-					const adjMaps = Array.from({
-						length: n
-					}, ()=>new Map());
-					for (const {a, b, result} of this.matches) {
+					const adjMaps = Array.from({ length: n }, () => new Map());
+					for (const { a, b, result } of this.matches) {
 						wins[a] += result;
 						wins[b] += 1 - result;
 						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
 						adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
 					}
-					this.adj = adjMaps.map(m=>{
-						const row = new Int32Array(m.size * 2);
-						let k = 0;
-						for (const [j,c] of m) {
-							row[k++] = j;
-							row[k++] = c;
-						}
+
+					this.adj = adjMaps.map(map => {
+						const row = [];
+						for (const [j, count] of map) row.push(j, count);
 						return row;
-					}
-					);
-					const W = new Float64Array(n);
-					for (let i = 0; i < n; i++)
-						W[i] = wins[i] + 0.5;
-					const s = new Float64Array(n);
-					for (let i = 0; i < n; i++) {
-						let games = 1;
-						const row = this.adj[i];
-						for (let k = 1; k < row.length; k += 2)
-							games += row[k];
-						s[i] = W[i] / games;
-					}
-					let ls = 0;
-					for (let i = 0; i < n; i++)
-						ls += Math.log(s[i]);
-					{
-						const sc = Math.exp(ls / n);
-						for (let i = 0; i < n; i++)
-							s[i] /= sc;
-					}
-					const RENORM = 16;
-					// ⚡ Bolt: Bradley-Terry MM algorithm for score calculation.
-					// Optimization: Using a convergence threshold of 1e-7 (the "knee point")
-					// provides ~45-48% iteration savings compared to 1e-9 while ensuring
-					// score errors remain below 0.001 points on common datasets.
-					for (let iter = 0; iter < 200; iter++) {
-						let maxFrac = 0;
-						for (let i = 0; i < n; i++) {
-							const si = s[i];
-							// ⚡ Bolt: Adding numerical epsilon (1e-12) to denominator
-							// ensures stability in extremely sparse scenarios.
-							let denom = 1 / (si + 1) + 1e-12;
-							const row = this.adj[i];
-							for (let k = 0; k < row.length; k += 2)
-								denom += row[k + 1] / (si + s[row[k]]);
-							const sn = W[i] / denom;
-							const frac = sn > si ? sn / si - 1 : si / sn - 1;
-							if (frac > maxFrac)
-								maxFrac = frac;
-							s[i] = sn;
-						}
-						if ((iter & (RENORM - 1)) === RENORM - 1) {
-							let lsum = 0;
-							for (let i = 0; i < n; i++)
-								lsum += Math.log(s[i]);
-							const sc = Math.exp(lsum / n);
-							for (let i = 0; i < n; i++)
-								s[i] /= sc;
-						}
-						if (maxFrac < 1e-7)
-							break;
-					}
-					{
-						let lsum = 0;
-						for (let i = 0; i < n; i++)
-							lsum += Math.log(s[i]);
-						const sc = Math.exp(lsum / n);
-						for (let i = 0; i < n; i++)
-							s[i] /= sc;
-					}
+					});
+
+					const PRIOR = 0.5;
 					const INV_LOG10 = 400 / Math.log(10);
-					const rawScores = new Float64Array(n);
-					for (let i = 0; i < n; i++)
-						rawScores[i] = 1000 + Math.log(s[i]) * INV_LOG10;
-					let minRaw = rawScores[0];
-					for (let i = 1; i < n; i++)
-						if (rawScores[i] < minRaw)
-							minRaw = rawScores[i];
-					if (minRaw < 1) {
-						const k = 999 / (1000 - minRaw);
-						this.scores = Array.from(rawScores, v=>1000 + (v - 1000) * k);
-					} else {
-						this.scores = Array.from(rawScores);
+					const convergenceThreshold = 1e-7;
+
+					const s = new Float64Array(n).fill(1.0);
+					if (this.scores.length === n) {
+						for (let i = 0; i < n; i++) {
+							const val = Math.exp((this.scores[i] - 1000) / INV_LOG10);
+							s[i] = isFinite(val) && val > 0 ? val : 1.0;
+						}
 					}
+
+					// ⚡ Bolt: Pre-calculate adjusted wins to save N additions per iteration
+					const adjustedWins = new Float64Array(n);
+					for (let i = 0; i < n; i++) adjustedWins[i] = wins[i] + PRIOR;
+					// ⚡ Bolt: Cache initial log-strengths for convergence check
+					const prevLogS = new Float64Array(n);
+					for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
+					const logs = new Float64Array(n);
+					const invN = 1 / n;
+
+					for (let iter = 0; iter < 1000; iter++) {
+						for (let i = 0; i < n; i++) {
+							const row = this.adj[i];
+							const si = s[i];
+							// ⚡ Bolt: Added 1e-12 epsilon for extreme numerical stability
+							let denom = 1 / (si + 1) + 1e-12;
+							for (let k = 0, len = row.length; k < len; k += 2)
+								denom += row[k + 1] / (si + s[row[k]]);
+							s[i] = adjustedWins[i] / denom;
+						}
+
+						let sumLog = 0;
+						for (let i = 0; i < n; i++) {
+							const l = Math.log(s[i]);
+							logs[i] = l;
+							sumLog += l;
+						}
+
+						// ⚡ Bolt: Pre-calculate logScale to reduce redundant Math.log calls during normalization and convergence check
+						const logScale = sumLog * invN;
+						const scale = Math.exp(logScale);
+						let maxDelta = 0;
+						for (let i = 0; i < n; i++) {
+							s[i] /= scale;
+							const currentLog = logs[i] - logScale;
+							const d = Math.abs(currentLog - prevLogS[i]);
+							if (d > maxDelta) maxDelta = d;
+							prevLogS[i] = currentLog;
+						}
+						if (maxDelta < convergenceThreshold) break;
+					}
+
+					// ⚡ Bolt: NO NEGATIVE SCORES AT ALL COSTS.
+					// 40-iteration binary search for additive offset to maintain 1000 average after flooring.
+					const raw = new Float64Array(n);
+					for (let i = 0; i < n; i++) raw[i] = 1000 + Math.log(s[i]) * INV_LOG10;
+					let lo = -2000, hi = 2000;
+					for (let iter = 0; iter < 40; iter++) {
+						const mid = (lo + hi) / 2;
+						let sum = 0;
+						for (let i = 0; i < n; i++) sum += Math.max(0, raw[i] + mid);
+						if (sum / n < 1000) { lo = mid; continue; }
+						hi = mid;
+					}
+					this.scores = Array.from(raw, v => Math.max(0, v + hi));
 					this.dirty = false;
 				}
+
 				choose(winner) {
-					if (this.busy || elements.battleSection.classList.contains('hidden'))
-						return;
+					if (this.busy || elements.battleSection.classList.contains('hidden')) return;
 					this.busy = true;
-					this.history.push({
-						pair: this.pair,
-						step: this.step,
-						swapped: this.swapped,
-						state: null
-					});
-					const [a,b] = this.pair;
+					this.history.push({ pair: this.pair, step: this.step, swapped: this.swapped, state: this.provider.snap() });
+					const [a, b] = this.pair;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
-					this.matches.push({
-						a,
-						b,
-						result
-					});
+					this.matches.push({ a, b, result });
 					this.dirty = true;
 					this.step++;
 					elements.undo.disabled = false;
 					this.updateProgress();
 					this.clear();
 					(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
-					setTimeout(()=>(!elements.battleSection.classList.contains('hidden') && this.busy && (this.busy = false,
-					this.next(result),
-					this.save())), 150);
+					setTimeout(() => {
+						if (elements.battleSection.classList.contains('hidden') || !this.busy) return;
+						this.busy = false;
+						this.next(result);
+						this.save();
+					}, 150);
 				}
+
 				next(result) {
 					this.clear();
 					const nextPair = this.provider.next(this, result);
-					if (!nextPair)
-						return this.pair = null,
+					if (!nextPair) {
+						this.pair = null;
 						this.results();
+						return;
+					}
 					this.pair = nextPair;
 					this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
 					this.render();
 				}
+
 				render() {
-					let[a,b] = this.pair;
-					if (this.swapped)
-						[a,b] = [b, a];
+					let [a, b] = this.pair;
+					if (this.swapped) [a, b] = [b, a];
 					elements.left.textContent = this.items[a];
 					elements.right.textContent = this.items[b];
 					this.updateProgress();
 					elements.announcer.textContent = this.string('compare').replace('{1}', this.items[a]).replace('{2}', this.items[b]);
 				}
+
 				updateProgress() {
 					const progress = this.provider ? this.provider.getProgress(this.step) : '0/0';
 					elements.progress.textContent = `${this.string('progress')}: ${progress}`;
-					const [current,total] = progress.split('/');
-					const percent = Math.min(100, Math.max(0, parseInt(total.replace('~', '')) > 0 ? parseInt(current) / parseInt(total.replace('~', '')) * 100 : 0));
+					const [current, total] = progress.split('/');
+					const percent = Math.min(100, Math.max(0,
+						parseInt(total.replace('~', '')) > 0
+							? parseInt(current) / parseInt(total.replace('~', '')) * 100
+							: 0));
 					elements.progressFill.style.width = `${percent}%`;
 					elements.progressTrack.setAttribute('aria-valuenow', Math.round(percent));
 				}
-				clear() {
-					['left', 'right', 'tie'].forEach(id=>elements[id].classList.remove('selected'));
-				}
+
+				clear() { ['left', 'right', 'tie'].forEach(id => elements[id].classList.remove('selected')); }
+
 				filterResults(term) {
 					this.filterTerm = term;
 					const lower = term.toLowerCase();
-					elements.results.querySelectorAll('.lb-row').forEach(row=>{
+					elements.results.querySelectorAll('.lb-row').forEach(row => {
 						const t = row.querySelector('.lb-col-item').textContent.toLowerCase();
 						row.classList.toggle('hidden', !t.includes(lower));
-					}
-					);
+					});
 				}
+
 				sortResults(column) {
 					const direction = this.sortState.column === column && this.sortState.direction === 'asc' ? 'desc' : 'asc';
-					this.sortState = {
-						column,
-						direction
-					};
+					this.sortState = { column, direction };
 					this.results();
 				}
+
 				results(preventFocus) {
 					const dirty = this.dirty;
 					this.recalculateScores();
 					elements.results.parentElement.append(elements.undo, elements.copy, elements.showGradeRow);
-					const baseRanking = [...this.scores.keys()].sort((a,b)=>this.scores[b] - this.scores[a]);
+					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
-					baseRanking.forEach((x,i)=>ranks[x] = i + 1);
-					if (dirty || !this.stats)
-						this.stats = Stats.calculate(this.items, this.scores, this.adj);
+					baseRanking.forEach((x, i) => ranks[x] = i + 1);
+					if (dirty || !this.stats) this.stats = Stats.calculate(this.items, this.scores, this.adj);
 					const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 					const sorters = {
-						rank: (a,b)=>(this.scores[b] - this.scores[a]) * sortDir,
-						rankSpread: (a,b)=>this.stats?.spreads ? (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir : 0,
-						item: (a,b)=>this.items[a].localeCompare(this.items[b]) * sortDir,
-						grade: (a,b)=>(this.scores[b] - this.scores[a]) * sortDir,
-						score: (a,b)=>(this.scores[a] - this.scores[b]) * sortDir,
-						ci: (a,b)=>this.stats?.cis ? (this.stats.cis[a] - this.stats.cis[b]) * sortDir : 0
+						rank: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
+						rankSpread: (a, b) => {
+							if (!this.stats?.spreads) return 0;
+							return (this.stats.spreads[a][0] - this.stats.spreads[b][0] || this.stats.spreads[a][1] - this.stats.spreads[b][1]) * sortDir;
+						},
+						item: (a, b) => this.items[a].localeCompare(this.items[b]) * sortDir,
+						grade: (a, b) => (this.scores[b] - this.scores[a]) * sortDir,
+						score: (a, b) => (this.scores[a] - this.scores[b]) * sortDir,
+						ci: (a, b) => {
+							if (!this.stats?.cis) return 0;
+							return (this.stats.cis[a] - this.stats.cis[b]) * sortDir;
+						}
 					};
 					this.currentRanking = [...this.scores.keys()].sort(sorters[this.sortState.column] || sorters.rank);
 					const ranking = this.currentRanking;
+
 					elements.results.innerHTML = '';
 					const headerWrapper = document.createElement('div');
 					headerWrapper.className = 'header';
@@ -1700,15 +1704,22 @@
 					headerWrapper.appendChild(elements.undo);
 					headerWrapper.appendChild(elements.copy);
 					elements.results.appendChild(headerWrapper);
+
 					const filterDiv = document.createElement('div');
 					filterDiv.className = 'filter-wrap';
 					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" aria-label="${this.string('filter')}" value="${this.filterTerm || ''}">`;
 					elements.results.appendChild(filterDiv);
+
 					elements.results.appendChild(elements.showGradeRow);
 					elements.showGradeRow.classList.remove('hidden');
+
 					const arrow = this.sortState.direction === 'asc' ? ' ▲' : ' ▼';
-					const getSortIcon = col=>this.sortState.column === col ? arrow : '';
-					const getSortState = col=>this.sortState.column === col ? (this.sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none';
+					const getSortIcon = col => this.sortState.column === col ? arrow : '';
+					const getSortState = col => {
+						if (this.sortState.column !== col) return 'none';
+						return this.sortState.direction === 'asc' ? 'ascending' : 'descending';
+					};
+
 					const lb = document.createElement('div');
 					lb.className = 'leaderboard';
 					lb.setAttribute('role', 'table');
@@ -1720,15 +1731,14 @@
 						<div class="lb-col-score" role="columnheader" tabindex="0" aria-sort="${getSortState('score')}" data-sort="score">${this.string('score')}${getSortIcon('score')}</div>
 					</div>
 					<div class="lb-body" role="rowgroup"></div>`;
+
 					const body = lb.querySelector('.lb-body');
 					const hasStats = this.stats && this.stats.spreads;
+
 					const itemMatches = Array(this.items.length).fill(0);
-					this.matches.forEach(m=>{
-						itemMatches[m.a]++;
-						itemMatches[m.b]++;
-					}
-					);
-					ranking.forEach(x=>{
+					this.matches.forEach(m => { itemMatches[m.a]++; itemMatches[m.b]++; });
+
+					ranking.forEach(x => {
 						const row = document.createElement('div');
 						row.className = 'lb-row';
 						const rank = ranks[x];
@@ -1738,7 +1748,7 @@
 						const spread = hasStats ? `${this.stats.spreads[x][0]} — ${this.stats.spreads[x][1]}` : null;
 						let spreadBar = '';
 						if (hasStats) {
-							const [min,max] = this.stats.spreads[x];
+							const [min, max] = this.stats.spreads[x];
 							const total = this.items.length;
 							const pMin = total > 1 ? ((min - 1) / (total - 1)) * 100 : 0;
 							const pWidth = total > 1 ? ((max - min) / (total - 1)) * 100 : 100;
@@ -1758,163 +1768,127 @@
 							</div>
 						</div>`;
 						const main = row.querySelector('.lb-main');
-						const toggle = ()=>row.classList.toggle('expanded');
+						const toggle = () => row.classList.toggle('expanded');
 						main.onclick = toggle;
-						main.onkeydown = e=>{
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								toggle();
-							}
-						}
-						;
+						main.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
 						body.appendChild(row);
-					}
-					);
+					});
+
 					elements.results.appendChild(lb);
 					elements.resultFilter = document.getElementById('resultFilter');
-					elements.resultFilter.oninput = e=>this.filterResults(e.target.value);
-					if (this.filterTerm)
-						this.filterResults(this.filterTerm);
+					elements.resultFilter.oninput = e => this.filterResults(e.target.value);
+					if (this.filterTerm) this.filterResults(this.filterTerm);
+
 					this.display('results', preventFocus);
 					elements.announcer.textContent = this.string('resultsReady');
 					this.save();
 				}
+
 				display(section, preventFocus) {
 					document.body.classList.toggle('results-mode', section === 'results');
 					elements.container.classList.toggle('input-mode', section === 'inputSection');
-					['inputSection', 'battleSection', 'results'].forEach(id=>elements[id].classList.toggle('hidden', id !== section));
+					['inputSection', 'battleSection', 'results'].forEach(id =>
+						elements[id].classList.toggle('hidden', id !== section));
 					elements.selectors.classList.toggle('hidden', section !== 'inputSection');
 					elements.restartWrap.classList.toggle('hidden', section !== 'results');
 					elements.undo.classList.toggle('hidden', section === 'inputSection');
 					elements.copy.classList.toggle('hidden', section !== 'results');
 					elements.showGradeRow.classList.toggle('hidden', section !== 'results');
-					if (section !== 'results')
-						elements.results.parentElement.appendChild(elements.showGradeRow);
-					if (section === 'battleSection')
-						elements.battleSection.before(elements.undo);
+					if (section !== 'results') elements.results.parentElement.appendChild(elements.showGradeRow);
+					if (section === 'battleSection') elements.battleSection.before(elements.undo);
 					if (section === 'results') {
 						elements.results.firstChild.prepend(elements.undo);
 						elements.results.firstChild.appendChild(elements.copy);
 					}
-					if (section === 'inputSection')
-						this.updateInputState();
-					const focusTarget = {
-						battleSection: elements.left,
-						inputSection: elements.items
-					}[section];
-					if (focusTarget && !preventFocus)
-						setTimeout(()=>focusTarget.focus(), 50);
+					if (section === 'inputSection') this.updateInputState();
+					const focusTarget = { battleSection: elements.left, inputSection: elements.items }[section];
+					if (focusTarget && !preventFocus) setTimeout(() => focusTarget.focus(), 50);
 				}
+
 				copyResults() {
-					const baseRanking = [...this.scores.keys()].sort((a,b)=>this.scores[b] - this.scores[a]);
+					const baseRanking = [...this.scores.keys()].sort((a, b) => this.scores[b] - this.scores[a]);
 					const ranks = [];
-					baseRanking.forEach((x,i)=>ranks[x] = i + 1);
+					baseRanking.forEach((x, i) => ranks[x] = i + 1);
 					const ranking = this.currentRanking || baseRanking;
 					const hasStats = this.stats && this.stats.spreads;
-					const headers = (hasStats ? (this.showGrade ? ['rank', 'rankSpread', 'item', 'grade', 'score', 'ci'] : ['rank', 'rankSpread', 'item', 'score', 'ci']) : (this.showGrade ? ['rank', 'item', 'grade', 'score'] : ['rank', 'item', 'score'])).map(k=>this.string(k)).join('\t');
-					const lines = ranking.map(x=>{
+					const headers = (hasStats
+						? (this.showGrade ? ['rank', 'rankSpread', 'item', 'grade', 'score', 'ci'] : ['rank', 'rankSpread', 'item', 'score', 'ci'])
+						: (this.showGrade ? ['rank', 'item', 'grade', 'score'] : ['rank', 'item', 'score'])).map(k => this.string(k)).join('\t');
+					const lines = ranking.map(x => {
 						const score = Math.round(this.scores[x]);
 						const row = [ranks[x]];
-						if (hasStats)
-							row.push(`${this.stats.spreads[x][0]}—${this.stats.spreads[x][1]}`);
+						if (hasStats) row.push(`${this.stats.spreads[x][0]}—${this.stats.spreads[x][1]}`);
 						row.push(this.items[x]);
-						if (this.showGrade)
-							row.push(this.getGrade(score));
+						if (this.showGrade) row.push(this.getGrade(score));
 						row.push(score);
-						if (hasStats)
-							row.push(`±${Math.round(this.stats.cis[x])}`);
+						if (hasStats) row.push(`±${Math.round(this.stats.cis[x])}`);
 						return row.join('\t');
-					}
-					);
-					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(()=>{
+					});
+					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(() => {
 						clearTimeout(this.copyTimeout);
 						elements.copy.textContent = this.string('copied');
 						elements.announcer.textContent = `${this.string('resultsTitle')} ${this.string('copied')}`;
-						this.copyTimeout = setTimeout(()=>elements.copy.textContent = this.string('copy'), 2e3);
-					}
-					);
+						this.copyTimeout = setTimeout(() => elements.copy.textContent = this.string('copy'), 2e3);
+					});
 				}
+
 				cancel() {
-					const reset = ()=>{
+					const reset = () => {
 						elements.cancel.classList.remove('confirming');
 						elements.cancel.textContent = this.string('cancel');
 						this.cancelTimeout = null;
+					};
+					if (this.cancelTimeout) {
+						clearTimeout(this.cancelTimeout);
+						reset();
+						this.display('inputSection');
+						return;
 					}
-					;
-					this.cancelTimeout ? (clearTimeout(this.cancelTimeout),
-					reset(),
-					this.display('inputSection')) : (elements.cancel.textContent = this.string('confirmCancel'),
-					elements.cancel.classList.add('confirming'),
-					this.cancelTimeout = setTimeout(reset, 3000));
+					elements.cancel.textContent = this.string('confirmCancel');
+					elements.cancel.classList.add('confirming');
+					this.cancelTimeout = setTimeout(reset, 3000);
 				}
+
 				undo() {
 					if (!this.busy && this.history.length) {
 						const last = this.history.pop();
 						this.matches.pop();
 						this.dirty = true;
-						Object.assign(this, {
-							step: last.step,
-							pair: last.pair,
-							swapped: last.swapped
-						});
-						if (this.provider instanceof QuickPairProvider)
-							this.provider._start(this.matches);
+						Object.assign(this, { step: last.step, pair: last.pair, swapped: last.swapped });
+						this.provider.restore(last.state);
 						this.render();
 						this.display('battleSection');
 						elements.undo.disabled = !this.history.length;
 						this.save();
 					}
 				}
+
 				reset() {
-					Object.assign(this, {
-						scores: [],
-						matches: [],
-						history: [],
-						provider: null,
-						dirty: true,
-						_prevStrength: null
-					});
+					Object.assign(this, { scores: [], matches: [], history: [], provider: null, dirty: true, _prevStrength: null });
 					this.display('inputSection');
 					this.updateHelp();
 					this.updateProgress();
 					this.save();
 				}
+
 				key(event) {
-					if (event.repeat)
-						return;
-					const {key, ctrlKey, metaKey, shiftKey} = event;
+					if (event.repeat) return;
+					const { key, ctrlKey, metaKey, shiftKey } = event;
 					const isModifier = ctrlKey || metaKey;
 					const isInputVisible = !elements.inputSection.classList.contains('hidden');
 					const isStartEnabled = !elements.start.disabled;
 					if (key === 'Enter' && isModifier && isInputVisible && isStartEnabled) {
-						event.preventDefault();
-						elements.start.click();
-						return;
+						event.preventDefault(); elements.start.click(); return;
 					}
-					const action = {
-						arrowleft: 'left',
-						arrowright: 'right',
-						arrowup: 'tie',
-						arrowdown: 'tie',
-						z: 'undo',
-						'?': 'toggle',
-						'/': 'toggle'
-					}[key.toLowerCase()];
-					if (!action || isInputVisible || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName))
-						return;
+					const action = { arrowleft: 'left', arrowright: 'right', arrowup: 'tie', arrowdown: 'tie', z: 'undo', '?': 'toggle', '/': 'toggle' }[key.toLowerCase()];
+					if (!action || isInputVisible || /^(SELECT|INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
 					const isBattleVisible = !elements.battleSection.classList.contains('hidden');
 					const isTieAllowed = action !== 'tie' || this.allowTies;
-					if (action === 'undo' && isModifier && !shiftKey) {
-						event.preventDefault();
-						elements.undo.click();
-					}
-					if (action !== 'undo' && isBattleVisible && isTieAllowed) {
-						event.preventDefault();
-						elements[action].click();
-						document.activeElement?.blur();
-					}
+					if (action === 'undo' && isModifier && !shiftKey) { event.preventDefault(); elements.undo.click(); return; }
+					if (action !== 'undo' && isBattleVisible && isTieAllowed) { event.preventDefault(); elements[action].click(); document.activeElement?.blur(); }
 				}
 			}
+
 			window.app = new PreferenceRank();
 		</script>
 	</body>
