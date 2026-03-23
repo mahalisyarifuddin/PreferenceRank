@@ -59,12 +59,7 @@
 				box-sizing: border-box;
 				margin: 0;
 				padding: 0;
-				outline-offset: 2px;
 				transition: background-color .3s, color .3s, border-color .3s, outline-color .3s;
-			}
-
-			*:focus-visible {
-				outline: 2px solid var(--primary);
 			}
 
 			body {
@@ -72,6 +67,7 @@
 				color: var(--text);
 				font-family: sans-serif;
 				display: flex;
+				align-items: center;
 				justify-content: center;
 				min-height: 100vh;
 				padding: 1rem;
@@ -82,7 +78,7 @@
 			}
 
 			body.results-mode .container {
-				margin: 2rem auto;
+				margin: 0 auto;
 			}
 
 			.container {
@@ -92,12 +88,6 @@
 				max-width: 720px;
 				padding: 2rem;
 				width: 100%;
-				position: relative;
-				margin: 2rem 0;
-			}
-
-			.container.input-mode {
-				padding-top: 3.5rem;
 			}
 
 			.hidden {
@@ -123,6 +113,10 @@
 				width: 100%;
 			}
 
+			input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+				outline: 2px solid var(--primary);
+				outline-offset: 2px;
+			}
 
 			textarea {
 				font-family: monospace;
@@ -171,11 +165,10 @@
 
 			.selectors {
 				position: absolute;
-				right: 1.5rem;
+				right: 2rem;
 				top: 1rem;
 				display: flex;
 				gap: 8px;
-				z-index: 100;
 			}
 
 			.selectors select {
@@ -446,7 +439,7 @@
 				align-items: center;
 				position: relative;
 				min-height: 40px;
-				margin: 0rem 0 1rem;
+				margin-bottom: 1rem;
 			}
 
 			.header #undo {
@@ -478,19 +471,13 @@
 				}
 
 				.container {
-					padding: 1.25rem;
-				}
-
-				.container.input-mode {
-					padding-top: 3rem;
+					padding: 1.5rem;
 				}
 
 				.selectors {
-					position: absolute;
-					right: 1.25rem;
-					top: 0.75rem;
+					position: static;
 					justify-content: flex-end;
-					margin-bottom: 0;
+					margin-bottom: .5rem;
 				}
 
 				#battle, #tieWrap, #restartWrap {
@@ -541,13 +528,8 @@
 			}
 
 			@keyframes fadeIn {
-				from {
-					opacity: 0;
-				}
-
-				to {
-					opacity: 1;
-				}
+				from { opacity: 0; }
+				to   { opacity: 1; }
 			}
 
 			.session-icon {
@@ -631,7 +613,7 @@
 				min-width: 2px;
 				position: absolute;
 			}
-		</style>
+</style>
 	</head>
 	<body>
 		<div id="container" class="container">
