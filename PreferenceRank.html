@@ -238,7 +238,7 @@
 			} 
  
 			#results { 
-				overflow-x: auto;
+				overflow: visible;
 			} 
  
 			.lb-wrap { 
@@ -1078,11 +1078,8 @@
 				restore() {}
 			}
 			class QuickPairProvider {
-				static estimate(count) {
-					if (count <= 1) return 0;
-					let total = 0;
-					for (let k = 2; k <= count; k++) total += Math.ceil(Math.log2(3 * k / 4));
-					return total;
+				static estimate(n) {
+					return n <= 1 ? 0 : Math.ceil(n * Math.log2(n) - 1.3408 * n - 0.8812);
 				}
 				constructor(count) {
 					this.count = count;
