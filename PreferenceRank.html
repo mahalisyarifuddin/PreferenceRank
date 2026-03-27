@@ -238,7 +238,7 @@
 			} 
  
 			#results { 
-				overflow: visible; 
+				overflow-x: auto;
 			} 
  
 			.lb-wrap { 
@@ -810,60 +810,40 @@
 					const size = inputMatrix.rows;
 					const inputData = inputMatrix.data;
 					const resultData = new Float64Array(size * size);
-					const rowViews = new Array(size);
-					for (let i = 0; i < size; i++)
-						rowViews[i] = resultData.subarray(i * size, (i + 1) * size);
 					for (let i = 0; i < size; i++) {
-						const rowI = rowViews[i];
+						const iOffset = i * size;
 						for (let j = 0; j <= i; j++) {
+							const jOffset = j * size;
 							let sum = 0;
-							const rowJ = rowViews[j];
 							for (let k = 0; k < j; k++)
-								sum += rowI[k] * rowJ[k];
-							const val = inputData[i * size + j] - sum;
+								sum += resultData[iOffset + k] * resultData[jOffset + k];
+							const val = inputData[iOffset + j] - sum;
 							if (i === j) {
-								if (val <= 0)
-									return null;
-								rowI[j] = Math.sqrt(val);
+								if (val <= 0) return null;
+								resultData[iOffset + j] = Math.sqrt(val);
 								continue;
 							}
-							rowI[j] = val / rowJ[j];
+							resultData[iOffset + j] = val / resultData[jOffset + j];
 						}
 					}
-					return {
-						rows: size,
-						cols: size,
-						data: resultData
-					};
+					return { rows: size, cols: size, data: resultData };
 				}
 				,
 				inverse: (inputMatrix)=>{
 					const size = inputMatrix.rows;
 					const matrixData = new Float64Array(inputMatrix.data);
 					const inverseData = new Float64Array(size * size);
-					for (let i = 0; i < size; i++)
-						inverseData[i * size + i] = 1;
-					const rowViews = new Array(size);
-					const invRowViews = new Array(size);
-					for (let i = 0; i < size; i++) {
-						rowViews[i] = matrixData.subarray(i * size, (i + 1) * size);
-						invRowViews[i] = inverseData.subarray(i * size, (i + 1) * size);
-					}
+					for (let i = 0; i < size; i++) inverseData[i * size + i] = 1;
 					for (let i = 0; i < size; i++) {
 						let pivotValue = matrixData[i * size + i];
 						let pivotIndex = i;
 						if (Math.abs(pivotValue) < 1e-10) {
 							for (let k = i + 1; k < size; k++) {
 								const val = matrixData[k * size + i];
-								if (Math.abs(val) > Math.abs(pivotValue)) {
-									pivotValue = val;
-									pivotIndex = k;
-								}
+								if (Math.abs(val) > Math.abs(pivotValue)) { pivotValue = val; pivotIndex = k; }
 							}
-							if (Math.abs(pivotValue) < 1e-10)
-								return null;
-							const offsetI = i * size;
-							const offsetP = pivotIndex * size;
+							if (Math.abs(pivotValue) < 1e-10) return null;
+							const offsetI = i * size, offsetP = pivotIndex * size;
 							for (let j = 0; j < size; j++) {
 								let temp = matrixData[offsetI + j];
 								matrixData[offsetI + j] = matrixData[offsetP + j];
@@ -874,31 +854,19 @@
 							}
 						}
 						const invPivot = 1 / pivotValue;
-						const rowI = rowViews[i];
-						const invRowI = invRowViews[i];
-						for (let j = i + 1; j < size; j++)
-							rowI[j] *= invPivot;
-						for (let j = 0; j < size; j++)
-							invRowI[j] *= invPivot;
-						for (let rowIndex = 0; rowIndex < size; rowIndex++) {
-							if (rowIndex === i)
-								continue;
-							const factor = matrixData[rowIndex * size + i];
-							if (factor === 0)
-								continue;
-							const rowR = rowViews[rowIndex];
-							const invRowR = invRowViews[rowIndex];
-							for (let j = i + 1; j < size; j++)
-								rowR[j] -= factor * rowI[j];
-							for (let j = 0; j < size; j++)
-								invRowR[j] -= factor * invRowI[j];
+						const offsetI = i * size;
+						for (let j = i + 1; j < size; j++) matrixData[offsetI + j] *= invPivot;
+						for (let j = 0; j < size; j++) inverseData[offsetI + j] *= invPivot;
+						for (let r = 0; r < size; r++) {
+							if (r === i) continue;
+							const offsetR = r * size;
+							const factor = matrixData[offsetR + i];
+							if (factor === 0) continue;
+							for (let j = i + 1; j < size; j++) matrixData[offsetR + j] -= factor * matrixData[offsetI + j];
+							for (let j = 0; j < size; j++) inverseData[offsetR + j] -= factor * inverseData[offsetI + j];
 						}
 					}
-					return {
-						rows: size,
-						cols: size,
-						data: inverseData
-					};
+					return { rows: size, cols: size, data: inverseData };
 				}
 			};
 			class Stats {
@@ -908,11 +876,11 @@
 						return null;
 					const scoreFactor = Math.log(10) / 400;
 					const parameters = new Float64Array(itemCount);
-					// Use rawScores (pre-clamp) when available; falling back to scores
-					// keeps this safe even if called without the 4th argument.
-					// Using clamped scores here would corrupt log-strength parameters
-					// (they'd carry an extra factor of k from the rescaling), producing
-					// wrong CI and rank-spread values whenever clamping was applied.
+
+
+
+
+
 					const src = rawScores || scores;
 					for (let i = 0; i < itemCount; i++)
 						parameters[i] = (src[i] - 1000) * scoreFactor;
@@ -999,10 +967,10 @@
 					const multiplier = 0.1257;
 					const totalGaussians = simulationCount * itemCountMinusOne;
 					const gaussians = new Float64Array(totalGaussians);
-					// ⚡ Bolt: Transposing Gaussian buffer layout to [simulation][item]
-					// ensures contiguous memory access during batched processing,
-					// reducing cache misses and improving performance by ~30% for
-					// common item counts.
+
+
+
+
 					for (let sim = 0; sim < simulationCount; sim += 2) {
 						const offset0 = sim * itemCountMinusOne;
 						const offset1 = (sim + 1) * itemCountMinusOne;
@@ -1028,47 +996,36 @@
 					const choleskyData = choleskyFactor.data;
 					for (let sim = 0; sim < simulationCount; sim += 4) {
 						const batchSize = Math.min(4, simulationCount - sim);
-						const g0 = gaussians.subarray(sim * itemCountMinusOne);
-						const g1 = gaussians.subarray((sim + 1) * itemCountMinusOne);
-						const g2 = gaussians.subarray((sim + 2) * itemCountMinusOne);
-						const g3 = gaussians.subarray((sim + 3) * itemCountMinusOne);
+						const gOffset0 = sim * itemCountMinusOne, gOffset1 = (sim + 1) * itemCountMinusOne;
+						const gOffset2 = (sim + 2) * itemCountMinusOne, gOffset3 = (sim + 3) * itemCountMinusOne;
 						for (let i = 0; i < itemCountMinusOne; i++) {
-							let s0 = 0
-							  , s1 = 0
-							  , s2 = 0
-							  , s3 = 0;
+							let s0 = 0, s1 = 0, s2 = 0, s3 = 0;
 							const rowOffset = i * itemCountMinusOne;
 							if (batchSize === 4) {
 								for (let j = 0; j <= i; j++) {
 									const c = choleskyData[rowOffset + j];
-									s0 += c * g0[j];
-									s1 += c * g1[j];
-									s2 += c * g2[j];
-									s3 += c * g3[j];
+									s0 += c * gaussians[gOffset0 + j];
+									s1 += c * gaussians[gOffset1 + j];
+									s2 += c * gaussians[gOffset2 + j];
+									s3 += c * gaussians[gOffset3 + j];
 								}
 								sampleParameters[i] = parameters[i] + s0;
 								sampleParameters[i + itemCount] = parameters[i] + s1;
 								sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
 								sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
-							} else {
-								for (let j = 0; j <= i; j++) {
-									const c = choleskyData[rowOffset + j];
-									s0 += c * g0[j];
-									if (batchSize > 1)
-										s1 += c * g1[j];
-									if (batchSize > 2)
-										s2 += c * g2[j];
-									if (batchSize > 3)
-										s3 += c * g3[j];
-								}
-								sampleParameters[i] = parameters[i] + s0;
-								if (batchSize > 1)
-									sampleParameters[i + itemCount] = parameters[i] + s1;
-								if (batchSize > 2)
-									sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
-								if (batchSize > 3)
-									sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
+								continue;
 							}
+							for (let j = 0; j <= i; j++) {
+								const c = choleskyData[rowOffset + j];
+								s0 += c * gaussians[gOffset0 + j];
+								if (batchSize > 1) s1 += c * gaussians[gOffset1 + j];
+								if (batchSize > 2) s2 += c * gaussians[gOffset2 + j];
+								if (batchSize > 3) s3 += c * gaussians[gOffset3 + j];
+							}
+							sampleParameters[i] = parameters[i] + s0;
+							if (batchSize > 1) sampleParameters[i + itemCount] = parameters[i] + s1;
+							if (batchSize > 2) sampleParameters[i + 2 * itemCount] = parameters[i] + s2;
+							if (batchSize > 3) sampleParameters[i + 3 * itemCount] = parameters[i] + s3;
 						}
 						sampleParameters[itemCountMinusOne] = parameters[itemCountMinusOne];
 						if (batchSize > 1)
@@ -1087,7 +1044,8 @@
 					}
 					const spreads = [];
 					for (let i = 0; i < itemCount; i++) {
-						const row = simulationRanks.subarray(i * simulationCount, (i + 1) * simulationCount);
+						const offset = i * simulationCount;
+						const row = simulationRanks.subarray(offset, offset + simulationCount);
 						row.sort();
 						spreads.push([row[Math.floor(simulationCount * 0.1)], row[Math.floor(simulationCount * 0.9)]]);
 					}
@@ -1119,108 +1077,111 @@
 				}
 				restore() {}
 			}
-			function *fjSort(items) {
-				const n = items.length;
-				if (n <= 1)
-					return items.slice();
-				const half = n >> 1;
-				const winners = new Array(half)
-				  , losers = new Array(half);
-				for (let i = 0; i < half; i++) {
-					const a = items[2 * i]
-					  , b = items[2 * i + 1];
-					const w = yield[a, b];
-					if (w === a) {
-						winners[i] = a;
-						losers[i] = b;
-					} else {
-						winners[i] = b;
-						losers[i] = a;
-					}
-				}
-				const sorted = yield*fjSort(winners);
-				const loserOf = new Map(winners.map((w,i)=>[w, losers[i]]));
-				const chain = [loserOf.get(sorted[0]), ...sorted];
-				const m = sorted.length;
-				let jPrev = 1
-				  , jA = 1
-				  , jB = 3;
-				while (jPrev < m) {
-					const jT = Math.min(jB, m);
-					for (let k = jT; k > jPrev; k--) {
-						const bk = loserOf.get(sorted[k - 1]);
-						let lo = 0
-						  , hi = chain.indexOf(sorted[k - 1]);
-						while (lo < hi) {
-							const mid = (lo + hi) >> 1;
-							const w = yield[bk, chain[mid]];
-							if (w === bk)
-								lo = mid + 1;
-							else
-								hi = mid;
-						}
-						chain.splice(lo, 0, bk);
-					}
-					jPrev = jT;
-					[jA,jB] = [jB, jB + 2 * jA];
-				}
-				if (n & 1) {
-					const odd = items[n - 1];
-					let lo = 0
-					  , hi = chain.length;
-					while (lo < hi) {
-						const mid = (lo + hi) >> 1;
-						const w = yield[odd, chain[mid]];
-						if (w === odd)
-							lo = mid + 1;
-						else
-							hi = mid;
-					}
-					chain.splice(lo, 0, odd);
-				}
-				return chain;
-			}
 			class QuickPairProvider {
 				static estimate(count) {
-					if (count <= 1)
-						return 0;
+					if (count <= 1) return 0;
 					let total = 0;
-					for (let k = 2; k <= count; k++)
-						total += Math.ceil(Math.log2(3 * k / 4));
+					for (let k = 2; k <= count; k++) total += Math.ceil(Math.log2(3 * k / 4));
 					return total;
 				}
 				constructor(count) {
 					this.count = count;
 					this._est = QuickPairProvider.estimate(count);
-					this._start();
-				}
-				_start(matches) {
-					const items = Array.from({
-						length: this.count
-					}, (_,i)=>i);
-					this._gen = fjSort(items);
-					let step = this._gen.next();
-					this._cur = step.done ? null : step.value;
-					if (matches) {
-						for (const {result} of matches) {
-							if (!this._cur)
-								break;
-							const [a,b] = this._cur;
-							step = this._gen.next(result === 0 ? b : a);
-							this._cur = step.done ? null : step.value;
-						}
-					}
+					this.state = 0;
+					this.stack = [{ items: Array.from({ length: count }, (_, i) => i) }];
 				}
 				next(_, result) {
-					if (result !== undefined && this._cur) {
-						const [a,b] = this._cur;
-						const step = this._gen.next(result === 0 ? b : a);
-						this._cur = step.done ? null : step.value;
+					while (this.stack.length > 0) {
+						const frame = this.stack[this.stack.length - 1];
+						if (this.state === 0) {
+							if (!frame.winners) {
+								frame.winners = [];
+								frame.losers = [];
+								frame.pairIdx = 0;
+							}
+							const n = frame.items.length;
+							const half = n >> 1;
+							if (result !== undefined && frame.pairIdx > 0) {
+								const prevA = frame.items[2 * (frame.pairIdx - 1)];
+								const prevB = frame.items[2 * (frame.pairIdx - 1) + 1];
+								result === 1 ? (frame.winners.push(prevA), frame.losers.push(prevB)) : (frame.winners.push(prevB), frame.losers.push(prevA));
+								result = undefined;
+							}
+							if (frame.pairIdx < half) {
+								const a = frame.items[2 * frame.pairIdx];
+								const b = frame.items[2 * frame.pairIdx + 1];
+								frame.pairIdx++;
+								return [a, b];
+							}
+							if (frame.winners.length <= 1) {
+								frame.sorted = [...frame.winners];
+								this.state = 1;
+								continue;
+							}
+							this.stack.push({ items: frame.winners });
+							this.state = 0;
+							continue;
+						}
+						if (this.state === 1) {
+							const child = this.stack.pop();
+							if (this.stack.length === 0) return null;
+							const parent = this.stack[this.stack.length - 1];
+							parent.sorted = child.sorted;
+							parent.loserOf = new Map(parent.winners.map((w, i) => [w, parent.losers[i]]));
+							parent.chain = [parent.loserOf.get(parent.sorted[0]), ...parent.sorted];
+							parent.posMap = new Map(parent.chain.map((it, idx) => [it, idx]));
+							parent.m = parent.sorted.length;
+							parent.jPrev = 1; parent.jA = 1; parent.jB = 3;
+							this.state = 2;
+							continue;
+						}
+						if (this.state === 2) {
+							if (result !== undefined) {
+								result === 1 ? frame.lo = frame.mid + 1 : frame.hi = frame.mid;
+								result = undefined;
+							}
+							if (frame.lo < frame.hi) {
+								frame.mid = (frame.lo + frame.hi) >> 1;
+								return [frame.bk, frame.chain[frame.mid]];
+							}
+							if (frame.bk !== undefined) {
+								frame.chain.splice(frame.lo, 0, frame.bk);
+								for (let i = frame.lo; i < frame.chain.length; i++) frame.posMap.set(frame.chain[i], i);
+								frame.bk = undefined;
+							}
+							if (frame.jPrev < frame.m) {
+								if (frame.k === undefined) frame.k = Math.min(frame.jB, frame.m);
+								if (frame.k > frame.jPrev) {
+									const parent = this.stack[this.stack.length - 1];
+									frame.bk = parent.loserOf.get(parent.sorted[frame.k - 1]);
+									frame.lo = 0; frame.hi = frame.posMap.get(parent.sorted[frame.k - 1]);
+									frame.k--;
+									continue;
+								}
+								frame.jPrev = Math.min(frame.jB, frame.m);
+								const nextJB = frame.jB + 2 * frame.jA;
+								frame.jA = frame.jB; frame.jB = nextJB;
+								frame.k = undefined;
+								continue;
+							}
+							if (frame.items.length & 1 && !frame.oddDone) {
+								frame.bk = frame.items[frame.items.length - 1];
+								frame.lo = 0; frame.hi = frame.chain.length;
+								frame.oddDone = true;
+								continue;
+							}
+							frame.sorted = frame.chain;
+							this.state = 1;
+							continue;
+						}
 					}
-					return this._cur ? [this._cur[0], this._cur[1]] : null;
+					return null;
 				}
 				getProgress(step) {
 					return `${step}/~${Math.max(step, this._est)}`;
+				}
+				_start(matches) {
+					for (const m of matches) this.next(undefined, m.result);
 				}
 			}
 			class PreferenceRank {
@@ -1386,10 +1347,7 @@
 					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
-					if (battle.providerType === 'quick')
-						this.provider._start(this.matches);
-					else
-						Object.assign(this.provider, battle.provider);
+					battle.providerType === 'quick' ? this.provider._start(this.matches) : Object.assign(this.provider, battle.provider);
 					elements.allowTies.checked = this.allowTies;
 					elements.quickRank.checked = battle.providerType === 'quick';
 					this.setTies(this.allowTies);
@@ -1410,8 +1368,7 @@
 					return lines.map(line=>{
 						const p = patterns.find(p=>p.test(line));
 						return p ? line.replace(p, '') : line;
-					}
-					);
+						});
 				}
 				updateInputState() {
 					const items = this.getItems();
@@ -1431,7 +1388,7 @@
 					this.updateHelp();
 				}
 				getGrade(score) {
-					return score >= 1400 ? 'S' : score >= 1200 ? 'A' : score >= 1000 ? 'B' : score >= 800 ? 'C' : score >= 600 ? 'D' : score >= 400 ? 'E' : 'F';
+					return score >= 1500 ? 'S' : score >= 1250 ? 'A' : score >= 1000 ? 'B' : score >= 750 ? 'C' : score >= 500 ? 'D' : score >= 250 ? 'E' : 'F';
 				}
 				updateHelp() {
 					const hidden = elements.tips.classList.contains('hidden');
@@ -1533,67 +1490,54 @@
 							s[i] /= sc;
 					}
 					const RENORM = 16;
-					// ⚡ Bolt: Bradley-Terry MM algorithm for score calculation.
-					// Optimization: Using a convergence threshold of 1e-7 (the "knee point")
-					// provides ~45-48% iteration savings compared to 1e-9 while ensuring
-					// score errors remain below 0.001 points on common datasets.
+					const prevLogS = new Float64Array(n);
+					for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
+
+
+
+
 					for (let iter = 0; iter < 200; iter++) {
-						let maxFrac = 0;
+						let maxDelta = 0;
 						for (let i = 0; i < n; i++) {
 							const si = s[i];
-							// ⚡ Bolt: Adding numerical epsilon (1e-12) to denominator
-							// ensures stability in extremely sparse scenarios.
 							let denom = 1 / (si + 1) + 1e-12;
 							const row = this.adj[i];
-							for (let k = 0; k < row.length; k += 2)
+							for (let k = 0, len = row.length; k < len; k += 2)
 								denom += row[k + 1] / (si + s[row[k]]);
-							const sn = W[i] / denom;
-							const frac = sn > si ? sn / si - 1 : si / sn - 1;
-							if (frac > maxFrac)
-								maxFrac = frac;
-							s[i] = sn;
+							s[i] = W[i] / denom;
 						}
-						if ((iter & (RENORM - 1)) === RENORM - 1) {
+						if ((iter & (RENORM - 1)) === RENORM - 1 || iter === 199) {
 							let lsum = 0;
-							for (let i = 0; i < n; i++)
-								lsum += Math.log(s[i]);
-							const sc = Math.exp(lsum / n);
-							for (let i = 0; i < n; i++)
-								s[i] /= sc;
+							for (let i = 0; i < n; i++) lsum += Math.log(s[i]);
+							const sc = lsum / n;
+							const scale = Math.exp(sc);
+							for (let i = 0; i < n; i++) {
+								s[i] /= scale;
+								const curLog = Math.log(s[i]);
+								const delta = Math.abs(curLog - prevLogS[i]);
+								if (delta > maxDelta) maxDelta = delta;
+								prevLogS[i] = curLog;
+							}
+							if (iter > 0 && maxDelta < 1e-7) break;
 						}
-						if (maxFrac < 1e-7)
-							break;
-					}
-					{
-						let lsum = 0;
-						for (let i = 0; i < n; i++)
-							lsum += Math.log(s[i]);
-						const sc = Math.exp(lsum / n);
-						for (let i = 0; i < n; i++)
-							s[i] /= sc;
 					}
 					const INV_LOG10 = 400 / Math.log(10);
 					const rawScores = new Float64Array(n);
 					for (let i = 0; i < n; i++)
 						rawScores[i] = 1000 + Math.log(s[i]) * INV_LOG10;
-					// Preserve true BT log-strength scores for Stats (CI / rank-spread).
-					// Must be stored BEFORE any clamping so Stats.calculate always
-					// receives parameters derived from genuine log(s[i]) values.
+
+
+
 					this._rawScores = Array.from(rawScores);
-					let minRaw = rawScores[0];
-					for (let i = 1; i < n; i++)
-						if (rawScores[i] < minRaw)
-							minRaw = rawScores[i];
-					if (minRaw < 0) {
-						// Only rescale when a score would genuinely go negative.
-						// k = 1000/(1000 - minRaw) maps the minimum exactly to 0,
-						// preserves the arithmetic mean at 1000 (Σ(raw-1000)=0 ⟹
-						// Σ(score-1000)=k×0=0), and minimises 400-point-rule distortion.
-						const k = 1000 / (1000 - minRaw);
-						this.scores = Array.from(rawScores, v=>1000 + (v - 1000) * k);
-					} else {
-						this.scores = Array.from(rawScores);
+					let low = -1000, high = 1000, offset = 0;
+					for (let i = 0; i < 40; i++) {
+						let mid = (low + high) / 2;
+						let sum = 0;
+						for (let j = 0; j < n; j++) sum += Math.max(0, rawScores[j] + mid);
+						sum / n > 1000 ? high = mid : low = mid;
+						offset = mid;
 					}
+					this.scores = Array.from(rawScores, v => Math.max(0, v + offset));
 					this.dirty = false;
 				}
 				choose(winner) {

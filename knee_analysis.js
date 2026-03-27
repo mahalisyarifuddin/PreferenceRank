@@ -6,7 +6,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
     const wins = new Float64Array(n);
     const adjMaps = Array.from({ length: n }, () => new Map());
     for (const { a, b, result } of matches) {
-        const weight = 2;
+        const weight = 1;
         wins[a] += result * weight;
         wins[b] += (1 - result) * weight;
         adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + weight);
@@ -63,7 +63,17 @@ function runBT(n, matches, threshold, maxIter = 20000) {
     }
     const end = performance.now();
 
-    const scores = Array.from(s, v => 1000 + Math.log(v) * SCALE);
+    const rawScores = new Float64Array(n);
+    for (let i = 0; i < n; i++) rawScores[i] = 1000 + Math.log(s[i]) * SCALE;
+    let low = -1000, high = 1000, offset = 0;
+    for (let i = 0; i < 40; i++) {
+        let mid = (low + high) / 2;
+        let sum = 0;
+        for (let j = 0; j < n; j++) sum += Math.max(0, rawScores[j] + mid);
+        sum / n > 1000 ? high = mid : low = mid;
+        offset = mid;
+    }
+    const scores = Array.from(rawScores, v => Math.max(0, v + offset));
     return { scores, iterations, time: end - start };
 }
 
