@@ -66,11 +66,15 @@ function runBT(n, matches, threshold, maxIter = 20000) {
     const rawScores = new Float64Array(n);
     for (let i = 0; i < n; i++) rawScores[i] = 1000 + Math.log(s[i]) * SCALE;
     let low = -1000, high = 1000, offset = 0;
+    const target = 1000 * n;
     for (let i = 0; i < 40; i++) {
         let mid = (low + high) / 2;
         let sum = 0;
-        for (let j = 0; j < n; j++) sum += Math.max(0, rawScores[j] + mid);
-        sum / n > 1000 ? high = mid : low = mid;
+        for (let j = 0; j < n; j++) {
+            const s = rawScores[j] + mid;
+            if (s > 0) sum += s;
+        }
+        sum > target ? high = mid : low = mid;
         offset = mid;
     }
     const scores = Array.from(rawScores, v => Math.max(0, v + offset));
