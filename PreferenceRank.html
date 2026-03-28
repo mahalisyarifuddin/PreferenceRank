@@ -1057,13 +1057,18 @@
 					return count * (count - 1) / 2;
 				}
 				constructor(count) {
-					this.pairs = [];
+					// ⚡ Bolt: Fast fixed-length array allocation
+					const len = count * (count - 1) / 2;
+					this.pairs = new Array(len);
+					let k = 0;
 					for (let i = 0; i < count; i++)
 						for (let j = i + 1; j < count; j++)
-							this.pairs.push([i, j]);
-					for (let i = this.pairs.length; i--; ) {
+							this.pairs[k++] = [i, j];
+					for (let i = len; i--; ) {
 						const j = Math.random() * (i + 1) | 0;
-						[this.pairs[i],this.pairs[j]] = [this.pairs[j], this.pairs[i]];
+						const temp = this.pairs[i];
+						this.pairs[i] = this.pairs[j];
+						this.pairs[j] = temp;
 					}
 				}
 				next(state) {
@@ -1515,11 +1520,16 @@
 
 					this._rawScores = Array.from(rawScores);
 					let low = -1000, high = 1000, offset = 0;
+					// ⚡ Bolt: Removed Math.max for scalar checks in hot path
+					const target = 1000 * n;
 					for (let i = 0; i < 40; i++) {
 						let mid = (low + high) / 2;
 						let sum = 0;
-						for (let j = 0; j < n; j++) sum += Math.max(0, rawScores[j] + mid);
-						sum / n > 1000 ? high = mid : low = mid;
+						for (let j = 0; j < n; j++) {
+							const s = rawScores[j] + mid;
+							if (s > 0) sum += s;
+						}
+						sum > target ? high = mid : low = mid;
 						offset = mid;
 					}
 					this.scores = Array.from(rawScores, v => Math.max(0, v + offset));
