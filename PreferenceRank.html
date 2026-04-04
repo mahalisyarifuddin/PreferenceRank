@@ -1558,7 +1558,7 @@
 					this.updateProgress();
 					this.clear();
 					(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
-					setTimeout(()=>(!elements.battleSection.classList.contains('hidden') && this.busy && (this.busy = false,
+					setTimeout(()=>(this.busy && (this.busy = false,
 					this.next(result),
 					this.save())), 150);
 				}

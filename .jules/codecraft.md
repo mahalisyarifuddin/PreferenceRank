@@ -1,4 +1,4 @@
-## 2024-05-26 - Decoupling State Updates from UI Visibility
+## 2024-04-04 - State Deadlock from UI Coupling
 **Mode:** Medic
-**Learning:** In asynchronous operations (like `setTimeout` or promises), conditionally applying state updates (e.g., `this.busy = false`, `this.save()`) based on whether a UI element is currently visible (`!classList.contains('hidden')`) can lead to permanent deadlocks. If the user navigates away (e.g., clicks Cancel) before the timeout fires, the state is never updated, rendering the session unresumable.
-**Action:** Always process core state transitions and persistence unconditionally in background tasks, and use UI visibility checks *only* to control immediate DOM manipulation or navigation (e.g., `this.results()`).
+**Learning:** Checking UI visibility (`!elements.battleSection.classList.contains('hidden')`) inside an asynchronous callback (`setTimeout`) to gate core state updates can cause deadlocks if the UI state changes (e.g., user cancels) before the timeout executes.
+**Action:** Always decouple core business logic and state flags (like `this.busy = false`) from UI visibility checks in delayed execution paths.
