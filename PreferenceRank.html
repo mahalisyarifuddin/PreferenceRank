@@ -1089,7 +1089,10 @@
 				constructor(count) {
 					this.count = count;
 					this._est = QuickPairProvider.estimate(count);
-					this.stack = [{ items: Array.from({ length: count }, (_, i) => i), state: 0 }];
+					this.reset();
+				}
+				reset() {
+					this.stack = [{ items: Array.from({ length: this.count }, (_, i) => i), state: 0 }];
 				}
 				next(_, result) {
 					while (this.stack.length > 0) {
@@ -1116,9 +1119,9 @@
 						}
 						if (frame.state === 3) {
 							frame.sortedWinners = frame.childResult;
-							frame.loserOf = new Map(frame.winners.map((w, i) => [w, frame.losers[i]]));
-							frame.chain = [frame.loserOf.get(frame.sortedWinners[0]), ...frame.sortedWinners];
-							frame.posMap = new Map(frame.chain.map((it, idx) => [it, idx]));
+							frame.loserOf = {}; frame.winners.forEach((w, i) => frame.loserOf[w] = frame.losers[i]);
+							frame.chain = [frame.loserOf[frame.sortedWinners[0]], ...frame.sortedWinners];
+							frame.posMap = {}; frame.chain.forEach((it, idx) => frame.posMap[it] = idx);
 							frame.m = frame.sortedWinners.length;
 							frame.jPrev = 1; frame.jA = 1; frame.jB = 3; frame.state = 4;
 						}
@@ -1126,8 +1129,8 @@
 							if (frame.jPrev < frame.m) {
 								if (frame.k === undefined) frame.k = Math.min(frame.jB, frame.m);
 								if (frame.k > frame.jPrev) {
-									frame.bk = frame.loserOf.get(frame.sortedWinners[frame.k - 1]);
-									frame.lo = 0; frame.hi = frame.posMap.get(frame.sortedWinners[frame.k - 1]);
+									frame.bk = frame.loserOf[frame.sortedWinners[frame.k - 1]];
+									frame.lo = 0; frame.hi = frame.posMap[frame.sortedWinners[frame.k - 1]];
 									frame.state = 6; continue;
 								}
 								frame.jPrev = Math.min(frame.jB, frame.m);
@@ -1154,7 +1157,7 @@
 								return [frame.bk, frame.chain[frame.mid]];
 							}
 							frame.chain.splice(frame.lo, 0, frame.bk);
-							for (let i = frame.lo; i < frame.chain.length; i++) frame.posMap.set(frame.chain[i], i);
+							for (let i = frame.lo; i < frame.chain.length; i++) frame.posMap[frame.chain[i]] = i;
 							frame.state = (frame.state === 6) ? (frame.k--, 4) : 5; continue;
 						}
 					}
@@ -1170,7 +1173,19 @@
 				getProgress(step) {
 					return `${step}/~${Math.max(step, this._est)}`;
 				}
+				snap() {
+					return JSON.stringify(this.stack);
+				}
+				restore(data, matches) {
+					if (!data) return matches && this._start(matches);
+					try {
+						this.stack = JSON.parse(data);
+					} catch {
+						matches && this._start(matches);
+					}
+				}
 				_start(matches) {
+					this.reset();
 					for (const m of matches) this.next(undefined, m.result);
 				}
 			}
@@ -1337,7 +1352,12 @@
 					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
-					battle.providerType === 'quick' ? this.provider._start(this.matches) : Object.assign(this.provider, battle.provider);
+					if (battle.providerType === 'quick') {
+						const last = this.history[this.history.length - 1];
+						last ? this.provider.restore(last.state, this.matches) : this.provider._start(this.matches);
+					} else {
+						Object.assign(this.provider, battle.provider);
+					}
 					elements.allowTies.checked = this.allowTies;
 					elements.quickRank.checked = battle.providerType === 'quick';
 					this.setTies(this.allowTies);
@@ -1543,7 +1563,7 @@
 						pair: this.pair,
 						step: this.step,
 						swapped: this.swapped,
-						state: null
+						state: this.provider.snap()
 					});
 					const [a,b] = this.pair;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
@@ -1793,8 +1813,7 @@
 							pair: last.pair,
 							swapped: last.swapped
 						});
-						if (this.provider instanceof QuickPairProvider)
-							this.provider._start(this.matches);
+						this.provider.restore(last.state, this.matches);
 						this.render();
 						this.display('battleSection');
 						elements.undo.disabled = !this.history.length;
