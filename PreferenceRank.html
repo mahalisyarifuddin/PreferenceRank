@@ -1371,14 +1371,9 @@
 					this.saveTimeout = setTimeout(()=>this.save(), 500);
 				}
 				getItems() {
-					const lines = elements.items.value.split('\n').map(l=>l.trim()).filter(Boolean);
-					if (!lines.length)
-						return [];
-					const patterns = [/^\d+[\.\)]\s+/, /^[-*•]\s+/];
-					return lines.map(line=>{
-						const p = patterns.find(p=>p.test(line));
-						return p ? line.replace(p, '') : line;
-						});
+					return elements.items.value.split('\n')
+						.map(l => l.trim().replace(/^(?:\d+[\.\)]|[-*•])\s+/, ''))
+						.filter(Boolean);
 				}
 				updateInputState() {
 					const items = this.getItems();
@@ -1767,7 +1762,14 @@
 					baseRanking.forEach((x,i)=>ranks[x] = i + 1);
 					const ranking = this.currentRanking || baseRanking;
 					const hasStats = this.stats && this.stats.spreads;
-					const headers = (hasStats ? (this.showGrade ? ['rank', 'rankSpread', 'item', 'grade', 'score', 'ci'] : ['rank', 'rankSpread', 'item', 'score', 'ci']) : (this.showGrade ? ['rank', 'item', 'grade', 'score'] : ['rank', 'item', 'score'])).map(k=>this.string(k)).join('\t');
+					const headers = [
+						'rank',
+						hasStats && 'rankSpread',
+						'item',
+						this.showGrade && 'grade',
+						'score',
+						hasStats && 'ci'
+					].filter(Boolean).map(k => this.string(k)).join('\t');
 					const lines = ranking.map(x=>{
 						const score = Math.round(this.scores[x]);
 						const row = [ranks[x]];
