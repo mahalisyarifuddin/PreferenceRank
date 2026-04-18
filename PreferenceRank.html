@@ -1498,8 +1498,8 @@
 					const prevLogS = new Float64Array(n);
 					for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
 
-
-
+					// ⚡ Bolt: Pre-allocate array to cache Math.log results and eliminate redundant O(N) calls
+					const currentLogs = new Float64Array(n);
 
 					for (let iter = 0; iter < 200; iter++) {
 						let maxDelta = 0;
@@ -1513,12 +1513,16 @@
 						}
 						if ((iter & (RENORM - 1)) === RENORM - 1 || iter === 199) {
 							let lsum = 0;
-							for (let i = 0; i < n; i++) lsum += Math.log(s[i]);
+							for (let i = 0; i < n; i++) {
+								const l = Math.log(s[i]);
+								currentLogs[i] = l;
+								lsum += l;
+							}
 							const sc = lsum / n;
 							const scale = Math.exp(sc);
 							for (let i = 0; i < n; i++) {
 								s[i] /= scale;
-								const curLog = Math.log(s[i]);
+								const curLog = currentLogs[i] - sc;
 								const delta = Math.abs(curLog - prevLogS[i]);
 								if (delta > maxDelta) maxDelta = delta;
 								prevLogS[i] = curLog;
