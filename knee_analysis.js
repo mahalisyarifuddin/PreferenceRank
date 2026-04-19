@@ -26,7 +26,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
 
     const prevLogS = new Float64Array(n);
     for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
-    const logs = new Float64Array(n);
+    const currentLogs = new Float64Array(n);
     const invN = 1 / n;
 
     const start = performance.now();
@@ -45,7 +45,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
         let sumLog = 0;
         for (let i = 0; i < n; i++) {
             const l = Math.log(s[i]);
-            logs[i] = l;
+            currentLogs[i] = l;
             sumLog += l;
         }
 
@@ -54,7 +54,7 @@ function runBT(n, matches, threshold, maxIter = 20000) {
         let maxDelta = 0;
         for (let i = 0; i < n; i++) {
             s[i] /= scale;
-            const currentLog = logs[i] - logScale;
+            const currentLog = currentLogs[i] - logScale;
             const d = Math.abs(currentLog - prevLogS[i]);
             if (d > maxDelta) maxDelta = d;
             prevLogS[i] = currentLog;
