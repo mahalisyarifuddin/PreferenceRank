@@ -1186,6 +1186,7 @@
 				}
 				_start(matches) {
 					this.reset();
+					this.next();
 					for (const m of matches) this.next(undefined, m.result);
 				}
 			}
