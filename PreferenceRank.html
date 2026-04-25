@@ -14,10 +14,7 @@
 				--text: #181c21; 
 				--border: #c1c6d4; 
 				--muted: #f2f3fc; 
-				--success: #0b6b1d; 
-				--on-success: #ffffff; 
 				--danger: #ba1a1a; 
-				--on-danger: #ffffff; 
 				--highlight-bg: #d4e3ff; 
 			} 
  
@@ -31,10 +28,7 @@
 					--text: #e0e2ea; 
 					--border: #414752; 
 					--muted: #181c21; 
-					--success: #82db7e; 
-					--on-success: #00390a; 
 					--danger: #ffb4ab; 
-					--on-danger: #93000a; 
 					--highlight-bg: #001c3a; 
 				} 
 			} 
@@ -48,10 +42,7 @@
 				--text: #e0e2ea; 
 				--border: #414752; 
 				--muted: #181c21; 
-				--success: #82db7e; 
-				--on-success: #00390a; 
 				--danger: #ffb4ab; 
-				--on-danger: #93000a; 
 				--highlight-bg: #001c3a; 
 			} 
  
@@ -239,11 +230,6 @@
  
 			#results { 
 				overflow: visible;
-			} 
- 
-			.lb-wrap { 
-				border-radius: 8px; 
-				overflow-x: auto; 
 			} 
  
 			kbd { 
@@ -635,7 +621,7 @@
 			</div>
 			<div id="inputSection">
 				<h1 id="title"></h1>
-				<div class="group">
+				<div>
 					<label for="items" id="labelItems"></label>
 					<textarea id="items" rows="5" spellcheck="false" autofocus aria-describedby="error"></textarea>
 					<div id="itemCount" class="count"></div>
@@ -794,18 +780,6 @@
 				get: (_,id)=>document.getElementById(id)
 			});
 			const Matrix = {
-				zeros: (rowCount,columnCount)=>({
-					rows: rowCount,
-					cols: columnCount,
-					data: new Float64Array(rowCount * columnCount)
-				}),
-				identity: (size)=>{
-					const matrix = Matrix.zeros(size, size);
-					for (let i = 0; i < size; i++)
-						matrix.data[i * size + i] = 1;
-					return matrix;
-				}
-				,
 				cholesky: (inputMatrix)=>{
 					const size = inputMatrix.rows;
 					const inputData = inputMatrix.data;
@@ -876,11 +850,6 @@
 						return null;
 					const scoreFactor = Math.log(10) / 400;
 					const parameters = new Float64Array(itemCount);
-
-
-
-
-
 					const src = rawScores || scores;
 					for (let i = 0; i < itemCount; i++)
 						parameters[i] = (src[i] - 1000) * scoreFactor;
@@ -967,10 +936,6 @@
 					const multiplier = 0.1257;
 					const totalGaussians = simulationCount * itemCountMinusOne;
 					const gaussians = new Float64Array(totalGaussians);
-
-
-
-
 					for (let sim = 0; sim < simulationCount; sim += 2) {
 						const offset0 = sim * itemCountMinusOne;
 						const offset1 = (sim + 1) * itemCountMinusOne;
@@ -1437,8 +1402,7 @@
 						history: [],
 						busy: false,
 						swaps: {},
-						dirty: true,
-						_prevStrength: null
+						dirty: true
 					});
 					elements.undo.disabled = true;
 					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
@@ -1535,9 +1499,6 @@
 					const rawScores = new Float64Array(n);
 					for (let i = 0; i < n; i++)
 						rawScores[i] = 1000 + Math.log(s[i]) * INV_LOG10;
-
-
-
 					this._rawScores = Array.from(rawScores);
 					let low = -1000, high = 1000, offset = 0;
 					// ⚡ Bolt: Removed Math.max for scalar checks in hot path
@@ -1833,8 +1794,7 @@
 						matches: [],
 						history: [],
 						provider: null,
-						dirty: true,
-						_prevStrength: null
+						dirty: true
 					});
 					this.display('inputSection');
 					this.updateHelp();
