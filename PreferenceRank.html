@@ -98,7 +98,7 @@
 				width: 100%; 
 			} 
  
-			input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { 
+			input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, .lb-main:focus-visible, .lb-header > div:focus-visible {
 				outline: 2px solid var(--primary); 
 				outline-offset: 2px; 
 			} 
@@ -608,9 +608,9 @@
 					<option value="dark">Dark</option>
 				</select>
 			</div>
-			<div id="sessionModal" class="hidden" role="dialog" aria-modal="true">
+			<div id="sessionModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="sessionTitle" aria-describedby="sessionMessage">
 				<div class="session-card">
-					<div class="session-icon">&#x21BA;</div>
+					<div class="session-icon" aria-hidden="true">&#x21BA;</div>
 					<h2 id="sessionTitle"></h2>
 					<p id="sessionMessage"></p>
 					<div id="sessionButtons">
@@ -656,7 +656,7 @@
 					<button id="tie" class="secondary"></button>
 				</div>
 				<div id="progress"></div>
-				<div id="progressTrack" class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+				<div id="progressTrack" class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="progress">
 					<div id="progressFill" class="fill"></div>
 				</div>
 				<button id="cancel"></button>
@@ -1662,8 +1662,8 @@
 							spreadBar = `<div class="spread-track" title="${spread}"><div class="spread-bar" style="left:${pMin}%;width:${pWidth}%"></div></div>`;
 						}
 						row.innerHTML = `
-						<div class="lb-main" role="button" tabindex="0">
-							<div class="lb-col-rank"><span class="chevron">&#x203a;</span><span>${rank}</span></div>
+						<div class="lb-main" role="button" tabindex="0" aria-expanded="false">
+							<div class="lb-col-rank"><span class="chevron" aria-hidden="true">&#x203a;</span><span>${rank}</span></div>
 							<div class="lb-col-item">${new Option(item).innerHTML}</div>
 							${this.showGrade ? `<div class="lb-col-grade">${this.getGrade(score)}</div>` : ''}
 							<div class="lb-col-score">${score}${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}</div>
@@ -1675,7 +1675,10 @@
 							</div>
 						</div>`;
 						const main = row.querySelector('.lb-main');
-						const toggle = ()=>row.classList.toggle('expanded');
+						const toggle = ()=>{
+							const isExpanded = row.classList.toggle('expanded');
+							main.setAttribute('aria-expanded', isExpanded);
+						};
 						main.onclick = toggle;
 						main.onkeydown = e=>{
 							if (e.key === 'Enter' || e.key === ' ') {
