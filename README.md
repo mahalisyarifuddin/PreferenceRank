@@ -22,12 +22,12 @@ Based on a comparative analysis of 24 sorting algorithms (see [ANALYSIS.md](ANAL
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Heap Sort | ~165 | 0.49 | Pareto-optimal |
-| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
-| Merge Sort | ~543 | 0.91 | Pareto-optimal |
-| **Shellsort** | **~725** | **0.95** | **Knee Point** |
-| Comb Sort | ~1260 | 0.99 | Pareto-optimal |
-| Full Rank | 4950 | 1.00 | Pareto-optimal |
+| Smooth Sort | ~170 | 0.54 | Pareto-optimal |
+| Ford-Johnson | ~526 | 0.88 | Pareto-optimal |
+| Merge Sort | ~542 | 0.89 | Pareto-optimal |
+| **Shellsort** | **~743** | **0.93** | **Knee Point** |
+| Comb Sort | ~1230 | 0.99 | Pareto-optimal |
+| Full Rank | ~4950 | 1.00 | Pareto-optimal |
 
 *Quick Rank reduces battles by ~85% compared to Full Rank while maintaining high ranking accuracy. Algorithms like Bogosort are quantitatively absurd and serve only as a humorous baseline.*
 

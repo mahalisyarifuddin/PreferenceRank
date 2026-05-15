@@ -17,39 +17,40 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Intelligent Design | 0.00 | 0.0331 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5165 | Pareto-optimal |
-| Thanos Sort | 190.00 | 0.5265 | Pareto-optimal |
-| Intro Sort | 445.40 | 0.8566 | Pareto-optimal |
-| Ford-Johnson | 525.70 | 0.8937 | Pareto-optimal |
-| Binary Insertion | 529.90 | 0.8953 | Pareto-optimal |
-| Merge Sort | 543.80 | 0.9049 | Pareto-optimal |
-| **Shellsort** | **719.50** | **0.9446** | **Production Knee Point** |
-| Comb Sort | 1201.00 | 0.9897 | Pareto-optimal |
+| Intelligent Design | 0.00 | 0.0324 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5413 | Pareto-optimal |
+| Smooth Sort | 170.20 | 0.5445 | Pareto-optimal |
+| Intro Sort | 456.80 | 0.8465 | Pareto-optimal |
+| Ford-Johnson | 526.20 | 0.8879 | Pareto-optimal |
+| Merge Sort | 542.10 | 0.8985 | Pareto-optimal |
+| **Shellsort** | **743.30** | **0.9387** | **Production Knee Point** |
+| Comb Sort | 1230.70 | 0.9905 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Quantum Bogo | 1.40 | -0.0349 | Dominated |
-| Stalin Sort | 99.00 | 0.1055 | Dominated |
-| Smooth Sort | 147.00 | 0.4847 | Dominated |
-| Heap Sort | 147.20 | 0.4650 | Dominated |
-| Patience Sort | 243.70 | 0.4525 | Dominated |
-| Tournament Sort | 556.40 | 0.8895 | Dominated |
-| Tree Sort | 598.10 | 0.8354 | Dominated |
-| Quicksort | 647.20 | 0.8359 | Dominated |
-| Strand Sort | 705.50 | 0.8321 | Dominated |
-| Bitonic Sort | 1334.00 | 0.9477 | Dominated |
-| Insertion Sort | 2581.00 | 0.8063 | Dominated |
-| Cocktail Shaker | 4011.00 | 0.9802 | Dominated |
-| Odd-Even Sort | 4682.70 | 0.9896 | Dominated |
-| Bubble Sort | 4884.40 | 0.9709 | Dominated |
-| Gnome Sort | 4895.60 | 0.9660 | Dominated |
-| Selection Sort | 4950.00 | 0.9339 | Dominated |
-| Bogosort | 4950.00 | 0.9789 | Dominated |
-| Pancake Sort | 4950.00 | 0.9762 | Dominated |
-| Bozosort | 4950.00 | 0.5992 | Dominated |
-| Slowsort | 4950.00 | 0.4645 | Dominated |
-| Cycle Sort | 4950.00 | 0.3362 | Dominated |
-| Stooge Sort | 4950.00 | 0.3124 | Dominated |
-| BogoBogoSort | 4950.00 | 0.0487 | Dominated |
+| Quantum Bogo | 1.70 | 0.0230 | Dominated |
+| Stalin Sort | 99.00 | 0.0640 | Dominated |
+| Heap Sort | 164.30 | 0.4808 | Dominated |
+| Thanos Sort | 190.00 | 0.5334 | Dominated |
+| Patience Sort | 248.80 | 0.4926 | Dominated |
+| Binary Insertion | 529.90 | 0.8834 | Dominated |
+| Tournament Sort | 557.00 | 0.8855 | Dominated |
+| Tree Sort | 643.60 | 0.8367 | Dominated |
+| Quicksort | 651.10 | 0.8354 | Dominated |
+| Strand Sort | 774.50 | 0.8265 | Dominated |
+| Hayate-Shiki | 980.50 | 0.7909 | Dominated |
+| Bitonic Sort | 1334.00 | 0.9526 | Dominated |
+| Insertion Sort | 2556.60 | 0.8041 | Dominated |
+| Cocktail Shaker | 3873.70 | 0.9777 | Dominated |
+| Odd-Even Sort | 4702.50 | 0.9884 | Dominated |
+| Gnome Sort | 4911.80 | 0.9581 | Dominated |
+| Bubble Sort | 4917.30 | 0.9731 | Dominated |
+| Selection Sort | 4950.00 | 0.9344 | Dominated |
+| Stooge Sort | 4950.00 | 0.2826 | Dominated |
+| Bogosort | 4950.00 | 0.9781 | Dominated |
+| Cycle Sort | 4950.00 | 0.4720 | Dominated |
+| Slowsort | 4950.00 | 0.4357 | Dominated |
+| Pancake Sort | 4950.00 | 0.9761 | Dominated |
+| Bozosort | 4950.00 | 0.5962 | Dominated |
+| BogoBogoSort | 4950.00 | 0.0975 | Dominated |
 
 ### Pareto Frontier & Knee Point Analysis
 The Pareto Frontier identifies algorithms where no other algorithm is both better at minimizing battles and better at maximizing accuracy.
