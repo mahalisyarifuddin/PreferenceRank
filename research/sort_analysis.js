@@ -442,6 +442,127 @@ class SmoothSortProvider extends Provider {
     }
 }
 
+class HayateShikiProvider extends Provider {
+    constructor(n) { super(n); this.cnIns = 32; this.iSrc = 0; this.unitStack = []; this.nJoin = 0; this.state = 'MAKE_UNIT'; this.external = new Array(n); this.mergeTasks = []; this.mpSubState = null; }
+    next(result) {
+        while (true) {
+            if (this.mergeTasks.length > 0) {
+                const t = this.mergeTasks[this.mergeTasks.length - 1];
+                if (t.state === 'INIT') { t.res = []; t.i = 0; t.j = 0; t.state = 'COMPARE'; }
+                if (t.state === 'COMPARE') {
+                    if (result !== undefined) { if (result === 1) t.res.push(t.u1[t.i++]); else t.res.push(t.u2[t.j++]); result = undefined; }
+                    if (t.i < t.u1.length && t.j < t.u2.length) return [t.u1[t.i], t.u2[t.j]];
+                    const merged = t.res.concat(t.u1.slice(t.i)).concat(t.u2.slice(t.j));
+                    this.mergeTasks.pop(); if (t.callback) t.callback(merged); continue;
+                }
+            }
+            if (this.state === 'MAKE_UNIT') { if (this.iSrc >= this.n) { this.state = 'FINAL_MERGE'; continue; } this.state = 'MAKE_PART_0'; continue; }
+            if (this.state === 'MAKE_PART_0') {
+                const res = this.subMakePart(result); if (res === 'BUSY') return this.lastPair;
+                const unit0 = this.partToUnit(res); result = undefined;
+                if (this.iSrc >= this.n) { this.pushUnit(unit0); this.state = 'MAKE_UNIT'; continue; }
+                this.unit0 = unit0; this.state = 'MAKE_PART_1'; continue;
+            }
+            if (this.state === 'MAKE_PART_1') {
+                const res = this.subMakePart(result); if (res === 'BUSY') return this.lastPair;
+                const unit1 = this.partToUnit(res); result = undefined;
+                this.mergeTasks.push({ u1: this.unit0, u2: unit1, state: 'INIT', callback: (merged) => this.pushUnit(merged) });
+                this.state = 'MAKE_UNIT'; continue;
+            }
+            if (this.state === 'FINAL_MERGE') {
+                if (this.unitStack.length > 1) {
+                    const u2 = this.unitStack.pop(), u1 = this.unitStack.pop();
+                    this.mergeTasks.push({ u1, u2, state: 'INIT', callback: (merged) => this.unitStack.push(merged) }); continue;
+                }
+                if (this.unitStack.length > 0) this.items = this.unitStack[0]; return null;
+            }
+        }
+    }
+    subMakePart(result) {
+        if (!this.mpSubState) { this.mpSubState = 'INIT'; this.mpA = this.iSrc; this.mpE = this.iSrc; this.isDsc = false; }
+        while (true) {
+            if (this.mpSubState === 'INIT') {
+                if (this.iSrc + 1 < this.n) { this.mpSubState = 'DECIDE'; this.lastPair = [this.items[this.iSrc + 1], this.items[this.iSrc]]; return 'BUSY'; }
+                this.iSrc++; this.mpE = this.iSrc; this.mpSubState = 'EXTEND_RUN_END'; continue;
+            }
+            if (this.mpSubState === 'DECIDE') { this.isDsc = (result === 0); this.mpE = Math.min(this.mpA + this.cnIns, this.n); this.mpInsI = this.mpA + 1; this.mpSubState = 'INS_SORT_START'; result = undefined; continue; }
+            if (this.mpSubState === 'INS_SORT_START') {
+                if (this.mpInsI < this.mpE) { this.mpInsVal = this.items[this.mpInsI]; this.mpInsJ = this.mpInsI - 1; this.mpSubState = 'INS_SORT_COMPARE'; continue; }
+                this.iSrc = this.mpE; this.mpSubState = 'EXTEND_RUN'; continue;
+            }
+            if (this.mpSubState === 'INS_SORT_COMPARE') {
+                if (this.mpInsJ >= this.mpA) { this.lastPair = [this.mpInsVal, this.items[this.mpInsJ]]; this.mpSubState = 'INS_SORT_RESULT'; return 'BUSY'; }
+                this.items[this.mpInsJ + 1] = this.mpInsVal; this.mpInsI++; this.mpSubState = 'INS_SORT_START'; continue;
+            }
+            if (this.mpSubState === 'INS_SORT_RESULT') {
+                const cond = this.isDsc ? (result === 1) : (result === 0);
+                if (cond) { this.items[this.mpInsJ + 1] = this.items[this.mpInsJ]; this.mpInsJ--; this.mpSubState = 'INS_SORT_COMPARE'; }
+                else { this.items[this.mpInsJ + 1] = this.mpInsVal; this.mpInsI++; this.mpSubState = 'INS_SORT_START'; }
+                result = undefined; continue;
+            }
+            if (this.mpSubState === 'EXTEND_RUN') {
+                if (this.iSrc < this.mpE) this.iSrc = this.mpE;
+                if (this.iSrc < this.n) { this.lastPair = [this.items[this.iSrc], this.items[this.iSrc - 1]]; this.mpSubState = 'EXTEND_RUN_RESULT'; return 'BUSY'; }
+                this.mpSubState = 'EXTEND_RUN_END'; continue;
+            }
+            if (this.mpSubState === 'EXTEND_RUN_RESULT') {
+                const cond = this.isDsc ? (result === 0) : (result === 1);
+                if (cond) { this.iSrc++; this.mpE = this.iSrc; this.mpSubState = 'EXTEND_RUN'; }
+                else { this.mpSubState = 'EXTEND_RUN_END'; }
+                result = undefined; continue;
+            }
+            if (this.mpSubState === 'EXTEND_RUN_END') {
+                if (this.isDsc) { let l = this.mpA, r = this.mpE - 1; while (l < r) { [this.items[l], this.items[r]] = [this.items[r], this.items[l]]; l++; r--; } }
+                this.mpSubState = 'EXTEND_EXTERNAL_INIT'; continue;
+            }
+            if (this.mpSubState === 'EXTEND_EXTERNAL_INIT') {
+                this.mpADsc = this.n; this.mpEDsc = this.n;
+                if (this.iSrc < this.n) { this.lastPair = [this.items[this.iSrc], this.items[this.mpA]]; this.mpSubState = 'EXTEND_EXTERNAL_RESULT_MIN'; return 'BUSY'; }
+                this.mpSubState = 'DONE'; continue;
+            }
+            if (this.mpSubState === 'EXTEND_EXTERNAL_RESULT_MIN') {
+                if (result === 0) { this.external[--this.mpADsc] = this.items[this.iSrc++]; this.mpSubState = 'EXTEND_EXTERNAL_LOOP'; }
+                else { this.mpSubState = 'DONE'; }
+                result = undefined; continue;
+            }
+            if (this.mpSubState === 'EXTEND_EXTERNAL_LOOP') {
+                if (this.iSrc < this.n) { this.lastPair = [this.items[this.iSrc], this.items[this.mpE - 1]]; this.mpSubState = 'EXTEND_EXTERNAL_LOOP_MAX'; return 'BUSY'; }
+                this.mpSubState = 'DONE'; continue;
+            }
+            if (this.mpSubState === 'EXTEND_EXTERNAL_LOOP_MAX') {
+                if (result === 1) { this.items[this.mpE++] = this.items[this.iSrc++]; this.mpSubState = 'EXTEND_EXTERNAL_LOOP'; }
+                else { this.lastPair = [this.items[this.iSrc], this.external[this.mpADsc]]; this.mpSubState = 'EXTEND_EXTERNAL_LOOP_MIN'; return 'BUSY'; }
+                result = undefined; continue;
+            }
+            if (this.mpSubState === 'EXTEND_EXTERNAL_LOOP_MIN') {
+                if (result === 0) { this.external[--this.mpADsc] = this.items[this.iSrc++]; this.mpSubState = 'EXTEND_EXTERNAL_LOOP'; }
+                else { this.mpSubState = 'DONE'; }
+                result = undefined; continue;
+            }
+            if (this.mpSubState === 'DONE') {
+                const res = { aAsc: this.mpA, nAsc: this.mpE - this.mpA, aDsc: this.mpADsc, nDsc: this.mpEDsc - this.mpADsc };
+                this.mpSubState = null; return res;
+            }
+        }
+    }
+    partToUnit(p) {
+        const res = [];
+        for (let i = 0; i < p.nDsc; i++) res.push(this.external[p.aDsc + i]);
+        for (let i = 0; i < p.nAsc; i++) res.push(this.items[p.aAsc + i]);
+        return res;
+    }
+    pushUnit(unit) {
+        this.unitStack.push(unit); let n = this.nJoin++; let carry = (n ^ (n + 1)) & n;
+        this.performIterativeMerge(carry);
+    }
+    performIterativeMerge(carry) {
+        if (carry > 0 && this.unitStack.length > 1) {
+            const u2 = this.unitStack.pop(), u1 = this.unitStack.pop();
+            this.mergeTasks.push({ u1, u2, state: 'INIT', callback: (merged) => { this.unitStack.push(merged); this.performIterativeMerge(carry >> 1); } });
+        }
+    }
+}
+
 class StalinSortProvider extends Provider {
     constructor(n) { super(n); this.i = 1; }
     next(result) {
@@ -584,6 +705,7 @@ function simulate(n, ProviderClass, trials = 10) {
 
 const N = 100, algos = [
     { name: 'Ford-Johnson', class: FJProvider }, { name: 'Merge Sort', class: MergeSortProvider },
+    { name: 'Hayate-Shiki', class: HayateShikiProvider },
     { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort', class: QuicksortProvider },
     { name: 'Bubble Sort', class: BubbleSortProvider }, { name: 'Selection Sort', class: SelectionSortProvider },
     { name: 'Insertion Sort', class: InsertionSortProvider }, { name: 'Binary Insertion', class: BinaryInsertionSortProvider },

@@ -1,13 +1,7 @@
 
-const algos = [
-    "Ford-Johnson", "Merge Sort", "Shellsort", "Quicksort", "Bubble Sort", "Selection Sort", "Insertion Sort",
-    "Binary Insertion", "Gnome Sort", "Stooge Sort", "Bogosort", "Full Rank", "Cycle Sort", "Bitonic Sort",
-    "Heap Sort", "Comb Sort", "Tournament Sort", "Odd-Even Sort", "Slowsort", "Pancake Sort", "Cocktail Shaker",
-    "Bozosort", "Tree Sort", "BogoBogoSort", "Stalin Sort", "Thanos Sort", "Miracle Sort", "Intelligent Design",
-    "Quantum Bogo", "Intro Sort", "Strand Sort", "Patience Sort", "Smooth Sort"
-];
-const battles = [525.70, 543.80, 719.50, 647.20, 4884.40, 4950.00, 2581.00, 529.90, 4895.60, 4950.00, 4950.00, 4950.00, 4950.00, 1334.00, 147.20, 1201.00, 556.40, 4682.70, 4950.00, 4950.00, 4011.00, 4950.00, 598.10, 4950.00, 99.00, 190.00, 99.00, 0.00, 1.40, 445.40, 705.50, 243.70, 147.00];
-const tau     = [0.8937, 0.9049, 0.9446, 0.8359, 0.9709, 0.9339, 0.8063, 0.8953, 0.9660, 0.3124, 0.9789, 1.0000, 0.3362, 0.9477, 0.4650, 0.9897, 0.8895, 0.9896, 0.4645, 0.9762, 0.9802, 0.5992, 0.8354, 0.0487, 0.1055, 0.5265, 0.5165, 0.0331, -0.0349, 0.8566, 0.8321, 0.4525, 0.4847];
+const algos = ["Ford-Johnson", "Merge Sort", "Hayate-Shiki", "Shellsort", "Quicksort", "Bubble Sort", "Selection Sort", "Insertion Sort", "Binary Insertion", "Gnome Sort", "Stooge Sort", "Bogosort", "Full Rank", "Cycle Sort", "Bitonic Sort", "Heap Sort", "Comb Sort", "Tournament Sort", "Odd-Even Sort", "Slowsort", "Pancake Sort", "Cocktail Shaker", "Bozosort", "Tree Sort", "BogoBogoSort", "Stalin Sort", "Thanos Sort", "Miracle Sort", "Intelligent Design", "Quantum Bogo", "Intro Sort", "Strand Sort", "Patience Sort", "Smooth Sort"];
+const battles = [526.20, 542.10, 980.50, 743.30, 651.10, 4917.30, 4950.00, 2556.60, 529.90, 4911.80, 4950.00, 4950.00, 4950.00, 4950.00, 1334.00, 164.30, 1230.70, 557.00, 4702.50, 4950.00, 4950.00, 3873.70, 4950.00, 643.60, 4950.00, 99.00, 190.00, 99.00, 0.00, 1.70, 456.80, 774.50, 248.80, 170.20];
+const tau     = [0.8879, 0.8985, 0.7909, 0.9387, 0.8354, 0.9731, 0.9344, 0.8041, 0.8834, 0.9581, 0.2826, 0.9781, 1.0000, 0.4720, 0.9526, 0.4808, 0.9905, 0.8855, 0.9884, 0.4357, 0.9761, 0.9777, 0.5962, 0.8367, 0.0975, 0.0640, 0.5334, 0.5413, 0.0324, 0.0230, 0.8465, 0.8265, 0.4926, 0.5445];
 
 function pareto_mask(x, y) {
     const n = x.length, mask = new Array(n).fill(true);

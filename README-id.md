@@ -22,12 +22,12 @@ Berdasarkan analisis komparatif terhadap 24 algoritma pengurutan (lihat [ANALYSI
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Heap Sort | ~165 | 0.49 | Pareto-optimal |
-| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
-| Merge Sort | ~543 | 0.91 | Pareto-optimal |
-| **Shellsort** | **~725** | **0.95** | **Titik Lutut** |
-| Comb Sort | ~1260 | 0.99 | Pareto-optimal |
-| Full Rank | 4950 | 1.00 | Pareto-optimal |
+| Smooth Sort | ~170 | 0.54 | Pareto-optimal |
+| Ford-Johnson | ~526 | 0.88 | Pareto-optimal |
+| Merge Sort | ~542 | 0.89 | Pareto-optimal |
+| **Shellsort** | **~743** | **0.93** | **Titik Lutut** |
+| Comb Sort | ~1230 | 0.99 | Pareto-optimal |
+| Full Rank | ~4950 | 1.00 | Pareto-optimal |
 
 *Peringkat Cepat mengurangi pertarungan sekitar 85% dibandingkan dengan Peringkat Penuh sambil tetap mempertahankan akurasi peringkat yang tinggi. Algoritma seperti Bogosort secara kuantitatif absurd dan hanya berfungsi sebagai pembanding yang lucu.*
 

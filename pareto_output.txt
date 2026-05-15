@@ -1,0 +1,37 @@
+Pareto-optimal algorithms (N=100):
+  Intelligent Design                battles=    0.00  tau=0.0324
+  Miracle Sort                      battles=   99.00  tau=0.5413
+  Smooth Sort                       battles=  170.20  tau=0.5445
+  Intro Sort                        battles=  456.80  tau=0.8465
+  Ford-Johnson                      battles=  526.20  tau=0.8879
+  Merge Sort                        battles=  542.10  tau=0.8985
+  Shellsort                         battles=  743.30  tau=0.9387  <-- PROD  <-- MATH KNEE
+  Comb Sort                         battles= 1230.70  tau=0.9905
+  Full Rank                         battles= 4950.00  tau=1.0000
+
+Dominated algorithms:
+  Quantum Bogo                      battles=    1.70  tau=0.0230
+  Stalin Sort                       battles=   99.00  tau=0.0640
+  Heap Sort                         battles=  164.30  tau=0.4808
+  Thanos Sort                       battles=  190.00  tau=0.5334
+  Patience Sort                     battles=  248.80  tau=0.4926
+  Binary Insertion                  battles=  529.90  tau=0.8834
+  Tournament Sort                   battles=  557.00  tau=0.8855
+  Tree Sort                         battles=  643.60  tau=0.8367
+  Quicksort                         battles=  651.10  tau=0.8354
+  Strand Sort                       battles=  774.50  tau=0.8265
+  Hayate-Shiki                      battles=  980.50  tau=0.7909
+  Bitonic Sort                      battles= 1334.00  tau=0.9526
+  Insertion Sort                    battles= 2556.60  tau=0.8041
+  Cocktail Shaker                   battles= 3873.70  tau=0.9777
+  Odd-Even Sort                     battles= 4702.50  tau=0.9884
+  Gnome Sort                        battles= 4911.80  tau=0.9581
+  Bubble Sort                       battles= 4917.30  tau=0.9731
+  Selection Sort                    battles= 4950.00  tau=0.9344
+  Stooge Sort                       battles= 4950.00  tau=0.2826
+  Bogosort                          battles= 4950.00  tau=0.9781
+  Cycle Sort                        battles= 4950.00  tau=0.4720
+  Slowsort                          battles= 4950.00  tau=0.4357
+  Pancake Sort                      battles= 4950.00  tau=0.9761
+  Bozosort                          battles= 4950.00  tau=0.5962
+  BogoBogoSort                      battles= 4950.00  tau=0.0975
