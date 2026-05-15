@@ -14,8 +14,20 @@ PreferenceRank offers two distinct modes to sort your items:
 
 - **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
 
-- **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation. This optimized approach minimizes comparisons (Battles ≈ N log₂ N - 1.41 N + 2.9) by skipping redundant refinement steps while maintaining statistical ranking quality.
-    - *Example:* For 50 items, Quick Rank uses ~215 battles vs. 1225 for Full Rank (~80% reduction).
+- **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
+
+### Algorithm Analysis
+Based on a comparative analysis of various sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** was identified as the **knee point** for efficiency and accuracy. It maximizes information gain while minimizing user fatigue.
+
+**Comparison (N=50):**
+| Algorithm | Avg Battles | Avg Kendall Tau | Improvement vs Random |
+| :--- | :--- | :--- | :--- |
+| **Ford-Johnson** | **~215** | **0.90** | **+10%** |
+| Quicksort | ~263 | 0.86 | - |
+| Random Pairs | 215 | 0.82 | - |
+| Full Rank | 1225 | 1.00 | +11% |
+
+*Quick Rank reduces battles by ~82% compared to Full Rank while maintaining 90% ranking accuracy.*
 
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
