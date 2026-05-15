@@ -61,10 +61,10 @@ Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang
 ### Sortir Esoterik & Lucu: Komedi Kuantitatif
 Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wikipedia untuk mengilustrasikan rentang filosofi pengurutan.
 
-- **Intelligent Design Sort:** Mengasumsikan Sang Pencipta sudah mengurutkan daftar. Waktu $O(1)$, tetapi tidak ada informasi yang diperoleh jika daftar tersebut belum terurut.
-- **Thanos Sort:** Menghapus setengah dari alam semesta (data) untuk mengembalikan keteraturan. Akurasi yang mengejutkan untuk jumlah pertarungan yang rendah, dengan biaya kehilangan setengah data Anda.
-- **Miracle Sort:** Menunggu keajaiban untuk mengurutkan data.
-- **Quantum Bogo Sort:** Menghasilkan permutasi acak dan menghancurkan alam semesta jika tidak terurut.
+- **Intelligent Design Sort:** Mengasumsikan Sang Pencipta sudah mengurutkan daftar. Algoritma ini menghasilkan **0 pertarungan** karena langsung berhenti, sehingga tidak memberikan perolehan informasi sama sekali.
+- **Quantum Bogo Sort:** Menghasilkan permutasi acak dan menghancurkan alam semesta jika tidak terurut. Dalam pengujian kami, algoritma ini menghasilkan **~1.5 pertarungan** karena langsung berhenti (menghancurkan alam semesta) saat menemukan satu pasangan yang tidak berurutan, yang terjadi hampir seketika dalam daftar acak.
+- **Thanos Sort:** Menghapus setengah dari alam semesta (data) untuk mengembalikan keteraturan. Algoritma ini menunjukkan akurasi yang mengejutkan untuk jumlah pertarungan yang rendah (~190), namun dengan konsekuensi kehilangan setengah dari pilihan Anda secara permanen.
+- **Miracle Sort:** Menunggu keajaiban untuk mengurutkan data. Dalam pengujian kami, algoritma ini melakukan satu sapuan (~99 pertarungan) dan kemudian menyerah pada keajaiban tersebut.
 
 ---
 

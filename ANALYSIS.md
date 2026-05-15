@@ -61,10 +61,10 @@ The Pareto Frontier identifies algorithms where no other algorithm is both bette
 ### Esoteric & Humorous Sorts: Quantitative Comedy
 We included several "impossible" or "humorous" algorithms from SortPedia and Wikipedia to illustrate the range of sorting philosophy.
 
-- **Intelligent Design Sort:** Assumes the Creator already sorted the list. $O(1)$ time, but zero information gained if it wasn't already sorted.
-- **Thanos Sort:** Deletes half of the universe (data) to restore order. Surprisingly high accuracy for its low battle count, at the cost of losing half your data.
-- **Miracle Sort:** Waits for a miracle to sort the data.
-- **Quantum Bogo Sort:** Generates a random permutation and destroys the universe if it's not sorted.
+- **Intelligent Design Sort:** Assumes the Creator already sorted the list. It generates **0 battles** because it immediately terminates, yielding zero information gain.
+- **Quantum Bogo Sort:** Generates a random permutation and destroys the universe if it's not sorted. In our benchmark, it generates **~1.5 battles** because it terminates (destroys the universe) the moment it encounters a single out-of-order pair, which happens almost immediately in a random list.
+- **Thanos Sort:** Deletes half of the universe (data) to restore order. It shows surprisingly high accuracy for its low battle count (~190), but at the cost of permanently losing half of the items.
+- **Miracle Sort:** Waits for a miracle to sort the data. In our benchmark, it performs a single pass (~99 battles) and then gives up on the miracle.
 
 ---
 
