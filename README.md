@@ -17,17 +17,18 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses the **Ford-Johnson Algorithm** (Merge-Insertion Sort) for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
 
 ### Algorithm Analysis
-Based on a comparative analysis of various sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** was identified as the **knee point** for efficiency and accuracy. It maximizes information gain while minimizing user fatigue.
+Based on a comparative analysis of various sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** was identified as the most efficient choice for human preference ranking. It is Pareto-optimal, maximizing information gain while minimizing user fatigue.
 
-**Comparison (N=50):**
-| Algorithm | Avg Battles | Avg Kendall Tau | Improvement vs Random |
+**Comparison (N=100):**
+| Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| **Ford-Johnson** | **~215** | **0.90** | **+10%** |
-| Quicksort | ~263 | 0.86 | - |
-| Random Pairs | 215 | 0.82 | - |
-| Full Rank | 1225 | 1.00 | +11% |
+| **Ford-Johnson** | **~527** | **0.89** | **Pareto-optimal** |
+| Merge Sort | ~542 | 0.90 | Pareto-optimal |
+| Shellsort | ~730 | 0.94 | Knee Point |
+| Quicksort | ~661 | 0.84 | Dominated |
+| Full Rank | 4950 | 1.00 | Pareto-optimal |
 
-*Quick Rank reduces battles by ~82% compared to Full Rank while maintaining 90% ranking accuracy.*
+*Quick Rank reduces battles by ~89% compared to Full Rank while maintaining ~90% ranking accuracy.*
 
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.

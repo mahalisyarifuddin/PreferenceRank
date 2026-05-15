@@ -249,98 +249,6 @@ class MergeSortProvider {
     }
 }
 
-class HeapSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.i = Math.floor(n / 2) - 1;
-        this.state = 'heapify';
-        this.heapSize = n;
-    }
-    next(result) {
-        while (this.state !== 'done') {
-            if (this.state === 'heapify') {
-                if (this.i >= 0) {
-                    this.state = 'siftDown';
-                    this.curr = this.i;
-                    this.i--;
-                } else {
-                    this.i = this.n - 1;
-                    this.state = 'sort';
-                }
-                continue;
-            }
-            if (this.state === 'siftDown') {
-                if (result !== undefined) {
-                    if (result === 1) { // items[largest] > items[curr]
-                        [this.items[this.curr], this.items[this.largest]] = [this.items[this.largest], this.items[this.curr]];
-                        this.curr = this.largest;
-                    } else {
-                        this.state = this.savedState || 'heapify';
-                        this.savedState = null;
-                        result = undefined;
-                        continue;
-                    }
-                    result = undefined;
-                }
-                let left = 2 * this.curr + 1;
-                let right = 2 * this.curr + 2;
-                this.largest = this.curr;
-                if (left < this.heapSize && right < this.heapSize) {
-                    // This is tricky because we need to compare left with right first
-                    // For simplicity, let's just do a 3-way or sequential
-                    if (this.comparingLeftRight === undefined) {
-                        this.comparingLeftRight = true;
-                        return [this.items[left], this.items[right]];
-                    }
-                    if (this.comparingLeftRight) {
-                        let betterChild = (result === 1) ? left : right;
-                        this.comparingLeftRight = false;
-                        this.tempBetterChild = betterChild;
-                        result = undefined;
-                        return [this.items[betterChild], this.items[this.curr]];
-                    }
-                    // result now from betterChild vs curr
-                    if (result === 1) {
-                        [this.items[this.curr], this.items[this.tempBetterChild]] = [this.items[this.tempBetterChild], this.items[this.curr]];
-                        this.curr = this.tempBetterChild;
-                        this.comparingLeftRight = undefined;
-                        result = undefined;
-                        continue;
-                    } else {
-                        this.state = this.savedState || 'heapify';
-                        this.savedState = null;
-                        this.comparingLeftRight = undefined;
-                        result = undefined;
-                        continue;
-                    }
-                } else if (left < this.heapSize) {
-                    this.largest = left;
-                    return [this.items[this.largest], this.items[this.curr]];
-                } else {
-                    this.state = this.savedState || 'heapify';
-                    this.savedState = null;
-                    continue;
-                }
-            }
-            if (this.state === 'sort') {
-                if (this.i > 0) {
-                    [this.items[0], this.items[this.i]] = [this.items[this.i], this.items[0]];
-                    this.heapSize = this.i;
-                    this.curr = 0;
-                    this.savedState = 'sort';
-                    this.state = 'siftDown';
-                    this.i--;
-                } else {
-                    this.state = 'done';
-                }
-                continue;
-            }
-        }
-        return null;
-    }
-}
-
 class ShellSortProvider {
     constructor(n) {
         this.n = n;
@@ -401,6 +309,190 @@ class ShellSortProvider {
     }
 }
 
+class CocktailShakerProvider {
+    constructor(n) {
+        this.n = n;
+        this.items = Array.from({ length: n }, (_, i) => i);
+        this.low = 0;
+        this.high = n - 1;
+        this.i = 0;
+        this.state = 'forward';
+        this.swapped = false;
+    }
+    next(result) {
+        while (this.low < this.high) {
+            if (this.state === 'forward') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        [this.items[this.i], this.items[this.i + 1]] = [this.items[this.i + 1], this.items[this.i]];
+                        this.swapped = true;
+                    }
+                    this.i++;
+                    result = undefined;
+                }
+                if (this.i < this.high) {
+                    return [this.items[this.i], this.items[this.i + 1]];
+                }
+                if (!this.swapped) break;
+                this.swapped = false;
+                this.high--;
+                this.i = this.high - 1;
+                this.state = 'backward';
+                continue;
+            }
+            if (this.state === 'backward') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        [this.items[this.i], this.items[this.i + 1]] = [this.items[this.i + 1], this.items[this.i]];
+                        this.swapped = true;
+                    }
+                    this.i--;
+                    result = undefined;
+                }
+                if (this.i >= this.low) {
+                    return [this.items[this.i], this.items[this.i + 1]];
+                }
+                if (!this.swapped) break;
+                this.swapped = false;
+                this.low++;
+                this.i = this.low;
+                this.state = 'forward';
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
+class CombSortProvider {
+    constructor(n) {
+        this.n = n;
+        this.items = Array.from({ length: n }, (_, i) => i);
+        this.gap = n;
+        this.shrink = 1.3;
+        this.i = 0;
+        this.swapped = false;
+        this.state = 'nextGap';
+    }
+    next(result) {
+        while (true) {
+            if (this.state === 'nextGap') {
+                this.gap = Math.floor(this.gap / this.shrink);
+                if (this.gap < 1) this.gap = 1;
+                this.i = 0;
+                this.swapped = false;
+                this.state = 'compare';
+            }
+            if (this.state === 'compare') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        [this.items[this.i], this.items[this.i + this.gap]] = [this.items[this.i + this.gap], this.items[this.i]];
+                        this.swapped = true;
+                    }
+                    this.i++;
+                    result = undefined;
+                }
+                if (this.i + this.gap < this.n) {
+                    return [this.items[this.i], this.items[this.i + this.gap]];
+                }
+                if (this.gap === 1 && !this.swapped) break;
+                this.state = 'nextGap';
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
+class HeapSortProvider {
+    constructor(n) {
+        this.n = n;
+        this.items = Array.from({ length: n }, (_, i) => i);
+        this.i = Math.floor(n / 2) - 1;
+        this.state = 'heapify';
+        this.heapSize = n;
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'heapify') {
+                if (this.i >= 0) {
+                    this.state = 'siftDown';
+                    this.curr = this.i;
+                    this.i--;
+                } else {
+                    this.i = this.n - 1;
+                    this.state = 'sort';
+                }
+                continue;
+            }
+            if (this.state === 'siftDown') {
+                if (result !== undefined) {
+                    if (result === 1) { // items[largest] > items[curr]
+                        [this.items[this.curr], this.items[this.largest]] = [this.items[this.largest], this.items[this.curr]];
+                        this.curr = this.largest;
+                    } else {
+                        this.state = this.savedState || 'heapify';
+                        this.savedState = null;
+                        result = undefined;
+                        continue;
+                    }
+                    result = undefined;
+                }
+                let left = 2 * this.curr + 1;
+                let right = 2 * this.curr + 2;
+                this.largest = this.curr;
+                if (left < this.heapSize && right < this.heapSize) {
+                    if (this.comparingLeftRight === undefined) {
+                        this.comparingLeftRight = true;
+                        return [this.items[left], this.items[right]];
+                    }
+                    if (this.comparingLeftRight) {
+                        let betterChild = (result === 1) ? left : right;
+                        this.comparingLeftRight = false;
+                        this.tempBetterChild = betterChild;
+                        result = undefined;
+                        return [this.items[betterChild], this.items[this.curr]];
+                    }
+                    if (result === 1) {
+                        [this.items[this.curr], this.items[this.tempBetterChild]] = [this.items[this.tempBetterChild], this.items[this.curr]];
+                        this.curr = this.tempBetterChild;
+                        this.comparingLeftRight = undefined;
+                        result = undefined;
+                        continue;
+                    } else {
+                        this.state = this.savedState || 'heapify';
+                        this.savedState = null;
+                        this.comparingLeftRight = undefined;
+                        result = undefined;
+                        continue;
+                    }
+                } else if (left < this.heapSize) {
+                    this.largest = left;
+                    return [this.items[this.largest], this.items[this.curr]];
+                } else {
+                    this.state = this.savedState || 'heapify';
+                    this.savedState = null;
+                    continue;
+                }
+            }
+            if (this.state === 'sort') {
+                if (this.i > 0) {
+                    [this.items[0], this.items[this.i]] = [this.items[this.i], this.items[0]];
+                    this.heapSize = this.i;
+                    this.curr = 0;
+                    this.savedState = 'sort';
+                    this.state = 'siftDown';
+                    this.i--;
+                } else {
+                    this.state = 'done';
+                }
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
 class FullRankProvider {
     constructor(n) {
         this.n = n;
@@ -436,7 +528,7 @@ class RandomPairProvider {
     }
 }
 
-function simulate(n, ProviderClass, trials = 100, extraParam) {
+function simulate(n, ProviderClass, trials = 50, extraParam) {
     let totalComps = 0;
     let totalTau = 0;
     for (let t = 0; t < trials; t++) {
@@ -459,25 +551,25 @@ function simulate(n, ProviderClass, trials = 100, extraParam) {
     return { avgComps: totalComps / trials, avgTau: totalTau / trials };
 }
 
-const NS = [20, 50, 100];
-for (const n of NS) {
-    console.log(`\nSimulating N=${n}, trials=100`);
-    console.log('Algorithm\tAvg Battles\tAvg Kendall Tau');
-    const algorithms = [
-        { name: 'Ford-Johnson', class: FJProvider },
-        { name: 'Merge Sort', class: MergeSortProvider },
-        { name: 'Shellsort', class: ShellSortProvider },
-        { name: 'Heapsort', class: HeapSortProvider },
-        { name: 'Quicksort', class: QuicksortProvider },
-        { name: 'Full Rank', class: FullRankProvider }
-    ];
+const N = 100;
+console.log(`Simulating N=${N}, trials=50`);
+console.log('Algorithm\tAvg Battles\tAvg Kendall Tau');
+const algorithms = [
+    { name: 'Ford-Johnson', class: FJProvider },
+    { name: 'Merge Sort', class: MergeSortProvider },
+    { name: 'Shellsort', class: ShellSortProvider },
+    { name: 'Heapsort', class: HeapSortProvider },
+    { name: 'Comb Sort', class: CombSortProvider },
+    { name: 'Cocktail Shaker', class: CocktailShakerProvider },
+    { name: 'Quicksort', class: QuicksortProvider },
+    { name: 'Full Rank', class: FullRankProvider }
+];
 
-    let fjBattles = 0;
-    for (const algo of algorithms) {
-        const res = simulate(n, algo.class);
-        console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`);
-        if (algo.name === 'Ford-Johnson') fjBattles = res.avgComps;
-    }
-    const resRand = simulate(n, RandomPairProvider, 100, Math.round(fjBattles));
-    console.log(`Random Pairs\t${resRand.avgComps.toFixed(2)}\t${resRand.avgTau.toFixed(4)} (Matched to FJ)`);
+let fjBattles = 0;
+for (const algo of algorithms) {
+    const res = simulate(N, algo.class);
+    console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`);
+    if (algo.name === 'Ford-Johnson') fjBattles = res.avgComps;
 }
+const resRand = simulate(N, RandomPairProvider, 50, Math.round(fjBattles));
+console.log(`Random Pairs\t${resRand.avgComps.toFixed(2)}\t${resRand.avgTau.toFixed(4)} (Matched to FJ)`);

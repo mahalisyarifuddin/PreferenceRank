@@ -17,17 +17,18 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 - **Peringkat Cepat:** Menggunakan **Algoritma Ford-Johnson** (Merge-Insertion Sort) untuk pembuatan pasangan yang efisien, dikombinasikan dengan **skor murni Bradley-Terry** untuk representasi yang akurat.
 
 ### Analisis Algoritma
-Berdasarkan analisis perbandingan berbagai algoritma pengurutan (lihat [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** diidentifikasi sebagai **titik lutut (knee point)** untuk efisiensi dan akurasi. Algoritma ini memaksimalkan perolehan informasi sembari meminimalkan kelelahan pengguna.
+Berdasarkan analisis perbandingan berbagai algoritma pengurutan (lihat [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** diidentifikasi sebagai pilihan paling efisien untuk pemeringkatan preferensi manusia. Algoritma ini bersifat Pareto-optimal, memaksimalkan perolehan informasi sembari meminimalkan kelelahan pengguna.
 
-**Perbandingan (N=50):**
-| Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Peningkatan vs Acak |
+**Perbandingan (N=100):**
+| Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| **Ford-Johnson** | **~215** | **0.90** | **+10%** |
-| Quicksort | ~263 | 0.86 | - |
-| Pasangan Acak | 215 | 0.82 | - |
-| Peringkat Penuh | 1225 | 1.00 | +11% |
+| **Ford-Johnson** | **~527** | **0.89** | **Pareto-optimal** |
+| Merge Sort | ~542 | 0.90 | Pareto-optimal |
+| Shellsort | ~730 | 0.94 | Titik Lutut |
+| Quicksort | ~661 | 0.84 | Terdominasi |
+| Peringkat Penuh | 4950 | 1.00 | Pareto-optimal |
 
-*Peringkat Cepat mengurangi jumlah pertarungan sebesar ~82% dibandingkan dengan Peringkat Penuh sembari tetap mempertahankan akurasi pemeringkatan sebesar 90%.*
+*Peringkat Cepat mengurangi jumlah pertarungan sebesar ~89% dibandingkan dengan Peringkat Penuh sembari tetap mempertahankan akurasi pemeringkatan sebesar ~90%.*
 
 ## Detail Teknis
 PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) bagi model Bradley-Terry. Pendekatan iteratif ini menjamin konvergensi dan perhitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi dari operasi matriks.
