@@ -22,8 +22,11 @@ Berdasarkan analisis perbandingan terhadap 23 algoritma pengurutan (lihat [ANALY
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Ford-Johnson | ~524 | 0,89 | Pareto-optimal |
 | **Shellsort** | **~713** | **0,95** | **Titik Lutut** |
+| Merge Sort | ~535 | 0,90 | Pareto-optimal |
+| Ford-Johnson | ~524 | 0,89 | Pareto-optimal |
+| Heap Sort | ~168 | 0,59 | Pareto-optimal |
+| Tournament Sort | ~1 | 0,00 | Pareto-optimal |
 | Bogosort | 4950 | 0,98 | Terdominasi |
 | Peringkat Penuh | 4950 | 1,00 | Pareto-optimal |
 
@@ -32,7 +35,7 @@ Berdasarkan analisis perbandingan terhadap 23 algoritma pengurutan (lihat [ANALY
 ## Detail Teknis
 PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) bagi model Bradley-Terry. Pendekatan iteratif ini menjamin konvergensi dan perhitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi dari operasi matriks.
 
-Berdasarkan **analisis titik lutut (knee point analysis)**, ambang batas konvergensi ditetapkan pada `1e-7`. Nilai ini memberikan rata-rata pengurangan jumlah iterasi sebesar ~48% dibandingkan dengan presisi yang lebih tinggi (`1e-12`), sembari memastikan kesalahan log-strength (~10⁻⁷) tetap jauh di bawah ambang batas yang dapat memengaruhi skor Elo bilangan bulat yang dibulatkan.
+Berdasarkan **analisis titik lutut (knee point analysis)**, ambang batas konvergensi ditetapkan pada `1e-7`. Nilai ini memberikan rata-rata pengurangan jumlah iterasi sebesar ~48% dibandingkan dengan presisi yang lebih tinggi (`1e-12`), sembari memastikan kesalahan log-strength (~10^-7) tetap jauh di bawah ambang batas yang dapat memengaruhi skor Elo bilangan bulat yang dibulatkan.
 
 ## Cara Menggunakan
 1. Unduh berkas `PreferenceRank.html` dari repositori.
