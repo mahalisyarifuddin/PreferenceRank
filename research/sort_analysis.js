@@ -3,21 +3,7 @@ const Math_log10 = Math.log(10);
 const SCALE = 400 / Math_log10;
 
 // Bradley-Terry MM Implementation
-function runBT(n, matches, threshold = 1e-7, maxIter = 1000) {
-    const wins = new Float64Array(n);
-    const adjMaps = Array.from({ length: n }, () => new Map());
-    for (const { a, b, result } of matches) {
-        wins[a] += result;
-        wins[b] += 1 - result;
-        adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
-        adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
-    }
-    const adj = adjMaps.map(m => {
-        const row = new Int32Array(m.size * 2);
-        let k = 0;
-        for (const [j, c] of m) { row[k++] = j; row[k++] = c; }
-        return row;
-    });
+function runBT(n, wins, adj, threshold = 1e-7, maxIter = 1000) {
     const PRIOR = 0.5;
     const W = new Float64Array(n);
     for (let i = 0; i < n; i++) W[i] = wins[i] + PRIOR;
@@ -72,10 +58,12 @@ function kendallTau(arr1, arr2) {
     return (concordant - discordant) / (n * (n - 1) / 2);
 }
 
-// Sorting Algorithms as "Providers"
-class FJProvider {
+// Providers
+class Provider { constructor(n) { this.n = n; this.items = Array.from({length:n}, (_,i)=>i); } }
+
+class FJProvider extends Provider {
     constructor(n) {
-        this.n = n;
+        super(n);
         this.stack = [{ items: Array.from({ length: n }, (_, i) => i), state: 0 }];
     }
     next(result) {
@@ -154,489 +142,287 @@ class FJProvider {
     }
 }
 
-class QuicksortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.stack = [[0, n - 1]];
-        this.pivot = null;
-        this.i = 0;
-        this.j = 0;
-        this.low = 0;
-        this.high = 0;
-        this.state = 'start';
-    }
+class QuicksortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
             if (this.state === 'start') {
                 if (this.stack.length === 0) { this.state = 'done'; return null; }
                 [this.low, this.high] = this.stack.pop();
                 if (this.low < this.high) {
-                    this.pivot = this.items[this.high];
-                    this.i = this.low - 1;
-                    this.j = this.low;
-                    this.state = 'partition';
+                    this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition';
                 } else continue;
             }
             if (this.state === 'partition') {
                 if (result !== undefined) {
-                    if (result === 1) { // items[j] < pivot
-                        this.i++;
-                        [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]];
-                    }
-                    this.j++;
-                    result = undefined;
+                    if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; }
+                    this.j++; result = undefined;
                 }
-                if (this.j < this.high) {
-                    return [this.items[this.j], this.pivot];
-                }
+                if (this.j < this.high) return [this.items[this.j], this.pivot];
                 [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
-                let p = this.i + 1;
-                this.stack.push([p + 1, this.high]);
-                this.stack.push([this.low, p - 1]);
-                this.state = 'start';
+                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
             }
         }
         return null;
     }
 }
 
-class MergeSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.stack = [{ l: 0, r: n - 1, state: 0 }];
-    }
+class MergeSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ l: 0, r: n - 1, state: 0 }]; }
     next(result) {
         while (this.stack.length > 0) {
-            let frame = this.stack[this.stack.length - 1];
-            if (frame.state === 0) {
-                if (frame.l >= frame.r) { this.stack.pop(); if (this.stack.length > 0) this.stack[this.stack.length - 1].state++; continue; }
-                frame.mid = Math.floor((frame.l + frame.r) / 2);
-                this.stack.push({ l: frame.l, r: frame.mid, state: 0 });
-                continue;
+            let f = this.stack[this.stack.length - 1];
+            if (f.state === 0) {
+                if (f.l >= f.r) { this.stack.pop(); if (this.stack.length > 0) this.stack[this.stack.length - 1].state++; continue; }
+                f.mid = Math.floor((f.l + f.r) / 2); this.stack.push({ l: f.l, r: f.mid, state: 0 }); continue;
             }
-            if (frame.state === 1) {
-                this.stack.push({ l: frame.mid + 1, r: frame.r, state: 0 });
-                continue;
-            }
-            if (frame.state === 2) {
-                frame.leftArr = this.items.slice(frame.l, frame.mid + 1);
-                frame.rightArr = this.items.slice(frame.mid + 1, frame.r + 1);
-                frame.i = 0; frame.j = 0; frame.k = frame.l;
-                frame.state = 3;
-            }
-            if (frame.state === 3) {
+            if (f.state === 1) { this.stack.push({ l: f.mid + 1, r: f.r, state: 0 }); continue; }
+            if (f.state === 2) { f.leftArr = this.items.slice(f.l, f.mid + 1); f.rightArr = this.items.slice(f.mid + 1, f.r + 1); f.i = 0; f.j = 0; f.k = f.l; f.state = 3; }
+            if (f.state === 3) {
                 if (result !== undefined) {
-                    if (result === 1) {
-                        this.items[frame.k++] = frame.leftArr[frame.i++];
-                    } else {
-                        this.items[frame.k++] = frame.rightArr[frame.j++];
-                    }
+                    if (result === 1) this.items[f.k++] = f.leftArr[f.i++]; else this.items[f.k++] = f.rightArr[f.j++];
                     result = undefined;
                 }
-                if (frame.i < frame.leftArr.length && frame.j < frame.rightArr.length) {
-                    return [frame.leftArr[frame.i], frame.rightArr[frame.j]];
-                }
-                while (frame.i < frame.leftArr.length) this.items[frame.k++] = frame.leftArr[frame.i++];
-                while (frame.j < frame.rightArr.length) this.items[frame.k++] = frame.rightArr[frame.j++];
-                this.stack.pop();
-                if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
-                continue;
+                if (f.i < f.leftArr.length && f.j < f.rightArr.length) return [f.leftArr[f.i], f.rightArr[f.j]];
+                while (f.i < f.leftArr.length) this.items[f.k++] = f.leftArr[f.i++];
+                while (f.j < f.rightArr.length) this.items[f.k++] = f.rightArr[f.j++];
+                this.stack.pop(); if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
             }
         }
         return null;
     }
 }
 
-class ShellSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.gaps = [701, 301, 132, 57, 23, 10, 4, 1].filter(g => g < n);
-        this.gapIdx = 0;
-        this.i = 0;
-        this.j = 0;
-        this.state = 'nextGap';
-    }
+class ShellSortProvider extends Provider {
+    constructor(n) { super(n); this.gaps = [701, 301, 132, 57, 23, 10, 4, 1].filter(g => g < n); this.gapIdx = 0; this.state = 'nextGap'; }
     next(result) {
         while (this.state !== 'done') {
             if (this.state === 'nextGap') {
-                if (this.gapIdx < this.gaps.length) {
-                    this.gap = this.gaps[this.gapIdx++];
-                    this.i = this.gap;
-                    this.state = 'insertion';
-                } else {
-                    this.state = 'done';
-                }
+                if (this.gapIdx < this.gaps.length) { this.gap = this.gaps[this.gapIdx++]; this.i = this.gap; this.state = 'insertion'; } else this.state = 'done';
                 continue;
             }
             if (this.state === 'insertion') {
-                if (this.i < this.n) {
-                    this.temp = this.items[this.i];
-                    this.j = this.i;
-                    this.state = 'compare';
-                } else {
-                    this.state = 'nextGap';
-                }
+                if (this.i < this.n) { this.temp = this.items[this.i]; this.j = this.i; this.state = 'compare'; } else this.state = 'nextGap';
                 continue;
             }
             if (this.state === 'compare') {
                 if (result !== undefined) {
-                    if (result === 0) { // items[j-gap] > temp
-                        this.items[this.j] = this.items[this.j - this.gap];
-                        this.j -= this.gap;
-                        result = undefined;
-                    } else {
-                        this.items[this.j] = this.temp;
-                        this.i++;
-                        this.state = 'insertion';
-                        result = undefined;
-                        continue;
-                    }
+                    if (result === 0) { this.items[this.j] = this.items[this.j - this.gap]; this.j -= this.gap; result = undefined; }
+                    else { this.items[this.j] = this.temp; this.i++; this.state = 'insertion'; result = undefined; continue; }
                 }
-                if (this.j >= this.gap) {
-                    return [this.temp, this.items[this.j - this.gap]];
-                } else {
-                    this.items[this.j] = this.temp;
-                    this.i++;
-                    this.state = 'insertion';
-                    continue;
-                }
+                if (this.j >= this.gap) return [this.temp, this.items[this.j - this.gap]];
+                this.items[this.j] = this.temp; this.i++; this.state = 'insertion';
             }
         }
         return null;
     }
 }
 
-class CocktailShakerProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.low = 0;
-        this.high = n - 1;
-        this.i = 0;
-        this.state = 'forward';
-        this.swapped = false;
-    }
+class BubbleSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.j = 0; this.swapped = false; }
     next(result) {
-        while (this.low < this.high) {
-            if (this.state === 'forward') {
-                if (result !== undefined) {
-                    if (result === 0) {
-                        [this.items[this.i], this.items[this.i + 1]] = [this.items[this.i + 1], this.items[this.i]];
-                        this.swapped = true;
-                    }
-                    this.i++;
-                    result = undefined;
-                }
-                if (this.i < this.high) {
-                    return [this.items[this.i], this.items[this.i + 1]];
-                }
-                if (!this.swapped) break;
-                this.swapped = false;
-                this.high--;
-                this.i = this.high - 1;
-                this.state = 'backward';
-                continue;
+        while (this.i < this.n - 1) {
+            if (result !== undefined) {
+                if (result === 0) { [this.items[this.j], this.items[this.j + 1]] = [this.items[this.j + 1], this.items[this.j]]; this.swapped = true; }
+                this.j++; result = undefined;
             }
-            if (this.state === 'backward') {
+            if (this.j < this.n - this.i - 1) return [this.items[this.j], this.items[this.j + 1]];
+            if (!this.swapped) break;
+            this.i++; this.j = 0; this.swapped = false;
+        }
+        return null;
+    }
+}
+
+class BogosortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.cap = 1000; this.totalComps = 0; }
+    next(result) {
+        while (this.totalComps < this.cap) {
+            if (result !== undefined) {
+                this.totalComps++;
+                if (result === 1) this.i++;
+                else { for (let k = this.n - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; }
+                result = undefined;
+            }
+            if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+            break;
+        }
+        return null;
+    }
+}
+
+class SelectionSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.j = 1; this.minIdx = 0; }
+    next(result) {
+        while (this.i < this.n - 1) {
+            if (result !== undefined) { if (result === 0) this.minIdx = this.j; this.j++; result = undefined; }
+            if (this.j < this.n) return [this.items[this.minIdx], this.items[this.j]];
+            [this.items[this.i], this.items[this.minIdx]] = [this.items[this.minIdx], this.items[this.i]];
+            this.i++; this.minIdx = this.i; this.j = this.i + 1;
+        }
+        return null;
+    }
+}
+
+class InsertionSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 1; this.j = 0; this.state = 'start'; }
+    next(result) {
+        while (this.i < this.n) {
+            if (this.state === 'start') { this.temp = this.items[this.i]; this.j = this.i - 1; this.state = 'compare'; }
+            if (result !== undefined) {
+                if (result === 0) { this.items[this.j + 1] = this.items[this.j]; this.j--; result = undefined; }
+                else { this.items[this.j + 1] = this.temp; this.i++; this.state = 'start'; result = undefined; continue; }
+            }
+            if (this.j >= 0) return [this.temp, this.items[this.j]];
+            this.items[this.j + 1] = this.temp; this.i++; this.state = 'start';
+        }
+        return null;
+    }
+}
+
+class BinaryInsertionSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 1; this.state = 'start'; }
+    next(result) {
+        while (this.i < this.n) {
+            if (this.state === 'start') { this.temp = this.items[this.i]; this.lo = 0; this.hi = this.i; this.state = 'binarySearch'; }
+            if (result !== undefined) { if (result === 1) this.lo = this.mid + 1; else this.hi = this.mid; result = undefined; }
+            if (this.lo < this.hi) { this.mid = (this.lo + this.hi) >> 1; return [this.temp, this.items[this.mid]]; }
+            for (let k = this.i; k > this.lo; k--) this.items[k] = this.items[k - 1];
+            this.items[this.lo] = this.temp; this.i++; this.state = 'start';
+        }
+        return null;
+    }
+}
+
+class GnomeSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 1; }
+    next(result) {
+        while (this.i < this.n) {
+            if (result !== undefined) {
+                if (result === 1) this.i++; else { [this.items[this.i], this.items[this.i-1]] = [this.items[this.i-1], this.items[this.i]]; this.i--; }
+                if (this.i === 0) this.i = 1; result = undefined;
+            }
+            if (this.i < this.n) return [this.items[this.i], this.items[this.i-1]];
+        }
+        return null;
+    }
+}
+
+class StoogeSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ i: 0, j: n - 1, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.state === 0) {
                 if (result !== undefined) {
-                    if (result === 0) {
-                        [this.items[this.i], this.items[this.i + 1]] = [this.items[this.i + 1], this.items[this.i]];
-                        this.swapped = true;
-                    }
-                    this.i--;
-                    result = undefined;
-                }
-                if (this.i >= this.low) {
-                    return [this.items[this.i], this.items[this.i + 1]];
-                }
-                if (!this.swapped) break;
-                this.swapped = false;
-                this.low++;
-                this.i = this.low;
-                this.state = 'forward';
-                continue;
+                    if (result === 0) [this.items[f.i], this.items[f.j]] = [this.items[f.j], this.items[f.i]];
+                    f.state = 1; result = undefined;
+                } else return [this.items[f.i], this.items[f.j]];
+            }
+            if (f.state === 1) {
+                if (f.j - f.i + 1 > 2) { let t = Math.floor((f.j - f.i + 1) / 3); this.stack.push({ i: f.i, j: f.j - t, state: 0 }); f.state = 2; }
+                else this.stack.pop();
+            } else if (f.state === 2) { let t = Math.floor((f.j - f.i + 1) / 3); this.stack.push({ i: f.i + t, j: f.j, state: 0 }); f.state = 3; }
+            else if (f.state === 3) { let t = Math.floor((f.j - f.i + 1) / 3); this.stack.push({ i: f.i, j: f.j - t, state: 0 }); f.state = 4; }
+            else if (f.state === 4) this.stack.pop();
+        }
+        return null;
+    }
+}
+
+class CycleSortProvider extends Provider {
+    constructor(n) { super(n); this.cycleStart = 0; this.state = 'findPos'; this.pos = 0; }
+    next(result) {
+        while (this.cycleStart < this.n - 1) {
+            if (this.state === 'findPos') {
+                if (this.pos === 0) { this.item = this.items[this.cycleStart]; this.pos = this.cycleStart; this.idx = this.cycleStart + 1; }
+                if (result !== undefined) { if (result === 1) this.pos++; this.idx++; result = undefined; }
+                if (this.idx < this.n) return [this.item, this.items[this.idx]];
+                if (this.pos === this.cycleStart) { this.cycleStart++; this.pos = 0; continue; }
+                while (this.item === this.items[this.pos]) this.pos++;
+                [this.items[this.pos], this.item] = [this.item, this.items[this.pos]];
+                this.state = 'cycle'; this.idx = this.cycleStart + 1; this.pos = 0; continue;
+            }
+            if (this.state === 'cycle') {
+                if (this.pos === 0) { this.pos = this.cycleStart; this.idx = this.cycleStart + 1; }
+                if (result !== undefined) { if (result === 1) this.pos++; this.idx++; result = undefined; }
+                if (this.idx < this.n) return [this.item, this.items[this.idx]];
+                while (this.item === this.items[this.pos]) this.pos++;
+                [this.items[this.pos], this.item] = [this.item, this.items[this.pos]];
+                if (this.pos === this.cycleStart) { this.cycleStart++; this.pos = 0; this.state = 'findPos'; }
+                else { this.state = 'cycle'; this.pos = 0; }
             }
         }
         return null;
     }
 }
 
-class CombSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.gap = n;
-        this.shrink = 1.3;
-        this.i = 0;
-        this.swapped = false;
-        this.state = 'nextGap';
-    }
+class BitonicSortProvider extends Provider {
+    constructor(n) { super(n); this.pow2 = 1; while (this.pow2 < n) this.pow2 *= 2;
+        this.items = Array.from({ length: this.pow2 }, (_, i) => i < n ? i : -1);
+        this.k = 2; this.j = 0; this.i = 0; this.state = 'nextK'; }
     next(result) {
-        while (true) {
-            if (this.state === 'nextGap') {
-                this.gap = Math.floor(this.gap / this.shrink);
-                if (this.gap < 1) this.gap = 1;
-                this.i = 0;
-                this.swapped = false;
-                this.state = 'compare';
-            }
+        while (this.k <= this.pow2) {
+            if (this.state === 'nextK') { this.j = this.k / 2; this.state = 'nextJ'; continue; }
+            if (this.state === 'nextJ') { if (this.j > 0) { this.i = 0; this.state = 'compare'; } else { this.k *= 2; this.state = 'nextK'; } continue; }
             if (this.state === 'compare') {
                 if (result !== undefined) {
-                    if (result === 0) {
-                        [this.items[this.i], this.items[this.i + this.gap]] = [this.items[this.i + this.gap], this.items[this.i]];
-                        this.swapped = true;
+                    let a = this.i, b = this.i ^ this.j;
+                    if (b > a) { let dir = (this.i & this.k) === 0; if ((dir && result === 0) || (!dir && result === 1)) [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; }
+                    this.i++; result = undefined;
+                }
+                while (this.i < this.pow2) {
+                    let a = this.i, b = this.i ^ this.j;
+                    if (b > a) {
+                        if (this.items[a] === -1) { this.items[a] = this.items[b]; this.items[b] = -1; this.i++; continue; }
+                        if (this.items[b] === -1) { this.i++; continue; }
+                        return [this.items[a], this.items[b]];
                     }
                     this.i++;
-                    result = undefined;
                 }
-                if (this.i + this.gap < this.n) {
-                    return [this.items[this.i], this.items[this.i + this.gap]];
-                }
-                if (this.gap === 1 && !this.swapped) break;
-                this.state = 'nextGap';
-                continue;
+                this.j = Math.floor(this.j / 2); this.state = 'nextJ';
             }
         }
         return null;
     }
 }
 
-class HeapSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.i = Math.floor(n / 2) - 1;
-        this.state = 'heapify';
-        this.heapSize = n;
-    }
+class HeapSortProvider extends Provider {
+    constructor(n) { super(n); this.i = Math.floor(n / 2) - 1; this.state = 'heapify'; this.heapSize = n; }
     next(result) {
         while (this.state !== 'done') {
-            if (this.state === 'heapify') {
-                if (this.i >= 0) {
-                    this.state = 'siftDown';
-                    this.curr = this.i;
-                    this.i--;
-                } else {
-                    this.i = this.n - 1;
-                    this.state = 'sort';
-                }
-                continue;
-            }
+            if (this.state === 'heapify') { if (this.i >= 0) { this.state = 'siftDown'; this.curr = this.i; this.i--; } else { this.i = this.n - 1; this.state = 'sort'; } continue; }
             if (this.state === 'siftDown') {
                 if (result !== undefined) {
-                    if (result === 1) { // items[largest] > items[curr]
-                        [this.items[this.curr], this.items[this.largest]] = [this.items[this.largest], this.items[this.curr]];
-                        this.curr = this.largest;
-                    } else {
-                        this.state = this.savedState || 'heapify';
-                        this.savedState = null;
-                        result = undefined;
-                        continue;
-                    }
+                    if (result === 1) { [this.items[this.curr], this.items[this.largest]] = [this.items[this.largest], this.items[this.curr]]; this.curr = this.largest; }
+                    else { this.state = this.savedState || 'heapify'; this.savedState = null; result = undefined; continue; }
                     result = undefined;
                 }
-                let left = 2 * this.curr + 1;
-                let right = 2 * this.curr + 2;
-                this.largest = this.curr;
-                if (left < this.heapSize && right < this.heapSize) {
-                    if (this.comparingLeftRight === undefined) {
-                        this.comparingLeftRight = true;
-                        return [this.items[left], this.items[right]];
-                    }
-                    if (this.comparingLeftRight) {
-                        let betterChild = (result === 1) ? left : right;
-                        this.comparingLeftRight = false;
-                        this.tempBetterChild = betterChild;
-                        result = undefined;
-                        return [this.items[betterChild], this.items[this.curr]];
-                    }
-                    if (result === 1) {
-                        [this.items[this.curr], this.items[this.tempBetterChild]] = [this.items[this.tempBetterChild], this.items[this.curr]];
-                        this.curr = this.tempBetterChild;
-                        this.comparingLeftRight = undefined;
-                        result = undefined;
-                        continue;
-                    } else {
-                        this.state = this.savedState || 'heapify';
-                        this.savedState = null;
-                        this.comparingLeftRight = undefined;
-                        result = undefined;
-                        continue;
-                    }
-                } else if (left < this.heapSize) {
-                    this.largest = left;
-                    return [this.items[this.largest], this.items[this.curr]];
-                } else {
-                    this.state = this.savedState || 'heapify';
-                    this.savedState = null;
-                    continue;
-                }
+                let l = 2 * this.curr + 1, r = 2 * this.curr + 2; this.largest = this.curr;
+                if (l < this.heapSize && r < this.heapSize) {
+                    if (this.comparingLeftRight === undefined) { this.comparingLeftRight = true; return [this.items[l], this.items[r]]; }
+                    if (this.comparingLeftRight) { let b = (result === 1) ? l : r; this.comparingLeftRight = false; this.tempBetterChild = b; result = undefined; return [this.items[b], this.items[this.curr]]; }
+                    if (result === 1) { [this.items[this.curr], this.items[this.tempBetterChild]] = [this.items[this.tempBetterChild], this.items[this.curr]]; this.curr = this.tempBetterChild; this.comparingLeftRight = undefined; result = undefined; continue; }
+                    else { this.state = this.savedState || 'heapify'; this.savedState = null; this.comparingLeftRight = undefined; result = undefined; continue; }
+                } else if (l < this.heapSize) { this.largest = l; return [this.items[this.largest], this.items[this.curr]]; }
+                else { this.state = this.savedState || 'heapify'; this.savedState = null; continue; }
             }
-            if (this.state === 'sort') {
-                if (this.i > 0) {
-                    [this.items[0], this.items[this.i]] = [this.items[this.i], this.items[0]];
-                    this.heapSize = this.i;
-                    this.curr = 0;
-                    this.savedState = 'sort';
-                    this.state = 'siftDown';
-                    this.i--;
-                } else {
-                    this.state = 'done';
-                }
-                continue;
-            }
+            if (this.state === 'sort') { if (this.i > 0) { [this.items[0], this.items[this.i]] = [this.items[this.i], this.items[0]]; this.heapSize = this.i; this.curr = 0; this.savedState = 'sort'; this.state = 'siftDown'; this.i--; } else this.state = 'done'; }
         }
         return null;
     }
 }
 
-class BubbleSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.i = 0;
-        this.j = 0;
-        this.swapped = false;
-        this.state = 'compare';
-    }
+class CombSortProvider extends Provider {
+    constructor(n) { super(n); this.gap = n; this.shrink = 1.3; this.i = 0; this.swapped = false; this.state = 'nextGap'; }
     next(result) {
-        while (this.i < this.n - 1) {
+        while (true) {
+            if (this.state === 'nextGap') { this.gap = Math.floor(this.gap / this.shrink); if (this.gap < 1) this.gap = 1; this.i = 0; this.swapped = false; this.state = 'compare'; }
             if (this.state === 'compare') {
-                if (result !== undefined) {
-                    if (result === 0) {
-                        [this.items[this.j], this.items[this.j + 1]] = [this.items[this.j + 1], this.items[this.j]];
-                        this.swapped = true;
-                    }
-                    this.j++;
-                    result = undefined;
-                }
-                if (this.j < this.n - this.i - 1) {
-                    return [this.items[this.j], this.items[this.j + 1]];
-                }
-                if (!this.swapped) break;
-                this.i++;
-                this.j = 0;
-                this.swapped = false;
-                continue;
-            }
-        }
-        return null;
-    }
-}
-
-class SelectionSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.i = 0;
-        this.j = 1;
-        this.minIdx = 0;
-        this.state = 'compare';
-    }
-    next(result) {
-        while (this.i < this.n - 1) {
-            if (this.state === 'compare') {
-                if (result !== undefined) {
-                    if (result === 0) {
-                        this.minIdx = this.j;
-                    }
-                    this.j++;
-                    result = undefined;
-                }
-                if (this.j < this.n) {
-                    return [this.items[this.minIdx], this.items[this.j]];
-                }
-                [this.items[this.i], this.items[this.minIdx]] = [this.items[this.minIdx], this.items[this.i]];
-                this.i++;
-                this.minIdx = this.i;
-                this.j = this.i + 1;
-                continue;
-            }
-        }
-        return null;
-    }
-}
-
-class InsertionSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.i = 1;
-        this.j = 0;
-        this.temp = 0;
-        this.state = 'start';
-    }
-    next(result) {
-        while (this.i < this.n) {
-            if (this.state === 'start') {
-                this.temp = this.items[this.i];
-                this.j = this.i - 1;
-                this.state = 'compare';
-            }
-            if (this.state === 'compare') {
-                if (result !== undefined) {
-                    if (result === 0) {
-                        this.items[this.j + 1] = this.items[this.j];
-                        this.j--;
-                        result = undefined;
-                    } else {
-                        this.items[this.j + 1] = this.temp;
-                        this.i++;
-                        this.state = 'start';
-                        result = undefined;
-                        continue;
-                    }
-                }
-                if (this.j >= 0) {
-                    return [this.temp, this.items[this.j]];
-                }
-                this.items[this.j + 1] = this.temp;
-                this.i++;
-                this.state = 'start';
-                continue;
-            }
-        }
-        return null;
-    }
-}
-
-class BinaryInsertionSortProvider {
-    constructor(n) {
-        this.n = n;
-        this.items = Array.from({ length: n }, (_, i) => i);
-        this.i = 1;
-        this.lo = 0;
-        this.hi = 1;
-        this.mid = 0;
-        this.temp = 0;
-        this.state = 'start';
-    }
-    next(result) {
-        while (this.i < this.n) {
-            if (this.state === 'start') {
-                this.temp = this.items[this.i];
-                this.lo = 0;
-                this.hi = this.i;
-                this.state = 'binarySearch';
-            }
-            if (this.state === 'binarySearch') {
-                if (result !== undefined) {
-                    if (result === 1) this.lo = this.mid + 1;
-                    else this.hi = this.mid;
-                    result = undefined;
-                }
-                if (this.lo < this.hi) {
-                    this.mid = (this.lo + this.hi) >> 1;
-                    return [this.temp, this.items[this.mid]];
-                }
-                for (let k = this.i; k > this.lo; k--) this.items[k] = this.items[k - 1];
-                this.items[this.lo] = this.temp;
-                this.i++;
-                this.state = 'start';
-                continue;
+                if (result !== undefined) { if (result === 0) { [this.items[this.i], this.items[this.i + this.gap]] = [this.items[this.i + this.gap], this.items[this.i]]; this.swapped = true; } this.i++; result = undefined; }
+                if (this.i + this.gap < this.n) return [this.items[this.i], this.items[this.i + this.gap]];
+                if (this.gap === 1 && !this.swapped) break;
+                this.state = 'nextGap';
             }
         }
         return null;
@@ -644,64 +430,43 @@ class BinaryInsertionSortProvider {
 }
 
 class FullRankProvider {
-    constructor(n) {
-        this.n = n;
-        this.pairs = [];
-        for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) this.pairs.push([i, j]);
-        for (let i = this.pairs.length - 1; i > 0; i--) {
-            let j = Math.floor(Math.random() * (i + 1));
-            [this.pairs[i], this.pairs[j]] = [this.pairs[j], this.pairs[i]];
-        }
-        this.idx = 0;
-    }
-    next() {
-        if (this.idx < this.pairs.length) return this.pairs[this.idx++];
-        return null;
-    }
+    constructor(n) { this.n = n; this.pairs = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) this.pairs.push([i, j]);
+        for (let i = this.pairs.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [this.pairs[i], this.pairs[j]] = [this.pairs[j], this.pairs[i]]; }
+        this.idx = 0; }
+    next() { return this.idx < this.pairs.length ? this.pairs[this.idx++] : null; }
 }
 
-function simulate(n, ProviderClass, trials = 50) {
-    let totalComps = 0;
-    let totalTau = 0;
+function simulate(n, ProviderClass, trials = 3) {
+    let totalComps = 0, totalTau = 0;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
         const provider = new ProviderClass(n);
-        const matches = [];
-        let pair = provider.next();
-        let comps = 0;
+        const wins = new Float64Array(n);
+        const adjMaps = Array.from({ length: n }, () => new Map());
+        let pair = provider.next(), comps = 0;
         while (pair) {
-            comps++;
-            const [a, b] = pair;
-            const res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
-            matches.push({ a, b, result: res });
+            const [a, b] = pair; if (a === undefined || b === undefined) break;
+            comps++; const res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
+            wins[a] += res; wins[b] += 1 - res;
+            adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1); adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
             pair = provider.next(res);
+            if (comps > 100000) break;
         }
-        totalComps += comps;
-        const estimatedScores = runBT(n, matches);
-        totalTau += kendallTau(trueStrengths, estimatedScores);
+        const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
+        totalComps += comps; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
     }
     return { avgComps: totalComps / trials, avgTau: totalTau / trials };
 }
 
-const N = 100;
-console.log(`Simulating N=${N}, trials=50`);
-console.log('Algorithm\tAvg Battles\tAvg Kendall Tau');
-const algorithms = [
-    { name: 'Ford-Johnson', class: FJProvider },
-    { name: 'Merge Sort', class: MergeSortProvider },
-    { name: 'Shellsort', class: ShellSortProvider },
-    { name: 'Heapsort', class: HeapSortProvider },
-    { name: 'Comb Sort', class: CombSortProvider },
-    { name: 'Cocktail Shaker', class: CocktailShakerProvider },
-    { name: 'Quicksort', class: QuicksortProvider },
-    { name: 'Binary Insertion', class: BinaryInsertionSortProvider },
-    { name: 'Insertion Sort', class: InsertionSortProvider },
-    { name: 'Selection Sort', class: SelectionSortProvider },
-    { name: 'Bubble Sort', class: BubbleSortProvider },
-    { name: 'Full Rank', class: FullRankProvider }
+const N = 100, algos = [
+    { name: 'Ford-Johnson', class: FJProvider }, { name: 'Merge Sort', class: MergeSortProvider },
+    { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort', class: QuicksortProvider },
+    { name: 'Bubble Sort', class: BubbleSortProvider }, { name: 'Selection Sort', class: SelectionSortProvider },
+    { name: 'Insertion Sort', class: InsertionSortProvider }, { name: 'Binary Insertion', class: BinaryInsertionSortProvider },
+    { name: 'Gnome Sort', class: GnomeSortProvider }, { name: 'Stooge Sort', class: StoogeSortProvider },
+    { name: 'Bogosort', class: BogosortProvider }, { name: 'Full Rank', class: FullRankProvider },
+    { name: 'Cycle Sort', class: CycleSortProvider }, { name: 'Bitonic Sort', class: BitonicSortProvider },
+    { name: 'Heap Sort', class: HeapSortProvider }, { name: 'Comb Sort', class: CombSortProvider }
 ];
-
-for (const algo of algorithms) {
-    const res = simulate(N, algo.class);
-    console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`);
-}
+console.log(`Simulating N=${N}, trials=3\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
+for (const algo of algos) { const res = simulate(N, algo.class); console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`); }

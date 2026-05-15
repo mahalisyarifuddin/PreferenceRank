@@ -3,18 +3,22 @@ const algos = [
     "Ford-Johnson",
     "Merge Sort",
     "Shellsort",
-    "Heapsort",
-    "Comb Sort",
-    "Cocktail Shaker",
     "Quicksort",
-    "Binary Insertion",
-    "Insertion Sort",
-    "Selection Sort",
     "Bubble Sort",
-    "Full Rank"
+    "Selection Sort",
+    "Insertion Sort",
+    "Binary Insertion",
+    "Gnome Sort",
+    "Stooge Sort",
+    "Bogosort",
+    "Full Rank",
+    "Cycle Sort",
+    "Bitonic Sort",
+    "Heap Sort",
+    "Comb Sort"
 ];
-const battles = [526.62, 543.24, 728.70, 146.64, 1238.62, 3897.50, 640.98, 530.06, 2585.82, 4950.00, 4873.08, 4950.00];
-const tau     = [0.8897, 0.9035, 0.9424, 0.4888, 0.9904, 0.9785, 0.8368, 0.8872, 0.8060, 0.9330, 0.9732, 1.0000];
+const battles = [525.67, 542.67, 740.33, 641.00, 4859.67, 4950.00, 2466.33, 531.33, 5036.33, 100001.00, 1001.00, 4950.00, 100001.00, 1334.00, 169.00, 1201.00];
+const tau     = [0.8896, 0.9156, 0.9480, 0.8387, 0.9717, 0.9301, 0.7921, 0.8808, 0.9737, 0.6857, 0.8947, 1.0000, 0.1216, 0.9444, 0.4785, 0.9887];
 
 function pareto_mask(x, y) {
     const n = x.length;
@@ -76,7 +80,7 @@ console.log("\nDominated algorithms:");
 const dominated = algos
     .map((name, i) => ({ name, b: battles[i], t: tau[i], m: pmask[i] }))
     .filter(p => !p.m)
-    .sort((a, b) => a.t - b.t);
+    .sort((a, b) => a.b - b.b);
 
 for (const p of dominated) {
     console.log(`  ${p.name.padEnd(32)}  battles=${p.b.toFixed(2).padStart(8)}  tau=${p.t.toFixed(4)}`);
