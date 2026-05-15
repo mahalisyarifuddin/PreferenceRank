@@ -14,21 +14,20 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 
 - **Peringkat Penuh (Default):** Menggunakan sistem round-robin komprehensif (Pertarungan = N(N-1)/2). Menjamin preferensi paling akurat namun meningkat secara kuadratik. Terbaik untuk daftar pendek (<20 item).
 
-- **Peringkat Cepat:** Menggunakan **Algoritma Ford-Johnson** (Merge-Insertion Sort) untuk pembuatan pasangan yang efisien, dikombinasikan dengan **skor murni Bradley-Terry** untuk representasi yang akurat.
+- **Peringkat Cepat:** Menggunakan **Shellsort** untuk pembuatan pasangan yang efisien, dikombinasikan dengan **skor murni Bradley-Terry** untuk representasi yang akurat.
 
 ### Analisis Algoritma
-Berdasarkan analisis perbandingan terhadap 23 algoritma pengurutan (lihat [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** diidentifikasi sebagai pilihan yang sangat efisien untuk pemeringkatan preferensi manusia. Algoritma ini memaksimalkan perolehan informasi sembari meminimalkan kelelahan pengguna.
+Berdasarkan analisis perbandingan terhadap 23 algoritma pengurutan (lihat [ANALYSIS.md](ANALYSIS.md)), **Shellsort** diidentifikasi sebagai **titik lutut (knee point)** matematika untuk pemeringkatan preferensi manusia. Algoritma ini memaksimalkan perolehan informasi sembari meminimalkan kelelahan pengguna.
 
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| **Ford-Johnson** | **~529** | **0,88** | **Pareto-optimal** |
-| Binary Insertion | ~532 | 0,89 | Titik Lutut |
-| Shellsort | ~759 | 0,93 | Pareto-optimal |
-| Bogosort | ~1001 | 0,91 | Terdominasi |
+| Ford-Johnson | ~524 | 0,89 | Pareto-optimal |
+| **Shellsort** | **~713** | **0,95** | **Titik Lutut** |
+| Bogosort | 4950 | 0,98 | Terdominasi |
 | Peringkat Penuh | 4950 | 1,00 | Pareto-optimal |
 
-*Peringkat Cepat mengurangi jumlah pertarungan sebesar ~89% dibandingkan dengan Peringkat Penuh sembari tetap mempertahankan akurasi pemeringkatan yang tinggi. Algoritma seperti Bogosort secara kuantitatif tidak masuk akal dan hanya berfungsi sebagai pembanding yang lucu.*
+*Peringkat Cepat mengurangi jumlah pertarungan sebesar ~85% dibandingkan dengan Peringkat Penuh sembari tetap mempertahankan akurasi pemeringkatan yang tinggi. Algoritma seperti Bogosort secara kuantitatif tidak masuk akal dan hanya berfungsi sebagai pembanding yang lucu.*
 
 ## Detail Teknis
 PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) bagi model Bradley-Terry. Pendekatan iteratif ini menjamin konvergensi dan perhitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi dari operasi matriks.

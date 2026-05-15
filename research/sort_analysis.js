@@ -136,9 +136,9 @@ class BubbleSortProvider extends Provider {
 }
 
 class BogosortProvider extends Provider {
-    constructor(n) { super(n); this.i = 0; this.cap = 1000; this.totalComps = 0; }
+    constructor(n) { super(n); this.i = 0; this.maxBattles = n * (n - 1) / 2; this.totalComps = 0; }
     next(result) {
-        while (this.totalComps < this.cap) {
+        while (this.totalComps < this.maxBattles) {
             if (result !== undefined) { this.totalComps++; if (result === 1) this.i++;
                 else { for (let k = this.n - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; } result = undefined; }
             if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]]; break;
@@ -147,9 +147,9 @@ class BogosortProvider extends Provider {
 }
 
 class BozosortProvider extends Provider {
-    constructor(n) { super(n); this.i = 0; this.cap = 1000; this.totalComps = 0; }
+    constructor(n) { super(n); this.maxBattles = n * (n - 1) / 2; this.totalComps = 0; this.i = 0; }
     next(result) {
-        while (this.totalComps < this.cap) {
+        while (this.totalComps < this.maxBattles) {
             if (result !== undefined) { this.totalComps++; if (result === 1) this.i++;
                 else { const a = Math.floor(Math.random() * this.n), b = Math.floor(Math.random() * this.n); [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.i = 0; } result = undefined; }
             if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]]; break;
@@ -389,7 +389,7 @@ class FullRankProvider {
 }
 
 function simulate(n, ProviderClass, trials = 1) {
-    let totalComps = 0, totalTau = 0;
+    let totalComps = 0, totalTau = 0, maxBattles = n * (n - 1) / 2;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
         const provider = new ProviderClass(n);
@@ -399,7 +399,7 @@ function simulate(n, ProviderClass, trials = 1) {
             const [a, b] = pair; if (a === undefined || b === undefined) break;
             comps++; const res = trueStrengths[a] > trueStrengths[b] ? 1 : 0; wins[a] += res; wins[b] += 1 - res;
             adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1); adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
-            pair = provider.next(res); if (comps > 50000) break;
+            pair = provider.next(res); if (comps >= maxBattles) break;
         }
         const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
         totalComps += comps; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
