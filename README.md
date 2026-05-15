@@ -17,17 +17,16 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Shellsort** for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 23 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Shellsort** was identified as the **mathematical knee point** for human preference ranking. It maximize information gain while minimizing user fatigue.
+Based on a comparative analysis of 24 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Shellsort** was identified as the optimal **mathematical knee point** for high-accuracy human preference ranking.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| **Shellsort** | **~713** | **0.95** | **Knee Point** |
-| Merge Sort | ~535 | 0.90 | Pareto-optimal |
-| Ford-Johnson | ~524 | 0.89 | Pareto-optimal |
-| Heap Sort | ~168 | 0.59 | Pareto-optimal |
-| Tournament Sort | ~1 | 0.00 | Pareto-optimal |
-| Bogosort | 4950 | 0.98 | Dominated |
+| Heap Sort | ~165 | 0.49 | Pareto-optimal |
+| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
+| Merge Sort | ~543 | 0.91 | Pareto-optimal |
+| **Shellsort** | **~722** | **0.95** | **Knee Point** |
+| Comb Sort | ~1260 | 0.99 | Pareto-optimal |
 | Full Rank | 4950 | 1.00 | Pareto-optimal |
 
 *Quick Rank reduces battles by ~85% compared to Full Rank while maintaining high ranking accuracy. Algorithms like Bogosort are quantitatively absurd and serve only as a humorous baseline.*
@@ -35,7 +34,7 @@ Based on a comparative analysis of 23 sorting algorithms (see [ANALYSIS.md](ANAL
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
 
-Based on a **knee point analysis**, the convergence threshold is set to 1e-7. This value provides an average reduction of ~48% in iteration counts compared to higher precision (1e-12) while ensuring log-strength errors (~10^-7) remain well below the threshold for affecting rounded integer Elo scores.
+Based on a **knee point analysis**, the convergence threshold is set to 1e-7. This value provides an average reduction of ~47% in iteration counts compared to higher precision (1e-12) while ensuring log-strength errors remain well below the threshold for affecting rounded integer Elo scores.
 
 ## Quick Start
 1. Download the `PreferenceRank.html` file from the repository.

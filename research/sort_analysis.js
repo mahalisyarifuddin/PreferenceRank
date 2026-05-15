@@ -136,22 +136,11 @@ class BubbleSortProvider extends Provider {
 }
 
 class BogosortProvider extends Provider {
-    constructor(n) { super(n); this.i = 0; this.maxBattles = n * (n - 1) / 2; this.totalComps = 0; }
+    constructor(n) { super(n); this.i = 0; this.totalComps = 0; }
     next(result) {
-        while (this.totalComps < this.maxBattles) {
+        while (true) {
             if (result !== undefined) { this.totalComps++; if (result === 1) this.i++;
                 else { for (let k = this.n - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; } result = undefined; }
-            if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]]; break;
-        } return null;
-    }
-}
-
-class BozosortProvider extends Provider {
-    constructor(n) { super(n); this.maxBattles = n * (n - 1) / 2; this.totalComps = 0; this.i = 0; }
-    next(result) {
-        while (this.totalComps < this.maxBattles) {
-            if (result !== undefined) { this.totalComps++; if (result === 1) this.i++;
-                else { const a = Math.floor(Math.random() * this.n), b = Math.floor(Math.random() * this.n); [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.i = 0; } result = undefined; }
             if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]]; break;
         } return null;
     }
@@ -288,18 +277,42 @@ class CombSortProvider extends Provider {
 }
 
 class TournamentSortProvider extends Provider {
-    constructor(n) { super(n); this.size = 1; while (this.size < n) this.size *= 2; this.tree = new Array(2 * this.size).fill(-1); for (let i = 0; i < n; i++) this.tree[this.size + i] = i; this.sortedCount = 0; this.state = 'build'; this.idx = this.size; }
+    constructor(n) {
+        super(n); this.size = 1; while (this.size < n) this.size *= 2;
+        this.tree = new Array(2 * this.size).fill(-1);
+        for (let i = 0; i < n; i++) this.tree[this.size + i] = i;
+        this.sortedCount = 0; this.state = 'build'; this.p = this.size - 1;
+    }
     next(result) {
         while (this.sortedCount < this.n) {
-            if (this.state === 'build') { if (result !== undefined) { this.tree[Math.floor(this.idx / 2)] = (result === 1) ? this.tree[this.idx] : this.tree[this.idx + 1]; this.idx -= 2; result = undefined; }
-                if (this.idx >= 2) { if (this.tree[this.idx] === -1) { this.tree[Math.floor(this.idx / 2)] = this.tree[this.idx + 1]; this.idx -= 2; continue; }
-                    if (this.tree[this.idx+1] === -1) { this.tree[Math.floor(this.idx / 2)] = this.tree[this.idx]; this.idx -= 2; continue; } return [this.tree[this.idx], this.tree[this.idx + 1]]; }
-                let winner = this.tree[1]; this.sortedCount++; this.tree[this.size + winner] = -1; this.idx = this.size + winner; this.state = 'rebuild'; continue; }
-            if (this.state === 'rebuild') { if (this.idx > 1) { let p = Math.floor(this.idx / 2), left = p * 2, right = p * 2 + 1;
-                    if (result !== undefined) { this.tree[p] = (result === 1) ? this.tree[left] : this.tree[right]; this.idx = p; result = undefined; continue; }
-                    if (this.tree[left] === -1) { this.tree[p] = this.tree[right]; this.idx = p; continue; }
-                    if (this.tree[right] === -1) { this.tree[p] = this.tree[left]; this.idx = p; continue; } return [this.tree[left], this.tree[right]]; }
-                let winner = this.tree[1]; this.sortedCount++; if (this.sortedCount === this.n) break; this.tree[this.size + winner] = -1; this.idx = this.size + winner; }
+            if (this.state === 'build') {
+                if (result !== undefined) {
+                    this.tree[this.p] = (result === 1) ? this.tree[2 * this.p] : this.tree[2 * this.p + 1];
+                    this.p--; result = undefined;
+                }
+                while (this.p >= 1) {
+                    let left = 2 * this.p, right = 2 * this.p + 1;
+                    if (this.tree[left] === -1) { this.tree[this.p] = this.tree[right]; this.p--; continue; }
+                    if (this.tree[right] === -1) { this.tree[this.p] = this.tree[left]; this.p--; continue; }
+                    return [this.tree[left], this.tree[right]];
+                }
+                this.sortedCount++; let winner = this.tree[1]; this.tree[this.size + winner] = -1;
+                this.p = this.size + winner; this.state = 'rebuild'; continue;
+            }
+            if (this.state === 'rebuild') {
+                while (this.p > 1) {
+                    let parent = Math.floor(this.p / 2), left = 2 * parent, right = 2 * parent + 1;
+                    if (result !== undefined) {
+                        this.tree[parent] = (result === 1) ? this.tree[left] : this.tree[right];
+                        this.p = parent; result = undefined; continue;
+                    }
+                    if (this.tree[left] === -1) { this.tree[parent] = this.tree[right]; this.p = parent; continue; }
+                    if (this.tree[right] === -1) { this.tree[parent] = this.tree[left]; this.p = parent; continue; }
+                    return [this.tree[left], this.tree[right]];
+                }
+                this.sortedCount++; if (this.sortedCount === this.n) break;
+                let winner = this.tree[1]; this.tree[this.size + winner] = -1; this.p = this.size + winner;
+            }
         } return null;
     }
 }
@@ -365,6 +378,32 @@ class CocktailShakerProvider extends Provider {
     }
 }
 
+class BozosortProvider extends Provider {
+    constructor(n) { super(n); this.totalComps = 0; this.i = 0; }
+    next(result) {
+        while (true) {
+            if (result !== undefined) { this.totalComps++; if (result === 1) this.i++;
+                else { const a = Math.floor(Math.random() * this.n), b = Math.floor(Math.random() * this.n); [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.i = 0; } result = undefined; }
+            if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]]; break;
+        } return null;
+    }
+}
+
+class BogoBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.size = 2; this.i = 0; this.totalComps = 0; }
+    next(result) {
+        while (this.size <= this.n) {
+            if (result !== undefined) { this.totalComps++;
+                if (result === 1) { this.i++; }
+                else { for (let k = this.size - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; }
+                result = undefined;
+            }
+            if (this.i < this.size - 1) return [this.items[this.i], this.items[this.i + 1]];
+            this.size++; this.i = 0;
+        } return null;
+    }
+}
+
 class TreeSortProvider extends Provider {
     constructor(n) { super(n); this.root = null; this.toInsert = 1; this.curr = null; this.state = 'insert'; }
     next(result) {
@@ -388,7 +427,7 @@ class FullRankProvider {
     next() { return this.idx < this.pairs.length ? this.pairs[this.idx++] : null; }
 }
 
-function simulate(n, ProviderClass, trials = 1) {
+function simulate(n, ProviderClass, trials = 10) {
     let totalComps = 0, totalTau = 0, maxBattles = n * (n - 1) / 2;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
@@ -418,7 +457,7 @@ const N = 100, algos = [
     { name: 'Tournament Sort', class: TournamentSortProvider }, { name: 'Odd-Even Sort', class: OddEvenSortProvider },
     { name: 'Slowsort', class: SlowsortProvider }, { name: 'Pancake Sort', class: PancakeSortProvider },
     { name: 'Cocktail Shaker', class: CocktailShakerProvider }, { name: 'Bozosort', class: BozosortProvider },
-    { name: 'Tree Sort', class: TreeSortProvider }
+    { name: 'Tree Sort', class: TreeSortProvider }, { name: 'BogoBogoSort', class: BogoBogoSortProvider }
 ];
-console.log(`Simulating N=${N}, trials=1\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
+console.log(`Simulating N=${N}, trials=10\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
 for (const algo of algos) { try { const res = simulate(N, algo.class); console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`); } catch (e) { console.log(`${algo.name}\tERROR`); } }

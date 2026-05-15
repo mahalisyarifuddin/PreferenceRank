@@ -4,11 +4,11 @@ Dokumen ini merangkum hasil pengujian dan analisis mendalam yang dilakukan untuk
 
 ## 1. Perbandingan Algoritma Pengurutan (N=100)
 
-Kami membandingkan 23 algoritma pengurutan untuk menentukan keseimbangan terbaik antara upaya pengguna (jumlah pertarungan) dan akurasi peringkat (Kendall Tau).
+Kami membandingkan 24 algoritma pengurutan untuk menentukan keseimbangan terbaik antara upaya pengguna (jumlah pertarungan) dan akurasi peringkat (Kendall Tau).
 
 ### Metodologi Pengujian
 - **Nilai N:** 100
-- **Uji Coba:** 1-10 per algoritma.
+- **Uji Coba:** 10 per algoritma.
 - **Metrik 1: Rata-rata Pertarungan:** Jumlah rata-rata perbandingan yang dihasilkan.
 - **Metrik 2: Rata-rata Kendall Tau:** Korelasi peringkat antara kekuatan tersembunyi yang sebenarnya dan skor estimasi.
 
@@ -17,45 +17,44 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Tournament Sort | 1.00 | 0.0028 | Pareto-optimal |
-| Heap Sort | 168.00 | 0.5883 | Pareto-optimal |
-| Ford-Johnson | 524.00 | 0.8921 | Pareto-optimal |
-| Merge Sort | 535.00 | 0.8990 | Pareto-optimal |
-| **Shellsort** | **713.00** | **0.9487** | **Titik Lutut** |
-| Comb Sort | 1201.00 | 0.9875 | Pareto-optimal |
-| Odd-Even Sort | 4554.00 | 0.9891 | Pareto-optimal |
+| Heap Sort | 165.00 | 0.4856 | Pareto-optimal |
+| Ford-Johnson | 527.20 | 0.8865 | Pareto-optimal |
+| Binary Insertion | 532.30 | 0.8884 | Pareto-optimal |
+| Merge Sort | 543.10 | 0.9078 | Pareto-optimal |
+| **Shellsort** | **722.10** | **0.9458** | **Titik Lutut Produksi** |
+| Comb Sort | 1260.40 | 0.9913 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Binary Insertion | 536.00 | 0.8889 | Terdominasi |
-| Tree Sort | 582.00 | 0.8396 | Terdominasi |
-| Quicksort | 601.00 | 0.8368 | Terdominasi |
-| Bitonic Sort | 1334.00 | 0.9531 | Terdominasi |
-| Insertion Sort | 2676.00 | 0.8311 | Terdominasi |
-| Cocktail Shaker | 3915.00 | 0.9737 | Terdominasi |
-| Bubble Sort | 4914.00 | 0.9733 | Terdominasi |
-| Bogosort | 4950.00 | 0.9762 | Terdominasi |
-| Pancake Sort | 4950.00 | 0.9721 | Terdominasi |
-| Gnome Sort | 4950.00 | 0.9523 | Terdominasi |
-| Selection Sort | 4950.00 | 0.9341 | Terdominasi |
-| Cycle Sort | 4950.00 | 0.7774 | Terdominasi |
-| Bozosort | 4950.00 | 0.5608 | Terdominasi |
-| Slowsort | 4950.00 | 0.5038 | Terdominasi |
-| Stooge Sort | 4950.00 | 0.2739 | Terdominasi |
+| Tournament Sort | 556.30 | 0.8870 | Terdominasi |
+| Tree Sort | 627.40 | 0.8405 | Terdominasi |
+| Quicksort | 652.40 | 0.8307 | Terdominasi |
+| Bitonic Sort | 1334.00 | 0.9463 | Terdominasi |
+| Insertion Sort | 2592.70 | 0.8085 | Terdominasi |
+| Cocktail Shaker | 4003.40 | 0.9788 | Terdominasi |
+| Odd-Even Sort | 4573.80 | 0.9877 | Terdominasi |
+| Bubble Sort | 4887.60 | 0.9728 | Terdominasi |
+| Gnome Sort | 4923.60 | 0.9557 | Terdominasi |
+| Bogosort | 4950.00 | 0.9798 | Terdominasi |
+| Pancake Sort | 4950.00 | 0.9758 | Terdominasi |
+| Selection Sort | 4950.00 | 0.9330 | Terdominasi |
+| Bozosort | 4950.00 | 0.5752 | Terdominasi |
+| Slowsort | 4950.00 | 0.4656 | Terdominasi |
+| Stooge Sort | 4950.00 | 0.2841 | Terdominasi |
+| Cycle Sort | 4950.00 | 0.2279 | Terdominasi |
+| BogoBogoSort | 4950.00 | 0.0487 | Terdominasi |
 
 ### Analisis Pareto Frontier & Titik Lutut
 Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang lebih baik dalam meminimalkan pertarungan sekaligus lebih baik dalam memaksimalkan akurasi.
 
-- Ford-Johnson dan Merge Sort memberikan rasio akurasi-terhadap-pertarungan yang luar biasa untuk upaya tingkat menengah.
-- Shellsort diidentifikasi sebagai titik lutut matematika untuk N=100. Algoritma ini menawarkan akurasi 95% dengan hanya 713 pertarungan (pengurangan 85% dibandingkan Peringkat Penuh).
-- Full Rank tetap menjadi standar emas untuk akurasi, tetapi dengan biaya yang sangat besar yaitu 4950 pertarungan.
+- **Ford-Johnson**, **Binary Insertion**, dan **Merge Sort** memberikan rasio akurasi-terhadap-pertarungan yang luar biasa untuk upaya tingkat menengah.
+- **Shellsort** diidentifikasi sebagai titik lutut optimal untuk Peringkat Cepat dengan akurasi tinggi. Algoritma ini menawarkan akurasi >94% dengan ~722 pertarungan (pengurangan 85% dibandingkan Peringkat Penuh).
+- **Full Rank** tetap menjadi standar emas untuk akurasi, tetapi dengan biaya yang sangat besar yaitu 4950 pertarungan.
 
-### Bogosort: Komedi Kuantitatif
-Bogosort adalah "badut" dalam algoritma pengurutan. Metodologinya—mengacak seluruh daftar secara acak sampai daftar tersebut terurut—sengaja dibuat konyol.
+### Bogosort & BogoBogoSort: Komedi Kuantitatif
+Bogosort dan kembaran "jahatnya" BogoBogoSort mewakili puncak absurditas komputasi.
 
-- **Kompleksitas:** O(N * N!). Untuk N=100, jumlah pengacakan yang diharapkan adalah sekitar 9.3e157.
-- **Komedi dalam Angka:** Untuk mengurutkan 100 item, Bogosort kemungkinan besar membutuhkan lebih banyak pengacakan daripada jumlah atom di alam semesta yang teramati. Jika setiap atom di alam semesta adalah komputer yang melakukan satu miliar pengacakan per detik, Bogosort tetap tidak akan selesai pada saat bintang terakhir di alam semesta padam.
-- **Dalam Pengujian Kami:** Bogosort dibatasi pada jumlah pertarungan Round Robin (4950). Algoritma ini mencapai akurasi ~0.98. Meskipun terlihat tinggi, hal ini semata-mata karena algoritma ini melakukan perbandingan acak dalam jumlah besar yang kemudian digunakan oleh model Bradley-Terry untuk mengekstrak informasi. Efisiensinya (Tau / Pertarungan) secara astronomis lebih rendah daripada algoritma rasional lainnya.
-
-**Kesimpulan:** Shellsort digunakan untuk "Peringkat Cepat" karena mewakili titik lutut matematika dari efisiensi pengurutan.
+- **Bogosort:** Mengacak seluruh daftar secara acak sampai terurut. Untuk N=100, pengacakan yang diharapkan melebihi 10^157.
+- **BogoBogoSort:** Secara rekursif melakukan Bogosort pada prefiks daftar. Algoritma ini sangat tidak efisien sehingga membuat Bogosort terlihat seperti Quicksort sebagai perbandingan.
+- **Dalam Pengujian Kami:** Keduanya dibatasi pada 4950 pertarungan. Akurasi mereka hanyalah produk sampingan dari model Bradley-Terry yang mengekstrak informasi jarang dari derau acak.
 
 ---
 

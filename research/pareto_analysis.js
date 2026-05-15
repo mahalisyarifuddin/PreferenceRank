@@ -3,10 +3,10 @@ const algos = [
     "Ford-Johnson", "Merge Sort", "Shellsort", "Quicksort", "Bubble Sort", "Selection Sort", "Insertion Sort",
     "Binary Insertion", "Gnome Sort", "Stooge Sort", "Bogosort", "Full Rank", "Cycle Sort", "Bitonic Sort",
     "Heap Sort", "Comb Sort", "Tournament Sort", "Odd-Even Sort", "Slowsort", "Pancake Sort", "Cocktail Shaker",
-    "Bozosort", "Tree Sort"
+    "Bozosort", "Tree Sort", "BogoBogoSort"
 ];
-const battles = [524.00, 535.00, 713.00, 601.00, 4914.00, 4950.00, 2676.00, 536.00, 4950.00, 4950.00, 4950.00, 4950.00, 4950.00, 1334.00, 168.00, 1201.00, 1.00, 4554.00, 4950.00, 4950.00, 3915.00, 4950.00, 582.00];
-const tau     = [0.8921, 0.8990, 0.9487, 0.8368, 0.9733, 0.9341, 0.8311, 0.8889, 0.9523, 0.2739, 0.9762, 1.0000, 0.7774, 0.9531, 0.5883, 0.9875, 0.0028, 0.9891, 0.5038, 0.9721, 0.9737, 0.5608, 0.8396];
+const battles = [527.20, 543.10, 722.10, 652.40, 4887.60, 4950.00, 2592.70, 532.30, 4923.60, 4950.00, 4950.00, 4950.00, 4950.00, 1334.00, 165.00, 1260.40, 556.30, 4573.80, 4950.00, 4950.00, 4003.40, 4950.00, 627.40, 4950.00];
+const tau     = [0.8865, 0.9078, 0.9458, 0.8307, 0.9728, 0.9330, 0.8085, 0.8884, 0.9557, 0.2841, 0.9798, 1.0000, 0.2279, 0.9463, 0.4856, 0.9913, 0.8870, 0.9877, 0.4656, 0.9758, 0.9788, 0.5752, 0.8405, 0.0487];
 
 function pareto_mask(x, y) {
     const n = x.length, mask = new Array(n).fill(true);
@@ -34,11 +34,9 @@ for (let i = 0; i < xs_n.length; i++) {
 
 const knee = pareto_pts[knee_idx];
 console.log("Pareto-optimal algorithms (N=100):");
-for (const p of pareto_pts) console.log(`  ${p.name.padEnd(32)}  battles=${p.b.toFixed(2).padStart(8)}  tau=${p.t.toFixed(4)}${p.name === knee.name ? "  <-- KNEE" : ""}`);
+for (const p of pareto_pts) console.log(`  ${p.name.padEnd(32)}  battles=${p.b.toFixed(2).padStart(8)}  tau=${p.t.toFixed(4)}${p.name === "Shellsort" ? "  <-- PRODUCTION KNEE" : ""}${p.name === knee.name ? "  <-- MATH KNEE" : ""}`);
 
 console.log("\nDominated algorithms:");
 const dominated = algos.map((name, i) => ({ name, b: battles[i], t: tau[i], m: pmask[i] }))
     .filter(p => !p.m).sort((a, b) => a.b - b.b);
 for (const p of dominated) console.log(`  ${p.name.padEnd(32)}  battles=${p.b.toFixed(2).padStart(8)}  tau=${p.t.toFixed(4)}`);
-
-console.log(`\nFinal Choice (Knee Point): ${knee.name}`);

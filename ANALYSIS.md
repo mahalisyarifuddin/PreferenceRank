@@ -4,11 +4,11 @@ This document summarizes the extensive benchmarking and analysis performed to op
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared 23 sorting algorithms to determine the ultimate balance between user effort (battles) and ranking accuracy (Kendall Tau).
+We compared 24 sorting algorithms to determine the ultimate balance between user effort (battles) and ranking accuracy (Kendall Tau).
 
 ### Benchmarking Methodology
 - **N Value:** 100
-- **Trials:** 1-10 per algorithm.
+- **Trials:** 10 per algorithm.
 - **Metric 1: Avg Battles:** The average number of comparisons generated.
 - **Metric 2: Avg Kendall Tau:** Rank correlation between true hidden strengths and estimated scores.
 
@@ -17,45 +17,44 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Tournament Sort | 1.00 | 0.0028 | Pareto-optimal |
-| Heap Sort | 168.00 | 0.5883 | Pareto-optimal |
-| Ford-Johnson | 524.00 | 0.8921 | Pareto-optimal |
-| Merge Sort | 535.00 | 0.8990 | Pareto-optimal |
-| **Shellsort** | **713.00** | **0.9487** | **Knee Point** |
-| Comb Sort | 1201.00 | 0.9875 | Pareto-optimal |
-| Odd-Even Sort | 4554.00 | 0.9891 | Pareto-optimal |
+| Heap Sort | 165.00 | 0.4856 | Pareto-optimal |
+| Ford-Johnson | 527.20 | 0.8865 | Pareto-optimal |
+| Binary Insertion | 532.30 | 0.8884 | Pareto-optimal |
+| Merge Sort | 543.10 | 0.9078 | Pareto-optimal |
+| **Shellsort** | **722.10** | **0.9458** | **Production Knee Point** |
+| Comb Sort | 1260.40 | 0.9913 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Binary Insertion | 536.00 | 0.8889 | Dominated |
-| Tree Sort | 582.00 | 0.8396 | Dominated |
-| Quicksort | 601.00 | 0.8368 | Dominated |
-| Bitonic Sort | 1334.00 | 0.9531 | Dominated |
-| Insertion Sort | 2676.00 | 0.8311 | Dominated |
-| Cocktail Shaker | 3915.00 | 0.9737 | Dominated |
-| Bubble Sort | 4914.00 | 0.9733 | Dominated |
-| Bogosort | 4950.00 | 0.9762 | Dominated |
-| Pancake Sort | 4950.00 | 0.9721 | Dominated |
-| Gnome Sort | 4950.00 | 0.9523 | Dominated |
-| Selection Sort | 4950.00 | 0.9341 | Dominated |
-| Cycle Sort | 4950.00 | 0.7774 | Dominated |
-| Bozosort | 4950.00 | 0.5608 | Dominated |
-| Slowsort | 4950.00 | 0.5038 | Dominated |
-| Stooge Sort | 4950.00 | 0.2739 | Dominated |
+| Tournament Sort | 556.30 | 0.8870 | Dominated |
+| Tree Sort | 627.40 | 0.8405 | Dominated |
+| Quicksort | 652.40 | 0.8307 | Dominated |
+| Bitonic Sort | 1334.00 | 0.9463 | Dominated |
+| Insertion Sort | 2592.70 | 0.8085 | Dominated |
+| Cocktail Shaker | 4003.40 | 0.9788 | Dominated |
+| Odd-Even Sort | 4573.80 | 0.9877 | Dominated |
+| Bubble Sort | 4887.60 | 0.9728 | Dominated |
+| Gnome Sort | 4923.60 | 0.9557 | Dominated |
+| Bogosort | 4950.00 | 0.9798 | Dominated |
+| Pancake Sort | 4950.00 | 0.9758 | Dominated |
+| Selection Sort | 4950.00 | 0.9330 | Dominated |
+| Bozosort | 4950.00 | 0.5752 | Dominated |
+| Slowsort | 4950.00 | 0.4656 | Dominated |
+| Stooge Sort | 4950.00 | 0.2841 | Dominated |
+| Cycle Sort | 4950.00 | 0.2279 | Dominated |
+| BogoBogoSort | 4950.00 | 0.0487 | Dominated |
 
 ### Pareto Frontier & Knee Point Analysis
 The Pareto Frontier identifies algorithms where no other algorithm is both better at minimizing battles and better at maximizing accuracy.
 
-- **Ford-Johnson** and **Merge Sort** provide an exceptional accuracy-to-battle ratio for mid-range effort.
-- **Shellsort** is identified as the mathematical knee point for N=100. It offers 95% accuracy for 713 battles (an 85% reduction vs. Full Rank).
+- **Ford-Johnson**, **Binary Insertion**, and **Merge Sort** provide an exceptional accuracy-to-battle ratio for mid-range effort.
+- **Shellsort** is identified as the optimal knee point for high-accuracy Quick Rank. It offers >94% accuracy for ~722 battles (an 85% reduction vs. Full Rank).
 - **Full Rank** remains the gold standard for accuracy but at a massive cost of 4950 battles.
 
-### Bogosort: A Quantitative Comedy
-Bogosort is the "jester" of sorting algorithms. Its methodology—shuffling the entire list randomly until it happens to be sorted—is intentionally absurd.
+### Bogosort & BogoBogoSort: Quantitative Comedy
+Bogosort and its "evil" twin BogoBogoSort represent the pinnacle of computational absurdity.
 
-- **Complexity:** O(N * N!). For N=100, the expected number of shuffles is approximately 9.3e157.
-- **Comedy in Numbers:** To sort 100 items, Bogosort would likely need more shuffles than there are atoms in the observable universe. If every atom in the universe were a computer performing a billion shuffles per second, Bogosort would still not be finished by the time the last star in the universe burns out.
-- **In Our Benchmark:** Bogosort was capped at the Round Robin battle count (4950). It achieved ~0.98 accuracy. While this seems high, it is simply because it performed a massive number of random comparisons, which the Bradley-Terry model used to extract information. Its efficiency (Tau / Battles) is astronomically lower than rational algorithms.
-
-**Conclusion:** Shellsort is used for "Quick Rank" as it represents the optimal mathematical knee point for information density vs. user effort.
+- **Bogosort:** Shuffles the entire list randomly until sorted. For N=100, the expected shuffles exceed 10^157.
+- **BogoBogoSort:** Recursively Bogosorts prefixes. It is so inefficient that it makes Bogosort look like Quicksort in comparison.
+- **In Our Benchmark:** Both were capped at 4950 battles. Their accuracy is merely a byproduct of the Bradley-Terry model extracting sparse information from random noise.
 
 ---
 
