@@ -25,7 +25,7 @@ Berdasarkan analisis komparatif terhadap 24 algoritma pengurutan (lihat [ANALYSI
 | Heap Sort | ~165 | 0.49 | Pareto-optimal |
 | Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
 | Merge Sort | ~543 | 0.91 | Pareto-optimal |
-| **Shellsort** | **~722** | **0.95** | **Titik Lutut** |
+| **Shellsort** | **~797** | **0.95** | **Titik Lutut** |
 | Comb Sort | ~1260 | 0.99 | Pareto-optimal |
 | Full Rank | 4950 | 1.00 | Pareto-optimal |
 

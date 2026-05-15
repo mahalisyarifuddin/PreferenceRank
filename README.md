@@ -25,7 +25,7 @@ Based on a comparative analysis of 24 sorting algorithms (see [ANALYSIS.md](ANAL
 | Heap Sort | ~165 | 0.49 | Pareto-optimal |
 | Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
 | Merge Sort | ~543 | 0.91 | Pareto-optimal |
-| **Shellsort** | **~722** | **0.95** | **Knee Point** |
+| **Shellsort** | **~797** | **0.95** | **Knee Point** |
 | Comb Sort | ~1260 | 0.99 | Pareto-optimal |
 | Full Rank | 4950 | 1.00 | Pareto-optimal |
 

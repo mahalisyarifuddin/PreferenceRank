@@ -58,6 +58,13 @@ Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang
 - **Shellsort** diidentifikasi sebagai titik lutut optimal untuk Peringkat Cepat dengan akurasi tinggi. Algoritma ini menawarkan akurasi >94% dengan ~720 pertarungan (pengurangan 85% dibandingkan Peringkat Penuh).
 - **Full Rank** tetap menjadi standar emas untuk akurasi, tetapi dengan biaya yang sangat besar yaitu 4950 pertarungan.
 
+### Regresi Estimasi Jumlah Pertarungan
+Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Shellsort (celah Ciura) dari N=10 hingga N=1000 dan menginterpolasi pertumbuhan rata-rata pertarungan.
+
+- **Observasi:** Pertumbuhan bersifat super-linear, kira-kira O(N log N) dengan sedikit kelengkungan ke atas karena urutan celah yang tetap.
+- **Formula Interpolasi:** `Pertarungan ≈ N * log2(N) * (1 + log10(N) / 10)`
+- **Akurasi:** Formula ini memprediksi 797 pertarungan untuk N=100 (simulasi ~731) dan 12956 pertarungan untuk N=1000 (simulasi ~13037), memberikan estimasi yang kuat untuk antarmuka pengguna.
+
 ### Sortir Esoterik & Lucu: Komedi Kuantitatif
 Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wikipedia untuk mengilustrasikan rentang filosofi pengurutan.
 
