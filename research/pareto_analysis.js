@@ -7,11 +7,14 @@ const algos = [
     "Comb Sort",
     "Cocktail Shaker",
     "Quicksort",
-    "Full Rank",
-    "Random Pairs (Matched to FJ)"
+    "Binary Insertion",
+    "Insertion Sort",
+    "Selection Sort",
+    "Bubble Sort",
+    "Full Rank"
 ];
-const battles = [527.14, 542.00, 729.82, 148.94, 1242.58, 3852.02, 660.70, 4950.00, 527.00];
-const tau     = [0.8876, 0.9047, 0.9417, 0.4797, 0.9899, 0.9776, 0.8367, 1.0000, 0.8384];
+const battles = [526.62, 543.24, 728.70, 146.64, 1238.62, 3897.50, 640.98, 530.06, 2585.82, 4950.00, 4873.08, 4950.00];
+const tau     = [0.8897, 0.9035, 0.9424, 0.4888, 0.9904, 0.9785, 0.8368, 0.8872, 0.8060, 0.9330, 0.9732, 1.0000];
 
 function pareto_mask(x, y) {
     const n = x.length;
@@ -70,10 +73,13 @@ for (const p of pareto_pts) {
 }
 
 console.log("\nDominated algorithms:");
-for (let i = 0; i < algos.length; i++) {
-    if (!pmask[i]) {
-        console.log(`  ${algos[i].padEnd(32)}  battles=${battles[i].toFixed(2).padStart(8)}  tau=${tau[i].toFixed(4)}`);
-    }
+const dominated = algos
+    .map((name, i) => ({ name, b: battles[i], t: tau[i], m: pmask[i] }))
+    .filter(p => !p.m)
+    .sort((a, b) => a.t - b.t);
+
+for (const p of dominated) {
+    console.log(`  ${p.name.padEnd(32)}  battles=${p.b.toFixed(2).padStart(8)}  tau=${p.t.toFixed(4)}`);
 }
 
 console.log(`\nFinal Choice (Knee Point): ${knee.name}`);

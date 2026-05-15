@@ -19,16 +19,16 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan item Anda:
 ### Analisis Algoritma
 Berdasarkan analisis perbandingan berbagai algoritma pengurutan (lihat [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** diidentifikasi sebagai pilihan paling efisien untuk pemeringkatan preferensi manusia. Algoritma ini bersifat Pareto-optimal, memaksimalkan perolehan informasi sembari meminimalkan kelelahan pengguna.
 
-**Perbandingan (N=100):**
+**Perbandingan (N=100), Diurutkan berdasarkan Kendall Tau:**
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| **Ford-Johnson** | **~527** | **0.89** | **Pareto-optimal** |
-| Merge Sort | ~542 | 0.90 | Pareto-optimal |
-| Shellsort | ~730 | 0.94 | Titik Lutut |
-| Quicksort | ~661 | 0.84 | Terdominasi |
-| Peringkat Penuh | 4950 | 1.00 | Pareto-optimal |
+| Quicksort | ~661 | 0,84 | Terdominasi |
+| **Ford-Johnson** | **~527** | **0,89** | **Pareto-optimal** |
+| Merge Sort | ~543 | 0,90 | Pareto-optimal |
+| Shellsort | ~730 | 0,94 | Titik Lutut |
+| Peringkat Penuh | 4950 | 1,00 | Pareto-optimal |
 
-*Peringkat Cepat mengurangi jumlah pertarungan sebesar ~89% dibandingkan dengan Peringkat Penuh sembari tetap mempertahankan akurasi pemeringkatan sebesar ~90%.*
+*Peringkat Cepat (Ford-Johnson) mengurangi jumlah pertarungan sebesar ~89% dibandingkan dengan Peringkat Penuh sembari tetap mempertahankan akurasi pemeringkatan yang tinggi.*
 
 ## Detail Teknis
 PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) bagi model Bradley-Terry. Pendekatan iteratif ini menjamin konvergensi dan perhitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi dari operasi matriks.

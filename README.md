@@ -19,16 +19,16 @@ PreferenceRank offers two distinct modes to sort your items:
 ### Algorithm Analysis
 Based on a comparative analysis of various sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** was identified as the most efficient choice for human preference ranking. It is Pareto-optimal, maximizing information gain while minimizing user fatigue.
 
-**Comparison (N=100):**
+**Comparison (N=100), Sorted by Kendall Tau:**
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
+| Quicksort | ~641 | 0.84 | Dominated |
 | **Ford-Johnson** | **~527** | **0.89** | **Pareto-optimal** |
-| Merge Sort | ~542 | 0.90 | Pareto-optimal |
-| Shellsort | ~730 | 0.94 | Knee Point |
-| Quicksort | ~661 | 0.84 | Dominated |
+| Merge Sort | ~543 | 0.90 | Pareto-optimal |
+| Shellsort | ~729 | 0.94 | Knee Point |
 | Full Rank | 4950 | 1.00 | Pareto-optimal |
 
-*Quick Rank reduces battles by ~89% compared to Full Rank while maintaining ~90% ranking accuracy.*
+*Quick Rank (Ford-Johnson) reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy.*
 
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.

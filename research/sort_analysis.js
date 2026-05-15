@@ -493,6 +493,156 @@ class HeapSortProvider {
     }
 }
 
+class BubbleSortProvider {
+    constructor(n) {
+        this.n = n;
+        this.items = Array.from({ length: n }, (_, i) => i);
+        this.i = 0;
+        this.j = 0;
+        this.swapped = false;
+        this.state = 'compare';
+    }
+    next(result) {
+        while (this.i < this.n - 1) {
+            if (this.state === 'compare') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        [this.items[this.j], this.items[this.j + 1]] = [this.items[this.j + 1], this.items[this.j]];
+                        this.swapped = true;
+                    }
+                    this.j++;
+                    result = undefined;
+                }
+                if (this.j < this.n - this.i - 1) {
+                    return [this.items[this.j], this.items[this.j + 1]];
+                }
+                if (!this.swapped) break;
+                this.i++;
+                this.j = 0;
+                this.swapped = false;
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
+class SelectionSortProvider {
+    constructor(n) {
+        this.n = n;
+        this.items = Array.from({ length: n }, (_, i) => i);
+        this.i = 0;
+        this.j = 1;
+        this.minIdx = 0;
+        this.state = 'compare';
+    }
+    next(result) {
+        while (this.i < this.n - 1) {
+            if (this.state === 'compare') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        this.minIdx = this.j;
+                    }
+                    this.j++;
+                    result = undefined;
+                }
+                if (this.j < this.n) {
+                    return [this.items[this.minIdx], this.items[this.j]];
+                }
+                [this.items[this.i], this.items[this.minIdx]] = [this.items[this.minIdx], this.items[this.i]];
+                this.i++;
+                this.minIdx = this.i;
+                this.j = this.i + 1;
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
+class InsertionSortProvider {
+    constructor(n) {
+        this.n = n;
+        this.items = Array.from({ length: n }, (_, i) => i);
+        this.i = 1;
+        this.j = 0;
+        this.temp = 0;
+        this.state = 'start';
+    }
+    next(result) {
+        while (this.i < this.n) {
+            if (this.state === 'start') {
+                this.temp = this.items[this.i];
+                this.j = this.i - 1;
+                this.state = 'compare';
+            }
+            if (this.state === 'compare') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        this.items[this.j + 1] = this.items[this.j];
+                        this.j--;
+                        result = undefined;
+                    } else {
+                        this.items[this.j + 1] = this.temp;
+                        this.i++;
+                        this.state = 'start';
+                        result = undefined;
+                        continue;
+                    }
+                }
+                if (this.j >= 0) {
+                    return [this.temp, this.items[this.j]];
+                }
+                this.items[this.j + 1] = this.temp;
+                this.i++;
+                this.state = 'start';
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
+class BinaryInsertionSortProvider {
+    constructor(n) {
+        this.n = n;
+        this.items = Array.from({ length: n }, (_, i) => i);
+        this.i = 1;
+        this.lo = 0;
+        this.hi = 1;
+        this.mid = 0;
+        this.temp = 0;
+        this.state = 'start';
+    }
+    next(result) {
+        while (this.i < this.n) {
+            if (this.state === 'start') {
+                this.temp = this.items[this.i];
+                this.lo = 0;
+                this.hi = this.i;
+                this.state = 'binarySearch';
+            }
+            if (this.state === 'binarySearch') {
+                if (result !== undefined) {
+                    if (result === 1) this.lo = this.mid + 1;
+                    else this.hi = this.mid;
+                    result = undefined;
+                }
+                if (this.lo < this.hi) {
+                    this.mid = (this.lo + this.hi) >> 1;
+                    return [this.temp, this.items[this.mid]];
+                }
+                for (let k = this.i; k > this.lo; k--) this.items[k] = this.items[k - 1];
+                this.items[this.lo] = this.temp;
+                this.i++;
+                this.state = 'start';
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
 class FullRankProvider {
     constructor(n) {
         this.n = n;
@@ -510,30 +660,12 @@ class FullRankProvider {
     }
 }
 
-class RandomPairProvider {
-    constructor(n, maxBattles) {
-        this.n = n;
-        this.maxBattles = maxBattles;
-        this.count = 0;
-    }
-    next() {
-        if (this.count < this.maxBattles) {
-            this.count++;
-            let a = Math.floor(Math.random() * this.n);
-            let b = Math.floor(Math.random() * this.n);
-            while (a === b) b = Math.floor(Math.random() * this.n);
-            return [a, b];
-        }
-        return null;
-    }
-}
-
-function simulate(n, ProviderClass, trials = 50, extraParam) {
+function simulate(n, ProviderClass, trials = 50) {
     let totalComps = 0;
     let totalTau = 0;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
-        const provider = new ProviderClass(n, extraParam);
+        const provider = new ProviderClass(n);
         const matches = [];
         let pair = provider.next();
         let comps = 0;
@@ -562,14 +694,14 @@ const algorithms = [
     { name: 'Comb Sort', class: CombSortProvider },
     { name: 'Cocktail Shaker', class: CocktailShakerProvider },
     { name: 'Quicksort', class: QuicksortProvider },
+    { name: 'Binary Insertion', class: BinaryInsertionSortProvider },
+    { name: 'Insertion Sort', class: InsertionSortProvider },
+    { name: 'Selection Sort', class: SelectionSortProvider },
+    { name: 'Bubble Sort', class: BubbleSortProvider },
     { name: 'Full Rank', class: FullRankProvider }
 ];
 
-let fjBattles = 0;
 for (const algo of algorithms) {
     const res = simulate(N, algo.class);
     console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`);
-    if (algo.name === 'Ford-Johnson') fjBattles = res.avgComps;
 }
-const resRand = simulate(N, RandomPairProvider, 50, Math.round(fjBattles));
-console.log(`Random Pairs\t${resRand.avgComps.toFixed(2)}\t${resRand.avgTau.toFixed(4)} (Matched to FJ)`);
