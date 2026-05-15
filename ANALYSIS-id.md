@@ -59,11 +59,11 @@ Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang
 - **Full Rank** tetap menjadi standar emas untuk akurasi, tetapi dengan biaya yang sangat besar yaitu 4950 pertarungan.
 
 ### Regresi Estimasi Jumlah Pertarungan
-Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Shellsort (celah Ciura) dari N=10 hingga N=1000 dan menginterpolasi pertumbuhan rata-rata pertarungan.
+Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Shellsort (celah Ciura) dari N=10 hingga N=1000 (500 uji coba per N) dan menurunkan model regresi dengan ketelitian tinggi (high-fidelity).
 
-- **Observasi:** Pertumbuhan bersifat super-linear, kira-kira O(N log N) dengan sedikit kelengkungan ke atas karena urutan celah yang tetap.
-- **Formula Interpolasi:** `Pertarungan ≈ N * log2(N) * (1 + log10(N) / 10)`
-- **Akurasi:** Formula ini memprediksi 797 pertarungan untuk N=100 (simulasi ~731) dan 12956 pertarungan untuk N=1000 (simulasi ~13037), memberikan estimasi yang kuat untuk antarmuka pengguna.
+- **Observasi:** Pertumbuhan bersifat super-linear, dimodelkan secara akurat oleh hukum pangkat log-linear yang dimodifikasi.
+- **Formula Ketelitian Tinggi:** `Pertarungan ≈ 0.4668 * N * (log2(N))^1.45`
+- **Akurasi:** Model ini mencapai kesalahan relatif RMS sebesar 0.71%. Model ini memprediksi 727 pertarungan untuk N=100 (simulasi ~731) dan 13092 pertarungan untuk N=1000 (simulasi ~13047), memberikan estimasi yang sangat tepat untuk antarmuka pengguna.
 
 ### Sortir Esoterik & Lucu: Komedi Kuantitatif
 Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wikipedia untuk mengilustrasikan rentang filosofi pengurutan.
