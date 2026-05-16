@@ -51,3 +51,8 @@ async function aetherisSort(elements) {
         }
     }
 }
+
+/**
+ * Global alias for SortVisualizer.com default entry point.
+ */
+window.selectionSort = aetherisSort;
