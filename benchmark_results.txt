@@ -1,36 +1,17 @@
 Simulating N=100, trials=10
 Algorithm	Avg Battles	Avg Kendall Tau
-Ford-Johnson	526.20	0.8879
-Merge Sort	542.10	0.8985
-Hayate-Shiki	980.50	0.7909
-Shellsort	743.30	0.9387
-Quicksort	651.10	0.8354
-Bubble Sort	4917.30	0.9731
-Selection Sort	4950.00	0.9344
-Insertion Sort	2556.60	0.8041
-Binary Insertion	529.90	0.8834
-Gnome Sort	4911.80	0.9581
-Stooge Sort	4950.00	0.2826
-Bogosort	4950.00	0.9781
+Aetheris	936.70	0.9657
+Ford-Johnson	527.40	0.8910
+Merge Sort	546.70	0.9073
+Hayate-Shiki	962.90	0.7859
+Shellsort	725.50	0.9457
+Quicksort	630.20	0.8377
+Bubble Sort	4877.80	0.9747
+Selection Sort	4950.00	0.9359
+Insertion Sort	2585.00	0.8008
+Binary Insertion	531.20	0.8879
+Gnome Sort	4858.50	0.9756
+Stooge Sort	4950.00	0.2749
+Bogosort	4950.00	0.9804
 Full Rank	4950.00	1.0000
-Cycle Sort	4950.00	0.4720
-Bitonic Sort	1334.00	0.9526
-Heap Sort	164.30	0.4808
-Comb Sort	1230.70	0.9905
-Tournament Sort	557.00	0.8855
-Odd-Even Sort	4702.50	0.9884
-Slowsort	4950.00	0.4357
-Pancake Sort	4950.00	0.9761
-Cocktail Shaker	3873.70	0.9777
-Bozosort	4950.00	0.5962
-Tree Sort	643.60	0.8367
-BogoBogoSort	4950.00	0.0975
-Stalin Sort	99.00	0.0640
-Thanos Sort	190.00	0.5334
-Miracle Sort	99.00	0.5413
-Intelligent Design	0.00	0.0324
-Quantum Bogo	1.70	0.0230
-Intro Sort	456.80	0.8465
-Strand Sort	774.50	0.8265
-Patience Sort	248.80	0.4926
-Smooth Sort	170.20	0.5445
+Cycle Sort	4950.00	0.3176

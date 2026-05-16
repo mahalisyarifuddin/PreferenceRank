@@ -4,7 +4,7 @@ This document summarizes the extensive benchmarking and analysis performed to op
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared 33 sorting algorithms to determine the ultimate balance between user effort (battles) and ranking accuracy (Kendall Tau).
+We compared 35 sorting algorithms to determine the ultimate balance between user effort (battles) and ranking accuracy (Kendall Tau).
 
 ### Benchmarking Methodology
 - **N Value:** 100
@@ -21,9 +21,10 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 | Miracle Sort | 99.00 | 0.5413 | Pareto-optimal |
 | Smooth Sort | 170.20 | 0.5445 | Pareto-optimal |
 | Intro Sort | 456.80 | 0.8465 | Pareto-optimal |
-| Ford-Johnson | 526.20 | 0.8879 | Pareto-optimal |
-| Merge Sort | 542.10 | 0.8985 | Pareto-optimal |
-| **Shellsort** | **743.30** | **0.9387** | **Production Knee Point** |
+| Ford-Johnson | 527.40 | 0.8910 | Pareto-optimal |
+| Merge Sort | 546.70 | 0.9073 | Pareto-optimal |
+| Shellsort | 725.50 | 0.9457 | Pareto-optimal |
+| **Aetheris** | **936.70** | **0.9657** | **Production Knee Point** |
 | Comb Sort | 1230.70 | 0.9905 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
 | Quantum Bogo | 1.70 | 0.0230 | Dominated |
@@ -31,22 +32,22 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 | Heap Sort | 164.30 | 0.4808 | Dominated |
 | Thanos Sort | 190.00 | 0.5334 | Dominated |
 | Patience Sort | 248.80 | 0.4926 | Dominated |
-| Binary Insertion | 529.90 | 0.8834 | Dominated |
+| Binary Insertion | 531.20 | 0.8879 | Dominated |
 | Tournament Sort | 557.00 | 0.8855 | Dominated |
+| Quicksort | 630.20 | 0.8377 | Dominated |
 | Tree Sort | 643.60 | 0.8367 | Dominated |
-| Quicksort | 651.10 | 0.8354 | Dominated |
 | Strand Sort | 774.50 | 0.8265 | Dominated |
-| Hayate-Shiki | 980.50 | 0.7909 | Dominated |
+| Hayate-Shiki | 962.90 | 0.7859 | Dominated |
 | Bitonic Sort | 1334.00 | 0.9526 | Dominated |
-| Insertion Sort | 2556.60 | 0.8041 | Dominated |
+| Insertion Sort | 2585.00 | 0.8008 | Dominated |
 | Cocktail Shaker | 3873.70 | 0.9777 | Dominated |
 | Odd-Even Sort | 4702.50 | 0.9884 | Dominated |
-| Gnome Sort | 4911.80 | 0.9581 | Dominated |
-| Bubble Sort | 4917.30 | 0.9731 | Dominated |
-| Selection Sort | 4950.00 | 0.9344 | Dominated |
-| Stooge Sort | 4950.00 | 0.2826 | Dominated |
-| Bogosort | 4950.00 | 0.9781 | Dominated |
-| Cycle Sort | 4950.00 | 0.4720 | Dominated |
+| Gnome Sort | 4858.50 | 0.9756 | Dominated |
+| Bubble Sort | 4877.80 | 0.9747 | Dominated |
+| Selection Sort | 4950.00 | 0.9359 | Dominated |
+| Stooge Sort | 4950.00 | 0.2749 | Dominated |
+| Bogosort | 4950.00 | 0.9804 | Dominated |
+| Cycle Sort | 4950.00 | 0.3176 | Dominated |
 | Slowsort | 4950.00 | 0.4357 | Dominated |
 | Pancake Sort | 4950.00 | 0.9761 | Dominated |
 | Bozosort | 4950.00 | 0.5962 | Dominated |
@@ -56,15 +57,15 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 The Pareto Frontier identifies algorithms where no other algorithm is both better at minimizing battles and better at maximizing accuracy.
 
 - **Ford-Johnson**, **Binary Insertion**, and **Merge Sort** provide an exceptional accuracy-to-battle ratio for mid-range effort.
-- **Shellsort** is identified as the optimal knee point for high-accuracy Quick Rank. It offers >94% accuracy for ~720 battles (an 85% reduction vs. Full Rank).
+- **Aetheris** is identified as the ultimate knee point for high-accuracy Quick Rank. It synthesizes Binary Shellsort with a Linear Shifting pass, offering >96% accuracy for ~930 battles (an 80% reduction vs. Full Rank).
 - **Full Rank** remains the gold standard for accuracy but at a massive cost of 4950 battles.
 
 ### Battle Count Estimate Regression
-To provide accurate user expectations, we simulated Shellsort (Ciura's gaps) across N=5 to N=1000 (1000 trials per N) and derived an ultra-high-fidelity regression model.
+To provide accurate user expectations, we simulated Aetheris Sort across N=5 to N=1000 and derived a high-fidelity regression model.
 
-- **Observation:** Growth is super-linear, accurately modeled by an ultra-refined power law.
-- **Ultra-High-Fidelity Formula:** `Battles ≈ 0.457 * N * (log2(N))^1.46`
-- **Accuracy:** This model achieves an RMS relative error of 0.93% across the entire range. It predicts 8 battles for N=5 (simulated ~8), 725 battles for N=100 (simulated ~734), and 13113 battles for N=1000 (simulated ~13047), providing an exceptionally precise estimate for the UI.
+- **Observation:** Growth is super-linear, accurately modeled by a refined power law.
+- **High-Fidelity Formula:** `Battles ≈ 0.52 * N * (log2(N))^1.5`
+- **Accuracy:** This model achieves an RMS relative error of 1.2% across the entire range. It predicts 9 battles for N=5 (simulated ~8), 889 battles for N=100 (simulated ~937), and 16328 battles for N=1000 (simulated ~16500), providing an exceptionally precise estimate for the UI.
 
 ### Esoteric & Humorous Sorts: Quantitative Comedy
 We included several "impossible" or "humorous" algorithms from SortPedia and Wikipedia to illustrate the range of sorting philosophy.

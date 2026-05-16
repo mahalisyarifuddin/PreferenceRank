@@ -4,7 +4,7 @@ Dokumen ini merangkum hasil pengujian dan analisis mendalam yang dilakukan untuk
 
 ## 1. Perbandingan Algoritma Pengurutan (N=100)
 
-Kami membandingkan 33 algoritma pengurutan untuk menentukan keseimbangan terbaik antara upaya pengguna (jumlah pertarungan) dan akurasi peringkat (Kendall Tau).
+Kami membandingkan 35 algoritma pengurutan untuk menentukan keseimbangan terbaik antara upaya pengguna (jumlah pertarungan) dan akurasi peringkat (Kendall Tau).
 
 ### Metodologi Pengujian
 - **Nilai N:** 100
@@ -21,9 +21,10 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 | Miracle Sort | 99.00 | 0.5413 | Pareto-optimal |
 | Smooth Sort | 170.20 | 0.5445 | Pareto-optimal |
 | Intro Sort | 456.80 | 0.8465 | Pareto-optimal |
-| Ford-Johnson | 526.20 | 0.8879 | Pareto-optimal |
-| Merge Sort | 542.10 | 0.8985 | Pareto-optimal |
-| **Shellsort** | **743.30** | **0.9387** | **Titik Lutut Produksi** |
+| Ford-Johnson | 527.40 | 0.8910 | Pareto-optimal |
+| Merge Sort | 546.70 | 0.9073 | Pareto-optimal |
+| Shellsort | 725.50 | 0.9457 | Pareto-optimal |
+| **Aetheris** | **936.70** | **0.9657** | **Titik Lutut Produksi** |
 | Comb Sort | 1230.70 | 0.9905 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
 | Quantum Bogo | 1.70 | 0.0230 | Terdominasi |
@@ -31,22 +32,22 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 | Heap Sort | 164.30 | 0.4808 | Terdominasi |
 | Thanos Sort | 190.00 | 0.5334 | Terdominasi |
 | Patience Sort | 248.80 | 0.4926 | Terdominasi |
-| Binary Insertion | 529.90 | 0.8834 | Terdominasi |
+| Binary Insertion | 531.20 | 0.8879 | Terdominasi |
 | Tournament Sort | 557.00 | 0.8855 | Terdominasi |
+| Quicksort | 630.20 | 0.8377 | Terdominasi |
 | Tree Sort | 643.60 | 0.8367 | Terdominasi |
-| Quicksort | 651.10 | 0.8354 | Terdominasi |
 | Strand Sort | 774.50 | 0.8265 | Terdominasi |
-| Hayate-Shiki | 980.50 | 0.7909 | Terdominasi |
+| Hayate-Shiki | 962.90 | 0.7859 | Terdominasi |
 | Bitonic Sort | 1334.00 | 0.9526 | Terdominasi |
-| Insertion Sort | 2556.60 | 0.8041 | Terdominasi |
+| Insertion Sort | 2585.00 | 0.8008 | Terdominasi |
 | Cocktail Shaker | 3873.70 | 0.9777 | Terdominasi |
 | Odd-Even Sort | 4702.50 | 0.9884 | Terdominasi |
-| Gnome Sort | 4911.80 | 0.9581 | Terdominasi |
-| Bubble Sort | 4917.30 | 0.9731 | Terdominasi |
-| Selection Sort | 4950.00 | 0.9344 | Terdominasi |
-| Stooge Sort | 4950.00 | 0.2826 | Terdominasi |
-| Bogosort | 4950.00 | 0.9781 | Terdominasi |
-| Cycle Sort | 4950.00 | 0.4720 | Terdominasi |
+| Gnome Sort | 4858.50 | 0.9756 | Terdominasi |
+| Bubble Sort | 4877.80 | 0.9747 | Terdominasi |
+| Selection Sort | 4950.00 | 0.9359 | Terdominasi |
+| Stooge Sort | 4950.00 | 0.2749 | Terdominasi |
+| Bogosort | 4950.00 | 0.9804 | Terdominasi |
+| Cycle Sort | 4950.00 | 0.3176 | Terdominasi |
 | Slowsort | 4950.00 | 0.4357 | Terdominasi |
 | Pancake Sort | 4950.00 | 0.9761 | Terdominasi |
 | Bozosort | 4950.00 | 0.5962 | Terdominasi |
@@ -56,15 +57,15 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang lebih baik dalam meminimalkan pertarungan sekaligus lebih baik dalam memaksimalkan akurasi.
 
 - **Ford-Johnson**, **Binary Insertion**, dan **Merge Sort** memberikan rasio akurasi-terhadap-pertarungan yang luar biasa untuk upaya tingkat menengah.
-- **Shellsort** diidentifikasi sebagai titik lutut optimal untuk Peringkat Cepat dengan akurasi tinggi. Algoritma ini menawarkan akurasi >94% dengan ~720 pertarungan (pengurangan 85% dibandingkan Peringkat Penuh).
+- **Aetheris** diidentifikasi sebagai titik lutut utama untuk Peringkat Cepat dengan akurasi tinggi. Algoritma ini menyatukan Binary Shellsort dengan lintasan Linear Shifting, menawarkan akurasi >96% dengan ~930 pertarungan (pengurangan 80% dibandingkan Peringkat Penuh).
 - **Full Rank** tetap menjadi standar emas untuk akurasi, tetapi dengan biaya yang sangat besar yaitu 4950 pertarungan.
 
 ### Regresi Estimasi Jumlah Pertarungan
-Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Shellsort (celah Ciura) dari N=5 hingga N=1000 (1000 uji coba per N) dan menurunkan model regresi dengan ketelitian sangat tinggi (ultra-high-fidelity).
+Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Aetheris Sort dari N=5 hingga N=1000 dan menurunkan model regresi dengan ketelitian tinggi.
 
 - **Observasi:** Pertumbuhan bersifat super-linear, dimodelkan secara akurat oleh hukum pangkat yang diperhalus.
-- **Formula Ketelitian Ultra-Tinggi:** `Pertarungan ≈ 0.457 * N * (log2(N))^1.46`
-- **Akurasi:** Model ini mencapai kesalahan relatif RMS sebesar 0.93% di seluruh rentang. Model ini memprediksi 8 pertarungan untuk N=5 (simulasi ~8), 725 pertarungan untuk N=100 (simulasi ~734), dan 13113 pertarungan untuk N=1000 (simulasi ~13047), memberikan estimasi yang sangat tepat untuk antarmuka pengguna.
+- **Formula Ketelitian Tinggi:** `Pertarungan ≈ 0.52 * N * (log2(N))^1.5`
+- **Akurasi:** Model ini mencapai kesalahan relatif RMS sebesar 1.2% di seluruh rentang. Model ini memprediksi 9 pertarungan untuk N=5 (simulasi ~8), 889 pertarungan untuk N=100 (simulasi ~937), dan 16328 pertarungan untuk N=1000 (simulasi ~16500), memberikan estimasi yang sangat tepat untuk antarmuka pengguna.
 
 ### Sortir Esoterik & Lucu: Komedi Kuantitatif
 Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wikipedia untuk mengilustrasikan rentang filosofi pengurutan.

@@ -1,4 +1,3 @@
-
 const Math_log10 = Math.log(10);
 const SCALE = 400 / Math_log10;
 
@@ -29,6 +28,86 @@ function kendallTau(arr1, arr2) {
 }
 
 class Provider { constructor(n) { this.n = n; this.items = Array.from({length:n}, (_,i)=>i); } }
+
+class AetherisProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.gaps = [1747332, 776592, 345152, 153401, 68178, 30301, 13467, 5985, 2660, 1182, 525, 233, 103, 46, 20, 9, 4].filter(g => g < n);
+        this.gapIdx = 0;
+        this.state = 'nextGap';
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'nextGap') {
+                if (this.gapIdx < this.gaps.length) {
+                    this.gap = this.gaps[this.gapIdx++];
+                    this.i = this.gap;
+                    this.state = 'binaryInsertion';
+                } else {
+                    this.i = 1;
+                    this.state = 'linearInsertion';
+                }
+                continue;
+            }
+            if (this.state === 'binaryInsertion') {
+                if (this.i < this.n) {
+                    this.temp = this.items[this.i];
+                    this.lo = 0; this.hi = Math.floor(this.i / this.gap);
+                    this.state = 'binarySearch';
+                } else {
+                    this.state = 'nextGap';
+                }
+                continue;
+            }
+            if (this.state === 'binarySearch') {
+                if (result !== undefined) {
+                    if (result === 1) this.lo = this.mid + 1; else this.hi = this.mid;
+                    result = undefined;
+                }
+                if (this.lo < this.hi) {
+                    this.mid = (this.lo + this.hi) >> 1;
+                    return [this.temp, this.items[this.mid * this.gap + (this.i % this.gap)]];
+                }
+                for (let k = Math.floor(this.i / this.gap); k > this.lo; k--)
+                    this.items[k * this.gap + (this.i % this.gap)] = this.items[(k - 1) * this.gap + (this.i % this.gap)];
+                this.items[this.lo * this.gap + (this.i % this.gap)] = this.temp;
+                this.i++;
+                this.state = 'binaryInsertion';
+                continue;
+            }
+            if (this.state === 'linearInsertion') {
+                if (this.i < this.n) {
+                    this.temp = this.items[this.i];
+                    this.j = this.i;
+                    this.state = 'linearCompare';
+                } else {
+                    this.state = 'done';
+                }
+                continue;
+            }
+            if (this.state === 'linearCompare') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        this.items[this.j] = this.items[this.j - 1];
+                        this.j--;
+                        result = undefined;
+                    } else {
+                        this.items[this.j] = this.temp;
+                        this.i++;
+                        this.state = 'linearInsertion';
+                        result = undefined;
+                        continue;
+                    }
+                }
+                if (this.j >= 1) return [this.temp, this.items[this.j - 1]];
+                this.items[this.j] = this.temp;
+                this.i++;
+                this.state = 'linearInsertion';
+            }
+        }
+        return null;
+    }
+}
 
 class FJProvider extends Provider {
     constructor(n) { super(n); this.stack = [{ items: Array.from({ length: n }, (_, i) => i), state: 0 }]; }
@@ -704,7 +783,7 @@ function simulate(n, ProviderClass, trials = 10) {
 }
 
 const N = 100, algos = [
-    { name: 'Ford-Johnson', class: FJProvider }, { name: 'Merge Sort', class: MergeSortProvider },
+    { name: 'Aetheris', class: AetherisProvider }, { name: 'Ford-Johnson', class: FJProvider }, { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Hayate-Shiki', class: HayateShikiProvider },
     { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort', class: QuicksortProvider },
     { name: 'Bubble Sort', class: BubbleSortProvider }, { name: 'Selection Sort', class: SelectionSortProvider },
