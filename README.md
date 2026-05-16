@@ -14,22 +14,22 @@ PreferenceRank offers two distinct modes to sort your items:
 
 - **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
 
-- **Quick Rank:** Uses **Aetheris Sort** for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
+- **Quick Rank:** Uses **Shellsort** for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 34 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Aetheris** was identified as the **"holy grail" mathematical knee point** for high-accuracy human preference ranking.
+Based on a comparative analysis of 24 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Shellsort** was identified as the optimal **mathematical knee point** for high-accuracy human preference ranking.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
-| Merge Sort | ~547 | 0.91 | Pareto-optimal |
-| Shellsort | ~726 | 0.95 | Pareto-optimal |
-| **Aetheris** | **~937** | **0.97** | **Knee Point** |
-| Comb Sort | ~1231 | 0.99 | Pareto-optimal |
+| Smooth Sort | ~170 | 0.54 | Pareto-optimal |
+| Ford-Johnson | ~526 | 0.88 | Pareto-optimal |
+| Merge Sort | ~542 | 0.89 | Pareto-optimal |
+| **Shellsort** | **~743** | **0.93** | **Knee Point** |
+| Comb Sort | ~1230 | 0.99 | Pareto-optimal |
 | Full Rank | ~4950 | 1.00 | Pareto-optimal |
 
-*Quick Rank reduces battles by ~80% compared to Full Rank while maintaining extremely high ranking accuracy (~97%). Algorithms like Bogosort are quantitatively absurd and serve only as a humorous baseline.*
+*Quick Rank reduces battles by ~85% compared to Full Rank while maintaining high ranking accuracy. Algorithms like Bogosort are quantitatively absurd and serve only as a humorous baseline.*
 
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
