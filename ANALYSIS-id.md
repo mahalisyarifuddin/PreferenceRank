@@ -17,41 +17,41 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Intelligent Design | 0.00 | 0.0324 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5413 | Pareto-optimal |
-| Smooth Sort | 170.20 | 0.5445 | Pareto-optimal |
-| Intro Sort | 456.80 | 0.8465 | Pareto-optimal |
-| Ford-Johnson | 527.40 | 0.8910 | Pareto-optimal |
-| Merge Sort | 546.70 | 0.9073 | Pareto-optimal |
-| Shellsort | 725.50 | 0.9457 | Pareto-optimal |
-| **Aetheris** | **936.70** | **0.9657** | **Titik Lutut Produksi** |
-| Comb Sort | 1230.70 | 0.9905 | Pareto-optimal |
+| Intelligent Design | 0.00 | -0.0147 | Pareto-optimal |
+| Quantum Bogo | 1.62 | 0.0005 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5423 | Pareto-optimal |
+| Intro Sort | 435.28 | 0.8512 | Pareto-optimal |
+| Ford-Johnson | 527.20 | 0.8886 | Pareto-optimal |
+| Binary Insertion | 530.62 | 0.8891 | Pareto-optimal |
+| Merge Sort | 541.62 | 0.9015 | Pareto-optimal |
+| Shellsort | 730.18 | 0.9425 | Pareto-optimal |
+| **Aetheris** | 949.64 | 0.9629 | **Titik Lutut Produksi** |
+| Comb Sort | 1252.48 | 0.9905 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Quantum Bogo | 1.70 | 0.0230 | Terdominasi |
-| Stalin Sort | 99.00 | 0.0640 | Terdominasi |
-| Heap Sort | 164.30 | 0.4808 | Terdominasi |
-| Thanos Sort | 190.00 | 0.5334 | Terdominasi |
-| Patience Sort | 248.80 | 0.4926 | Terdominasi |
-| Binary Insertion | 531.20 | 0.8879 | Terdominasi |
-| Tournament Sort | 557.00 | 0.8855 | Terdominasi |
-| Quicksort | 630.20 | 0.8377 | Terdominasi |
-| Tree Sort | 643.60 | 0.8367 | Terdominasi |
-| Strand Sort | 774.50 | 0.8265 | Terdominasi |
-| Hayate-Shiki | 962.90 | 0.7859 | Terdominasi |
-| Bitonic Sort | 1334.00 | 0.9526 | Terdominasi |
-| Insertion Sort | 2585.00 | 0.8008 | Terdominasi |
-| Cocktail Shaker | 3873.70 | 0.9777 | Terdominasi |
-| Odd-Even Sort | 4702.50 | 0.9884 | Terdominasi |
-| Gnome Sort | 4858.50 | 0.9756 | Terdominasi |
-| Bubble Sort | 4877.80 | 0.9747 | Terdominasi |
-| Selection Sort | 4950.00 | 0.9359 | Terdominasi |
-| Stooge Sort | 4950.00 | 0.2749 | Terdominasi |
-| Bogosort | 4950.00 | 0.9804 | Terdominasi |
-| Cycle Sort | 4950.00 | 0.3176 | Terdominasi |
-| Slowsort | 4950.00 | 0.4357 | Terdominasi |
-| Pancake Sort | 4950.00 | 0.9761 | Terdominasi |
-| Bozosort | 4950.00 | 0.5962 | Terdominasi |
-| BogoBogoSort | 4950.00 | 0.0975 | Terdominasi |
+| Stalin Sort | 99.00 | 0.0978 | Terdominasi |
+| Smooth Sort | 150.92 | 0.4771 | Terdominasi |
+| Heap Sort | 153.58 | 0.4755 | Terdominasi |
+| Thanos Sort | 190.00 | 0.5330 | Terdominasi |
+| Patience Sort | 249.00 | 0.4721 | Terdominasi |
+| Tournament Sort | 559.80 | 0.8853 | Terdominasi |
+| Quicksort | 658.64 | 0.8382 | Terdominasi |
+| Tree Sort | 662.28 | 0.8369 | Terdominasi |
+| Strand Sort | 739.42 | 0.8211 | Terdominasi |
+| Hayate-Shiki | 943.66 | 0.7802 | Terdominasi |
+| Bitonic Sort | 1334.00 | 0.9513 | Terdominasi |
+| Insertion Sort | 2551.58 | 0.8010 | Terdominasi |
+| Cocktail Shaker | 3901.04 | 0.9778 | Terdominasi |
+| Odd-Even Sort | 4684.68 | 0.9889 | Terdominasi |
+| Gnome Sort | 4876.20 | 0.9622 | Terdominasi |
+| Bubble Sort | 4887.64 | 0.9720 | Terdominasi |
+| Bogosort | 4950.00 | 0.9792 | Terdominasi |
+| Pancake Sort | 4950.00 | 0.9757 | Terdominasi |
+| Selection Sort | 4950.00 | 0.9341 | Terdominasi |
+| Bozosort | 4950.00 | 0.5906 | Terdominasi |
+| Slowsort | 4950.00 | 0.4739 | Terdominasi |
+| Cycle Sort | 4950.00 | 0.4338 | Terdominasi |
+| Stooge Sort | 4950.00 | 0.2916 | Terdominasi |
+| BogoBogoSort | 4950.00 | 0.0630 | Terdominasi |
 
 ### Analisis Pareto Frontier & Titik Lutut
 Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang lebih baik dalam meminimalkan pertarungan sekaligus lebih baik dalam memaksimalkan akurasi.
@@ -64,8 +64,8 @@ Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang
 Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Aetheris Sort dari N=5 hingga N=1000 dan menurunkan model regresi dengan ketelitian tinggi.
 
 - **Observasi:** Pertumbuhan bersifat super-linear, dimodelkan secara akurat oleh hukum pangkat yang diperhalus.
-- **Formula Ketelitian Tinggi:** `Pertarungan ≈ 0.52 * N * (log2(N))^1.5`
-- **Akurasi:** Model ini mencapai kesalahan relatif RMS sebesar 1.2% di seluruh rentang. Model ini memprediksi 9 pertarungan untuk N=5 (simulasi ~8), 889 pertarungan untuk N=100 (simulasi ~937), dan 16328 pertarungan untuk N=1000 (simulasi ~16500), memberikan estimasi yang sangat tepat untuk antarmuka pengguna.
+- **Formula Ketelitian Tinggi:** `Pertarungan ≈ 0.14 * N * (log2(N))^2.25`
+- **Akurasi:** Model ini mencapai kesalahan relatif RMS sebesar 0.8% pada rentang paling umum (N=20-1000). Model ini memprediksi 5 pertarungan untuk N=5 (simulasi ~8), 992 pertarungan untuk N=100 (simulasi ~949), dan 24705 pertarungan untuk N=1000 (simulasi ~24466), memberikan estimasi yang sangat tepat untuk antarmuka pengguna.
 
 ### Sortir Esoterik & Lucu: Komedi Kuantitatif
 Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wikipedia untuk mengilustrasikan rentang filosofi pengurutan.

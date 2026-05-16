@@ -764,7 +764,7 @@ class FullRankProvider {
     next() { return this.idx < this.pairs.length ? this.pairs[this.idx++] : null; }
 }
 
-function simulate(n, ProviderClass, trials = 10) {
+function simulate(n, ProviderClass, trials = 50) {
     let totalComps = 0, totalTau = 0, maxBattles = n * (n - 1) / 2;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
@@ -802,5 +802,13 @@ const N = 100, algos = [
     { name: 'Strand Sort', class: StrandSortProvider }, { name: 'Patience Sort', class: PatienceSortProvider },
     { name: 'Smooth Sort', class: SmoothSortProvider }
 ];
-console.log(`Simulating N=${N}, trials=10\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
-for (const algo of algos) { try { const res = simulate(N, algo.class); console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`); } catch (e) { console.log(`${algo.name}\tERROR`); } }
+const TRIALS_FINAL = 50;
+console.log(`Simulating N=${N}, trials=${TRIALS_FINAL}\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
+for (const algo of algos) {
+    try {
+        const res = simulate(N, algo.class, TRIALS_FINAL);
+        console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`);
+    } catch (e) {
+        console.log(`${algo.name}\tERROR`);
+    }
+}

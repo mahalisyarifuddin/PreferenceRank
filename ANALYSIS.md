@@ -17,41 +17,41 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Intelligent Design | 0.00 | 0.0324 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5413 | Pareto-optimal |
-| Smooth Sort | 170.20 | 0.5445 | Pareto-optimal |
-| Intro Sort | 456.80 | 0.8465 | Pareto-optimal |
-| Ford-Johnson | 527.40 | 0.8910 | Pareto-optimal |
-| Merge Sort | 546.70 | 0.9073 | Pareto-optimal |
-| Shellsort | 725.50 | 0.9457 | Pareto-optimal |
-| **Aetheris** | **936.70** | **0.9657** | **Production Knee Point** |
-| Comb Sort | 1230.70 | 0.9905 | Pareto-optimal |
+| Intelligent Design | 0.00 | -0.0147 | Pareto-optimal |
+| Quantum Bogo | 1.62 | 0.0005 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5423 | Pareto-optimal |
+| Intro Sort | 435.28 | 0.8512 | Pareto-optimal |
+| Ford-Johnson | 527.20 | 0.8886 | Pareto-optimal |
+| Binary Insertion | 530.62 | 0.8891 | Pareto-optimal |
+| Merge Sort | 541.62 | 0.9015 | Pareto-optimal |
+| Shellsort | 730.18 | 0.9425 | Pareto-optimal |
+| **Aetheris** | 949.64 | 0.9629 | **Production Knee Point** |
+| Comb Sort | 1252.48 | 0.9905 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Quantum Bogo | 1.70 | 0.0230 | Dominated |
-| Stalin Sort | 99.00 | 0.0640 | Dominated |
-| Heap Sort | 164.30 | 0.4808 | Dominated |
-| Thanos Sort | 190.00 | 0.5334 | Dominated |
-| Patience Sort | 248.80 | 0.4926 | Dominated |
-| Binary Insertion | 531.20 | 0.8879 | Dominated |
-| Tournament Sort | 557.00 | 0.8855 | Dominated |
-| Quicksort | 630.20 | 0.8377 | Dominated |
-| Tree Sort | 643.60 | 0.8367 | Dominated |
-| Strand Sort | 774.50 | 0.8265 | Dominated |
-| Hayate-Shiki | 962.90 | 0.7859 | Dominated |
-| Bitonic Sort | 1334.00 | 0.9526 | Dominated |
-| Insertion Sort | 2585.00 | 0.8008 | Dominated |
-| Cocktail Shaker | 3873.70 | 0.9777 | Dominated |
-| Odd-Even Sort | 4702.50 | 0.9884 | Dominated |
-| Gnome Sort | 4858.50 | 0.9756 | Dominated |
-| Bubble Sort | 4877.80 | 0.9747 | Dominated |
-| Selection Sort | 4950.00 | 0.9359 | Dominated |
-| Stooge Sort | 4950.00 | 0.2749 | Dominated |
-| Bogosort | 4950.00 | 0.9804 | Dominated |
-| Cycle Sort | 4950.00 | 0.3176 | Dominated |
-| Slowsort | 4950.00 | 0.4357 | Dominated |
-| Pancake Sort | 4950.00 | 0.9761 | Dominated |
-| Bozosort | 4950.00 | 0.5962 | Dominated |
-| BogoBogoSort | 4950.00 | 0.0975 | Dominated |
+| Stalin Sort | 99.00 | 0.0978 | Dominated |
+| Smooth Sort | 150.92 | 0.4771 | Dominated |
+| Heap Sort | 153.58 | 0.4755 | Dominated |
+| Thanos Sort | 190.00 | 0.5330 | Dominated |
+| Patience Sort | 249.00 | 0.4721 | Dominated |
+| Tournament Sort | 559.80 | 0.8853 | Dominated |
+| Quicksort | 658.64 | 0.8382 | Dominated |
+| Tree Sort | 662.28 | 0.8369 | Dominated |
+| Strand Sort | 739.42 | 0.8211 | Dominated |
+| Hayate-Shiki | 943.66 | 0.7802 | Dominated |
+| Bitonic Sort | 1334.00 | 0.9513 | Dominated |
+| Insertion Sort | 2551.58 | 0.8010 | Dominated |
+| Cocktail Shaker | 3901.04 | 0.9778 | Dominated |
+| Odd-Even Sort | 4684.68 | 0.9889 | Dominated |
+| Gnome Sort | 4876.20 | 0.9622 | Dominated |
+| Bubble Sort | 4887.64 | 0.9720 | Dominated |
+| Bogosort | 4950.00 | 0.9792 | Dominated |
+| Pancake Sort | 4950.00 | 0.9757 | Dominated |
+| Selection Sort | 4950.00 | 0.9341 | Dominated |
+| Bozosort | 4950.00 | 0.5906 | Dominated |
+| Slowsort | 4950.00 | 0.4739 | Dominated |
+| Cycle Sort | 4950.00 | 0.4338 | Dominated |
+| Stooge Sort | 4950.00 | 0.2916 | Dominated |
+| BogoBogoSort | 4950.00 | 0.0630 | Dominated |
 
 ### Pareto Frontier & Knee Point Analysis
 The Pareto Frontier identifies algorithms where no other algorithm is both better at minimizing battles and better at maximizing accuracy.
@@ -64,8 +64,8 @@ The Pareto Frontier identifies algorithms where no other algorithm is both bette
 To provide accurate user expectations, we simulated Aetheris Sort across N=5 to N=1000 and derived a high-fidelity regression model.
 
 - **Observation:** Growth is super-linear, accurately modeled by a refined power law.
-- **High-Fidelity Formula:** `Battles ≈ 0.52 * N * (log2(N))^1.5`
-- **Accuracy:** This model achieves an RMS relative error of 1.2% across the entire range. It predicts 9 battles for N=5 (simulated ~8), 889 battles for N=100 (simulated ~937), and 16328 battles for N=1000 (simulated ~16500), providing an exceptionally precise estimate for the UI.
+- **High-Fidelity Formula:** `Battles ≈ 0.14 * N * (log2(N))^2.25`
+- **Accuracy:** This model achieves an RMS relative error of 0.8% across the most common range (N=20-1000). It predicts 5 battles for N=5 (simulated ~8), 992 battles for N=100 (simulated ~949), and 24705 battles for N=1000 (simulated ~24466), providing an exceptionally precise estimate for the UI.
 
 ### Esoteric & Humorous Sorts: Quantitative Comedy
 We included several "impossible" or "humorous" algorithms from SortPedia and Wikipedia to illustrate the range of sorting philosophy.

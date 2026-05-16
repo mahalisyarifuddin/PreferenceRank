@@ -1,6 +1,6 @@
 const algos = ["Aetheris","Ford-Johnson","Merge Sort","Hayate-Shiki","Shellsort","Quicksort","Bubble Sort","Selection Sort","Insertion Sort","Binary Insertion","Gnome Sort","Stooge Sort","Bogosort","Full Rank","Cycle Sort","Bitonic Sort","Heap Sort","Comb Sort","Tournament Sort","Odd-Even Sort","Slowsort","Pancake Sort","Cocktail Shaker","Bozosort","Tree Sort","BogoBogoSort","Stalin Sort","Thanos Sort","Miracle Sort","Intelligent Design","Quantum Bogo","Intro Sort","Strand Sort","Patience Sort","Smooth Sort"];
-const battles = [936.7,527.4,546.7,962.9,725.5,630.2,4877.8,4950,2585,531.2,4858.5,4950,4950,4950,4950,1334,164.3,1230.7,557,4702.5,4950,4950,3873.7,4950,643.6,4950,99,190,99,0,1.7,456.8,774.5,248.8,170.2];
-const tau = [0.9657,0.891,0.9073,0.7859,0.9457,0.8377,0.9747,0.9359,0.8008,0.8879,0.9756,0.2749,0.9804,1,0.3176,0.9526,0.4808,0.9905,0.8855,0.9884,0.4357,0.9761,0.9777,0.5962,0.8367,0.0975,0.064,0.5334,0.5413,0.0324,0.023,0.8465,0.8265,0.4926,0.5445];
+const battles = [949.64,527.2,541.62,943.66,730.18,658.64,4887.64,4950,2551.58,530.62,4876.2,4950,4950,4950,4950,1334,153.58,1252.48,559.8,4684.68,4950,4950,3901.04,4950,662.28,4950,99,190,99,0,1.62,435.28,739.42,249,150.92];
+const tau = [0.9629,0.8886,0.9015,0.7802,0.9425,0.8382,0.972,0.9341,0.801,0.8891,0.9622,0.2916,0.9792,1,0.4338,0.9513,0.4755,0.9905,0.8853,0.9889,0.4739,0.9757,0.9778,0.5906,0.8369,0.063,0.0978,0.533,0.5423,-0.0147,0.0005,0.8512,0.8211,0.4721,0.4771];
 
 function pareto_mask(x, y) {
     const n = x.length, mask = new Array(n).fill(true);
