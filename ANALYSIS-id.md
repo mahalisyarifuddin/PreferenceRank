@@ -75,6 +75,8 @@ Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wi
 - **Thanos Sort:** Menghapus setengah dari alam semesta (data) untuk mengembalikan keteraturan. Algoritma ini menunjukkan akurasi yang mengejutkan untuk jumlah pertarungan yang rendah (~190), namun dengan konsekuensi kehilangan setengah dari pilihan Anda secara permanen.
 - **Miracle Sort:** Menunggu keajaiban untuk mengurutkan data. Dalam pengujian kami, algoritma ini melakukan satu sapuan (~99 pertarungan) dan kemudian menyerah pada keajaiban tersebut.
 
+- **Kompatibilitas Visualizer Sortir:** Versi umum dari algoritma Aetheris Sort tersedia di `research/aetheris_visualizer.js`, yang kompatibel dengan API [SortVisualizer.com](https://sortvisualizer.com/docs/).
+
 ---
 
 ## 2. Analisis Konvergensi Bradley-Terry

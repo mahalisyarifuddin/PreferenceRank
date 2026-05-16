@@ -75,6 +75,8 @@ We included several "impossible" or "humorous" algorithms from SortPedia and Wik
 - **Thanos Sort:** Deletes half of the universe (data) to restore order. It shows surprisingly high accuracy for its low battle count (~190), but at the cost of permanently losing half of the items.
 - **Miracle Sort:** Waits for a miracle to sort the data. In our benchmark, it performs a single pass (~99 battles) and then gives up on the miracle.
 
+- **Sort Visualizer Compatibility:** A general-purpose version of the Aetheris Sort algorithm is available in `research/aetheris_visualizer.js`, compatible with the [SortVisualizer.com](https://sortvisualizer.com/docs/) API.
+
 ---
 
 ## 2. Bradley-Terry Convergence Analysis
