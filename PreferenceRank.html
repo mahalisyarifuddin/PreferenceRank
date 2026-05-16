@@ -1022,7 +1022,6 @@
 					return count * (count - 1) / 2;
 				}
 				constructor(count) {
-					// ⚡ Bolt: Fast fixed-length array allocation
 					const len = count * (count - 1) / 2;
 					this.pairs = new Array(len);
 					let k = 0;
@@ -1049,7 +1048,6 @@
 			}
 			class QuickPairProvider {
 				static estimate(n) {
-					// ⚡ Bolt: Ultra-high-fidelity regression for Shellsort average battles (N=5-1000, RMS Error 0.9%)
 					return Math.round(0.457 * n * Math.pow(Math.log2(n), 1.46));
 				}
 				constructor(count) {
@@ -1436,7 +1434,6 @@
 					const prevLogS = new Float64Array(n);
 					for (let i = 0; i < n; i++) prevLogS[i] = Math.log(s[i]);
 
-					// ⚡ Bolt: Pre-allocate array to cache Math.log results and eliminate redundant O(N) calls
 					const currentLogs = new Float64Array(n);
 
 					for (let iter = 0; iter < 200; iter++) {
@@ -1473,9 +1470,10 @@
 					for (let i = 0; i < n; i++)
 						rawScores[i] = 1000 + Math.log(s[i]) * INV_LOG10;
 					this._rawScores = Array.from(rawScores);
-					let low = -1000, high = 1000, offset = 0;
-					// ⚡ Bolt: Removed Math.max for scalar checks in hot path
 					const target = 1000 * n;
+					let maxRaw = rawScores[0];
+					for (let j = 1; j < n; j++) if (rawScores[j] > maxRaw) maxRaw = rawScores[j];
+					let low = -(maxRaw + 1), high = 1, offset = 0;
 					for (let i = 0; i < 40; i++) {
 						let mid = (low + high) / 2;
 						let sum = 0;
