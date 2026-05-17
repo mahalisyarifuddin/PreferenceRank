@@ -4,7 +4,7 @@ This document summarizes the extensive benchmarking and analysis performed to op
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared 33 sorting algorithms to determine the ultimate balance between user effort (battles) and ranking accuracy (Kendall Tau).
+We compared 45 sorting algorithms to determine the ultimate balance between user effort (battles) and ranking accuracy (Kendall Tau).
 
 ### Benchmarking Methodology
 - **N Value:** 100
@@ -17,46 +17,57 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Intelligent Design | 0.00 | -0.0056 | Pareto-optimal |
-| Quantum Bogo | 1.62 | 0.0078 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5464 | Pareto-optimal |
-| Intro Sort | 420.16 | 0.8498 | Pareto-optimal |
-| Ford-Johnson | 526.98 | 0.8885 | Pareto-optimal |
-| Merge Sort | 542.62 | 0.9043 | Pareto-optimal |
-| **Shellsort** | 728.94 | 0.9414 | **Production Knee Point** |
-| Comb Sort | 1234.66 | 0.9902 | Pareto-optimal |
+| Socialist Sort | 0.00 | -0.0057 | Pareto-optimal |
+| Quantum Bogo | 2.00 | 0.0227 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5333 | Pareto-optimal |
+| Thanos Sort | 190.00 | 0.5457 | Pareto-optimal |
+| Hater Sort | 200.00 | 0.6632 | Pareto-optimal |
+| Random Sort | 264.10 | 0.6943 | Pareto-optimal |
+| Intro Sort | 423.00 | 0.8545 | Pareto-optimal |
+| Ford-Johnson | 526.30 | 0.8876 | Pareto-optimal |
+| Merge Sort | 542.00 | 0.9043 | Pareto-optimal |
+| **Shellsort** | 733.00 | 0.9451 | **Production Knee Point** |
+| Comb Sort | 1210.90 | 0.9904 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Stalin Sort | 99.00 | 0.0701 | Dominated |
-| Smooth Sort | 152.42 | 0.4740 | Dominated |
-| Heap Sort | 152.94 | 0.4841 | Dominated |
-| Thanos Sort | 190.00 | 0.5322 | Dominated |
-| Patience Sort | 251.70 | 0.4875 | Dominated |
-| Binary Insertion | 531.08 | 0.8875 | Dominated |
-| Tournament Sort | 561.58 | 0.8872 | Dominated |
-| Tree Sort | 649.72 | 0.8375 | Dominated |
-| Quicksort | 650.62 | 0.8369 | Dominated |
-| Strand Sort | 753.62 | 0.8169 | Dominated |
-| Hayate-Shiki | 932.42 | 0.7835 | Dominated |
-| Bitonic Sort | 1334.00 | 0.9487 | Dominated |
-| Insertion Sort | 2619.90 | 0.8068 | Dominated |
-| Cocktail Shaker | 3868.36 | 0.9778 | Dominated |
-| Odd-Even Sort | 4658.94 | 0.9881 | Dominated |
-| Gnome Sort | 4859.46 | 0.9623 | Dominated |
-| Bubble Sort | 4896.92 | 0.9723 | Dominated |
-| Bogosort | 4950.00 | 0.9784 | Dominated |
-| Pancake Sort | 4950.00 | 0.9757 | Dominated |
-| Selection Sort | 4950.00 | 0.9331 | Dominated |
-| Bozosort | 4950.00 | 0.5856 | Dominated |
-| Cycle Sort | 4950.00 | 0.4677 | Dominated |
-| Slowsort | 4950.00 | 0.4627 | Dominated |
-| Stooge Sort | 4950.00 | 0.2843 | Dominated |
-| BogoBogoSort | 4950.00 | 0.0518 | Dominated |
+| Exit Sort | 0.00 | -0.0146 | Dominated |
+| Intelligent Design | 0.00 | -0.0098 | Dominated |
+| Genghis Khan Sort | 99.00 | 0.2963 | Dominated |
+| Stalin Sort | 99.00 | 0.0945 | Dominated |
+| Sleep Sort | 100.00 | 0.0030 | Dominated |
+| Heap Sort | 146.40 | 0.4752 | Dominated |
+| Smooth Sort | 156.40 | 0.4898 | Dominated |
+| Patience Sort | 255.50 | 0.4869 | Dominated |
+| Dual-Pivot Quicksort | 527.90 | 0.8377 | Dominated |
+| Binary Insertion | 529.40 | 0.8855 | Dominated |
+| Tournament Sort | 561.00 | 0.8918 | Dominated |
+| Quicksort | 642.60 | 0.8354 | Dominated |
+| Tree Sort | 667.90 | 0.8363 | Dominated |
+| Strand Sort | 709.70 | 0.8333 | Dominated |
+| Hayate-Shiki | 965.50 | 0.7921 | Dominated |
+| Bitonic Sort | 1334.00 | 0.9503 | Dominated |
+| Circle Sort | 2180.40 | 0.9715 | Dominated |
+| Insertion Sort | 2506.40 | 0.8046 | Dominated |
+| Cocktail Shaker | 4022.50 | 0.9815 | Dominated |
+| Odd-Even Sort | 4554.00 | 0.9855 | Dominated |
+| Gnome Sort | 4844.00 | 0.9660 | Dominated |
+| Bubble Sort | 4865.60 | 0.9743 | Dominated |
+| BogoBogoSort | 4950.00 | 0.0848 | Dominated |
+| Bogosort | 4950.00 | 0.9794 | Dominated |
+| Bozosort | 4950.00 | 0.5606 | Dominated |
+| Cocktail Selection | 4950.00 | 0.9472 | Dominated |
+| Cycle Sort | 4950.00 | 0.1995 | Dominated |
+| Double Selection | 4950.00 | 0.9378 | Dominated |
+| Pancake Sort | 4950.00 | 0.9750 | Dominated |
+| Selection Sort | 4950.00 | 0.9312 | Dominated |
+| Silly Sort | 4950.00 | 0.1402 | Dominated |
+| Slowsort | 4950.00 | 0.4629 | Dominated |
+| Stooge Sort | 4950.00 | 0.2820 | Dominated |
 
 ### Pareto Frontier & Knee Point Analysis
 The Pareto Frontier identifies algorithms where no other algorithm is both better at minimizing battles and better at maximizing accuracy.
 
-- **Ford-Johnson**, **Binary Insertion**, and **Merge Sort** provide an exceptional accuracy-to-battle ratio for mid-range effort.
-- **Shellsort** is identified as the optimal knee point for high-accuracy Quick Rank. It offers >94% accuracy for ~720 battles (an 85% reduction vs. Full Rank).
+- **Ford-Johnson**, **Intro Sort**, and **Merge Sort** provide an exceptional accuracy-to-battle ratio for mid-range effort.
+- **Shellsort** is identified as the optimal knee point for high-accuracy Quick Rank. It offers >94% accuracy for ~730 battles (an 85% reduction vs. Full Rank).
 - **Full Rank** remains the gold standard for accuracy but at a massive cost of 4950 battles.
 
 ### Battle Count Estimate Regression
@@ -69,10 +80,10 @@ To provide accurate user expectations, we simulated Shellsort (Ciura's gaps) acr
 ### Esoteric & Humorous Sorts: Quantitative Comedy
 We included several "impossible" or "humorous" algorithms from SortPedia and Wikipedia to illustrate the range of sorting philosophy.
 
-- **Intelligent Design Sort:** Assumes the Creator already sorted the list. It generates **0 battles** because it immediately terminates, yielding zero information gain.
-- **Quantum Bogo Sort:** Generates a random permutation and destroys the universe if it's not sorted. In our benchmark, it generates **~1.5 battles** because it terminates (destroys the universe) the moment it encounters a single out-of-order pair, which happens almost immediately in a random list.
-- **Thanos Sort:** Deletes half of the universe (data) to restore order. It shows surprisingly high accuracy for its low battle count (~190), but at the cost of permanently losing half of the items.
-- **Miracle Sort:** Waits for a miracle to sort the data. In our benchmark, it performs a single pass (~99 battles) and then gives up on the miracle.
+- **Socialist Sort:** Assumes all items are already equal and thus already sorted. It generates **0 battles**.
+- **Quantum Bogo Sort:** Generates a random permutation and destroys the universe if it's not sorted. In our benchmark, it generates **~2 battles** because it terminates the moment it encounters a single out-of-order pair.
+- **Thanos Sort:** Deletes half of the universe (data) to restore order. It shows surprisingly high accuracy for its low battle count (~190).
+- **Miracle Sort:** Waits for a miracle to sort the data. In our benchmark, it performs a single pass (~99 battles) and then gives up.
 
 ---
 
