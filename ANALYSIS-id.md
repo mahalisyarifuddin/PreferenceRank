@@ -17,57 +17,57 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Socialist Sort | 0.00 | -0.0057 | Pareto-optimal |
-| Quantum Bogo | 2.00 | 0.0227 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5333 | Pareto-optimal |
-| Thanos Sort | 190.00 | 0.5457 | Pareto-optimal |
-| Hater Sort | 200.00 | 0.6632 | Pareto-optimal |
-| Random Sort | 264.10 | 0.6943 | Pareto-optimal |
-| Intro Sort | 423.00 | 0.8545 | Pareto-optimal |
-| Ford-Johnson | 526.30 | 0.8876 | Pareto-optimal |
-| Merge Sort | 542.00 | 0.9043 | Pareto-optimal |
-| **Shellsort** | 733.00 | 0.9451 | **Titik Lutut Produksi** |
-| Comb Sort | 1210.90 | 0.9904 | Pareto-optimal |
+| Exit Sort | 0.00 | 0.0404 | Pareto-optimal |
+| Quantum Bogo | 1.70 | 0.0516 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5541 | Pareto-optimal |
+| Hater Sort | 200.00 | 0.6513 | Pareto-optimal |
+| Intro Sort | 407.70 | 0.8538 | Pareto-optimal |
+| Ford-Johnson | 526.70 | 0.8925 | Pareto-optimal |
+| Merge Sort | 542.90 | 0.9036 | Pareto-optimal |
+| **Shellsort** | 744.40 | 0.9434 | **Titik Lutut Produksi** |
+| Comb Sort | 1260.40 | 0.9906 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Exit Sort | 0.00 | -0.0146 | Terdominasi |
-| Intelligent Design | 0.00 | -0.0098 | Terdominasi |
-| Genghis Khan Sort | 99.00 | 0.2963 | Terdominasi |
-| Stalin Sort | 99.00 | 0.0945 | Terdominasi |
-| Sleep Sort | 100.00 | 0.0030 | Terdominasi |
-| Heap Sort | 146.40 | 0.4752 | Terdominasi |
-| Smooth Sort | 156.40 | 0.4898 | Terdominasi |
-| Patience Sort | 255.50 | 0.4869 | Terdominasi |
-| Dual-Pivot Quicksort | 527.90 | 0.8377 | Terdominasi |
-| Binary Insertion | 529.40 | 0.8855 | Terdominasi |
-| Tournament Sort | 561.00 | 0.8918 | Terdominasi |
-| Quicksort | 642.60 | 0.8354 | Terdominasi |
-| Tree Sort | 667.90 | 0.8363 | Terdominasi |
-| Strand Sort | 709.70 | 0.8333 | Terdominasi |
-| Hayate-Shiki | 965.50 | 0.7921 | Terdominasi |
+| Intelligent Design | 0.00 | -0.0036 | Terdominasi |
+| Socialist Sort | 0.00 | -0.0389 | Terdominasi |
+| Genghis Khan Sort | 99.00 | 0.3765 | Terdominasi |
+| Stalin Sort | 99.00 | 0.1075 | Terdominasi |
+| Sleep Sort | 100.00 | 0.0046 | Terdominasi |
+| Smooth Sort | 141.80 | 0.4803 | Terdominasi |
+| Heap Sort | 146.10 | 0.4937 | Terdominasi |
+| Random Sort | 176.50 | 0.5124 | Terdominasi |
+| Thanos Sort | 190.00 | 0.5288 | Terdominasi |
+| Patience Sort | 250.70 | 0.5142 | Terdominasi |
+| Dual-Pivot Quicksort | 484.60 | 0.8255 | Terdominasi |
+| Binary Insertion | 530.20 | 0.8850 | Terdominasi |
+| Tournament Sort | 552.70 | 0.8869 | Terdominasi |
+| Quicksort | 637.60 | 0.8416 | Terdominasi |
+| Tree Sort | 679.70 | 0.8392 | Terdominasi |
+| Strand Sort | 736.80 | 0.8183 | Terdominasi |
+| Hayate-Shiki | 928.50 | 0.7728 | Terdominasi |
 | Bitonic Sort | 1334.00 | 0.9503 | Terdominasi |
-| Circle Sort | 2180.40 | 0.9715 | Terdominasi |
-| Insertion Sort | 2506.40 | 0.8046 | Terdominasi |
-| Cocktail Shaker | 4022.50 | 0.9815 | Terdominasi |
-| Odd-Even Sort | 4554.00 | 0.9855 | Terdominasi |
-| Gnome Sort | 4844.00 | 0.9660 | Terdominasi |
-| Bubble Sort | 4865.60 | 0.9743 | Terdominasi |
-| BogoBogoSort | 4950.00 | 0.0848 | Terdominasi |
-| Bogosort | 4950.00 | 0.9794 | Terdominasi |
-| Bozosort | 4950.00 | 0.5606 | Terdominasi |
-| Cocktail Selection | 4950.00 | 0.9472 | Terdominasi |
-| Cycle Sort | 4950.00 | 0.1995 | Terdominasi |
-| Double Selection | 4950.00 | 0.9378 | Terdominasi |
-| Pancake Sort | 4950.00 | 0.9750 | Terdominasi |
-| Selection Sort | 4950.00 | 0.9312 | Terdominasi |
-| Silly Sort | 4950.00 | 0.1402 | Terdominasi |
-| Slowsort | 4950.00 | 0.4629 | Terdominasi |
-| Stooge Sort | 4950.00 | 0.2820 | Terdominasi |
+| Circle Sort | 2148.80 | 0.9733 | Terdominasi |
+| Insertion Sort | 2591.70 | 0.8034 | Terdominasi |
+| Cocktail Shaker | 3942.20 | 0.9766 | Terdominasi |
+| Odd-Even Sort | 4742.10 | 0.9874 | Terdominasi |
+| Bubble Sort | 4886.70 | 0.9730 | Terdominasi |
+| Gnome Sort | 4921.10 | 0.9517 | Terdominasi |
+| BogoBogoSort | 4950.00 | 0.0391 | Terdominasi |
+| Bogosort | 4950.00 | 0.9799 | Terdominasi |
+| Bozosort | 4950.00 | 0.6008 | Terdominasi |
+| Cocktail Selection | 4950.00 | 0.9460 | Terdominasi |
+| Cycle Sort | 4950.00 | 0.3437 | Terdominasi |
+| Double Selection | 4950.00 | 0.9410 | Terdominasi |
+| Pancake Sort | 4950.00 | 0.9756 | Terdominasi |
+| Selection Sort | 4950.00 | 0.9354 | Terdominasi |
+| Silly Sort | 4950.00 | 0.1095 | Terdominasi |
+| Slowsort | 4950.00 | 0.4712 | Terdominasi |
+| Stooge Sort | 4950.00 | 0.2829 | Terdominasi |
 
 ### Analisis Pareto Frontier & Titik Lutut
 Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang lebih baik dalam meminimalkan pertarungan sekaligus lebih baik dalam memaksimalkan akurasi.
 
 - **Ford-Johnson**, **Intro Sort**, dan **Merge Sort** memberikan rasio akurasi-terhadap-pertarungan yang luar biasa untuk upaya tingkat menengah.
-- **Shellsort** diidentifikasi sebagai titik lutut optimal untuk Peringkat Cepat dengan akurasi tinggi. Algoritma ini menawarkan akurasi >94% dengan ~730 pertarungan (pengurangan 85% dibandingkan Peringkat Penuh).
+- **Shellsort** diidentifikasi sebagai titik lutut optimal untuk Peringkat Cepat dengan akurasi tinggi. Algoritma ini menawarkan akurasi >94% dengan ~744 pertarungan (pengurangan 85% dibandingkan Peringkat Penuh).
 - **Full Rank** tetap menjadi standar emas untuk akurasi, tetapi dengan biaya yang sangat besar yaitu 4950 pertarungan.
 
 ### Regresi Estimasi Jumlah Pertarungan
@@ -81,7 +81,7 @@ Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Shellsort 
 Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wikipedia untuk mengilustrasikan rentang filosofi pengurutan.
 
 - **Socialist Sort:** Mengasumsikan semua item sudah sama dan dengan demikian sudah terurut. Algoritma ini menghasilkan **0 pertarungan**.
-- **Quantum Bogo Sort:** Menghasilkan permutasi acak dan menghancurkan alam semesta jika tidak terurut. Dalam pengujian kami, algoritma ini menghasilkan **~2 pertarungan** karena langsung berhenti saat menemukan satu pasangan yang tidak berurutan.
+- **Quantum Bogo Sort:** Menghasilkan permutasi acak dan menghancurkan alam semesta jika tidak terurut. Dalam pengujian kami, algoritma ini menghasilkan **~1.7 pertarungan** karena langsung berhenti saat menemukan satu pasangan yang tidak berurutan.
 - **Thanos Sort:** Menghapus setengah dari alam semesta (data) untuk mengembalikan keteraturan. Algoritma ini menunjukkan akurasi yang mengejutkan untuk jumlah pertarungan yang rendah (~190).
 - **Miracle Sort:** Menunggu keajaiban untuk mengurutkan data. Dalam pengujian kami, algoritma ini melakukan satu sapuan (~99 pertarungan) dan kemudian menyerah.
 
