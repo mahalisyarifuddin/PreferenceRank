@@ -1285,6 +1285,7 @@
 				}
 				restoreBattle(battle) {
 					Object.assign(this, battle);
+					this.dirty = true;
 					this.showGrade = !!battle.showGrade;
 					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
