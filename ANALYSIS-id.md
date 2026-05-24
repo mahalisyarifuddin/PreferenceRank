@@ -40,7 +40,7 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 | Patience Sort | 243.20 | 0.4531 | Terdominasi |
 | Dual-Pivot Quicksort | 500.80 | 0.8404 | Terdominasi |
 | Tournament Sort | 558.80 | 0.8796 | Terdominasi |
-| Quicksort | 612.70 | 0.8364 | Terdominasi |
+| Quicksort (RTL) | 612.70 | 0.8364 | Terdominasi |
 | Quicksort (LTR) | 624.10 | 0.8321 | Terdominasi |
 | Quicksort (Random) | 655.60 | 0.8362 | Terdominasi |
 | Tree Sort | 663.10 | 0.8354 | Terdominasi |

@@ -40,7 +40,7 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 | Patience Sort | 243.20 | 0.4531 | Dominated |
 | Dual-Pivot Quicksort | 500.80 | 0.8404 | Dominated |
 | Tournament Sort | 558.80 | 0.8796 | Dominated |
-| Quicksort | 612.70 | 0.8364 | Dominated |
+| Quicksort (RTL) | 612.70 | 0.8364 | Dominated |
 | Quicksort (LTR) | 624.10 | 0.8321 | Dominated |
 | Quicksort (Random) | 655.60 | 0.8362 | Dominated |
 | Tree Sort | 663.10 | 0.8354 | Dominated |

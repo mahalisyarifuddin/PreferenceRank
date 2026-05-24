@@ -70,7 +70,7 @@ class FJProvider extends Provider {
     pop(res) { this.stack.pop(); if (this.stack.length > 0) { const p = this.stack[this.stack.length - 1]; p.childResult = res; p.state++; } }
 }
 
-class QuicksortProvider extends Provider {
+class QuicksortRTLProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
@@ -897,7 +897,7 @@ function simulate(n, ProviderClass, trials = 10) {
 const N = 100, algos = [
     { name: 'Ford-Johnson', class: FJProvider }, { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Hayate-Shiki', class: HayateShikiProvider },
-    { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort', class: QuicksortProvider },
+    { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort (RTL)', class: QuicksortRTLProvider },
     { name: 'Quicksort (LTR)', class: QuicksortLTRProvider }, { name: 'Quicksort (Random)', class: QuicksortRandomProvider },
     { name: 'Bubble Sort', class: BubbleSortProvider }, { name: 'Selection Sort', class: SelectionSortProvider },
     { name: 'Insertion Sort', class: InsertionSortProvider }, { name: 'Binary Insertion', class: BinaryInsertionSortProvider },
