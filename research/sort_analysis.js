@@ -70,12 +70,53 @@ class FJProvider extends Provider {
     pop(res) { this.stack.pop(); if (this.stack.length > 0) { const p = this.stack[this.stack.length - 1]; p.childResult = res; p.state++; } }
 }
 
-class QuicksortProvider extends Provider {
+class QuicksortRTLProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
             if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
                 [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } else continue;
+            }
+            if (this.state === 'partition') {
+                if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
+                if (this.j < this.high) return [this.items[this.j], this.pivot];
+                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
+                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
+            }
+        } return null;
+    }
+}
+
+class QuicksortLTRProvider extends Provider {
+    constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
+    next(result) {
+        while (this.stack.length > 0 || this.state !== 'done') {
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
+                [this.low, this.high] = this.stack.pop(); if (this.low < this.high) {
+                    [this.items[this.low], this.items[this.high]] = [this.items[this.high], this.items[this.low]];
+                    this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition';
+                } else continue;
+            }
+            if (this.state === 'partition') {
+                if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
+                if (this.j < this.high) return [this.items[this.j], this.pivot];
+                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
+                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
+            }
+        } return null;
+    }
+}
+
+class QuicksortRandomProvider extends Provider {
+    constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
+    next(result) {
+        while (this.stack.length > 0 || this.state !== 'done') {
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
+                [this.low, this.high] = this.stack.pop(); if (this.low < this.high) {
+                    let r = Math.floor(Math.random() * (this.high - this.low + 1)) + this.low;
+                    [this.items[r], this.items[this.high]] = [this.items[this.high], this.items[r]];
+                    this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition';
+                } else continue;
             }
             if (this.state === 'partition') {
                 if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
@@ -856,7 +897,8 @@ function simulate(n, ProviderClass, trials = 10) {
 const N = 100, algos = [
     { name: 'Ford-Johnson', class: FJProvider }, { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Hayate-Shiki', class: HayateShikiProvider },
-    { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort', class: QuicksortProvider },
+    { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort (RTL)', class: QuicksortRTLProvider },
+    { name: 'Quicksort (LTR)', class: QuicksortLTRProvider }, { name: 'Quicksort (Random)', class: QuicksortRandomProvider },
     { name: 'Bubble Sort', class: BubbleSortProvider }, { name: 'Selection Sort', class: SelectionSortProvider },
     { name: 'Insertion Sort', class: InsertionSortProvider }, { name: 'Binary Insertion', class: BinaryInsertionSortProvider },
     { name: 'Gnome Sort', class: GnomeSortProvider }, { name: 'Stooge Sort', class: StoogeSortProvider },
