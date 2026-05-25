@@ -17,54 +17,54 @@ The table is partitioned by Pareto status and sorted by Avg Battles (ascending),
 
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Socialist Sort | 0.00 | 0.0014 | Pareto-optimal |
-| Quantum Bogo | 2.00 | 0.0398 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5384 | Pareto-optimal |
-| Hater Sort | 200.00 | 0.6546 | Pareto-optimal |
-| Intro Sort | 402.10 | 0.8538 | Pareto-optimal |
-| Ford-Johnson | 526.10 | 0.8866 | Pareto-optimal |
-| Binary Insertion | 532.20 | 0.8873 | Pareto-optimal |
-| Merge Sort | 541.80 | 0.9040 | Pareto-optimal |
-| **Shellsort** | 731.10 | 0.9440 | **Production Knee Point** |
-| Comb Sort | 1240.60 | 0.9909 | Pareto-optimal |
+| Socialist Sort | 0.00 | 0.0077 | Pareto-optimal |
+| Quantum Bogo | 1.78 | 0.0082 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5423 | Pareto-optimal |
+| Hater Sort | 200.00 | 0.6613 | Pareto-optimal |
+| Intro Sort | 393.40 | 0.8071 | Pareto-optimal |
+| Dual-Pivot Quicksort | 481.19 | 0.8348 | Pareto-optimal |
+| Ford-Johnson | 527.05 | 0.8877 | Pareto-optimal |
+| Binary Insertion | 530.07 | 0.8889 | Pareto-optimal |
+| Merge Sort | 541.53 | 0.9037 | Pareto-optimal |
+| **Shellsort** | 734.36 | 0.9432 | **Production Knee Point** |
+| Comb Sort | 1242.58 | 0.9904 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Exit Sort | 0.00 | -0.0305 | Dominated |
-| Intelligent Design | 0.00 | -0.0489 | Dominated |
-| Genghis Khan Sort | 99.00 | 0.3277 | Dominated |
-| Stalin Sort | 99.00 | 0.0840 | Dominated |
-| Sleep Sort | 100.00 | 0.0345 | Dominated |
-| Heap Sort | 148.40 | 0.4863 | Dominated |
-| Smooth Sort | 155.00 | 0.4589 | Dominated |
-| Thanos Sort | 190.00 | 0.5288 | Dominated |
-| Random Sort | 199.90 | 0.5305 | Dominated |
-| Patience Sort | 245.20 | 0.4737 | Dominated |
-| Dual-Pivot Quicksort | 481.50 | 0.8351 | Dominated |
-| Tournament Sort | 559.00 | 0.8807 | Dominated |
-| Parallel Merge Sort | 560.50 | 0.8857 | Dominated |
-| Quicksort (LTR) | 627.60 | 0.8341 | Dominated |
-| Quicksort (RTL) | 643.40 | 0.8396 | Dominated |
-| Tree Sort | 656.10 | 0.8380 | Dominated |
-| Quicksort (Random) | 669.80 | 0.8389 | Dominated |
-| Strand Sort | 745.80 | 0.8183 | Dominated |
-| Hayate-Shiki | 919.50 | 0.7874 | Dominated |
-| Bitonic Sort | 1334.00 | 0.9482 | Dominated |
-| Circle Sort | 2180.40 | 0.9728 | Dominated |
-| Insertion Sort | 2534.50 | 0.8076 | Dominated |
-| Cocktail Shaker | 3844.80 | 0.9787 | Dominated |
-| Odd-Even Sort | 4722.30 | 0.9891 | Dominated |
-| Gnome Sort | 4857.50 | 0.9486 | Dominated |
-| Bubble Sort | 4886.00 | 0.9721 | Dominated |
-| Bogosort | 4950.00 | 0.9809 | Dominated |
-| Pancake Sort | 4950.00 | 0.9756 | Dominated |
-| Cocktail Selection | 4950.00 | 0.9478 | Dominated |
-| Double Selection | 4950.00 | 0.9427 | Dominated |
-| Selection Sort | 4950.00 | 0.9329 | Dominated |
-| Bozosort | 4950.00 | 0.5693 | Dominated |
-| Slowsort | 4950.00 | 0.4585 | Dominated |
-| Cycle Sort | 4950.00 | 0.4049 | Dominated |
-| Stooge Sort | 4950.00 | 0.2790 | Dominated |
-| Silly Sort | 4950.00 | 0.1081 | Dominated |
-| BogoBogoSort | 4950.00 | 0.0418 | Dominated |
+| Exit Sort | 0.00 | 0.0040 | Dominated |
+| Intelligent Design | 0.00 | -0.0024 | Dominated |
+| Genghis Khan Sort | 99.00 | 0.3556 | Dominated |
+| Stalin Sort | 99.00 | 0.0933 | Dominated |
+| Sleep Sort | 100.00 | 0.0106 | Dominated |
+| Heap Sort | 150.66 | 0.4814 | Dominated |
+| Smooth Sort | 151.44 | 0.4853 | Dominated |
+| Thanos Sort | 190.00 | 0.5373 | Dominated |
+| Patience Sort | 248.23 | 0.4662 | Dominated |
+| Random Sort | 264.94 | 0.6487 | Dominated |
+| Tournament Sort | 557.57 | 0.8872 | Dominated |
+| Parallel Merge Sort | 559.65 | 0.8862 | Dominated |
+| Tree Sort | 641.35 | 0.8379 | Dominated |
+| Quicksort (LTR) | 643.17 | 0.8373 | Dominated |
+| Quicksort (Random) | 645.64 | 0.8365 | Dominated |
+| Quicksort (RTL) | 648.81 | 0.8380 | Dominated |
+| Strand Sort | 747.55 | 0.8199 | Dominated |
+| Hayate-Shiki | 951.19 | 0.7884 | Dominated |
+| Bitonic Sort | 1334.00 | 0.9496 | Dominated |
+| Circle Sort | 2221.48 | 0.9743 | Dominated |
+| Insertion Sort | 2558.51 | 0.8016 | Dominated |
+| Cocktail Shaker | 3888.84 | 0.9779 | Dominated |
+| Odd-Even Sort | 4712.40 | 0.9892 | Dominated |
+| Gnome Sort | 4847.01 | 0.9597 | Dominated |
+| Bubble Sort | 4890.31 | 0.9721 | Dominated |
+| Bogosort | 4950.00 | 0.9789 | Dominated |
+| Pancake Sort | 4950.00 | 0.9760 | Dominated |
+| Cocktail Selection | 4950.00 | 0.9479 | Dominated |
+| Double Selection | 4950.00 | 0.9417 | Dominated |
+| Selection Sort | 4950.00 | 0.9336 | Dominated |
+| Bozosort | 4950.00 | 0.5866 | Dominated |
+| Cycle Sort | 4950.00 | 0.4901 | Dominated |
+| Slowsort | 4950.00 | 0.4634 | Dominated |
+| Stooge Sort | 4950.00 | 0.2942 | Dominated |
+| Silly Sort | 4950.00 | 0.1270 | Dominated |
+| BogoBogoSort | 4950.00 | 0.0677 | Dominated |
 
 ### Pareto Frontier & Knee Point Analysis
 The Pareto Frontier identifies algorithms where no other algorithm is both better at minimizing battles and better at maximizing accuracy.

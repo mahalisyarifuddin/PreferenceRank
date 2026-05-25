@@ -17,54 +17,54 @@ Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rat
 
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Socialist Sort | 0.00 | 0.0014 | Pareto-optimal |
-| Quantum Bogo | 2.00 | 0.0398 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5384 | Pareto-optimal |
-| Hater Sort | 200.00 | 0.6546 | Pareto-optimal |
-| Intro Sort | 402.10 | 0.8538 | Pareto-optimal |
-| Ford-Johnson | 526.10 | 0.8866 | Pareto-optimal |
-| Binary Insertion | 532.20 | 0.8873 | Pareto-optimal |
-| Merge Sort | 541.80 | 0.9040 | Pareto-optimal |
-| **Shellsort** | 731.10 | 0.9440 | **Titik Lutut Produksi** |
-| Comb Sort | 1240.60 | 0.9909 | Pareto-optimal |
+| Socialist Sort | 0.00 | 0.0077 | Pareto-optimal |
+| Quantum Bogo | 1.78 | 0.0082 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5423 | Pareto-optimal |
+| Hater Sort | 200.00 | 0.6613 | Pareto-optimal |
+| Intro Sort | 393.40 | 0.8071 | Pareto-optimal |
+| Dual-Pivot Quicksort | 481.19 | 0.8348 | Pareto-optimal |
+| Ford-Johnson | 527.05 | 0.8877 | Pareto-optimal |
+| Binary Insertion | 530.07 | 0.8889 | Pareto-optimal |
+| Merge Sort | 541.53 | 0.9037 | Pareto-optimal |
+| **Shellsort** | 734.36 | 0.9432 | **Titik Lutut Produksi** |
+| Comb Sort | 1242.58 | 0.9904 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Exit Sort | 0.00 | -0.0305 | Terdominasi |
-| Intelligent Design | 0.00 | -0.0489 | Terdominasi |
-| Genghis Khan Sort | 99.00 | 0.3277 | Terdominasi |
-| Stalin Sort | 99.00 | 0.0840 | Terdominasi |
-| Sleep Sort | 100.00 | 0.0345 | Terdominasi |
-| Heap Sort | 148.40 | 0.4863 | Terdominasi |
-| Smooth Sort | 155.00 | 0.4589 | Terdominasi |
-| Thanos Sort | 190.00 | 0.5288 | Terdominasi |
-| Random Sort | 199.90 | 0.5305 | Terdominasi |
-| Patience Sort | 245.20 | 0.4737 | Terdominasi |
-| Dual-Pivot Quicksort | 481.50 | 0.8351 | Terdominasi |
-| Tournament Sort | 559.00 | 0.8807 | Terdominasi |
-| Parallel Merge Sort | 560.50 | 0.8857 | Terdominasi |
-| Quicksort (LTR) | 627.60 | 0.8341 | Terdominasi |
-| Quicksort (RTL) | 643.40 | 0.8396 | Terdominasi |
-| Tree Sort | 656.10 | 0.8380 | Terdominasi |
-| Quicksort (Random) | 669.80 | 0.8389 | Terdominasi |
-| Strand Sort | 745.80 | 0.8183 | Terdominasi |
-| Hayate-Shiki | 919.50 | 0.7874 | Terdominasi |
-| Bitonic Sort | 1334.00 | 0.9482 | Terdominasi |
-| Circle Sort | 2180.40 | 0.9728 | Terdominasi |
-| Insertion Sort | 2534.50 | 0.8076 | Terdominasi |
-| Cocktail Shaker | 3844.80 | 0.9787 | Terdominasi |
-| Odd-Even Sort | 4722.30 | 0.9891 | Terdominasi |
-| Gnome Sort | 4857.50 | 0.9486 | Terdominasi |
-| Bubble Sort | 4886.00 | 0.9721 | Terdominasi |
-| Bogosort | 4950.00 | 0.9809 | Terdominasi |
-| Pancake Sort | 4950.00 | 0.9756 | Terdominasi |
-| Cocktail Selection | 4950.00 | 0.9478 | Terdominasi |
-| Double Selection | 4950.00 | 0.9427 | Terdominasi |
-| Selection Sort | 4950.00 | 0.9329 | Terdominasi |
-| Bozosort | 4950.00 | 0.5693 | Terdominasi |
-| Slowsort | 4950.00 | 0.4585 | Terdominasi |
-| Cycle Sort | 4950.00 | 0.4049 | Terdominasi |
-| Stooge Sort | 4950.00 | 0.2790 | Terdominasi |
-| Silly Sort | 4950.00 | 0.1081 | Terdominasi |
-| BogoBogoSort | 4950.00 | 0.0418 | Terdominasi |
+| Exit Sort | 0.00 | 0.0040 | Terdominasi |
+| Intelligent Design | 0.00 | -0.0024 | Terdominasi |
+| Genghis Khan Sort | 99.00 | 0.3556 | Terdominasi |
+| Stalin Sort | 99.00 | 0.0933 | Terdominasi |
+| Sleep Sort | 100.00 | 0.0106 | Terdominasi |
+| Heap Sort | 150.66 | 0.4814 | Terdominasi |
+| Smooth Sort | 151.44 | 0.4853 | Terdominasi |
+| Thanos Sort | 190.00 | 0.5373 | Terdominasi |
+| Patience Sort | 248.23 | 0.4662 | Terdominasi |
+| Random Sort | 264.94 | 0.6487 | Terdominasi |
+| Tournament Sort | 557.57 | 0.8872 | Terdominasi |
+| Parallel Merge Sort | 559.65 | 0.8862 | Terdominasi |
+| Tree Sort | 641.35 | 0.8379 | Terdominasi |
+| Quicksort (LTR) | 643.17 | 0.8373 | Terdominasi |
+| Quicksort (Random) | 645.64 | 0.8365 | Terdominasi |
+| Quicksort (RTL) | 648.81 | 0.8380 | Terdominasi |
+| Strand Sort | 747.55 | 0.8199 | Terdominasi |
+| Hayate-Shiki | 951.19 | 0.7884 | Terdominasi |
+| Bitonic Sort | 1334.00 | 0.9496 | Terdominasi |
+| Circle Sort | 2221.48 | 0.9743 | Terdominasi |
+| Insertion Sort | 2558.51 | 0.8016 | Terdominasi |
+| Cocktail Shaker | 3888.84 | 0.9779 | Terdominasi |
+| Odd-Even Sort | 4712.40 | 0.9892 | Terdominasi |
+| Gnome Sort | 4847.01 | 0.9597 | Terdominasi |
+| Bubble Sort | 4890.31 | 0.9721 | Terdominasi |
+| Bogosort | 4950.00 | 0.9789 | Terdominasi |
+| Pancake Sort | 4950.00 | 0.9760 | Terdominasi |
+| Cocktail Selection | 4950.00 | 0.9479 | Terdominasi |
+| Double Selection | 4950.00 | 0.9417 | Terdominasi |
+| Selection Sort | 4950.00 | 0.9336 | Terdominasi |
+| Bozosort | 4950.00 | 0.5866 | Terdominasi |
+| Cycle Sort | 4950.00 | 0.4901 | Terdominasi |
+| Slowsort | 4950.00 | 0.4634 | Terdominasi |
+| Stooge Sort | 4950.00 | 0.2942 | Terdominasi |
+| Silly Sort | 4950.00 | 0.1270 | Terdominasi |
+| BogoBogoSort | 4950.00 | 0.0677 | Terdominasi |
 
 ### Analisis Pareto Frontier & Titik Lutut
 Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang lebih baik dalam meminimalkan pertarungan sekaligus lebih baik dalam memaksimalkan akurasi.
