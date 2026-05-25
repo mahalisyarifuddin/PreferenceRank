@@ -912,7 +912,7 @@ class FullRankProvider {
     next() { return this.idx < this.pairs.length ? this.pairs[this.idx++] : null; }
 }
 
-function simulate(n, ProviderClass, trials = 100) {
+function simulate(n, ProviderClass, trials = 250) {
     let totalComps = 0, totalTau = 0, maxBattles = n * (n - 1) / 2;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
@@ -957,7 +957,7 @@ const N = 100, algos = [
     { name: 'Exit Sort', class: ExitSortProvider }, { name: 'Random Sort', class: RandomSortProvider },
     { name: 'Silly Sort', class: SillySortProvider }, { name: 'Sleep Sort', class: SleepSortProvider }
 ];
-console.log(`Simulating N=${N}, trials=100\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
+console.log(`Simulating N=${N}, trials=250\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
 for (const algo of algos) {
     try {
         const res = simulate(N, algo.class);
