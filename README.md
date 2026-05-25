@@ -17,15 +17,15 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Shellsort** for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 47 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Shellsort** was identified as the optimal **mathematical knee point** for high-accuracy human preference ranking.
+Based on a comparative analysis of 48 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Shellsort** was identified as the optimal **mathematical knee point** for high-accuracy human preference ranking.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
 | :--- | :--- | :--- | :--- |
-| Random Sort | ~287 | 0.71 | Pareto-optimal |
-| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
-| Merge Sort | ~541 | 0.91 | Pareto-optimal |
-| **Shellsort** | **~727** | **0.94** | **Knee Point** |
+| Ford-Johnson | ~526 | 0.89 | Pareto-optimal |
+| Merge Sort | ~542 | 0.90 | Pareto-optimal |
+| Parallel Merge Sort | ~561 | 0.89 | Dominated |
+| **Shellsort** | **~731** | **0.94** | **Knee Point** |
 | Comb Sort | ~1241 | 0.99 | Pareto-optimal |
 | Full Rank | ~4950 | 1.00 | Pareto-optimal |
 

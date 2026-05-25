@@ -17,15 +17,15 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 - **Peringkat Cepat:** Menggunakan **Shellsort** untuk pembuatan pasangan yang efisien, dikombinasikan dengan **penilaian Bradley-Terry murni** untuk representasi yang akurat.
 
 ### Analisis Algoritma
-Berdasarkan analisis komparatif terhadap 47 algoritma pengurutan (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Shellsort** diidentifikasi sebagai **titik lutut matematika** optimal untuk peringkat preferensi manusia dengan akurasi tinggi.
+Berdasarkan analisis komparatif terhadap 48 algoritma pengurutan (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Shellsort** diidentifikasi sebagai **titik lutut matematika** optimal untuk peringkat preferensi manusia dengan akurasi tinggi.
 
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Random Sort | ~287 | 0.71 | Pareto-optimal |
-| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
-| Merge Sort | ~541 | 0.91 | Pareto-optimal |
-| **Shellsort** | **~727** | **0.94** | **Titik Lutut** |
+| Ford-Johnson | ~526 | 0.89 | Pareto-optimal |
+| Merge Sort | ~542 | 0.90 | Pareto-optimal |
+| Parallel Merge Sort | ~561 | 0.89 | Terdominasi |
+| **Shellsort** | **~731** | **0.94** | **Titik Lutut** |
 | Comb Sort | ~1241 | 0.99 | Pareto-optimal |
 | Full Rank | ~4950 | 1.00 | Pareto-optimal |
 
