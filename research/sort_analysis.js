@@ -87,6 +87,42 @@ class QuicksortRTLProvider extends Provider {
     }
 }
 
+class ParallelMergeSortProvider extends Provider {
+    constructor(n) { super(n); this.width = 1; this.tasks = []; this.state = 'init'; }
+    next(result) {
+        while (this.width < this.n) {
+            if (this.state === 'init') {
+                this.tasks = [];
+                for (let i = 0; i < this.n; i += 2 * this.width) {
+                    let mid = i + this.width, r = Math.min(i + 2 * this.width, this.n);
+                    if (mid < r) this.tasks.push({ l: i, mid, r, left: this.items.slice(i, mid), right: this.items.slice(mid, r), i: 0, j: 0, k: i, done: false });
+                }
+                if (this.tasks.length === 0) { this.width *= 2; continue; }
+                this.idx = 0; this.state = 'work';
+            }
+            if (this.state === 'work') {
+                if (result !== undefined) {
+                    let t = this.tasks[this.idx];
+                    if (result === 1) this.items[t.k++] = t.left[t.i++]; else this.items[t.k++] = t.right[t.j++];
+                    if (t.i === t.left.length || t.j === t.right.length) {
+                        while (t.i < t.left.length) this.items[t.k++] = t.left[t.i++];
+                        while (t.j < t.right.length) this.items[t.k++] = t.right[t.j++];
+                        t.done = true;
+                    }
+                    this.idx = (this.idx + 1) % this.tasks.length; result = undefined;
+                }
+                let start = this.idx;
+                while (this.tasks[this.idx].done) {
+                    this.idx = (this.idx + 1) % this.tasks.length;
+                    if (this.idx === start) break;
+                }
+                if (this.tasks[this.idx].done) { this.width *= 2; this.state = 'init'; continue; }
+                let t = this.tasks[this.idx]; return [t.left[t.i], t.right[t.j]];
+            }
+        } return null;
+    }
+}
+
 class QuicksortLTRProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
@@ -876,7 +912,7 @@ class FullRankProvider {
     next() { return this.idx < this.pairs.length ? this.pairs[this.idx++] : null; }
 }
 
-function simulate(n, ProviderClass, trials = 10) {
+function simulate(n, ProviderClass, trials = 250) {
     let totalComps = 0, totalTau = 0, maxBattles = n * (n - 1) / 2;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
@@ -896,6 +932,7 @@ function simulate(n, ProviderClass, trials = 10) {
 
 const N = 100, algos = [
     { name: 'Ford-Johnson', class: FJProvider }, { name: 'Merge Sort', class: MergeSortProvider },
+    { name: 'Parallel Merge Sort', class: ParallelMergeSortProvider },
     { name: 'Hayate-Shiki', class: HayateShikiProvider },
     { name: 'Shellsort', class: ShellSortProvider }, { name: 'Quicksort (RTL)', class: QuicksortRTLProvider },
     { name: 'Quicksort (LTR)', class: QuicksortLTRProvider }, { name: 'Quicksort (Random)', class: QuicksortRandomProvider },
@@ -920,7 +957,7 @@ const N = 100, algos = [
     { name: 'Exit Sort', class: ExitSortProvider }, { name: 'Random Sort', class: RandomSortProvider },
     { name: 'Silly Sort', class: SillySortProvider }, { name: 'Sleep Sort', class: SleepSortProvider }
 ];
-console.log(`Simulating N=${N}, trials=10\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
+console.log(`Simulating N=${N}, trials=250\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
 for (const algo of algos) {
     try {
         const res = simulate(N, algo.class);
