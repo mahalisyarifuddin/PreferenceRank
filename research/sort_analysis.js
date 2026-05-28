@@ -913,7 +913,7 @@ class FullRankProvider {
 }
 
 function simulate(n, ProviderClass, trials = 250) {
-    let totalComps = 0, totalTau = 0, maxUniqueBattles = n * (n - 1) / 2;
+    let totalComps = 0, totalTau = 0, maxUniqueBattles = n * (n - 1) / 2, hasDuplicates = false;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
         const provider = new ProviderClass(n);
@@ -927,6 +927,7 @@ function simulate(n, ProviderClass, trials = 250) {
             const match = matchesMap.get(pairKey);
             let res;
             if (match) {
+                hasDuplicates = true;
                 res = match.a === a ? match.result : 1 - match.result;
             } else {
                 uniqueBattles++;
@@ -939,7 +940,7 @@ function simulate(n, ProviderClass, trials = 250) {
         }
         const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
         totalComps += uniqueBattles; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
-    } return { avgComps: totalComps / trials, avgTau: totalTau / trials };
+    } return { avgComps: totalComps / trials, avgTau: totalTau / trials, hasDuplicates };
 }
 
 const N = 100, algos = [
@@ -969,11 +970,11 @@ const N = 100, algos = [
     { name: 'Exit Sort', class: ExitSortProvider }, { name: 'Random Sort', class: RandomSortProvider },
     { name: 'Silly Sort', class: SillySortProvider }, { name: 'Sleep Sort', class: SleepSortProvider }
 ];
-console.log(`Simulating N=${N}, trials=250\nAlgorithm\tAvg Battles\tAvg Kendall Tau`);
+console.log(`Simulating N=${N}, trials=250\nAlgorithm\tAvg Battles\tAvg Kendall Tau\tDuplicates`);
 for (const algo of algos) {
     try {
         const res = simulate(N, algo.class);
-        console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}`);
+        console.log(`${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}\t${res.hasDuplicates ? 'YES' : 'NO'}`);
     } catch (e) {
         console.log(`${algo.name}\tERROR`);
     }
