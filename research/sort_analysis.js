@@ -913,20 +913,32 @@ class FullRankProvider {
 }
 
 function simulate(n, ProviderClass, trials = 250) {
-    let totalComps = 0, totalTau = 0, maxBattles = n * (n - 1) / 2;
+    let totalComps = 0, totalTau = 0, maxUniqueBattles = n * (n - 1) / 2;
     for (let t = 0; t < trials; t++) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
         const provider = new ProviderClass(n);
         const wins = new Float64Array(n), adjMaps = Array.from({ length: n }, () => new Map());
-        let pair = provider.next(), comps = 0;
-        while (pair) {
+        const matchesMap = new Map();
+        let pair = provider.next(), uniqueBattles = 0, totalIterations = 0;
+        while (pair && totalIterations < 1000000) {
+            totalIterations++;
             const [a, b] = pair; if (a === undefined || b === undefined) break;
-            comps++; const res = trueStrengths[a] > trueStrengths[b] ? 1 : 0; wins[a] += res; wins[b] += 1 - res;
-            adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1); adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
-            pair = provider.next(res); if (comps >= maxBattles) break;
+            const pairKey = a < b ? `${a}-${b}` : `${b}-${a}`;
+            const match = matchesMap.get(pairKey);
+            let res;
+            if (match) {
+                res = match.a === a ? match.result : 1 - match.result;
+            } else {
+                uniqueBattles++;
+                res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
+                matchesMap.set(pairKey, { a, b, result: res });
+                wins[a] += res; wins[b] += 1 - res;
+                adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1); adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
+            }
+            pair = provider.next(res); if (uniqueBattles >= maxUniqueBattles) break;
         }
         const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
-        totalComps += comps; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
+        totalComps += uniqueBattles; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
     } return { avgComps: totalComps / trials, avgTau: totalTau / trials };
 }
 
