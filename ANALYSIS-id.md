@@ -1,95 +1,87 @@
-# Analisis Algoritma Pengurutan dan Konvergensi pada PreferenceRank
+# Analisis Algoritma Pengurutan dan Konvergensi di PreferenceRank
 
-Dokumen ini merangkum hasil pengujian dan analisis mendalam yang dilakukan untuk mengoptimalkan sistem pembuatan pasangan dan penilaian dalam PreferenceRank.
+Dokumen ini merangkum tolok ukur (benchmarking) dan analisis ekstensif yang dilakukan untuk mengoptimalkan pembuatan pasangan dan sistem penilaian di PreferenceRank, yang sekarang menyertakan deduplikasi perbandingan untuk meminimalkan upaya pengguna.
 
 ## 1. Perbandingan Algoritma Pengurutan (N=100)
 
-Kami membandingkan 48 algoritma pengurutan untuk menentukan keseimbangan terbaik antara upaya pengguna (jumlah pertarungan) dan akurasi peringkat (Kendall Tau).
+Kami membandingkan 48 algoritma pengurutan untuk menentukan keseimbangan akhir antara upaya pengguna (pertarungan unik) dan akurasi peringkat (Kendall Tau). Deduplikasi diterapkan: jika algoritma meminta perbandingan antara pasangan yang sama dua kali, hasil sebelumnya akan digunakan kembali secara otomatis.
 
-### Metodologi Pengujian
+### Metodologi Tolok Ukur
 - **Nilai N:** 100
-- **Uji Coba:** 10 per algoritma.
-- **Metrik 1: Rata-rata Pertarungan:** Jumlah rata-rata perbandingan yang dihasilkan.
-- **Metrik 2: Rata-rata Kendall Tau:** Korelasi peringkat antara kekuatan tersembunyi yang sebenarnya dan skor estimasi.
+- **Uji Coba:** 250 per algoritma.
+- **Metrik 1: Rerata Pertarungan:** Rata-rata jumlah perbandingan unik yang ditampilkan kepada pengguna.
+- **Metrik 2: Rerata Kendall Tau:** Korelasi peringkat antara kekuatan tersembunyi yang sebenarnya dan skor perkiraan.
 
 ### Hasil (N=100)
-Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rata-rata Pertarungan (menaik), lalu Rata-rata Kendall Tau (menurun).
+Tabel ini dipartisi berdasarkan status Pareto dan diurutkan berdasarkan Rerata Pertarungan (naik), lalu Rerata Kendall Tau (turun).
 
-| Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
+| Algoritma | Rerata Pertarungan | Rerata Kendall Tau | Status Pareto |
 | :--- | :--- | :--- | :--- |
-| Socialist Sort | 0.00 | 0.0077 | Pareto-optimal |
-| Quantum Bogo | 1.78 | 0.0082 | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5423 | Pareto-optimal |
+| Intelligent Design | 0.00 | 0.0029 | Pareto-optimal |
+| Quantum Bogo | 1.69 | 0.0226 | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5477 | Pareto-optimal |
 | Hater Sort | 200.00 | 0.6613 | Pareto-optimal |
-| Intro Sort | 393.40 | 0.8071 | Pareto-optimal |
-| Dual-Pivot Quicksort | 481.19 | 0.8348 | Pareto-optimal |
-| Ford-Johnson | 527.05 | 0.8877 | Pareto-optimal |
-| Binary Insertion | 530.07 | 0.8889 | Pareto-optimal |
-| Merge Sort | 541.53 | 0.9037 | Pareto-optimal |
-| **Shellsort** | 734.36 | 0.9432 | **Titik Lutut Produksi** |
-| Comb Sort | 1242.58 | 0.9904 | Pareto-optimal |
+| Intro Sort | 394.94 | 0.8264 | Pareto-optimal |
+| Dual-Pivot Quicksort | 481.17 | 0.8337 | Pareto-optimal |
+| Ford-Johnson | 526.80 | 0.8894 | Pareto-optimal |
+| Merge Sort | 541.12 | 0.9036 | Pareto-optimal |
+| **Shellsort** | 671.55 | 0.9421 | **Titik Lutut Produksi** |
+| Comb Sort | 1237.83 | 0.9903 | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | Pareto-optimal |
-| Exit Sort | 0.00 | 0.0040 | Terdominasi |
-| Intelligent Design | 0.00 | -0.0024 | Terdominasi |
-| Genghis Khan Sort | 99.00 | 0.3556 | Terdominasi |
-| Stalin Sort | 99.00 | 0.0933 | Terdominasi |
-| Sleep Sort | 100.00 | 0.0106 | Terdominasi |
-| Heap Sort | 150.66 | 0.4814 | Terdominasi |
-| Smooth Sort | 151.44 | 0.4853 | Terdominasi |
-| Thanos Sort | 190.00 | 0.5373 | Terdominasi |
-| Patience Sort | 248.23 | 0.4662 | Terdominasi |
-| Random Sort | 264.94 | 0.6487 | Terdominasi |
-| Tournament Sort | 557.57 | 0.8872 | Terdominasi |
-| Parallel Merge Sort | 559.65 | 0.8862 | Terdominasi |
-| Tree Sort | 641.35 | 0.8379 | Terdominasi |
-| Quicksort (LTR) | 643.17 | 0.8373 | Terdominasi |
-| Quicksort (Random) | 645.64 | 0.8365 | Terdominasi |
-| Quicksort (RTL) | 648.81 | 0.8380 | Terdominasi |
-| Strand Sort | 747.55 | 0.8199 | Terdominasi |
-| Hayate-Shiki | 951.19 | 0.7884 | Terdominasi |
-| Bitonic Sort | 1334.00 | 0.9496 | Terdominasi |
-| Circle Sort | 2221.48 | 0.9743 | Terdominasi |
-| Insertion Sort | 2558.51 | 0.8016 | Terdominasi |
-| Cocktail Shaker | 3888.84 | 0.9779 | Terdominasi |
-| Odd-Even Sort | 4712.40 | 0.9892 | Terdominasi |
-| Gnome Sort | 4847.01 | 0.9597 | Terdominasi |
-| Bubble Sort | 4890.31 | 0.9721 | Terdominasi |
-| Bogosort | 4950.00 | 0.9789 | Terdominasi |
-| Pancake Sort | 4950.00 | 0.9760 | Terdominasi |
-| Cocktail Selection | 4950.00 | 0.9479 | Terdominasi |
-| Double Selection | 4950.00 | 0.9417 | Terdominasi |
-| Selection Sort | 4950.00 | 0.9336 | Terdominasi |
-| Bozosort | 4950.00 | 0.5866 | Terdominasi |
-| Cycle Sort | 4950.00 | 0.4901 | Terdominasi |
-| Slowsort | 4950.00 | 0.4634 | Terdominasi |
-| Stooge Sort | 4950.00 | 0.2942 | Terdominasi |
-| Silly Sort | 4950.00 | 0.1270 | Terdominasi |
-| BogoBogoSort | 4950.00 | 0.0677 | Terdominasi |
+| Exit Sort | 0.00 | 0.0005 | Terdominasi |
+| Socialist Sort | 0.00 | -0.0054 | Terdominasi |
+| Genghis Khan Sort | 99.00 | 0.3273 | Terdominasi |
+| Stalin Sort | 99.00 | 0.1063 | Terdominasi |
+| Sleep Sort | 100.00 | -0.0004 | Terdominasi |
+| Heap Sort | 150.40 | 0.4761 | Terdominasi |
+| Smooth Sort | 150.96 | 0.4736 | Terdominasi |
+| Thanos Sort | 189.99 | 0.5353 | Terdominasi |
+| Patience Sort | 249.74 | 0.4767 | Terdominasi |
+| Random Sort | 259.77 | 0.6564 | Terdominasi |
+| Binary Insertion | 530.20 | 0.8865 | Terdominasi |
+| Parallel Merge Sort | 558.52 | 0.8870 | Terdominasi |
+| Tournament Sort | 558.97 | 0.8853 | Terdominasi |
+| Quicksort (Random) | 642.78 | 0.8363 | Terdominasi |
+| Quicksort (LTR) | 643.28 | 0.8361 | Terdominasi |
+| Tree Sort | 643.57 | 0.8367 | Terdominasi |
+| Quicksort (RTL) | 646.11 | 0.8354 | Terdominasi |
+| Strand Sort | 743.60 | 0.8212 | Terdominasi |
+| Hayate-Shiki | 932.10 | 0.7852 | Terdominasi |
+| Bitonic Sort | 1334.00 | 0.9497 | Terdominasi |
+| Circle Sort | 2180.40 | 0.9743 | Terdominasi |
+| Insertion Sort | 2565.64 | 0.8023 | Terdominasi |
+| Cocktail Shaker | 3871.29 | 0.9770 | Terdominasi |
+| Odd-Even Sort | 4667.26 | 0.9878 | Terdominasi |
+| Gnome Sort | 4845.45 | 0.9625 | Terdominasi |
+| Bubble Sort | 4874.80 | 0.9727 | Terdominasi |
+| Bogosort | 4950.00 | 0.9790 | Terdominasi |
+| Pancake Sort | 4950.00 | 0.9758 | Terdominasi |
+| Cocktail Selection | 4950.00 | 0.9474 | Terdominasi |
+| Double Selection | 4950.00 | 0.9422 | Terdominasi |
+| Selection Sort | 4950.00 | 0.9339 | Terdominasi |
+| Bozosort | 4950.00 | 0.5822 | Terdominasi |
+| Cycle Sort | 4950.00 | 0.4701 | Terdominasi |
+| Slowsort | 4950.00 | 0.4615 | Terdominasi |
+| Stooge Sort | 4950.00 | 0.2910 | Terdominasi |
+| Silly Sort | 4950.00 | 0.1260 | Terdominasi |
+| BogoBogoSort | 4950.00 | 0.0636 | Terdominasi |
 
-### Analisis Pareto Frontier & Titik Lutut
-Pareto Frontier mengidentifikasi algoritma di mana tidak ada algoritma lain yang lebih baik dalam meminimalkan pertarungan sekaligus lebih baik dalam memaksimalkan akurasi.
+### Batas Pareto & Analisis Titik Lutut
+Batas Pareto mengidentifikasi algoritma di mana tidak ada algoritma lain yang lebih baik dalam meminimalkan pertarungan unik sekaligus lebih baik dalam memaksimalkan akurasi.
 
 - **Ford-Johnson**, **Intro Sort**, dan **Merge Sort** memberikan rasio akurasi-terhadap-pertarungan yang luar biasa untuk upaya tingkat menengah.
-- **Shellsort** diidentifikasi sebagai titik lutut optimal untuk Peringkat Cepat dengan akurasi tinggi. Algoritma ini menawarkan akurasi >93% dengan ~727 pertarungan (pengurangan 85% dibandingkan Peringkat Penuh).
-- **Full Rank** tetap menjadi standar emas untuk akurasi, tetapi dengan biaya yang sangat besar yaitu 4950 pertarungan.
+- **Shellsort** diidentifikasi sebagai "titik lutut" akhir untuk produksi. Setelah deduplikasi, ia menawarkan akurasi >94% untuk ~672 pertarungan unik (pengurangan 86% vs. Peringkat Penuh). Verifikasi menggunakan metode Kneedle dan Jarak Tegak Lurus Maksimum mengonfirmasi Shellsort sebagai titik keseimbangan optimal.
+- **Peringkat Penuh** tetap menjadi standar emas untuk akurasi tetapi dengan biaya besar 4950 pertarungan.
 
 ### Regresi Estimasi Jumlah Pertarungan
-Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Shellsort (celah Ciura) dari N=5 hingga N=1000 (1000 uji coba per N) dan menurunkan model regresi dengan ketelitian sangat tinggi (ultra-high-fidelity).
+Untuk memberikan ekspektasi pengguna yang akurat, kami mensimulasikan Shellsort (celah Ciura) dengan deduplikasi perbandingan di seluruh N=5 hingga N=1000 dan memperoleh model regresi fidelitas ultra-tinggi yang diperbarui.
 
-- **Observasi:** Pertumbuhan bersifat super-linear, dimodelkan secara akurat oleh hukum pangkat yang diperhalus.
-- **Formula Ketelitian Ultra-Tinggi:** `Pertarungan ≈ 0.457 * N * (log2(N))^1.46`
-- **Akurasi:** Model ini mencapai kesalahan relatif RMS sebesar 0.93% di seluruh rentang. Model ini memprediksi 8 pertarungan untuk N=5 (simulasi ~8), 725 pertarungan untuk N=100 (simulasi ~734), dan 13113 pertarungan untuk N=1000 (simulasi ~13047), memberikan estimasi yang sangat tepat untuk antarmuka pengguna.
-
-### Sortir Esoterik & Lucu: Komedi Kuantitatif
-Kami menyertakan beberapa algoritma "mustahil" atau "lucu" dari SortPedia dan Wikipedia untuk mengilustrasikan rentang filosofi pengurutan.
-
-- **Socialist Sort:** Mengasumsikan semua item sudah sama dan dengan demikian sudah terurut. Algoritma ini menghasilkan **0 pertarungan**.
-- **Quantum Bogo Sort:** Menghasilkan permutasi acak dan menghancurkan alam semesta jika tidak terurut. Dalam pengujian kami, algoritma ini menghasilkan **~1.5 pertarungan** karena langsung berhenti saat menemukan satu pasangan yang tidak berurutan.
-- **Thanos Sort:** Menghapus setengah dari alam semesta (data) untuk mengembalikan keteraturan. Algoritma ini menunjukkan akurasi yang mengejutkan untuk jumlah pertarungan yang rendah (~190).
-- **Miracle Sort:** Menunggu keajaiban untuk mengurutkan data. Dalam pengujian kami, algoritma ini melakukan satu sapuan (~99 pertarungan) dan kemudian menyerah.
+- **Observasi:** Pertumbuhan tetap super-linear, tetapi konstanta efektif lebih rendah karena deduplikasi.
+- **Formula Fidelitas Ultra-Tinggi:** `Pertarungan Unik ≈ 0.428 * N * (log2(N))^1.458`
+- **Akurasi:** Model ini mencapai kesalahan relatif RMS <1% di seluruh rentang. Ini memprediksi 672 pertarungan untuk N=100 (disimulasikan ~671) dan 12226 pertarungan untuk N=1000 (disimulasikan ~12269), memberikan perkiraan yang sangat tepat untuk UI.
 
 ---
 
 ## 2. Analisis Konvergensi Bradley-Terry
 
-Kami menganalisis algoritma Minorization-Maximization (MM) dan mengidentifikasi 1e-7 sebagai ambang batas titik lutut. Optimalisasi ini menghemat ~47% iterasi sambil mempertahankan kesalahan skor maksimum <0.001 (tidak signifikan untuk skor bulat yang ditampilkan).
+Kami menganalisis algoritma Minorization-Maximization (MM) untuk konvergensi dan mengidentifikasi 1e-7 sebagai ambang batas titik lutut. Optimalisasi ini menghemat ~47% iterasi sambil mempertahankan kesalahan skor maksimum <0.001 (dapat diabaikan untuk skor yang dibulatkan menjadi bilangan bulat).

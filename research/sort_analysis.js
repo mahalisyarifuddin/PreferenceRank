@@ -918,10 +918,20 @@ function simulate(n, ProviderClass, trials = 250) {
         const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
         const provider = new ProviderClass(n);
         const wins = new Float64Array(n), adjMaps = Array.from({ length: n }, () => new Map());
+        const matches = [];
         let pair = provider.next(), comps = 0;
         while (pair) {
             const [a, b] = pair; if (a === undefined || b === undefined) break;
-            comps++; const res = trueStrengths[a] > trueStrengths[b] ? 1 : 0; wins[a] += res; wins[b] += 1 - res;
+            const match = matches.find(m => (m.a === a && m.b === b) || (m.a === b && m.b === a));
+            let res;
+            if (match) {
+                res = match.a === a ? match.result : 1 - match.result;
+            } else {
+                comps++;
+                res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
+                matches.push({ a, b, result: res });
+            }
+            wins[a] += res; wins[b] += 1 - res;
             adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1); adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
             pair = provider.next(res); if (comps >= maxBattles) break;
         }
