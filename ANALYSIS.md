@@ -1,84 +1,83 @@
 # Analysis of Sorting Algorithms and Convergence in PreferenceRank
 
-This document summarizes the extensive benchmarking and analysis performed to optimize the pair generation and scoring system in PreferenceRank, using "Pure Unique" comparisons to measure true information efficiency.
+This document summarizes the extensive benchmarking and analysis performed to optimize the pair generation and scoring system in PreferenceRank, focusing on **pure, non-duplicate comparisons** as the primary criterion for algorithm selection.
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared 48 sorting algorithms to determine the ultimate balance between user effort (unique battles) and ranking accuracy (Kendall Tau). Deduplication is applied: redundant comparisons are resolved silently, so "Avg Battles" represents only unique user interactions.
+We compared 48 sorting algorithms. A key requirement for production is the elimination of duplicate pairwise comparisons. Algorithms that request the same pair twice are now identified and excluded from the Pareto-optimal knee point analysis to ensure maximum user efficiency.
 
 ### Benchmarking Methodology
 - **N Value:** 100
 - **Trials:** 250 per algorithm.
-- **Metric 1: Avg Battles:** The average number of unique comparisons presented to the user.
+- **Metric 1: Avg Battles:** Total unique comparisons presented to the user.
 - **Metric 2: Avg Kendall Tau:** Rank correlation between true hidden strengths and estimated scores (BT).
+- **Metric 3: Duplicates:** Indicates if the algorithm ever requests the same pair twice during a single sort.
 
 ### Results (N=100)
-The table is partitioned by Pareto status and sorted by Avg Battles (ascending), then Avg Kendall Tau (descending).
+The table is partitioned by Pareto status (Optimal then Dominated) and sorted by Avg Battles (ascending).
 
-| Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
-| :--- | :--- | :--- | :--- |
-| Intelligent Design | 0.00 | 0.0070 | Pareto-optimal |
-| Quantum Bogo | 1.80 | 0.0192 | Pareto-optimal |
-| BogoBogoSort | 44.94 | 0.0942 | Pareto-optimal |
-| Smooth Sort | 98.62 | 0.4751 | Pareto-optimal |
-| Thanos Sort | 99.00 | 0.5460 | Pareto-optimal |
-| Hater Sort | 196.04 | 0.6651 | Pareto-optimal |
-| Intro Sort | 406.79 | 0.8356 | Pareto-optimal |
-| Dual-Pivot Quicksort | 488.27 | 0.8365 | Pareto-optimal |
-| Ford-Johnson | 526.84 | 0.8899 | Pareto-optimal |
-| Merge Sort | 541.17 | 0.9034 | Pareto-optimal |
-| **Shellsort** | 670.38 | 0.9318 | **Production Knee Point** |
-| Comb Sort | 852.90 | 0.9747 | Pareto-optimal |
-| Stooge Sort | 2889.84 | 0.9900 | Pareto-optimal |
-| Bozosort | 4946.48 | 1.0000 | Pareto-optimal |
-| Socialist Sort | 0.00 | 0.0048 | Dominated |
-| Exit Sort | 0.00 | -0.0004 | Dominated |
-| Miracle Sort | 99.00 | 0.5458 | Dominated |
-| Genghis Khan Sort | 99.00 | 0.3516 | Dominated |
-| Stalin Sort | 99.00 | 0.1050 | Dominated |
-| Sleep Sort | 100.00 | -0.0095 | Dominated |
-| Heap Sort | 101.23 | 0.4863 | Dominated |
-| Silly Sort | 138.00 | 0.2444 | Dominated |
-| Patience Sort | 197.99 | 0.4769 | Dominated |
-| Random Sort | 251.25 | 0.6493 | Dominated |
-| Cycle Sort | 500.50 | 0.4591 | Dominated |
-| Binary Insertion | 530.58 | 0.8868 | Dominated |
-| Parallel Merge Sort | 557.96 | 0.8870 | Dominated |
-| Tournament Sort | 558.04 | 0.8877 | Dominated |
-| Quicksort (Random) | 645.54 | 0.8361 | Dominated |
-| Quicksort (LTR) | 648.94 | 0.8371 | Dominated |
-| Tree Sort | 649.52 | 0.8359 | Dominated |
-| Quicksort (RTL) | 651.76 | 0.8374 | Dominated |
-| Strand Sort | 751.27 | 0.8192 | Dominated |
-| Hayate-Shiki | 928.67 | 0.7838 | Dominated |
-| Bitonic Sort | 1038.89 | 0.9576 | Dominated |
-| Circle Sort | 1207.89 | 0.9697 | Dominated |
-| Slowsort | 1321.99 | 0.9467 | Dominated |
-| Gnome Sort | 2548.66 | 0.8015 | Dominated |
-| Bubble Sort | 2570.82 | 0.8033 | Dominated |
-| Insertion Sort | 2593.32 | 0.8044 | Dominated |
-| Odd-Even Sort | 2615.69 | 0.8058 | Dominated |
-| Cocktail Selection | 2749.14 | 0.9233 | Dominated |
-| Selection Sort | 2758.31 | 0.8910 | Dominated |
-| Double Selection | 2766.07 | 0.9222 | Dominated |
-| Cocktail Shaker | 2586.94 | 0.8063 | Dominated |
-| Pancake Sort | 3092.15 | 0.9695 | Dominated |
-| Bogosort | 4950.00 | 1.0000 | Dominated |
-| Full Rank | 4950.00 | 1.0000 | Dominated |
+| Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |
+| :--- | :--- | :--- | :--- | :--- |
+| Exit Sort | 0.00 | -0.0005 | NO | Pareto-optimal |
+| Quantum Bogo | 1.62 | 0.0120 | NO | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5450 | NO | Pareto-optimal |
+| Dual-Pivot Quicksort | 494.08 | 0.8364 | NO | Pareto-optimal |
+| Ford-Johnson | 526.85 | 0.8886 | NO | Pareto-optimal |
+| **Merge Sort** | 542.07 | 0.9032 | NO | **Production Knee Point** |
+| Full Rank | 4950.00 | 1.0000 | NO | Pareto-optimal |
+| Intelligent Design | 0.00 | 0.0069 | NO | Dominated |
+| Socialist Sort | 0.00 | 0.0036 | NO | Dominated |
+| BogoBogoSort | 44.46 | 0.0897 | YA | Dominated |
+| Smooth Sort | 98.10 | 0.4813 | YA | Dominated |
+| Heap Sort | 98.52 | 0.4865 | YA | Dominated |
+| Stalin Sort | 99.00 | 0.0993 | NO | Dominated |
+| Thanos Sort | 99.00 | 0.5475 | YA | Dominated |
+| Genghis Khan Sort | 99.00 | 0.3381 | NO | Dominated |
+| Sleep Sort | 100.00 | -0.0022 | NO | Dominated |
+| Silly Sort | 138.00 | 0.2391 | YA | Dominated |
+| Hater Sort | 195.94 | 0.6643 | YA | Dominated |
+| Patience Sort | 198.58 | 0.4921 | YA | Dominated |
+| Random Sort | 255.21 | 0.6554 | YA | Dominated |
+| Intro Sort | 409.05 | 0.8314 | YA | Dominated |
+| Cycle Sort | 431.63 | 0.4313 | YA | Dominated |
+| Binary Insertion | 530.42 | 0.8877 | NO | Dominated |
+| Tournament Sort | 558.18 | 0.8860 | NO | Dominated |
+| Parallel Merge Sort | 558.28 | 0.8861 | NO | Dominated |
+| Quicksort (RTL) | 642.67 | 0.8369 | NO | Dominated |
+| Quicksort (Random) | 644.90 | 0.8365 | NO | Dominated |
+| Tree Sort | 648.08 | 0.8366 | NO | Dominated |
+| Quicksort (LTR) | 654.10 | 0.8375 | NO | Dominated |
+| Shellsort | 671.24 | 0.9330 | YA | Dominated |
+| Strand Sort | 738.34 | 0.8200 | NO | Dominated |
+| Comb Sort | 851.18 | 0.9745 | YA | Dominated |
+| Hayate-Shiki | 937.24 | 0.7873 | YA | Dominated |
+| Bitonic Sort | 1036.05 | 0.9574 | YA | Dominated |
+| Circle Sort | 1213.04 | 0.9695 | YA | Dominated |
+| Slowsort | 1323.12 | 0.9494 | YA | Dominated |
+| Bubble Sort | 2565.62 | 0.8014 | YA | Dominated |
+| Insertion Sort | 2568.34 | 0.8019 | NO | Dominated |
+| Gnome Sort | 2569.91 | 0.8020 | YA | Dominated |
+| Cocktail Shaker | 2578.76 | 0.8062 | YA | Dominated |
+| Odd-Even Sort | 2610.81 | 0.8061 | YA | Dominated |
+| Cocktail Selection | 2753.86 | 0.9209 | YA | Dominated |
+| Double Selection | 2754.74 | 0.9215 | YA | Dominated |
+| Selection Sort | 2756.40 | 0.8908 | YA | Dominated |
+| Stooge Sort | 2881.16 | 0.9901 | YA | Dominated |
+| Pancake Sort | 3083.59 | 0.9684 | YA | Dominated |
+| Bozosort | 4946.49 | 1.0000 | YA | Dominated |
+| Bogosort | 4950.00 | 1.0000 | YA | Dominated |
 
 ### Pareto Frontier & Knee Point Analysis
-The Pareto Frontier identifies algorithms where no other algorithm is both better at minimizing unique battles and better at maximizing accuracy.
+With the new "Pure Comparison" constraint (No Duplicates):
 
-- **Ford-Johnson**, **Intro Sort**, and **Merge Sort** provide an exceptional accuracy-to-battle ratio for mid-range effort.
-- **Shellsort** is identified as the optimal "knee point" for production. Under the "Pure Unique" model, it offers >93% accuracy for ~670 unique battles (an 86% reduction vs. Full Rank). It remains the most mathematically sound trade-off for human preference ranking.
-- **Full Rank** (and eventually Bogosort/Bozosort) achieve a perfect 1.000 Tau but at an enormous cost of ~4950 battles.
+- **Merge Sort** emerges as the primary **Production Knee Point**. It is Pareto-optimal and achieves the highest accuracy among all "Pure" algorithms before reaching the extreme cost of Full Rank.
+- **Ford-Johnson** and **Dual-Pivot Quicksort** remain excellent Pareto-optimal choices for mid-range effort without duplicates.
+- **Shellsort**, while highly accurate, is now categorized as dominated because it inherently produces duplicate comparisons (in its current gap-based implementation), which violates the new efficiency requirement.
 
 ### Battle Count Estimate Regression
-To provide accurate user expectations, we simulated Shellsort (Ciura's gaps) with full comparison deduplication and derived an ultra-high-fidelity regression model.
-
-- **Observation:** Growth remains super-linear, but unique counts are ~8.5% lower than raw algorithmic comparisons.
-- **Ultra-High-Fidelity Formula:** `Unique Battles ≈ 0.428 * N * (log2(N))^1.458`
-- **Accuracy:** This model achieves an RMS relative error of <1% across the entire range. It predicts ~671 battles for N=100 (simulated ~670), providing a precise estimate for the UI.
+For Merge Sort (the new Production Knee Point):
+- **Formula:** `Unique Battles ≈ N * log2(N) - (N - 1)`
+- For N=100, this predicts ~565 battles (simulated ~542 unique on average).
 
 ---
 

@@ -1048,58 +1048,49 @@
 			}
 			class QuickPairProvider {
 				static estimate(n) {
-					return Math.round(0.428 * n * Math.pow(Math.log2(n), 1.458));
+					return Math.round(n * Math.log2(n) - n + 1);
 				}
 				constructor(count) {
 					this.count = count;
 					this._est = QuickPairProvider.estimate(count);
 					this.items = Array.from({ length: count }, (_, i) => i);
-					this.gaps = [701, 301, 132, 57, 23, 10, 4, 1].filter(g => g < count);
-					this.gapIdx = 0;
-					this.state = 'nextGap';
+					this.stack = [{ l: 0, r: count - 1, state: 0 }];
 				}
 				next(_, result) {
-					while (this.state !== 'done') {
-						if (this.state === 'nextGap') {
-							if (this.gapIdx < this.gaps.length) {
-								this.gap = this.gaps[this.gapIdx++];
-								this.i = this.gap;
-								this.state = 'insertion';
-							} else {
-								this.state = 'done';
-								break;
-							}
-						}
-						if (this.state === 'insertion') {
-							if (this.i < this.count) {
-								this.temp = this.items[this.i];
-								this.j = this.i;
-								this.state = 'compare';
-							} else {
-								this.state = 'nextGap';
+					while (this.stack.length > 0) {
+						let f = this.stack[this.stack.length - 1];
+						if (f.state === 0) {
+							if (f.l >= f.r) {
+								this.stack.pop();
+								if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
 								continue;
 							}
+							f.mid = Math.floor((f.l + f.r) / 2);
+							this.stack.push({ l: f.l, r: f.mid, state: 0 });
+							continue;
 						}
-						if (this.state === 'compare') {
+						if (f.state === 1) {
+							this.stack.push({ l: f.mid + 1, r: f.r, state: 0 });
+							continue;
+						}
+						if (f.state === 2) {
+							f.leftArr = this.items.slice(f.l, f.mid + 1);
+							f.rightArr = this.items.slice(f.mid + 1, f.r + 1);
+							f.i = 0; f.j = 0; f.k = f.l; f.state = 3;
+						}
+						if (f.state === 3) {
 							if (result !== undefined) {
-								if (result === 0) {
-									this.items[this.j] = this.items[this.j - this.gap];
-									this.j -= this.gap;
-									result = undefined;
-								} else {
-									this.items[this.j] = this.temp;
-									this.i++;
-									this.state = 'insertion';
-									result = undefined;
-									continue;
-								}
+								if (result === 1) this.items[f.k++] = f.leftArr[f.i++];
+								else this.items[f.k++] = f.rightArr[f.j++];
+								result = undefined;
 							}
-							if (this.j >= this.gap) {
-								return [this.temp, this.items[this.j - this.gap]];
+							if (f.i < f.leftArr.length && f.j < f.rightArr.length) {
+								return [f.leftArr[f.i], f.rightArr[f.j]];
 							}
-							this.items[this.j] = this.temp;
-							this.i++;
-							this.state = 'insertion';
+							while (f.i < f.leftArr.length) this.items[f.k++] = f.leftArr[f.i++];
+							while (f.j < f.rightArr.length) this.items[f.k++] = f.rightArr[f.j++];
+							this.stack.pop();
+							if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
 						}
 					}
 					return null;
@@ -1108,20 +1099,21 @@
 					return `${step}/~${Math.max(step, this._est)}`;
 				}
 				snap() {
-					return JSON.stringify({ items: this.items, gaps: this.gaps, gapIdx: this.gapIdx, state: this.state, gap: this.gap, i: this.i, j: this.j, temp: this.temp });
+					return JSON.stringify({ items: this.items, stack: this.stack });
 				}
 				restore(data, matches) {
 					if (!data) return matches && this._start(matches);
 					try {
-						Object.assign(this, JSON.parse(data));
+						const parsed = JSON.parse(data);
+						this.items = parsed.items;
+						this.stack = parsed.stack;
 					} catch {
 						matches && this._start(matches);
 					}
 				}
 				_start(matches) {
 					this.items = Array.from({ length: this.count }, (_, i) => i);
-					this.gapIdx = 0;
-					this.state = 'nextGap';
+					this.stack = [{ l: 0, r: this.count - 1, state: 0 }];
 					this.next();
 					for (const m of matches) this.next(undefined, m.result);
 				}
@@ -1517,19 +1509,7 @@
 				}
 				next(result) {
 					this.clear();
-					let nextPair = this.provider.next(this, result);
-					while (nextPair) {
-						const [a, b] = nextPair;
-						const match = this.matches.find(m => (m.a === a && m.b === b) || (m.a === b && m.b === a));
-						if (match) {
-							const autoResult = match.a === a ? match.result : 1 - match.result;
-							this.matches.push({ a, b, result: autoResult });
-							this.step++;
-							nextPair = this.provider.next(this, autoResult);
-						} else {
-							break;
-						}
-					}
+					const nextPair = this.provider.next(this, result);
 					if (!nextPair)
 						return this.pair = null,
 						this.results();

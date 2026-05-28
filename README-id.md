@@ -14,22 +14,20 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 
 - **Peringkat Penuh (Bawaan):** Menggunakan sistem round-robin yang komprehensif (Pertarungan = N(N-1)/2). Menjamin preferensi yang paling akurat tetapi tumbuh secara kuadratik. Terbaik untuk daftar kecil (<20 pilihan).
 
-- **Peringkat Cepat:** Menggunakan **Shellsort** untuk pembuatan pasangan yang efisien, dikombinasikan dengan **penilaian Bradley-Terry murni** untuk representasi yang akurat.
+- **Peringkat Cepat:** Menggunakan **Merge Sort** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **penilaian Bradley-Terry murni** untuk representasi yang akurat.
 
 ### Analisis Algoritma
-Berdasarkan analisis komparatif terhadap 48 algoritma pengurutan (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Shellsort** diidentifikasi sebagai **titik lutut matematika** optimal untuk peringkat preferensi manusia dengan akurasi tinggi.
+Berdasarkan analisis komparatif terhadap 48 algoritma pengurutan (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Merge Sort** diidentifikasi sebagai **titik lutut matematika** optimal untuk peringkat preferensi manusia dengan akurasi tinggi tanpa perbandingan berulang.
 
 **Perbandingan (N=100):**
-| Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Status Pareto |
-| :--- | :--- | :--- | :--- |
-| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
-| Merge Sort | ~542 | 0.90 | Pareto-optimal |
-| Parallel Merge Sort | ~560 | 0.89 | Terdominasi |
-| **Shellsort** | **~734** | **0.94** | **Titik Lutut** |
-| Comb Sort | ~1243 | 0.99 | Pareto-optimal |
-| Full Rank | ~4950 | 1.00 | Pareto-optimal |
+| Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Duplikat | Status Pareto |
+| :--- | :--- | :--- | :--- | :--- |
+| Ford-Johnson | ~527 | 0.89 | TIDAK | Pareto-optimal |
+| **Merge Sort** | **~542** | **0.91** | **TIDAK** | **Titik Lutut** |
+| Dual-Pivot Quicksort | ~491 | 0.84 | TIDAK | Pareto-optimal |
+| Full Rank | ~4950 | 1.00 | TIDAK | Pareto-optimal |
 
-*Peringkat Cepat mengurangi pertarungan sekitar 85% dibandingkan dengan Peringkat Penuh sambil tetap mempertahankan akurasi peringkat yang tinggi. Algoritma seperti Bogosort secara kuantitatif absurd dan hanya berfungsi sebagai pembanding yang lucu.*
+*Peringkat Cepat mengurangi pertarungan sekitar 89% dibandingkan dengan Peringkat Penuh sambil tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan duplikat (seperti Shellsort) dikecualikan dari produksi untuk memastikan efisiensi pengguna yang maksimal.*
 
 ## Detail Teknis
 PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) untuk model Bradley-Terry. Pendekatan iteratif ini memastikan konvergensi yang terjamin dan perhitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi operasi matriks.
