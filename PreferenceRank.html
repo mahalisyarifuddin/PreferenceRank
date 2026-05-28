@@ -1509,19 +1509,7 @@
 				}
 				next(result) {
 					this.clear();
-					let nextPair = this.provider.next(this, result);
-					while (nextPair) {
-						const [a, b] = nextPair;
-						const match = this.matches.find(m => (m.a === a && m.b === b) || (m.a === b && m.b === a));
-						if (match) {
-							const autoResult = match.a === a ? match.result : 1 - match.result;
-							this.matches.push({ a, b, result: autoResult });
-							this.step++;
-							nextPair = this.provider.next(this, autoResult);
-						} else {
-							break;
-						}
-					}
+					const nextPair = this.provider.next(this, result);
 					if (!nextPair)
 						return this.pair = null,
 						this.results();
