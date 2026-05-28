@@ -1517,7 +1517,19 @@
 				}
 				next(result) {
 					this.clear();
-					const nextPair = this.provider.next(this, result);
+					let nextPair = this.provider.next(this, result);
+					while (nextPair) {
+						const [a, b] = nextPair;
+						const match = this.matches.find(m => (m.a === a && m.b === b) || (m.a === b && m.b === a));
+						if (match) {
+							const autoResult = match.a === a ? match.result : 1 - match.result;
+							this.matches.push({ a, b, result: autoResult });
+							this.step++;
+							nextPair = this.provider.next(this, autoResult);
+						} else {
+							break;
+						}
+					}
 					if (!nextPair)
 						return this.pair = null,
 						this.results();
@@ -1749,7 +1761,7 @@
 				undo() {
 					if (!this.busy && this.history.length) {
 						const last = this.history.pop();
-						this.matches.pop();
+						while (this.matches.length > last.step) this.matches.pop();
 						this.dirty = true;
 						Object.assign(this, {
 							step: last.step,
