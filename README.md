@@ -14,22 +14,20 @@ PreferenceRank offers two distinct modes to sort your items:
 
 - **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
 
-- **Quick Rank:** Uses **Shellsort** for efficient pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
+- **Quick Rank:** Uses **Merge Sort** for efficient, non-duplicating pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 48 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Shellsort** was identified as the optimal **mathematical knee point** for high-accuracy human preference ranking.
+Based on a comparative analysis of 48 sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Merge Sort** was identified as the optimal **mathematical knee point** for high-accuracy human preference ranking without redundant comparisons.
 
 **Comparison (N=100):**
-| Algorithm | Avg Battles | Avg Kendall Tau | Pareto Status |
-| :--- | :--- | :--- | :--- |
-| Ford-Johnson | ~527 | 0.89 | Pareto-optimal |
-| Merge Sort | ~542 | 0.90 | Pareto-optimal |
-| Parallel Merge Sort | ~560 | 0.89 | Dominated |
-| **Shellsort** | **~734** | **0.94** | **Knee Point** |
-| Comb Sort | ~1243 | 0.99 | Pareto-optimal |
-| Full Rank | ~4950 | 1.00 | Pareto-optimal |
+| Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |
+| :--- | :--- | :--- | :--- | :--- |
+| Ford-Johnson | ~527 | 0.89 | NO | Pareto-optimal |
+| **Merge Sort** | **~542** | **0.91** | **NO** | **Knee Point** |
+| Dual-Pivot Quicksort | ~491 | 0.84 | NO | Pareto-optimal |
+| Full Rank | ~4950 | 1.00 | NO | Pareto-optimal |
 
-*Quick Rank reduces battles by ~85% compared to Full Rank while maintaining high ranking accuracy. Algorithms like Bogosort are quantitatively absurd and serve only as a humorous baseline.*
+*Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons (like Shellsort) are excluded from production to ensure maximum user efficiency.*
 
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
