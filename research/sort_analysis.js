@@ -308,11 +308,12 @@ class DoubleSelectionSortProvider extends Provider {
 class DualPivotQuicksortProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
-        while (this.stack.length > 0 || this.state !== 'start') {
+        while (this.stack.length > 0 || this.state !== 'done') {
             if (this.state === 'start') {
-                if (this.stack.length === 0) return null;
+                if (this.stack.length === 0) { this.state = 'done'; return null; }
                 [this.l, this.r] = this.stack.pop();
-                if (this.l < this.r) { this.state = 'pivots'; } else continue;
+                if (this.r - this.l < 1) continue;
+                this.state = 'pivots';
             }
             if (this.state === 'pivots') {
                 if (result !== undefined) {
@@ -332,7 +333,7 @@ class DualPivotQuicksortProvider extends Provider {
                     }
                     if (this.sub === 'p2') {
                         if (result !== undefined) {
-                            if (result === 1) { [this.items[this.k], this.items[this.gt]] = [this.items[this.gt], this.items[this.k]]; this.gt--; this.sub = undefined; this.k++; }
+                            if (result === 1) { [this.items[this.k], this.items[this.gt]] = [this.items[this.gt], this.items[this.k]]; this.gt--; this.sub = undefined; }
                             else { this.k++; this.sub = undefined; }
                             result = undefined; continue;
                         } else return [this.items[this.k], this.p2];
@@ -878,9 +879,9 @@ class Quicksort3WayProvider extends Provider {
 class QuicksortHoareProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
-        while (this.stack.length > 0 || this.state !== 'start') {
+        while (this.stack.length > 0 || this.state !== 'done') {
             if (this.state === 'start') {
-                if (this.stack.length === 0) return null;
+                if (this.stack.length === 0) { this.state = 'done'; return null; }
                 [this.l, this.r] = this.stack.pop();
                 if (this.l < this.r) {
                     this.pVal = this.items[this.l + Math.floor((this.r - this.l)/2)];
@@ -1143,20 +1144,27 @@ class ThanosSortProvider extends Provider {
 }
 
 class TimsortProvider extends Provider {
-    constructor(n) { super(n); this.minRun = n < 64 ? n : 32; this.idx = 0; this.runs = []; this.state = 'nextRun'; }
+    constructor(n) { super(n); this.minRun = n < 64 ? n : 32; this.runs = []; this.idx = 0; this.state = 'next_run'; }
     next(result) {
         while (true) {
-            if (this.state === 'nextRun') { if (this.idx < this.n) { this.runStart = this.idx; this.runEnd = Math.min(this.idx + this.minRun, this.n); this.i = this.idx + 1; this.state = 'insSort'; } else { this.state = 'mergeLoop'; this.mergeState = 'init'; } continue; }
-            if (this.state === 'insSort') { if (this.i < this.runEnd) { this.temp = this.items[this.i]; this.j = this.i - 1; this.state = 'insComp'; continue; } this.runs.push(this.items.slice(this.runStart, this.runEnd)); this.idx = this.runEnd; this.state = 'nextRun'; continue; }
-            if (this.state === 'insComp') {
-                if (this.j >= this.runStart) { if (result !== undefined) { if (result === 0) { this.items[this.j+1] = this.items[this.j]; this.j--; result = undefined; } else { this.items[this.j+1] = this.temp; this.i++; this.state = 'insSort'; result = undefined; continue; } } else return [this.temp, this.items[this.j]]; continue; }
-                this.items[this.j+1] = this.temp; this.i++; this.state = 'insSort'; continue;
+            if (this.state === 'next_run') { if (this.idx < this.n) { this.runStart = this.idx; this.i = this.idx + 1; this.state = 'extend_run'; } else { this.state = 'merge_loop'; continue; } }
+            if (this.state === 'extend_run') {
+                if (this.i < this.n) {
+                   if (result !== undefined) {
+                       if (result === 0) { this.i++; result = undefined; }
+                       else { this.runs.push(this.items.slice(this.runStart, this.i)); this.idx = this.i; this.state = 'next_run'; result = undefined; continue; }
+                   } else return [this.items[this.i], this.items[this.i-1]];
+                } else { this.runs.push(this.items.slice(this.runStart, this.i)); this.idx = this.i; this.state = 'merge_loop'; continue; }
             }
-            if (this.state === 'mergeLoop') {
-                if (this.runs.length <= 1) { if (this.runs.length === 1) this.items = this.runs[0]; return null; }
-                if (this.mergeState === 'init') { this.newRuns = []; this.rIdx = 0; this.mergeState = 'pair'; }
-                if (this.mergeState === 'pair') { if (this.rIdx < this.runs.length - 1) { this.A = this.runs[this.rIdx]; this.B = this.runs[this.rIdx+1]; this.ai = 0; this.bi = 0; this.resArr = []; this.mergeState = 'work'; } else { if (this.rIdx === this.runs.length - 1) this.newRuns.push(this.runs[this.rIdx]); this.runs = this.newRuns; this.mergeState = 'init'; continue; } }
-                if (this.mergeState === 'work') { if (result !== undefined) { if (result === 0) this.resArr.push(this.A[this.ai++]); else this.resArr.push(this.B[this.bi++]); result = undefined; } if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]]; while (this.ai < this.A.length) this.resArr.push(this.A[this.ai++]); while (this.bi < this.B.length) this.resArr.push(this.B[this.bi++]); this.newRuns.push(this.resArr); this.rIdx += 2; this.mergeState = 'pair'; }
+            if (this.state === 'merge_loop') {
+                if (this.runs.length > 1) { this.A = this.runs.pop(); this.B = this.runs.pop(); this.ai = 0; this.bi = 0; this.res = []; this.state = 'merging'; }
+                else { if (this.runs.length === 1) this.items = this.runs[0]; return null; }
+            }
+            if (this.state === 'merging') {
+                if (result !== undefined) { if (result === 0) this.res.push(this.A[this.ai++]); else this.res.push(this.B[this.bi++]); result = undefined; }
+                if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]];
+                while (this.ai < this.A.length) this.res.push(this.A[this.ai++]); while (this.bi < this.B.length) this.res.push(this.B[this.bi++]);
+                this.runs.push(this.res); this.state = 'merge_loop';
             }
         }
     }
