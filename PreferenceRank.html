@@ -1056,40 +1056,38 @@
 					this.items = Array.from({ length: count }, (_, i) => i);
 					this.stack = [{ l: 0, r: count - 1, state: 0 }];
 				}
+				getProgress(step) {
+					return `${step}/~${this._est}`;
+				}
 				next(_, result) {
 					while (this.stack.length > 0) {
 						let f = this.stack[this.stack.length - 1];
 						if (f.state === 0) {
-							if (f.l >= f.r) {
-								this.pop();
-								continue;
-							}
-							f.m = Math.floor((f.l + f.r) / 2);
-							this.stack.push({ l: f.l, r: f.m, state: 0 });
+							if (f.l >= f.r) { this.pop(); continue; }
+							f.mid = Math.floor((f.l + f.r) / 2);
+							this.stack.push({ l: f.l, r: f.mid, state: 0 });
 							continue;
 						}
 						if (f.state === 1) {
-							this.stack.push({ l: f.m + 1, r: f.r, state: 0 });
+							this.stack.push({ l: f.mid + 1, r: f.r, state: 0 });
 							continue;
 						}
 						if (f.state === 2) {
-							f.i = f.l;
-							f.j = f.m + 1;
-							f.state = 3;
+							f.leftArr = this.items.slice(f.l, f.mid + 1);
+							f.rightArr = this.items.slice(f.mid + 1, f.r + 1);
+							f.i = 0; f.j = 0; f.k = f.l; f.state = 3;
 						}
 						if (f.state === 3) {
-							if (f.i <= f.m && f.j <= f.r) {
-								if (result !== undefined) {
-									if (result === 0) {
-										let val = this.items[f.j];
-										for (let k = f.j; k > f.i; k--) this.items[k] = this.items[k - 1];
-										this.items[f.i] = val;
-										f.i++; f.m++; f.j++;
-									} else f.i++;
-									result = undefined;
-								}
-								if (f.i <= f.m && f.j <= f.r) return [this.items[f.i], this.items[f.j]];
+							if (result !== undefined) {
+								if (result >= 0.5) this.items[f.k++] = f.leftArr[f.i++];
+								else this.items[f.k++] = f.rightArr[f.j++];
+								result = undefined;
 							}
+							if (f.i < f.leftArr.length && f.j < f.rightArr.length) {
+								return [f.leftArr[f.i], f.rightArr[f.j]];
+							}
+							while (f.i < f.leftArr.length) this.items[f.k++] = f.leftArr[f.i++];
+							while (f.j < f.rightArr.length) this.items[f.k++] = f.rightArr[f.j++];
 							this.pop();
 						}
 					}
