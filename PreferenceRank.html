@@ -1080,7 +1080,7 @@
 						}
 						if (f.state === 3) {
 							if (result !== undefined) {
-								if (result === 1) this.items[f.k++] = f.leftArr[f.i++];
+								if (result >= 0.5) this.items[f.k++] = f.leftArr[f.i++];
 								else this.items[f.k++] = f.rightArr[f.j++];
 								result = undefined;
 							}
