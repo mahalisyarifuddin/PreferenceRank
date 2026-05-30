@@ -16,69 +16,69 @@ Kami membandingkan 64 algoritma pengurutan. Persyaratan utama untuk produksi ada
 ### Hasil (N=100)
 | Algoritma | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
 | :--- | :--- | :--- | :--- | :--- |
-| Exit Sort | 0.00 | 0.0054 | TIDAK | Pareto-optimal |
-| Quantum Bogo | 1.72 | 0.0170 | TIDAK | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5475 | TIDAK | Pareto-optimal |
-| Ford-Johnson | 526.82 | 0.8890 | TIDAK | Pareto-optimal |
-| Merge Sort | 541.23 | 0.9039 | TIDAK | Pareto-optimal |
-| **In-place Merge Sort** | 541.76 | 0.9046 | TIDAK | **Titik Lutut Produksi** |
+| Exit Sort | 0.00 | 0.0010 | TIDAK | Pareto-optimal |
+| Quantum Bogo | 1.74 | 0.0125 | TIDAK | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5455 | TIDAK | Pareto-optimal |
+| Ford-Johnson | 526.86 | 0.8894 | TIDAK | Pareto-optimal |
+| **In-place Merge Sort** | 541.58 | 0.9037 | TIDAK | **Titik Lutut Produksi** |
 | Full Rank | 4950.00 | 1.0000 | TIDAK | Pareto-optimal |
-| Intelligent Design | 0.00 | 0.0023 | TIDAK | Terdominasi |
-| Socialist Sort | 0.00 | -0.0025 | TIDAK | Terdominasi |
-| BogoBogoSort | 44.26 | 0.0893 | YA | Terdominasi |
-| Genghis Khan Sort | 99.00 | 0.3630 | TIDAK | Terdominasi |
-| Stalin Sort | 99.00 | 0.0970 | TIDAK | Terdominasi |
-| Thanos Sort | 99.00 | 0.5467 | YA | Terdominasi |
-| Heap Sort | 99.56 | 0.4803 | YA | Terdominasi |
-| Sleep Sort | 100.00 | -0.0059 | TIDAK | Terdominasi |
-| Smooth Sort | 100.80 | 0.4860 | YA | Terdominasi |
-| 3-Way Quicksort | 101.58 | 0.3448 | YA | Terdominasi |
-| Silly Sort | 138.00 | 0.2464 | YA | Terdominasi |
-| Hater Sort | 196.09 | 0.6637 | YA | Terdominasi |
-| Patience Sort | 199.25 | 0.4868 | YA | Terdominasi |
-| Quicksort (Hoare) | 203.70 | 0.5313 | YA | Terdominasi |
-| Random Sort | 254.65 | 0.6600 | YA | Terdominasi |
-| Cycle Sort | 504.61 | 0.4230 | YA | Terdominasi |
-| Binary Insertion | 530.44 | 0.8875 | TIDAK | Terdominasi |
-| Timsort | 532.38 | 0.8943 | YA | Terdominasi |
-| Triple-Pivot Quicksort | 534.50 | 0.8286 | YA | Terdominasi |
-| 4-way Merge Sort | 542.69 | 0.9023 | TIDAK | Terdominasi |
-| Ping-pong Merge Sort | 558.03 | 0.8863 | TIDAK | Terdominasi |
-| Bottom-up Merge Sort | 558.25 | 0.8873 | TIDAK | Terdominasi |
-| Parallel Merge Sort | 558.29 | 0.8862 | TIDAK | Terdominasi |
-| Tournament Sort | 558.73 | 0.8867 | TIDAK | Terdominasi |
-| Powersort | 562.54 | 0.9078 | YA | Terdominasi |
-| 3-way Merge Sort | 568.33 | 0.8800 | TIDAK | Terdominasi |
-| Natural Merge Sort | 578.56 | 0.8935 | YA | Terdominasi |
-| Quicksort (Ninther) | 602.87 | 0.8423 | YA | Terdominasi |
-| Quicksort (LTR) | 637.28 | 0.8373 | TIDAK | Terdominasi |
-| Tree Sort | 644.16 | 0.8363 | TIDAK | Terdominasi |
-| Dual-Pivot Quicksort | 645.96 | 0.8372 | TIDAK | Terdominasi |
-| Quicksort (RTL) | 647.14 | 0.8377 | TIDAK | Terdominasi |
-| Quicksort (Random) | 647.97 | 0.8368 | TIDAK | Terdominasi |
-| Parallel Quicksort | 651.38 | 0.8369 | TIDAK | Terdominasi |
-| Stable Quicksort | 651.82 | 0.8362 | TIDAK | Terdominasi |
-| Quicksort (Middle) | 652.87 | 0.8361 | TIDAK | Terdominasi |
-| Shellsort | 671.36 | 0.9328 | YA | Terdominasi |
-| Quicksort (Mo3) | 709.14 | 0.8277 | YA | Terdominasi |
-| BlockQuicksort | 718.28 | 0.8073 | TIDAK | Terdominasi |
-| Intro Sort | 722.06 | 0.8072 | TIDAK | Terdominasi |
-| Strand Sort | 740.23 | 0.8193 | TIDAK | Terdominasi |
-| Comb Sort | 851.81 | 0.9747 | YA | Terdominasi |
-| Hayate-Shiki | 932.18 | 0.7849 | YA | Terdominasi |
-| Bitonic Sort | 1037.63 | 0.9577 | YA | Terdominasi |
-| Circle Sort | 1210.62 | 0.9702 | YA | Terdominasi |
-| Slowsort | 1320.52 | 0.9465 | YA | Terdominasi |
-| Insertion Sort | 2568.90 | 0.8013 | TIDAK | Terdominasi |
-| Cocktail Shaker | 2569.86 | 0.8075 | YA | Terdominasi |
-| Bubble Sort | 2580.12 | 0.8035 | YA | Terdominasi |
-| Gnome Sort | 2588.91 | 0.8039 | YA | Terdominasi |
-| Odd-Even Sort | 2600.93 | 0.8052 | YA | Terdominasi |
-| Double Selection | 2743.44 | 0.9218 | YA | Terdominasi |
-| Cocktail Selection | 2752.02 | 0.9223 | YA | Terdominasi |
-| Selection Sort | 2766.80 | 0.8899 | YA | Terdominasi |
-| Stooge Sort | 2877.99 | 0.9901 | YA | Terdominasi |
-| Pancake Sort | 3076.83 | 0.9683 | YA | Terdominasi |
+| Intelligent Design | 0.00 | -0.0006 | TIDAK | Terdominasi |
+| Socialist Sort | 0.00 | -0.0024 | TIDAK | Terdominasi |
+| BogoBogoSort | 45.20 | 0.0899 | YA | Terdominasi |
+| Genghis Khan Sort | 99.00 | 0.3446 | TIDAK | Terdominasi |
+| Stalin Sort | 99.00 | 0.0998 | TIDAK | Terdominasi |
+| Thanos Sort | 99.00 | 0.5448 | YA | Terdominasi |
+| Smooth Sort | 99.37 | 0.4747 | YA | Terdominasi |
+| Heap Sort | 99.44 | 0.4826 | YA | Terdominasi |
+| Sleep Sort | 100.00 | 0.0020 | TIDAK | Terdominasi |
+| 3-Way Quicksort | 101.19 | 0.3714 | YA | Terdominasi |
+| Silly Sort | 138.00 | 0.2390 | YA | Terdominasi |
+| Hater Sort | 196.03 | 0.6613 | YA | Terdominasi |
+| Patience Sort | 198.88 | 0.4862 | YA | Terdominasi |
+| Quicksort (Hoare) | 199.80 | 0.5258 | YA | Terdominasi |
+| Random Sort | 243.38 | 0.6436 | YA | Terdominasi |
+| Binary Insertion | 530.61 | 0.8876 | TIDAK | Terdominasi |
+| Timsort | 532.64 | 0.8970 | YA | Terdominasi |
+| Triple-Pivot Quicksort | 535.74 | 0.8289 | YA | Terdominasi |
+| Merge Sort | 541.78 | 0.9031 | TIDAK | Terdominasi |
+| 4-way Merge Sort | 543.60 | 0.9034 | TIDAK | Terdominasi |
+| Cycle Sort | 549.71 | 0.4431 | YA | Terdominasi |
+| Tournament Sort | 557.12 | 0.8867 | TIDAK | Terdominasi |
+| Parallel Merge Sort | 557.40 | 0.8853 | TIDAK | Terdominasi |
+| Ping-pong Merge Sort | 558.31 | 0.8871 | TIDAK | Terdominasi |
+| Bottom-up Merge Sort | 558.76 | 0.8879 | TIDAK | Terdominasi |
+| Powersort | 562.08 | 0.9073 | YA | Terdominasi |
+| 3-way Merge Sort | 566.84 | 0.8796 | TIDAK | Terdominasi |
+| Natural Merge Sort | 578.28 | 0.8928 | YA | Terdominasi |
+| Quicksort (Ninther) | 605.76 | 0.8421 | YA | Terdominasi |
+| Quicksort (Middle) | 644.16 | 0.8373 | TIDAK | Terdominasi |
+| Dual-Pivot Quicksort | 644.56 | 0.8368 | TIDAK | Terdominasi |
+| Quicksort (RTL) | 644.66 | 0.8365 | TIDAK | Terdominasi |
+| Tree Sort | 646.14 | 0.8365 | TIDAK | Terdominasi |
+| Parallel Quicksort | 651.54 | 0.8371 | TIDAK | Terdominasi |
+| Quicksort (LTR) | 651.62 | 0.8370 | TIDAK | Terdominasi |
+| Quicksort (Random) | 651.86 | 0.8373 | TIDAK | Terdominasi |
+| Stable Quicksort | 655.33 | 0.8363 | TIDAK | Terdominasi |
+| Shellsort | 673.24 | 0.9333 | YA | Terdominasi |
+| Quicksort (Mo3) | 707.04 | 0.8282 | YA | Terdominasi |
+| Intro Sort | 717.94 | 0.8067 | TIDAK | Terdominasi |
+| BlockQuicksort | 721.63 | 0.8073 | TIDAK | Terdominasi |
+| Strand Sort | 740.95 | 0.8215 | TIDAK | Terdominasi |
+| Comb Sort | 851.51 | 0.9746 | YA | Terdominasi |
+| Hayate-Shiki | 933.34 | 0.7874 | YA | Terdominasi |
+| Bitonic Sort | 1037.85 | 0.9576 | YA | Terdominasi |
+| Circle Sort | 1208.33 | 0.9691 | YA | Terdominasi |
+| Slowsort | 1318.27 | 0.9478 | YA | Terdominasi |
+| Insertion Sort | 2569.03 | 0.8023 | TIDAK | Terdominasi |
+| Bubble Sort | 2570.84 | 0.8036 | YA | Terdominasi |
+| Gnome Sort | 2576.10 | 0.8041 | YA | Terdominasi |
+| Cocktail Shaker | 2584.04 | 0.8078 | YA | Terdominasi |
+| Odd-Even Sort | 2618.82 | 0.8066 | YA | Terdominasi |
+| Cocktail Selection | 2738.95 | 0.9225 | YA | Terdominasi |
+| Selection Sort | 2742.28 | 0.8888 | YA | Terdominasi |
+| Double Selection | 2758.65 | 0.9214 | YA | Terdominasi |
+| Stooge Sort | 2881.61 | 0.9900 | YA | Terdominasi |
+| Pancake Sort | 3059.09 | 0.9682 | YA | Terdominasi |
 | Bogosort | 4950.00 | 1.0000 | YA | Terdominasi |
 
 ### Regresi Estimasi Jumlah Pertempuran
@@ -90,4 +90,4 @@ Untuk In-place Merge Sort (Titik Lutut Produksi yang baru):
 
 ## 2. Analisis Konvergensi Bradley-Terry
 
-Kami menganalisis konvergensi algoritma Minorization-Maximization (MM) dan mengidentifikasi 1e-7 sebagai ambang titik lutut. Optimalisasi ini menghemat ~43% iterasi sambil mempertahankan kesalahan skor maksimum <0,001 (diabaikan untuk skor integer yang dibulatkan).
+Kami menganalisis konvergensi algoritma Minorization-Maximization (MM) dan mengidentifikasi 1e-7 sebagai ambang titik lutut. Optimalisasi ini menghemat ~45% iterasi sambil mempertahankan kesalahan skor maksimum <0,001 (diabaikan untuk skor integer yang dibulatkan).
