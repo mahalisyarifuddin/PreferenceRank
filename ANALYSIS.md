@@ -16,70 +16,70 @@ We compared 64 sorting algorithms. A key requirement for production is the elimi
 ### Results (N=100)
 | Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |
 | :--- | :--- | :--- | :--- | :--- |
-| Intelligent Design | 0.00 | 0.0087 | NO | Pareto-optimal |
-| Quantum Bogo | 1.81 | 0.0195 | NO | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5457 | NO | Pareto-optimal |
-| Ford-Johnson | 526.81 | 0.8889 | NO | Pareto-optimal |
-| **Merge Sort** | 541.71 | 0.9034 | NO | **Production Knee Point** |
-| 4-way Merge Sort | 543.22 | 0.9048 | NO | Pareto-optimal |
-| Full Rank | 4950.00 | 1.0000 | NO | Pareto-optimal |
-| Socialist Sort | 0.00 | 0.0012 | NO | Dominated |
-| Exit Sort | 0.00 | -0.0062 | NO | Dominated |
-| BogoBogoSort | 45.24 | 0.0887 | YES | Dominated |
-| Smooth Sort | 98.11 | 0.4798 | YES | Dominated |
-| Heap Sort | 98.82 | 0.4762 | YES | Dominated |
-| Genghis Khan Sort | 99.00 | 0.3384 | NO | Dominated |
-| Stalin Sort | 99.00 | 0.1016 | NO | Dominated |
-| Thanos Sort | 99.00 | 0.5472 | YES | Dominated |
-| Sleep Sort | 100.00 | 0.0063 | NO | Dominated |
-| 3-Way Quicksort | 100.00 | 0.3615 | YES | Dominated |
-| Silly Sort | 138.00 | 0.2347 | YES | Dominated |
-| Hater Sort | 196.23 | 0.6630 | YES | Dominated |
-| Patience Sort | 198.57 | 0.4781 | YES | Dominated |
-| Quicksort (Hoare) | 201.44 | 0.5138 | YES | Dominated |
-| Random Sort | 236.68 | 0.6285 | YES | Dominated |
-| Cycle Sort | 530.07 | 0.4391 | YES | Dominated |
-| Binary Insertion | 530.67 | 0.8883 | NO | Dominated |
-| Timsort | 532.40 | 0.8954 | YES | Dominated |
-| Triple-Pivot Quicksort | 541.53 | 0.8277 | YES | Dominated |
-| In-place Merge Sort | 542.07 | 0.9026 | NO | Dominated |
-| Ping-pong Merge Sort | 557.90 | 0.8852 | NO | Dominated |
-| Bottom-up Merge Sort | 558.21 | 0.8865 | NO | Dominated |
-| Tournament Sort | 558.31 | 0.8867 | NO | Dominated |
-| Parallel Merge Sort | 558.39 | 0.8864 | NO | Dominated |
-| Powersort | 562.02 | 0.9085 | YES | Dominated |
-| 3-way Merge Sort | 567.70 | 0.8803 | NO | Dominated |
-| Natural Merge Sort | 578.31 | 0.8917 | YES | Dominated |
-| Quicksort (Ninther) | 604.10 | 0.8419 | YES | Dominated |
-| Quicksort (Random) | 641.35 | 0.8366 | NO | Dominated |
-| Quicksort (Middle) | 643.60 | 0.8358 | NO | Dominated |
-| Stable Quicksort | 645.40 | 0.8375 | NO | Dominated |
-| Dual-Pivot Quicksort | 646.56 | 0.8364 | NO | Dominated |
-| Tree Sort | 648.73 | 0.8366 | NO | Dominated |
-| Parallel Quicksort | 648.84 | 0.8365 | NO | Dominated |
-| Quicksort (LTR) | 649.12 | 0.8372 | NO | Dominated |
-| Quicksort (RTL) | 650.60 | 0.8367 | NO | Dominated |
-| Shellsort | 670.82 | 0.9314 | YES | Dominated |
-| Quicksort (Mo3) | 702.53 | 0.8272 | YES | Dominated |
-| Intro Sort | 715.22 | 0.8080 | NO | Dominated |
-| BlockQuicksort | 725.04 | 0.8067 | NO | Dominated |
-| Strand Sort | 737.73 | 0.8174 | NO | Dominated |
-| Comb Sort | 851.63 | 0.9746 | YES | Dominated |
-| Hayate-Shiki | 931.93 | 0.7823 | YES | Dominated |
-| Bitonic Sort | 1036.71 | 0.9574 | YES | Dominated |
-| Circle Sort | 1206.98 | 0.9694 | YES | Dominated |
-| Slowsort | 1321.04 | 0.9481 | YES | Dominated |
-| Cocktail Shaker | 2566.32 | 0.8045 | YES | Dominated |
-| Bubble Sort | 2575.85 | 0.8013 | YES | Dominated |
-| Insertion Sort | 2585.64 | 0.8038 | NO | Dominated |
-| Gnome Sort | 2589.39 | 0.8043 | YES | Dominated |
-| Odd-Even Sort | 2592.26 | 0.8038 | YES | Dominated |
-| Selection Sort | 2750.68 | 0.8909 | YES | Dominated |
-| Cocktail Selection | 2756.68 | 0.9228 | YES | Dominated |
-| Double Selection | 2770.46 | 0.9216 | YES | Dominated |
-| Stooge Sort | 2881.02 | 0.9901 | YES | Dominated |
-| Pancake Sort | 3088.26 | 0.9686 | YES | Dominated |
+| 3-Way Quicksort | 101.58 | 0.3620 | YES | Dominated |
+| 3-way Merge Sort | 566.94 | 0.8808 | NO | Dominated |
+| 4-way Merge Sort | 543.44 | 0.9024 | NO | Dominated |
+| Binary Insertion | 530.61 | 0.8867 | NO | Dominated |
+| Bitonic Sort | 1037.33 | 0.9574 | YES | Dominated |
+| BlockQuicksort | 717.95 | 0.8064 | NO | Dominated |
+| BogoBogoSort | 44.81 | 0.0927 | YES | Dominated |
 | Bogosort | 4950.00 | 1.0000 | YES | Dominated |
+| Bottom-up Merge Sort | 558.57 | 0.8874 | NO | Dominated |
+| Bubble Sort | 2589.34 | 0.8044 | YES | Dominated |
+| Circle Sort | 1211.16 | 0.9693 | YES | Dominated |
+| Cocktail Selection | 2749.38 | 0.9220 | YES | Dominated |
+| Cocktail Shaker | 2579.46 | 0.8076 | YES | Dominated |
+| Comb Sort | 850.95 | 0.9747 | YES | Dominated |
+| Cycle Sort | 528.88 | 0.4202 | YES | Dominated |
+| Double Selection | 2774.61 | 0.9227 | YES | Dominated |
+| Dual-Pivot Quicksort | 645.06 | 0.8370 | NO | Dominated |
+| Exit Sort | 0.00 | 0.0015 | NO | Dominated |
+| Ford-Johnson | 526.51 | 0.8880 | NO | Pareto-optimal |
+| Full Rank | 4950.00 | 1.0000 | NO | Pareto-optimal |
+| Genghis Khan Sort | 99.00 | 0.3201 | NO | Dominated |
+| Gnome Sort | 2578.87 | 0.8033 | YES | Dominated |
+| Hater Sort | 195.97 | 0.6639 | YES | Dominated |
+| Hayate-Shiki | 930.57 | 0.7832 | YES | Dominated |
+| Heap Sort | 98.08 | 0.4785 | YES | Dominated |
+| In-place Merge Sort | 541.82 | 0.9029 | NO | Pareto-optimal |
+| Insertion Sort | 2565.09 | 0.8018 | NO | Dominated |
+| Intelligent Design | 0.00 | 0.0027 | NO | Dominated |
+| Intro Sort | 723.25 | 0.8063 | NO | Dominated |
+| **Merge Sort** | 542.16 | 0.9041 | NO | **Production Knee Point** |
+| Miracle Sort | 99.00 | 0.5424 | NO | Pareto-optimal |
+| Natural Merge Sort | 577.58 | 0.8924 | YES | Dominated |
+| Odd-Even Sort | 2605.79 | 0.8053 | YES | Dominated |
+| Pancake Sort | 3079.14 | 0.9688 | YES | Dominated |
+| Parallel Merge Sort | 558.04 | 0.8872 | NO | Dominated |
+| Parallel Quicksort | 645.14 | 0.8367 | NO | Dominated |
+| Patience Sort | 198.50 | 0.4866 | YES | Dominated |
+| Ping-pong Merge Sort | 558.58 | 0.8879 | NO | Dominated |
+| Powersort | 562.51 | 0.9071 | YES | Dominated |
+| Quantum Bogo | 1.73 | 0.0121 | NO | Pareto-optimal |
+| Quicksort (Hoare) | 207.09 | 0.5238 | YES | Dominated |
+| Quicksort (LTR) | 650.76 | 0.8371 | NO | Dominated |
+| Quicksort (Middle) | 647.08 | 0.8371 | NO | Dominated |
+| Quicksort (Mo3) | 710.38 | 0.8278 | YES | Dominated |
+| Quicksort (Ninther) | 604.40 | 0.8427 | YES | Dominated |
+| Quicksort (RTL) | 643.33 | 0.8364 | NO | Dominated |
+| Quicksort (Random) | 650.54 | 0.8371 | NO | Dominated |
+| Random Sort | 244.41 | 0.6469 | YES | Dominated |
+| Selection Sort | 2759.44 | 0.8890 | YES | Dominated |
+| Shellsort | 670.58 | 0.9323 | YES | Dominated |
+| Silly Sort | 138.00 | 0.2385 | YES | Dominated |
+| Sleep Sort | 100.00 | -0.0047 | NO | Dominated |
+| Slowsort | 1324.76 | 0.9496 | YES | Dominated |
+| Smooth Sort | 100.12 | 0.4848 | YES | Dominated |
+| Socialist Sort | 0.00 | 0.0035 | NO | Pareto-optimal |
+| Stable Quicksort | 654.62 | 0.8372 | NO | Dominated |
+| Stalin Sort | 99.00 | 0.0983 | NO | Dominated |
+| Stooge Sort | 2893.43 | 0.9900 | YES | Dominated |
+| Strand Sort | 743.92 | 0.8188 | NO | Dominated |
+| Thanos Sort | 99.00 | 0.5451 | YES | Dominated |
+| Timsort | 532.34 | 0.8957 | YES | Dominated |
+| Tournament Sort | 558.63 | 0.8875 | NO | Dominated |
+| Tree Sort | 650.24 | 0.8374 | NO | Dominated |
+| Triple-Pivot Quicksort | 532.48 | 0.8292 | YES | Dominated |
 
 ### Battle Count Estimate Regression
 For Merge Sort (the new Production Knee Point):
@@ -90,4 +90,4 @@ For Merge Sort (the new Production Knee Point):
 
 ## 2. Bradley-Terry Convergence Analysis
 
-We analyzed the Minorization-Maximization (MM) algorithm's convergence and identified 1e-7 as the knee point threshold. This optimization saves ~47% of iterations while maintaining a maximum score error of <0.001 (negligible for integer-rounded scores).
+We analyzed the Minorization-Maximization (MM) algorithm's convergence and identified 1e-7 as the knee point threshold. This optimization saves ~45% of iterations while maintaining a maximum score error of <0.001 (negligible for integer-rounded scores).
