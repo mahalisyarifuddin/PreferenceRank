@@ -846,13 +846,61 @@ class PingPongMergeSortProvider extends Provider {
 }
 
 class PowersortProvider extends Provider {
-    constructor(n) { super(n); this.idx = 0; this.runs = []; this.state = 'findRun'; }
+    constructor(n) { super(n); this.idx = 0; this.runStack = []; this.state = 'next_run'; }
+    power(s1, n1, s2, n2, n) {
+        let m1 = s1 + n1 / 2, m2 = s2 + n2 / 2;
+        let a = m1 / n, b = m2 / n; let p = 0;
+        while (true) {
+            let abits = Math.floor(a * 2), bbits = Math.floor(b * 2);
+            if (abits !== bbits) return p;
+            a = a * 2 - abits; b = b * 2 - bbits; p++;
+        }
+    }
     next(result) {
         while (true) {
-            if (this.state === 'findRun') { if (this.idx < this.n) { this.runStart = this.idx; this.idx++; this.state = 'extendRun'; continue; } this.state = 'finalMerge'; continue; }
-            if (this.state === 'extendRun') { if (this.idx < this.n) { if (result !== undefined) { if (result === 0) { this.idx++; result = undefined; } else { this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; result = undefined; continue; } } else return [this.items[this.idx-1], this.items[this.idx]]; continue; } this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; continue; }
-            if (this.state === 'finalMerge') { if (this.runs.length > 1) { this.A = this.runs.shift(); this.B = this.runs.shift(); this.ai = 0; this.bi = 0; this.resArr = []; this.state = 'work'; } else { if (this.runs.length === 1) this.items = this.runs[0]; return null; } }
-            if (this.state === 'work') { if (result !== undefined) { if (result === 0) this.resArr.push(this.A[this.ai++]); else this.resArr.push(this.B[this.bi++]); result = undefined; } if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]]; while (this.ai < this.A.length) this.resArr.push(this.A[this.ai++]); while (this.bi < this.B.length) this.resArr.push(this.B[this.bi++]); this.runs.unshift(this.resArr); this.state = 'finalMerge'; }
+            if (this.state === 'next_run') { if (this.idx < this.n) { this.runStart = this.idx; this.i = this.idx + 1; this.state = 'decide_direction'; } else { this.state = 'force_collapse'; continue; } }
+            if (this.state === 'decide_direction' || this.state === 'extend_ascending' || this.state === 'extend_descending') {
+                if (result !== undefined) {
+                    if (this.state === 'decide_direction') { this.isDescending = (result === 0); this.i++; this.state = this.isDescending ? 'extend_descending' : 'extend_ascending'; }
+                    else if (this.state === 'extend_ascending') { if (result === 1) this.i++; else this.state = 'push_run'; }
+                    else if (this.state === 'extend_descending') { if (result === 0) this.i++; else this.state = 'push_run'; }
+                    result = undefined; if (this.state === 'push_run') continue;
+                }
+                if (this.i < this.n) return [this.items[this.i], this.items[this.i-1]];
+                this.state = 'push_run'; continue;
+            }
+            if (this.state === 'push_run') {
+                if (this.isDescending) { let l=this.runStart, r=this.i-1; while(l<r) { [this.items[l],this.items[r]]=[this.items[r],this.items[l]]; l++; r--; } }
+                let newRun = { start: this.runStart, len: this.i - this.runStart };
+                if (this.runStack.length > 0) {
+                    let lastRun = this.runStack[this.runStack.length - 1];
+                    lastRun.p = this.power(lastRun.start, lastRun.len, newRun.start, newRun.len, this.n);
+                    while (this.runStack.length >= 2 && this.runStack[this.runStack.length-2].p >= lastRun.p) {
+                        this.mergeIdx = this.runStack.length - 2; this.state = 'merging_init'; return this.next(undefined);
+                    }
+                }
+                this.runStack.push(newRun); this.idx = this.i; this.state = 'next_run'; continue;
+            }
+            if (this.state === 'force_collapse') { if (this.runStack.length > 1) { this.mergeIdx = this.runStack.length - 2; this.state = 'merging_init'; continue; } return null; }
+            if (this.state === 'merging_init') {
+                let r1 = this.runStack[this.mergeIdx], r2 = this.runStack[this.mergeIdx+1];
+                this.A = this.items.slice(r1.start, r1.start + r1.len); this.B = this.items.slice(r2.start, r2.start + r2.len);
+                this.ai = 0; this.bi = 0; this.k = r1.start; this.state = 'merging_loop'; continue;
+            }
+            if (this.state === 'merging_loop') {
+                if (result !== undefined) { if (result === 0) this.items[this.k++] = this.A[this.ai++]; else this.items[this.k++] = this.B[this.bi++]; result = undefined; }
+                if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]];
+                while (this.ai < this.A.length) this.items[this.k++] = this.A[this.ai++]; while (this.bi < this.B.length) this.items[this.k++] = this.B[this.bi++];
+                let merged = { start: this.runStack[this.mergeIdx].start, len: this.runStack[this.mergeIdx].len + this.runStack[this.mergeIdx+1].len, p: this.runStack[this.mergeIdx+1].p };
+                this.runStack.splice(this.mergeIdx, 2, merged);
+                if (this.idx === this.n) { this.state = 'force_collapse'; }
+                else {
+                    let lastRun = this.runStack[this.runStack.length - 1];
+                    if (this.runStack.length >= 2 && this.runStack[this.runStack.length-2].p >= lastRun.p) {
+                        this.mergeIdx = this.runStack.length - 2; this.state = 'merging_init';
+                    } else { this.state = 'next_run'; }
+                } continue;
+            }
         }
     }
 }
@@ -886,28 +934,26 @@ class QuicksortHoareProvider extends Provider {
                 if (this.l < this.r) {
                     this.pVal = this.items[this.l + Math.floor((this.r - this.l)/2)];
                     this.i = this.l - 1; this.j = this.r + 1;
-                    this.state = 'i_loop'; this.sub = undefined;
+                    this.state = 'i_loop';
                 } else continue;
             }
             if (this.state === 'i_loop') {
                 if (result !== undefined) {
-                    if (result === 0) { this.i++; result = undefined; }
-                    else { this.state = 'j_loop'; result = undefined; }
-                }
+                    if (result === 1) { this.state = 'j_loop'; result = undefined; }
+                    else { this.i++; result = undefined; }
+                } else { this.i++; }
                 if (this.state === 'i_loop') {
-                    this.i++;
-                    if (this.i < this.n) return [this.items[this.i], this.pVal];
+                    if (this.i <= this.r) return [this.items[this.i], this.pVal];
                     else { this.state = 'j_loop'; }
                 }
             }
             if (this.state === 'j_loop') {
                 if (result !== undefined) {
-                    if (result === 1) { this.j--; result = undefined; }
-                    else { this.state = 'swap'; result = undefined; }
-                }
+                    if (result === 0) { this.state = 'swap'; result = undefined; }
+                    else { this.j--; result = undefined; }
+                } else { this.j--; }
                 if (this.state === 'j_loop') {
-                    this.j--;
-                    if (this.j >= 0) return [this.items[this.j], this.pVal];
+                    if (this.j >= this.l) return [this.items[this.j], this.pVal];
                     else { this.state = 'swap'; }
                 }
             }
@@ -919,8 +965,7 @@ class QuicksortHoareProvider extends Provider {
                     [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]];
                     this.state = 'i_loop';
                 }
-                result = undefined;
-                continue;
+                result = undefined; continue;
             }
         } return null;
     }
@@ -1144,27 +1189,55 @@ class ThanosSortProvider extends Provider {
 }
 
 class TimsortProvider extends Provider {
-    constructor(n) { super(n); this.minRun = n < 64 ? n : 32; this.runs = []; this.idx = 0; this.state = 'next_run'; }
+    constructor(n) { super(n); this.minRun = this.calcMinRun(n); this.idx = 0; this.runStack = []; this.state = 'next_run'; }
+    calcMinRun(n) { let r = 0; while (n >= 64) { r |= n & 1; n >>= 1; } return n + r; }
     next(result) {
         while (true) {
-            if (this.state === 'next_run') { if (this.idx < this.n) { this.runStart = this.idx; this.i = this.idx + 1; this.state = 'extend_run'; } else { this.state = 'merge_loop'; continue; } }
-            if (this.state === 'extend_run') {
-                if (this.i < this.n) {
-                   if (result !== undefined) {
-                       if (result === 0) { this.i++; result = undefined; }
-                       else { this.runs.push(this.items.slice(this.runStart, this.i)); this.idx = this.i; this.state = 'next_run'; result = undefined; continue; }
-                   } else return [this.items[this.i], this.items[this.i-1]];
-                } else { this.runs.push(this.items.slice(this.runStart, this.i)); this.idx = this.i; this.state = 'merge_loop'; continue; }
+            if (this.state === 'next_run') { if (this.idx < this.n) { this.runStart = this.idx; this.i = this.idx + 1; this.state = 'decide_direction'; } else { this.state = 'force_collapse'; continue; } }
+            if (this.state === 'decide_direction' || this.state === 'extend_ascending' || this.state === 'extend_descending') {
+                if (result !== undefined) {
+                    if (this.state === 'decide_direction') { this.isDescending = (result === 0); this.i++; this.state = this.isDescending ? 'extend_descending' : 'extend_ascending'; }
+                    else if (this.state === 'extend_ascending') { if (result === 1) this.i++; else this.state = 'extend_minrun'; }
+                    else if (this.state === 'extend_descending') { if (result === 0) this.i++; else this.state = 'extend_minrun'; }
+                    result = undefined; if (this.state === 'extend_minrun') continue;
+                }
+                if (this.i < this.n) return [this.items[this.i], this.items[this.i-1]];
+                this.state = 'extend_minrun'; continue;
             }
-            if (this.state === 'merge_loop') {
-                if (this.runs.length > 1) { this.A = this.runs.pop(); this.B = this.runs.pop(); this.ai = 0; this.bi = 0; this.res = []; this.state = 'merging'; }
-                else { if (this.runs.length === 1) this.items = this.runs[0]; return null; }
+            if (this.state === 'extend_minrun') {
+                if (this.isDescending) { let l=this.runStart, r=this.i-1; while(l<r) { [this.items[l],this.items[r]]=[this.items[r],this.items[l]]; l++; r--; } }
+                this.targetEnd = Math.min(this.n, this.runStart + this.minRun);
+                if (this.i < this.targetEnd) { this.ins_i = this.i; this.state = 'ins_start'; } else { this.state = 'push_run'; } continue;
             }
-            if (this.state === 'merging') {
-                if (result !== undefined) { if (result === 0) this.res.push(this.A[this.ai++]); else this.res.push(this.B[this.bi++]); result = undefined; }
+            if (this.state === 'ins_start') { if (this.ins_i < this.targetEnd) { this.temp = this.items[this.ins_i]; this.lo = this.runStart; this.hi = this.ins_i; this.state = 'ins_binary_search'; continue; } this.i = this.targetEnd; this.state = 'push_run'; continue; }
+            if (this.state === 'ins_binary_search') {
+                if (result !== undefined) { if (result === 1) this.lo = this.mid + 1; else this.hi = this.mid; result = undefined; }
+                if (this.lo < this.hi) { this.mid = (this.lo + this.hi) >> 1; return [this.temp, this.items[this.mid]]; }
+                for (let k = this.ins_i; k > this.lo; k--) this.items[k] = this.items[k-1]; this.items[this.lo] = this.temp; this.ins_i++; this.state = 'ins_start'; continue;
+            }
+            if (this.state === 'push_run') { this.runStack.push({ start: this.runStart, len: this.i - this.runStart }); this.idx = this.i; this.state = 'collapse'; continue; }
+            if (this.state === 'collapse') {
+                if (this.runStack.length > 1) {
+                    let n = this.runStack.length;
+                    if (n >= 3 && this.runStack[n-3].len <= this.runStack[n-2].len + this.runStack[n-1].len) {
+                        if (this.runStack[n-3].len < this.runStack[n-1].len) { this.mergeIdx = n-3; } else { this.mergeIdx = n-2; }
+                        this.state = 'merging_init'; continue;
+                    } else if (this.runStack[n-2].len <= this.runStack[n-1].len) { this.mergeIdx = n-2; this.state = 'merging_init'; continue; }
+                }
+                this.state = 'next_run'; continue;
+            }
+            if (this.state === 'force_collapse') { if (this.runStack.length > 1) { this.mergeIdx = this.runStack.length - 2; this.state = 'merging_init'; continue; } return null; }
+            if (this.state === 'merging_init') {
+                let r1 = this.runStack[this.mergeIdx], r2 = this.runStack[this.mergeIdx+1];
+                this.A = this.items.slice(r1.start, r1.start + r1.len); this.B = this.items.slice(r2.start, r2.start + r2.len);
+                this.ai = 0; this.bi = 0; this.k = r1.start; this.state = 'merging_loop'; continue;
+            }
+            if (this.state === 'merging_loop') {
+                if (result !== undefined) { if (result === 0) this.items[this.k++] = this.A[this.ai++]; else this.items[this.k++] = this.B[this.bi++]; result = undefined; }
                 if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]];
-                while (this.ai < this.A.length) this.res.push(this.A[this.ai++]); while (this.bi < this.B.length) this.res.push(this.B[this.bi++]);
-                this.runs.push(this.res); this.state = 'merge_loop';
+                while (this.ai < this.A.length) this.items[this.k++] = this.A[this.ai++]; while (this.bi < this.B.length) this.items[this.k++] = this.B[this.bi++];
+                let m = { start: this.runStack[this.mergeIdx].start, len: this.runStack[this.mergeIdx].len + this.runStack[this.mergeIdx+1].len };
+                this.runStack.splice(this.mergeIdx, 2, m); this.state = (this.idx === this.n) ? 'force_collapse' : 'collapse'; continue;
             }
         }
     }

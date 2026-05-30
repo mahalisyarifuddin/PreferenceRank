@@ -23,8 +23,8 @@ Berdasarkan analisis komparatif terhadap 48 algoritma pengurutan (lihat [ANALYSI
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Duplikat | Status Pareto |
 | :--- | :--- | :--- | :--- | :--- |
 | Ford-Johnson | ~527 | 0.89 | TIDAK | Pareto-optimal |
-| **Merge Sort** | **~542** | **0.91** | **TIDAK** | **Titik Lutut** |
-| Dual-Pivot Quicksort | ~491 | 0.84 | TIDAK | Pareto-optimal |
+| **Merge Sort** | **~542** | **0.90** | **TIDAK** | **Titik Lutut** |
+| Dual-Pivot Quicksort | ~647 | 0.84 | TIDAK | Terdominasi |
 | Full Rank | ~4950 | 1.00 | TIDAK | Pareto-optimal |
 
 *Peringkat Cepat mengurangi pertarungan sekitar 89% dibandingkan dengan Peringkat Penuh sambil tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan duplikat (seperti Shellsort) dikecualikan dari produksi untuk memastikan efisiensi pengguna yang maksimal.*

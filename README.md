@@ -23,8 +23,8 @@ Based on a comparative analysis of 64 sorting algorithms (see [ANALYSIS.md](ANAL
 | Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |
 | :--- | :--- | :--- | :--- | :--- |
 | Ford-Johnson | ~527 | 0.89 | NO | Pareto-optimal |
-| **Merge Sort** | **~542** | **0.91** | **NO** | **Knee Point** |
-| Dual-Pivot Quicksort | ~491 | 0.84 | NO | Pareto-optimal |
+| **Merge Sort** | **~542** | **0.90** | **NO** | **Knee Point** |
+| Dual-Pivot Quicksort | ~647 | 0.84 | NO | Dominated |
 | Full Rank | ~4950 | 1.00 | NO | Pareto-optimal |
 
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons (like Shellsort) are excluded from production to ensure maximum user efficiency.*
