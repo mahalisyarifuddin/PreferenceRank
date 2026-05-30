@@ -24,7 +24,7 @@ Berdasarkan analisis komparatif terhadap 64 algoritma pengurutan (lihat [ANALYSI
 | :--- | :--- | :--- | :--- | :--- |
 | Ford-Johnson | ~527 | 0.89 | TIDAK | Pareto-optimal |
 | In-place Merge Sort | ~542 | 0.90 | TIDAK | Pareto-optimal |
-| **Merge Sort** | ~542 | 0.90 | TIDAK | **Titik Lutut** |
+| **Merge Sort** | ~542 | 0.91 | TIDAK | **Titik Lutut** |
 | Full Rank | ~4950 | 1.00 | TIDAK | Pareto-optimal |
 
 *Peringkat Cepat mengurangi pertarungan sekitar 89% dibandingkan dengan Peringkat Penuh sambil tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan duplikat (seperti Shellsort) dikecualikan dari produksi untuk memastikan efisiensi pengguna yang maksimal.*
@@ -32,7 +32,7 @@ Berdasarkan analisis komparatif terhadap 64 algoritma pengurutan (lihat [ANALYSI
 ## Detail Teknis
 PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) untuk model Bradley-Terry. Pendekatan iteratif ini memastikan konvergensi yang terjamin dan perhitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi operasi matriks.
 
-Berdasarkan **analisis titik lutut**, ambang batas konvergensi ditetapkan ke 1e-7. Nilai ini memberikan pengurangan rata-rata ~41% dalam jumlah iterasi dibandingkan dengan presisi yang lebih tinggi (1e-12) sambil memastikan kesalahan kekuatan logaritmik tetap jauh di bawah ambang batas yang mempengaruhi pembulatan skor Elo integer.
+Berdasarkan **analisis titik lutut**, ambang batas konvergensi ditetapkan ke 1e-7. Nilai ini memberikan pengurangan rata-rata ~43% dalam jumlah iterasi dibandingkan dengan presisi yang lebih tinggi (1e-12) sambil memastikan kesalahan kekuatan logaritmik tetap jauh di bawah ambang batas yang mempengaruhi pembulatan skor Elo integer.
 
 ## Mulai Cepat
 1. Unduh file `PreferenceRank.html` dari repositori.

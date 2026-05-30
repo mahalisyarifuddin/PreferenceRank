@@ -24,7 +24,7 @@ Based on a comparative analysis of 64 sorting algorithms (see [ANALYSIS.md](ANAL
 | :--- | :--- | :--- | :--- | :--- |
 | Ford-Johnson | ~527 | 0.89 | NO | Pareto-optimal |
 | In-place Merge Sort | ~542 | 0.90 | NO | Pareto-optimal |
-| **Merge Sort** | ~542 | 0.90 | NO | **Knee Point** |
+| **Merge Sort** | ~542 | 0.91 | NO | **Knee Point** |
 | Full Rank | ~4950 | 1.00 | NO | Pareto-optimal |
 
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons (like Shellsort) are excluded from production to ensure maximum user efficiency.*
@@ -32,7 +32,7 @@ Based on a comparative analysis of 64 sorting algorithms (see [ANALYSIS.md](ANAL
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
 
-Based on a **knee point analysis**, the convergence threshold is set to 1e-7. This value provides an average reduction of ~41% in iteration counts compared to higher precision (1e-12) while ensuring log-strength errors remain well below the threshold for affecting rounded integer Elo scores.
+Based on a **knee point analysis**, the convergence threshold is set to 1e-7. This value provides an average reduction of ~43% in iteration counts compared to higher precision (1e-12) while ensuring log-strength errors remain well below the threshold for affecting rounded integer Elo scores.
 
 ## Quick Start
 1. Download the `PreferenceRank.html` file from the repository.
