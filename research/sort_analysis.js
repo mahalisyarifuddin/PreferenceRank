@@ -22,9 +22,49 @@ function runBT(n, wins, adj, threshold = 1e-7, maxIter = 1000) {
 
 function kendallTau(arr1, arr2) {
     let n = arr1.length, concordant = 0, discordant = 0;
-    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-        let a = arr1[i] < arr1[j], b = arr2[i] < arr2[j]; if (a === b) concordant++; else discordant++;
-    } return (concordant - discordant) / (n * (n - 1) / 2);
+    for (let i = 0; i < n; i++) {
+        const a1 = arr1[i], a2 = arr2[i];
+        for (let j = i + 1; j < n; j++) {
+            if ((a1 < arr1[j]) === (a2 < arr2[j])) concordant++; else discordant++;
+        }
+    }
+    return (concordant - discordant) / (n * (n - 1) / 2);
+}
+
+function simulate(n, ProviderClass, trials = 250) {
+    let totalComps = 0, totalTau = 0, maxUniqueBattles = n * (n - 1) / 2, hasDuplicates = false;
+    const trueStrengths = new Float64Array(n);
+    const wins = new Float64Array(n);
+    const adjMaps = Array.from({ length: n }, () => new Map());
+    for (let t = 0; t < trials; t++) {
+        for (let i = 0; i < n; i++) trueStrengths[i] = Math.random() * 2000;
+        const provider = new ProviderClass(n);
+        wins.fill(0); for (let i = 0; i < n; i++) adjMaps[i].clear();
+        const matchesMap = new Map();
+        let pair = provider.next(), uniqueBattles = 0, totalIterations = 0;
+        while (pair && totalIterations < 1000000) {
+            totalIterations++;
+            const [a, b] = pair;
+            const pairKey = a < b ? (a << 16) | b : (b << 16) | a;
+            const matchResult = matchesMap.get(pairKey);
+            let res;
+            if (matchResult !== undefined) {
+                hasDuplicates = true;
+                res = matchResult.a === a ? matchResult.res : 1 - matchResult.res;
+            } else {
+                uniqueBattles++;
+                res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
+                matchesMap.set(pairKey, { a, res });
+                wins[a] += res; wins[b] += 1 - res;
+                adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
+                adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
+            }
+            pair = provider.next(res); if (uniqueBattles >= maxUniqueBattles) break;
+        }
+        const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
+        totalComps += uniqueBattles; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
+    }
+    return { avgComps: totalComps / trials, avgTau: totalTau / trials, hasDuplicates };
 }
 
 class FullRankProvider {
@@ -69,38 +109,13 @@ class BitonicSortProvider extends Provider {
 }
 
 class BlockQuicksortProvider extends Provider {
-    constructor(n) { super(n); this.stack = [[0, n-1]]; this.state = 'start'; this.B = 64; }
+    constructor(n) { super(n); this.stack = [[0, n-1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') {
-                if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.l, this.r] = this.stack.pop();
-                if (this.r - this.l <= 16) { this.iL=this.l; this.iR=this.r; this.iI=this.l+1; this.state='insStart'; continue; }
-                this.pivotVal = this.items[this.l]; this.state = 'partition'; this.p_i = this.l + 1; this.p_j = this.r;
-            }
-            if (this.state === 'insStart') {
-                if (this.iI <= this.iR) { this.iTemp = this.items[this.iI]; this.iJ = this.iI - 1; this.state = 'insCompare'; continue; }
-                this.state = 'start'; continue;
-            }
-            if (this.state === 'insCompare') {
-                if (this.iJ >= this.iL) {
-                    if (result !== undefined) {
-                        if (result === 0) { this.items[this.iJ + 1] = this.items[this.iJ]; this.iJ--; result = undefined; }
-                        else { this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; result = undefined; continue; }
-                    } else return [this.iTemp, this.items[this.iJ]];
-                    continue;
-                }
-                this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; continue;
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) {
-                    if (result === 0) { this.p_i++; result = undefined; }
-                    else { [this.items[this.p_i], this.items[this.p_j]] = [this.items[this.p_j], this.items[this.p_i]]; this.p_j--; result = undefined; }
-                }
-                if (this.p_i <= this.p_j) return [this.items[this.p_i], this.pivotVal];
-                [this.items[this.l], this.items[this.p_i - 1]] = [this.items[this.p_i - 1], this.items[this.l]];
-                let p = this.p_i - 1; this.stack.push([p + 1, this.r], [this.l, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.l, this.r] = this.stack.pop(); if (this.r - this.l <= 16) { this.iL=this.l; this.iR=this.r; this.iI=this.l+1; this.state='insStart'; continue; } this.pivotVal = this.items[this.l]; this.state = 'partition'; this.p_i = this.l + 1; this.p_j = this.r; }
+            if (this.state === 'insStart') { if (this.iI <= this.iR) { this.iTemp = this.items[this.iI]; this.iJ = this.iI - 1; this.state = 'insCompare'; continue; } this.state = 'start'; continue; }
+            if (this.state === 'insCompare') { if (this.iJ >= this.iL) { if (result !== undefined) { if (result === 0) { this.items[this.iJ + 1] = this.items[this.iJ]; this.iJ--; result = undefined; } else { this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; result = undefined; continue; } } else return [this.iTemp, this.items[this.iJ]]; continue; } this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.p_i++; result = undefined; } else { [this.items[this.p_i], this.items[this.p_j]] = [this.items[this.p_j], this.items[this.p_i]]; this.p_j--; result = undefined; } } if (this.p_i <= this.p_j) return [this.items[this.p_i], this.pivotVal]; [this.items[this.l], this.items[this.p_i - 1]] = [this.items[this.p_i - 1], this.items[this.l]]; let p = this.p_i - 1; this.stack.push([p + 1, this.r], [this.l, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -296,39 +311,39 @@ class DualPivotQuicksortProvider extends Provider {
         while (this.stack.length > 0 || this.state !== 'start') {
             if (this.state === 'start') {
                 if (this.stack.length === 0) return null;
-                [this.low, this.high] = this.stack.pop();
-                if (this.low < this.high) { this.state = 'pivots'; } else continue;
+                [this.l, this.r] = this.stack.pop();
+                if (this.l < this.r) { this.state = 'pivots'; } else continue;
             }
             if (this.state === 'pivots') {
-                this.state = 'pivots_result';
-                return [this.items[this.low], this.items[this.high]];
-            }
-            if (result !== undefined && this.state === 'pivots_result') {
-                if (result === 0) [this.items[this.low], this.items[this.high]] = [this.items[this.high], this.items[this.low]];
-                this.lp = this.items[this.low]; this.rp = this.items[this.high];
-                this.lt = this.low + 1; this.gt = this.high - 1; this.i = this.low + 1;
-                this.state = 'partition'; this.subState = 'lp'; result = undefined;
+                if (result !== undefined) {
+                    if (result === 1) [this.items[this.l], this.items[this.r]] = [this.items[this.r], this.items[this.l]];
+                    this.p1 = this.items[this.l]; this.p2 = this.items[this.r];
+                    this.lt = this.l + 1; this.gt = this.r - 1; this.k = this.l + 1;
+                    this.state = 'partition'; this.sub = undefined; result = undefined;
+                } else return [this.items[this.l], this.items[this.r]];
             }
             if (this.state === 'partition') {
-                if (result !== undefined) {
-                    if (this.subState === 'lp') {
-                        if (result === 1) { [this.items[this.i], this.items[this.lt]] = [this.items[this.lt], this.items[this.i]]; this.lt++; }
-                        else { this.subState = 'rp'; result = undefined; continue; }
-                    } else if (this.subState === 'rp') {
-                        if (result === 0) {
-                            [this.items[this.i], this.items[this.gt]] = [this.items[this.gt], this.items[this.i]]; this.gt--;
-                        }
+                if (this.k <= this.gt) {
+                    if (this.sub === undefined) {
+                        if (result !== undefined) {
+                            if (result === 0) { [this.items[this.k], this.items[this.lt]] = [this.items[this.lt], this.items[this.k]]; this.lt++; this.k++; result = undefined; }
+                            else { this.sub = 'p2'; result = undefined; }
+                        } else return [this.items[this.k], this.p1];
                     }
-                    this.i++; this.subState = 'lp'; result = undefined;
+                    if (this.sub === 'p2') {
+                        if (result !== undefined) {
+                            if (result === 1) { [this.items[this.k], this.items[this.gt]] = [this.items[this.gt], this.items[this.k]]; this.gt--; this.sub = undefined; this.k++; }
+                            else { this.k++; this.sub = undefined; }
+                            result = undefined; continue;
+                        } else return [this.items[this.k], this.p2];
+                    }
+                    continue;
                 }
-                if (this.i <= this.gt) {
-                    if (this.subState === 'lp') return [this.items[this.i], this.lp];
-                    else return [this.items[this.i], this.rp];
-                }
-                [this.items[this.low], this.items[this.lt - 1]] = [this.items[this.lt - 1], this.items[this.low]];
-                [this.items[this.high], this.items[this.gt + 1]] = [this.items[this.gt + 1], this.items[this.high]];
-                this.stack.push([this.low, this.lt - 2], [this.lt, this.gt], [this.gt + 2, this.high]);
-                this.state = 'start';
+                this.lt--; this.gt++;
+                [this.items[this.l], this.items[this.lt]] = [this.items[this.lt], this.items[this.l]];
+                [this.items[this.r], this.items[this.gt]] = [this.items[this.gt], this.items[this.r]];
+                this.stack.push([this.gt + 1, this.r], [this.lt + 1, this.gt - 1], [this.l, this.lt - 1]);
+                this.state = 'start'; this.sub = undefined;
             }
         } return null;
     }
@@ -555,28 +570,18 @@ class InPlaceMergeSortProvider extends Provider {
     next(result) {
         while (this.stack.length > 0) {
             let f = this.stack[this.stack.length - 1];
-            if (f.state === 0) {
-                if (f.l >= f.r) { this.stack.pop(); if(this.stack.length>0) this.stack[this.stack.length-1].state++; continue; }
-                f.m = Math.floor((f.l + f.r) / 2);
-                this.stack.push({ l: f.l, r: f.m, state: 0 }); continue;
-            }
-            if (f.state === 1) {
-                this.stack.push({ l: f.m + 1, r: f.r, state: 0 }); continue;
-            }
+            if (f.state === 0) { if (f.l >= f.r) { this.pop(); continue; } f.m = Math.floor((f.l + f.r) / 2); this.stack.push({ l: f.l, r: f.m, state: 0 }); continue; }
+            if (f.state === 1) { this.stack.push({ l: f.m + 1, r: f.r, state: 0 }); continue; }
             if (f.state === 2) { f.i = f.l; f.j = f.m + 1; f.state = 3; }
             if (f.state === 3) {
                 if (f.i <= f.m && f.j <= f.r) {
                     if (result !== undefined) {
-                        if (result === 1) {
-                            let val = this.items[f.j];
-                            for (let k = f.j; k > f.i; k--) this.items[k] = this.items[k - 1];
-                            this.items[f.i] = val; f.i++; f.m++; f.j++;
-                        } else { f.i++; }
-                        result = undefined;
+                        if (result === 1) { let val = this.items[f.j]; for (let k = f.j; k > f.i; k--) this.items[k] = this.items[k - 1]; this.items[f.i] = val; f.i++; f.m++; f.j++; }
+                        else f.i++; result = undefined;
                     }
                     if (f.i <= f.m && f.j <= f.r) return [this.items[f.i], this.items[f.j]];
                 }
-                this.stack.pop(); if(this.stack.length>0) this.stack[this.stack.length-1].state++;
+                this.pop();
             }
         } return null;
     }
@@ -604,64 +609,12 @@ class IntroSortProvider extends Provider {
     constructor(n) { super(n); this.depthLimit = 2 * Math.floor(Math.log2(n)); this.stack = [{l: 0, r: n - 1, d: 0}]; this.state = 'pop'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'pop') {
-            if (this.state === 'pop') {
-                if (this.stack.length === 0) return null;
-                const {l, r, d} = this.stack.pop();
-                if (l >= r) continue;
-                if (r - l <= 16) { this.iL = l; this.iR = r; this.iI = l + 1; this.state = 'insStart'; continue; }
-                if (d > this.depthLimit) { this.state = 'heap'; this.hl = l; this.hr = r; this.hi = Math.floor((r - l + 1) / 2) - 1; this.h_state = 'heapify'; this.h_size = r - l + 1; continue; }
-                this.low = l; this.high = r; this.d = d; this.pivotVal = this.items[r]; this.p_i = l - 1; this.p_j = l; this.state = 'partition';
-            }
-            if (this.state === 'insStart') {
-                if (this.iI <= this.iR) { this.iTemp = this.items[this.iI]; this.iJ = this.iI - 1; this.state = 'insCompare'; continue; }
-                this.state = 'pop'; continue;
-            }
-            if (this.state === 'insCompare') {
-                if (this.iJ >= this.iL) {
-                    if (result !== undefined) {
-                        if (result === 0) { this.items[this.iJ + 1] = this.items[this.iJ]; this.iJ--; result = undefined; }
-                        else { this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; result = undefined; continue; }
-                    } else return [this.iTemp, this.items[this.iJ]];
-                    continue;
-                }
-                this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; continue;
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) {
-                    if (result === 1) { this.p_i++; [this.items[this.p_i], this.items[this.p_j]] = [this.items[this.p_j], this.items[this.p_i]]; }
-                    this.p_j++; result = undefined;
-                }
-                if (this.p_j < this.high) return [this.items[this.p_j], this.pivotVal];
-                [this.items[this.p_i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.p_i + 1]];
-                let p = this.p_i + 1; this.stack.push({l: p + 1, r: this.high, d: this.d + 1}, {l: this.low, r: p - 1, d: this.d + 1});
-                this.state = 'pop';
-            }
-            if (this.state === 'heap') {
-                if (this.h_state === 'heapify') {
-                    if (this.hi >= 0) { this.h_curr = this.hl + this.hi; this.hi--; this.state = 'siftDown'; this.h_next = 'heapify'; }
-                    else { this.hi = this.h_size - 1; this.h_state = 'sort'; } continue;
-                }
-                if (this.h_state === 'sort') {
-                    if (this.hi > 0) {
-                        [this.items[this.hl], this.items[this.hl + this.hi]] = [this.items[this.hl + this.hi], this.items[this.hl]];
-                        this.h_size = this.hi; this.h_curr = this.hl; this.hi--; this.state = 'siftDown'; this.h_next = 'sort';
-                    } else this.state = 'pop'; continue;
-                }
-            }
-            if (this.state === 'siftDown') {
-                if (result !== undefined) {
-                    if (result === 1) { [this.items[this.h_curr], this.items[this.h_best]] = [this.items[this.h_best], this.items[this.h_curr]]; this.h_curr = this.h_best; }
-                    else { this.state = 'heap'; this.h_state = this.h_next; result = undefined; continue; } result = undefined;
-                }
-                let rel_curr = this.h_curr - this.hl, l = 2 * rel_curr + 1, r = 2 * rel_curr + 2; this.h_best = this.h_curr;
-                if (l < this.h_size && r < this.h_size) {
-                    if (this.h_compLR === undefined) { this.h_compLR = true; return [this.items[this.hl + l], this.items[this.hl + r]]; }
-                    if (this.h_compLR) { let b = (result === 1) ? l : r; this.h_compLR = false; this.h_tempBest = this.hl + b; result = undefined; return [this.items[this.h_tempBest], this.items[this.h_curr]]; }
-                    if (result === 1) { [this.items[this.h_curr], this.items[this.h_tempBest]] = [this.items[this.h_tempBest], this.items[this.h_curr]]; this.h_curr = this.h_tempBest; this.h_compLR = undefined; result = undefined; continue; }
-                    else { this.state = 'heap'; this.h_state = this.h_next; this.h_compLR = undefined; result = undefined; continue; }
-                } else if (l < this.h_size) { this.h_best = this.hl + l; return [this.items[this.h_best], this.items[this.h_curr]]; }
-                else { this.state = 'heap'; this.h_state = this.h_next; continue; }
-            }
+            if (this.state === 'pop') { if (this.stack.length === 0) return null; const {l, r, d} = this.stack.pop(); if (l >= r) continue; if (r - l <= 16) { this.iL = l; this.iR = r; this.iI = l + 1; this.state = 'insStart'; continue; } if (d > this.depthLimit) { this.state = 'heap'; this.hl = l; this.hr = r; this.hi = Math.floor((r - l + 1) / 2) - 1; this.h_state = 'heapify'; this.h_size = r - l + 1; continue; } this.low = l; this.high = r; this.d = d; this.pivotVal = this.items[r]; this.p_i = l - 1; this.p_j = l; this.state = 'partition'; }
+            if (this.state === 'insStart') { if (this.iI <= this.iR) { this.iTemp = this.items[this.iI]; this.iJ = this.iI - 1; this.state = 'insCompare'; continue; } this.state = 'pop'; continue; }
+            if (this.state === 'insCompare') { if (this.iJ >= this.iL) { if (result !== undefined) { if (result === 0) { this.items[this.iJ + 1] = this.items[this.iJ]; this.iJ--; result = undefined; } else { this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; result = undefined; continue; } } else return [this.iTemp, this.items[this.iJ]]; continue; } this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 1) { this.p_i++; [this.items[this.p_i], this.items[this.p_j]] = [this.items[this.p_j], this.items[this.p_i]]; } this.p_j++; result = undefined; } if (this.p_j < this.high) return [this.items[this.p_j], this.pivotVal]; [this.items[this.p_i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.p_i + 1]]; let p = this.p_i + 1; this.stack.push({l: p + 1, r: this.high, d: this.d + 1}, {l: this.low, r: p - 1, d: this.d + 1}); this.state = 'pop'; }
+            if (this.state === 'heap') { if (this.h_state === 'heapify') { if (this.hi >= 0) { this.h_curr = this.hl + this.hi; this.hi--; this.state = 'siftDown'; this.h_next = 'heapify'; } else { this.hi = this.h_size - 1; this.h_state = 'sort'; } continue; } if (this.h_state === 'sort') { if (this.hi > 0) { [this.items[this.hl], this.items[this.hl + this.hi]] = [this.items[this.hl + this.hi], this.items[this.hl]]; this.h_size = this.hi; this.h_curr = this.hl; this.hi--; this.state = 'siftDown'; this.h_next = 'sort'; } else this.state = 'pop'; continue; } }
+            if (this.state === 'siftDown') { if (result !== undefined) { if (result === 1) { [this.items[this.h_curr], this.items[this.h_best]] = [this.items[this.h_best], this.items[this.h_curr]]; this.h_curr = this.h_best; } else { this.state = 'heap'; this.h_state = this.h_next; result = undefined; continue; } result = undefined; } let rel_curr = this.h_curr - this.hl, l = 2 * rel_curr + 1, r = 2 * rel_curr + 2; this.h_best = this.h_curr; if (l < this.h_size && r < this.h_size) { if (this.h_compLR === undefined) { this.h_compLR = true; return [this.items[this.hl + l], this.items[this.hl + r]]; } if (this.h_compLR) { let b = (result === 1) ? l : r; this.h_compLR = false; this.h_tempBest = this.hl + b; result = undefined; return [this.items[this.h_tempBest], this.items[this.h_curr]]; } if (result === 1) { [this.items[this.h_curr], this.items[this.h_tempBest]] = [this.items[this.h_tempBest], this.items[this.h_curr]]; this.h_curr = this.h_tempBest; this.h_compLR = undefined; result = undefined; continue; } else { this.state = 'heap'; this.h_state = this.h_next; this.h_compLR = undefined; result = undefined; continue; } } else if (l < this.h_size) { this.h_best = this.hl + l; return [this.items[this.h_best], this.items[this.h_curr]]; } else { this.state = 'heap'; this.h_state = this.h_next; continue; } }
         } return null;
     }
 }
@@ -681,8 +634,7 @@ class KWayMergeSortProvider extends Provider {
                 f.state = 1; continue;
             }
             if (typeof f.state === 'number' && f.state >= 1 && f.state <= f.parts.length) {
-                let p = f.parts[f.state - 1];
-                this.stack.push({ l: p.l, r: p.r, state: 0 }); continue;
+                let p = f.parts[f.state - 1]; this.stack.push({ l: p.l, r: p.r, state: 0 }); continue;
             }
             if (f.state === f.parts.length + 1) {
                 f.arrays = f.parts.map(p => this.items.slice(p.l, p.r + 1));
@@ -739,17 +691,17 @@ class MergeSortProvider extends Provider {
         while (this.stack.length > 0) {
             let f = this.stack[this.stack.length - 1];
             if (f.state === 0) {
-                if (f.l >= f.r) { this.stack.pop(); if(this.stack.length>0) this.stack[this.stack.length-1].state++; continue; }
-                f.m = Math.floor((f.l + f.r) / 2); this.stack.push({ l: f.l, r: f.m, state: 0 }); continue;
+                if (f.l >= f.r) { this.pop(); continue; }
+                f.mid = Math.floor((f.l + f.r) / 2); this.stack.push({ l: f.l, r: f.mid, state: 0 }); continue;
             }
-            if (f.state === 1) { this.stack.push({ l: f.m + 1, r: f.r, state: 0 }); continue; }
-            if (f.state === 2) { f.L = this.items.slice(f.l, f.m + 1); f.R = this.items.slice(f.m + 1, f.r + 1); f.i = 0; f.j = 0; f.k = f.l; f.state = 3; }
+            if (f.state === 1) { this.stack.push({ l: f.mid + 1, r: f.r, state: 0 }); continue; }
+            if (f.state === 2) { f.L = this.items.slice(f.l, f.mid + 1); f.R = this.items.slice(f.mid + 1, f.r + 1); f.i = 0; f.j = 0; f.k = f.l; f.state = 3; }
             if (f.state === 3) {
                 if (result !== undefined) { if (result === 0) this.items[f.k++] = f.L[f.i++]; else this.items[f.k++] = f.R[f.j++]; result = undefined; }
                 if (f.i < f.L.length && f.j < f.R.length) return [f.L[f.i], f.R[f.j]];
                 while (f.i < f.L.length) this.items[f.k++] = f.L[f.i++];
                 while (f.j < f.R.length) this.items[f.k++] = f.R[f.j++];
-                this.stack.pop(); if(this.stack.length>0) this.stack[this.stack.length-1].state++;
+                this.pop();
             }
         } return null;
     }
@@ -772,32 +724,19 @@ class NaturalMergeSortProvider extends Provider {
     next(result) {
         while (true) {
             if (this.state === 'start') { this.runs = []; this.idx = 0; this.state = 'findRun'; }
-            if (this.state === 'findRun') {
-                if (this.idx < this.n) { this.runStart = this.idx; this.idx++; this.state = 'extendRun'; continue; }
-                this.state = 'mergeLoop'; continue;
-            }
+            if (this.state === 'findRun') { if (this.idx < this.n) { this.runStart = this.idx; this.idx++; this.state = 'extendRun'; continue; } this.state = 'mergeLoop'; continue; }
             if (this.state === 'extendRun') {
                 if (this.idx < this.n) {
-                    if (result !== undefined) {
-                        if (result === 0) { this.idx++; result = undefined; }
-                        else { this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; result = undefined; continue; }
-                    } else return [this.items[this.idx-1], this.items[this.idx]];
+                    if (result !== undefined) { if (result === 0) { this.idx++; result = undefined; } else { this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; result = undefined; continue; } }
+                    else return [this.items[this.idx-1], this.items[this.idx]];
                     continue;
                 }
                 this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; continue;
             }
-            if (this.state === 'mergeLoop') {
-                if (this.runs.length <= 1) { if (this.runs.length === 1) this.items = this.runs[0]; return null; }
-                this.newRuns = []; this.rIdx = 0; this.state = 'pair';
-            }
+            if (this.state === 'mergeLoop') { if (this.runs.length <= 1) { if (this.runs.length === 1) this.items = this.runs[0]; return null; } this.newRuns = []; this.rIdx = 0; this.state = 'pair'; }
             if (this.state === 'pair') {
-                if (this.rIdx < this.runs.length - 1) {
-                    this.A = this.runs[this.rIdx]; this.B = this.runs[this.rIdx + 1];
-                    this.ai = 0; this.bi = 0; this.resArr = []; this.state = 'work';
-                } else {
-                    if (this.rIdx === this.runs.length - 1) this.newRuns.push(this.runs[this.rIdx]);
-                    this.runs = this.newRuns; this.state = 'mergeLoop'; continue;
-                }
+                if (this.rIdx < this.runs.length - 1) { this.A = this.runs[this.rIdx]; this.B = this.runs[this.rIdx + 1]; this.ai = 0; this.bi = 0; this.resArr = []; this.state = 'work'; }
+                else { if (this.rIdx === this.runs.length - 1) this.newRuns.push(this.runs[this.rIdx]); this.runs = this.newRuns; this.state = 'mergeLoop'; continue; }
             }
             if (this.state === 'work') {
                 if (result !== undefined) { if (result === 0) this.resArr.push(this.A[this.ai++]); else this.resArr.push(this.B[this.bi++]); result = undefined; }
@@ -843,34 +782,8 @@ class ParallelMergeSortProvider extends Provider {
     constructor(n) { super(n); this.width = 1; this.tasks = []; this.state = 'init'; }
     next(result) {
         while (this.width < this.n) {
-            if (this.state === 'init') {
-                this.tasks = [];
-                for (let i = 0; i < this.n; i += 2 * this.width) {
-                    let mid = i + this.width, r = Math.min(i + 2 * this.width, this.n);
-                    if (mid < r) this.tasks.push({ l: i, mid, r, left: this.items.slice(i, mid), right: this.items.slice(mid, r), i: 0, j: 0, k: i, done: false });
-                }
-                if (this.tasks.length === 0) { this.width *= 2; continue; }
-                this.idx = 0; this.state = 'work';
-            }
-            if (this.state === 'work') {
-                if (result !== undefined) {
-                    let t = this.tasks[this.idx];
-                    if (result === 1) this.items[t.k++] = t.left[t.i++]; else this.items[t.k++] = t.right[t.j++];
-                    if (t.i === t.left.length || t.j === t.right.length) {
-                        while (t.i < t.left.length) this.items[t.k++] = t.left[t.i++];
-                        while (t.j < t.right.length) this.items[t.k++] = t.right[t.j++];
-                        t.done = true;
-                    }
-                    this.idx = (this.idx + 1) % this.tasks.length; result = undefined;
-                }
-                let start = this.idx;
-                while (this.tasks[this.idx].done) {
-                    this.idx = (this.idx + 1) % this.tasks.length;
-                    if (this.idx === start) break;
-                }
-                if (this.tasks[this.idx].done) { this.width *= 2; this.state = 'init'; continue; }
-                let t = this.tasks[this.idx]; return [t.left[t.i], t.right[t.j]];
-            }
+            if (this.state === 'init') { this.tasks = []; for (let i = 0; i < this.n; i += 2 * this.width) { let mid = i + this.width, r = Math.min(i + 2 * this.width, this.n); if (mid < r) this.tasks.push({ l: i, mid, r, left: this.items.slice(i, mid), right: this.items.slice(mid, r), i: 0, j: 0, k: i, done: false }); } if (this.tasks.length === 0) { this.width *= 2; continue; } this.idx = 0; this.state = 'work'; }
+            if (this.state === 'work') { if (result !== undefined) { let t = this.tasks[this.idx]; if (result === 0) this.items[t.k++] = t.left[t.i++]; else this.items[t.k++] = t.right[t.j++]; if (t.i === t.left.length || t.j === t.right.length) { while (t.i < t.left.length) this.items[t.k++] = t.left[t.i++]; while (t.j < t.right.length) this.items[t.k++] = t.right[t.j++]; t.done = true; } this.idx = (this.idx + 1) % this.tasks.length; result = undefined; } let start = this.idx; while (this.tasks[this.idx].done) { this.idx = (this.idx + 1) % this.tasks.length; if (this.idx === start) break; } if (this.tasks[this.idx].done) { this.width *= 2; this.state = 'init'; continue; } let t = this.tasks[this.idx]; return [t.left[t.i], t.right[t.j]]; }
         } return null;
     }
 }
@@ -881,18 +794,8 @@ class ParallelQuicksortProvider extends Provider {
         while (this.tasks.some(t => t.state !== 'done')) {
             for (let idx = 0; idx < this.tasks.length; idx++) {
                 let t = this.tasks[idx]; if (t.state === 'done') continue;
-                if (t.state === 'init') {
-                    if (t.l >= t.r) { t.state = 'done'; continue; }
-                    t.pivotVal = this.items[t.r]; t.i = t.l - 1; t.j = t.l; t.state = 'partition';
-                }
-                if (t.state === 'partition') {
-                    if (result !== undefined && t.busy) { if (result === 0) { t.i++; [this.items[t.i], this.items[t.j]] = [this.items[t.j], this.items[t.i]]; } t.j++; t.busy = false; result = undefined; }
-                    if (t.j < t.r) { t.busy = true; return [this.items[t.j], t.pivotVal]; }
-                    [this.items[t.i + 1], this.items[t.r]] = [this.items[t.r], this.items[t.i + 1]];
-                    let p = t.i + 1; t.state = 'done';
-                    this.tasks.push({ l: t.l, r: p - 1, state: 'init' }, { l: p + 1, r: t.r, state: 'init' });
-                    continue;
-                }
+                if (t.state === 'init') { if (t.l >= t.r) { t.state = 'done'; continue; } t.pivotVal = this.items[t.r]; t.i = t.l - 1; t.j = t.l; t.state = 'partition'; }
+                if (t.state === 'partition') { if (result !== undefined && t.busy) { if (result === 0) { t.i++; [this.items[t.i], this.items[t.j]] = [this.items[t.j], this.items[t.i]]; } t.j++; t.busy = false; result = undefined; } if (t.j < t.r) { t.busy = true; return [this.items[t.j], t.pivotVal]; } [this.items[t.i + 1], this.items[t.r]] = [this.items[t.r], this.items[t.i + 1]]; let p = t.i + 1; t.state = 'done'; this.tasks.push({ l: t.l, r: p - 1, state: 'init' }, { l: p + 1, r: t.r, state: 'init' }); continue; }
             }
         } return null;
     }
@@ -945,28 +848,10 @@ class PowersortProvider extends Provider {
     constructor(n) { super(n); this.idx = 0; this.runs = []; this.state = 'findRun'; }
     next(result) {
         while (true) {
-            if (this.state === 'findRun') {
-                if (this.idx < this.n) { this.runStart = this.idx; this.idx++; this.state = 'extendRun'; continue; }
-                this.state = 'finalMerge'; continue;
-            }
-            if (this.state === 'extendRun') {
-                if (this.idx < this.n) {
-                    if (result !== undefined) { if (result === 0) { this.idx++; result = undefined; } else { this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; result = undefined; continue; } }
-                    else return [this.items[this.idx-1], this.items[this.idx]]; continue;
-                }
-                this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; continue;
-            }
-            if (this.state === 'finalMerge') {
-                if (this.runs.length > 1) { this.A = this.runs.shift(); this.B = this.runs.shift(); this.ai = 0; this.bi = 0; this.resArr = []; this.state = 'work'; }
-                else { if (this.runs.length === 1) this.items = this.runs[0]; return null; }
-            }
-            if (this.state === 'work') {
-                if (result !== undefined) { if (result === 0) this.resArr.push(this.A[this.ai++]); else this.resArr.push(this.B[this.bi++]); result = undefined; }
-                if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]];
-                while (this.ai < this.A.length) this.resArr.push(this.A[this.ai++]);
-                while (this.bi < this.B.length) this.resArr.push(this.B[this.bi++]);
-                this.runs.unshift(this.resArr); this.state = 'finalMerge';
-            }
+            if (this.state === 'findRun') { if (this.idx < this.n) { this.runStart = this.idx; this.idx++; this.state = 'extendRun'; continue; } this.state = 'finalMerge'; continue; }
+            if (this.state === 'extendRun') { if (this.idx < this.n) { if (result !== undefined) { if (result === 0) { this.idx++; result = undefined; } else { this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; result = undefined; continue; } } else return [this.items[this.idx-1], this.items[this.idx]]; continue; } this.runs.push(this.items.slice(this.runStart, this.idx)); this.state = 'findRun'; continue; }
+            if (this.state === 'finalMerge') { if (this.runs.length > 1) { this.A = this.runs.shift(); this.B = this.runs.shift(); this.ai = 0; this.bi = 0; this.resArr = []; this.state = 'work'; } else { if (this.runs.length === 1) this.items = this.runs[0]; return null; } }
+            if (this.state === 'work') { if (result !== undefined) { if (result === 0) this.resArr.push(this.A[this.ai++]); else this.resArr.push(this.B[this.bi++]); result = undefined; } if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]]; while (this.ai < this.A.length) this.resArr.push(this.A[this.ai++]); while (this.bi < this.B.length) this.resArr.push(this.B[this.bi++]); this.runs.unshift(this.resArr); this.state = 'finalMerge'; }
         }
     }
 }
@@ -984,32 +869,8 @@ class Quicksort3WayProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') {
-                if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.l, this.r] = this.stack.pop();
-                if (this.l < this.r) {
-                    this.pVal = this.items[this.l];
-                    this.lt = this.l; this.eq = this.l; this.gt = this.r;
-                    this.state = 'partition';
-                } else continue;
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) {
-                    if (result === 0) { // items[eq] < pVal
-                        [this.items[this.lt], this.items[this.eq]] = [this.items[this.eq], this.items[this.lt]];
-                        this.lt++; this.eq++;
-                    } else if (result === 1) { // items[eq] > pVal
-                        [this.items[this.eq], this.items[this.gt]] = [this.items[this.gt], this.items[this.eq]];
-                        this.gt--;
-                    } else { // items[eq] == pVal
-                        this.eq++;
-                    }
-                    result = undefined;
-                }
-                if (this.eq <= this.gt) return [this.items[this.eq], this.pVal];
-                this.stack.push([this.gt + 1, this.r], [this.l, this.lt - 1]);
-                this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.l, this.r] = this.stack.pop(); if (this.l < this.r) { this.pVal = this.items[this.l]; this.lt = this.l; this.eq = this.l; this.gt = this.r; this.state = 'partition'; } else continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { [this.items[this.lt], this.items[this.eq]] = [this.items[this.eq], this.items[this.lt]]; this.lt++; this.eq++; } else if (result === 1) { [this.items[this.eq], this.items[this.gt]] = [this.items[this.gt], this.items[this.eq]]; this.gt--; } else this.eq++; result = undefined; } if (this.eq <= this.gt) return [this.items[this.eq], this.pVal]; this.stack.push([this.gt + 1, this.r], [this.l, this.lt - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1017,30 +878,48 @@ class Quicksort3WayProvider extends Provider {
 class QuicksortHoareProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
-        while (this.stack.length > 0 || this.state !== 'done') {
+        while (this.stack.length > 0 || this.state !== 'start') {
             if (this.state === 'start') {
-                if (this.stack.length === 0) { this.state = 'done'; return null; }
+                if (this.stack.length === 0) return null;
                 [this.l, this.r] = this.stack.pop();
                 if (this.l < this.r) {
                     this.pVal = this.items[this.l + Math.floor((this.r - this.l)/2)];
                     this.i = this.l - 1; this.j = this.r + 1;
-                    this.state = 'partition'; this.sub = 'i';
+                    this.state = 'i_loop'; this.sub = undefined;
                 } else continue;
             }
-            if (this.state === 'partition') {
-                if (this.sub === 'i') {
-                    if (result !== undefined) { if (result === 0) { this.i++; result = undefined; } else { this.sub = 'j'; result = undefined; } }
-                    if (this.sub === 'i') { if (this.i + 1 <= this.r) { this.i++; return [this.items[this.i], this.pVal]; } else { this.sub = 'j'; } }
+            if (this.state === 'i_loop') {
+                if (result !== undefined) {
+                    if (result === 0) { this.i++; result = undefined; }
+                    else { this.state = 'j_loop'; result = undefined; }
                 }
-                if (this.sub === 'j') {
-                    if (result !== undefined) { if (result === 1) { this.j--; result = undefined; } else { this.sub = 'swap'; result = undefined; } }
-                    if (this.sub === 'j') { if (this.j - 1 >= this.l) { this.j--; return [this.items[this.j], this.pVal]; } else { this.sub = 'swap'; } }
+                if (this.state === 'i_loop') {
+                    this.i++;
+                    if (this.i < this.n) return [this.items[this.i], this.pVal];
+                    else { this.state = 'j_loop'; }
                 }
-                if (this.sub === 'swap') {
-                    if (this.i >= this.j) { this.stack.push([this.j + 1, this.r], [this.l, this.j]); this.state = 'start'; continue; }
+            }
+            if (this.state === 'j_loop') {
+                if (result !== undefined) {
+                    if (result === 1) { this.j--; result = undefined; }
+                    else { this.state = 'swap'; result = undefined; }
+                }
+                if (this.state === 'j_loop') {
+                    this.j--;
+                    if (this.j >= 0) return [this.items[this.j], this.pVal];
+                    else { this.state = 'swap'; }
+                }
+            }
+            if (this.state === 'swap') {
+                if (this.i >= this.j) {
+                    this.stack.push([this.j + 1, this.r], [this.l, this.j]);
+                    this.state = 'start';
+                } else {
                     [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]];
-                    this.sub = 'i'; continue;
+                    this.state = 'i_loop';
                 }
+                result = undefined;
+                continue;
             }
         } return null;
     }
@@ -1050,18 +929,8 @@ class QuicksortLTRProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.low, this.high] = this.stack.pop(); if (this.low < this.high) {
-                    [this.items[this.low], this.items[this.high]] = [this.items[this.high], this.items[this.low]];
-                    this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition';
-                } else continue;
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
-                if (this.j < this.high) return [this.items[this.j], this.pivot];
-                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
-                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { [this.items[this.low], this.items[this.high]] = [this.items[this.high], this.items[this.low]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } else continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; } if (this.j < this.high) return [this.items[this.j], this.pivot]; [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]]; let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1070,19 +939,8 @@ class QuicksortMiddleProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.low, this.high] = this.stack.pop(); if (this.low < this.high) {
-                    this.mid = this.low + Math.floor((this.high - this.low) / 2);
-                    [this.items[this.mid], this.items[this.high]] = [this.items[this.high], this.items[this.mid]];
-                    this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition';
-                } else continue;
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
-                if (this.j < this.high) return [this.items[this.j], this.pivot];
-                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
-                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { let m = Math.floor((this.low + this.high) / 2); [this.items[m], this.items[this.high]] = [this.items[this.high], this.items[m]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } else continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; } if (this.j < this.high) return [this.items[this.j], this.pivot]; [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]]; let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1091,33 +949,9 @@ class QuicksortMo3Provider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.low, this.high] = this.stack.pop(); if (this.low < this.high) {
-                    this.mid = this.low + Math.floor((this.high - this.low) / 2);
-                    this.pivotState = 0; this.state = 'pivot';
-                } else continue;
-            }
-            if (this.state === 'pivot') {
-                if (this.pivotState === 0) {
-                    if (result !== undefined) { if (result === 0) [this.items[this.low], this.items[this.mid]] = [this.items[this.mid], this.items[this.low]]; this.pivotState = 1; result = undefined; }
-                    else return [this.items[this.mid], this.items[this.low]];
-                }
-                if (this.pivotState === 1) {
-                    if (result !== undefined) { if (result === 0) [this.items[this.low], this.items[this.high]] = [this.items[this.high], this.items[this.low]]; this.pivotState = 2; result = undefined; }
-                    else return [this.items[this.high], this.items[this.low]];
-                }
-                if (this.pivotState === 2) {
-                    if (result !== undefined) { if (result === 0) [this.items[this.mid], this.items[this.high]] = [this.items[this.high], this.items[this.mid]]; this.pivotState = 3; result = undefined; }
-                    else return [this.items[this.mid], this.items[this.high]];
-                }
-                if (this.pivotState === 3) { this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; }
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
-                if (this.j < this.high) return [this.items[this.j], this.pivot];
-                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
-                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { this.mid = Math.floor((this.low + this.high) / 2); this.pState = 0; this.state = 'pivot'; } else continue; }
+            if (this.state === 'pivot') { if (this.pState === 0) { if (result !== undefined) { if (result === 1) [this.items[this.low], this.items[this.mid]] = [this.items[this.mid], this.items[this.low]]; this.pState = 1; result = undefined; } else return [this.items[this.low], this.items[this.mid]]; } if (this.pState === 1) { if (result !== undefined) { if (result === 1) [this.items[this.low], this.items[this.high]] = [this.items[this.high], this.items[this.low]]; this.pState = 2; result = undefined; } else return [this.items[this.low], this.items[this.high]]; } if (this.pState === 2) { if (result !== undefined) { if (result === 1) [this.items[this.mid], this.items[this.high]] = [this.items[this.high], this.items[this.mid]]; this.pState = 3; result = undefined; } else return [this.items[this.mid], this.items[this.high]]; } if (this.pState === 3) { this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; } if (this.j < this.high) return [this.items[this.j], this.pivot]; [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]]; let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1126,33 +960,9 @@ class QuicksortNintherProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.low, this.high] = this.stack.pop(); if (this.low < this.high) {
-                    if (this.high - this.low < 8) { this.mid = this.low + Math.floor((this.high - this.low) / 2); [this.items[this.mid], this.items[this.high]] = [this.items[this.high], this.items[this.mid]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; }
-                    else { let div = Math.floor((this.high - this.low) / 8); this.indices = [0,1,2,3,4,5,6,7,8].map(i => this.low + i * div); this.m = []; this.group = 0; this.pivotState = 0; this.state = 'ninther'; }
-                } else continue;
-            }
-            if (this.state === 'ninther') {
-                if (this.group < 3) {
-                    let a = this.indices[this.group * 3], b = this.indices[this.group * 3 + 1], c = this.indices[this.group * 3 + 2];
-                    if (this.pivotState === 0) { if (result !== undefined) { if (result === 0) [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.pivotState = 1; result = undefined; } else return [this.items[b], this.items[a]]; }
-                    if (this.pivotState === 1) { if (result !== undefined) { if (result === 0) [this.items[a], this.items[c]] = [this.items[c], this.items[a]]; this.pivotState = 2; result = undefined; } else return [this.items[c], this.items[a]]; }
-                    if (this.pivotState === 2) { if (result !== undefined) { if (result === 0) [this.items[b], this.items[c]] = [this.items[c], this.items[b]]; this.pivotState = 3; result = undefined; } else return [this.items[b], this.items[c]]; }
-                    if (this.pivotState === 3) { this.m.push(this.indices[this.group * 3 + 2]); this.group++; this.pivotState = 0; continue; }
-                } else {
-                    let a = this.m[0], b = this.m[1], c = this.m[2];
-                    if (this.pivotState === 0) { if (result !== undefined) { if (result === 0) [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.pivotState = 1; result = undefined; } else return [this.items[b], this.items[a]]; }
-                    if (this.pivotState === 1) { if (result !== undefined) { if (result === 0) [this.items[a], this.items[c]] = [this.items[c], this.items[a]]; this.pivotState = 2; result = undefined; } else return [this.items[c], this.items[a]]; }
-                    if (this.pivotState === 2) { if (result !== undefined) { if (result === 0) [this.items[b], this.items[c]] = [this.items[c], this.items[b]]; this.pivotState = 3; result = undefined; } else return [this.items[b], this.items[c]]; }
-                    if (this.pivotState === 3) { [this.items[c], this.items[this.high]] = [this.items[this.high], this.items[c]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; }
-                }
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
-                if (this.j < this.high) return [this.items[this.j], this.pivot];
-                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
-                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { if (this.high - this.low < 8) { let m = Math.floor((this.low+this.high)/2); [this.items[m], this.items[this.high]] = [this.items[this.high], this.items[m]]; this.pivot = this.items[this.high]; this.i = this.low-1; this.j = this.low; this.state = 'partition'; } else { let d = Math.floor((this.high-this.low)/8); this.idx = [0,1,2,3,4,5,6,7,8].map(k => this.low+k*d); this.g = 0; this.pS = 0; this.m = []; this.state = 'ninther'; } } else continue; }
+            if (this.state === 'ninther') { if (this.g < 3) { let a = this.idx[this.g*3], b = this.idx[this.g*3+1], c = this.idx[this.g*3+2]; if (this.pS === 0) { if (result !== undefined) { if (result === 1) [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.pS=1; result=undefined; } else return [this.items[a], this.items[b]]; } if (this.pS === 1) { if (result !== undefined) { if (result === 1) [this.items[a], this.items[c]] = [this.items[c], this.items[a]]; this.pS=2; result=undefined; } else return [this.items[a], this.items[c]]; } if (this.pS === 2) { if (result !== undefined) { if (result === 1) [this.items[b], this.items[c]] = [this.items[c], this.items[b]]; this.pS=3; result=undefined; } else return [this.items[b], this.items[c]]; } if (this.pS === 3) { this.m.push(this.items[this.idx[this.g*3+1]]); this.g++; this.pS = 0; continue; } } else { if (this.pS === 0) { if (result !== undefined) { if (result === 1) [this.m[0], this.m[1]] = [this.m[1], this.m[0]]; this.pS=1; result=undefined; } else return [this.m[0], this.m[1]]; } if (this.pS === 1) { if (result !== undefined) { if (result === 1) [this.m[0], this.m[2]] = [this.m[2], this.m[0]]; this.pS=2; result=undefined; } else return [this.m[0], this.m[2]]; } if (this.pS === 2) { if (result !== undefined) { if (result === 1) [this.m[1], this.m[2]] = [this.m[2], this.m[1]]; this.pS=3; result=undefined; } else return [this.m[1], this.m[2]]; } if (this.pS === 3) { let val = this.m[1]; let pos = this.high; for (let k=this.low; k<=this.high; k++) if (this.items[k] === val) { pos = k; break; } [this.items[pos], this.items[this.high]] = [this.items[this.high], this.items[pos]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } } continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; } if (this.j < this.high) return [this.items[this.j], this.pivot]; [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]]; let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1162,12 +972,7 @@ class QuicksortRTLProvider extends Provider {
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
             if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } else continue; }
-            if (this.state === 'partition') {
-                if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
-                if (this.j < this.high) return [this.items[this.j], this.pivot];
-                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
-                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; } if (this.j < this.high) return [this.items[this.j], this.pivot]; [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]]; let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1176,19 +981,8 @@ class QuicksortRandomProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.low, this.high] = this.stack.pop(); if (this.low < this.high) {
-                    let r = Math.floor(Math.random() * (this.high - this.low + 1)) + this.low;
-                    [this.items[r], this.items[this.high]] = [this.items[this.high], this.items[r]];
-                    this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition';
-                } else continue;
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) { if (result === 1) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; }
-                if (this.j < this.high) return [this.items[this.j], this.pivot];
-                [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]];
-                let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { let r = Math.floor(Math.random() * (this.high - this.low + 1)) + this.low; [this.items[r], this.items[this.high]] = [this.items[this.high], this.items[r]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } else continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; } if (this.j < this.high) return [this.items[this.j], this.pivot]; [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]]; let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1277,19 +1071,8 @@ class StableQuicksortProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') {
-                if (this.stack.length === 0) { this.state = 'done'; return null; }
-                [this.low, this.high] = this.stack.pop();
-                if (this.low < this.high) {
-                    this.pivot = this.items[this.low]; this.left = []; this.right = []; this.curr = this.low + 1; this.state = 'partition';
-                } else continue;
-            }
-            if (this.state === 'partition') {
-                if (result !== undefined) { if (result === 1) this.right.push(this.items[this.curr]); else this.left.push(this.items[this.curr]); this.curr++; result = undefined; }
-                if (this.curr <= this.high) return [this.items[this.curr], this.pivot];
-                let idx = this.low; for (let x of this.left) this.items[idx++] = x; let p = idx++; this.items[p] = this.pivot; for (let x of this.right) this.items[idx++] = x;
-                this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start';
-            }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { this.pivot = this.items[this.low]; this.left = []; this.right = []; this.curr = this.low + 1; this.state = 'partition'; } else continue; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 1) this.right.push(this.items[this.curr]); else this.left.push(this.items[this.curr]); this.curr++; result = undefined; } if (this.curr <= this.high) return [this.items[this.curr], this.pivot]; let idx = this.low; for (let x of this.left) this.items[idx++] = x; let p = idx++; this.items[p] = this.pivot; for (let x of this.right) this.items[idx++] = x; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
@@ -1363,38 +1146,17 @@ class TimsortProvider extends Provider {
     constructor(n) { super(n); this.minRun = n < 64 ? n : 32; this.idx = 0; this.runs = []; this.state = 'nextRun'; }
     next(result) {
         while (true) {
-            if (this.state === 'nextRun') {
-                if (this.idx < this.n) {
-                    this.runStart = this.idx; this.runEnd = Math.min(this.idx + this.minRun, this.n);
-                    this.i = this.idx + 1; this.state = 'insSort';
-                } else { this.state = 'mergeLoop'; this.mergeState = 'init'; } continue;
-            }
-            if (this.state === 'insSort') {
-                if (this.i < this.runEnd) { this.temp = this.items[this.i]; this.j = this.i - 1; this.state = 'insComp'; continue; }
-                this.runs.push(this.items.slice(this.runStart, this.runEnd)); this.idx = this.runEnd; this.state = 'nextRun'; continue;
-            }
+            if (this.state === 'nextRun') { if (this.idx < this.n) { this.runStart = this.idx; this.runEnd = Math.min(this.idx + this.minRun, this.n); this.i = this.idx + 1; this.state = 'insSort'; } else { this.state = 'mergeLoop'; this.mergeState = 'init'; } continue; }
+            if (this.state === 'insSort') { if (this.i < this.runEnd) { this.temp = this.items[this.i]; this.j = this.i - 1; this.state = 'insComp'; continue; } this.runs.push(this.items.slice(this.runStart, this.runEnd)); this.idx = this.runEnd; this.state = 'nextRun'; continue; }
             if (this.state === 'insComp') {
-                if (this.j >= this.runStart) {
-                    if (result !== undefined) { if (result === 0) { this.items[this.j+1] = this.items[this.j]; this.j--; result = undefined; }
-                        else { this.items[this.j+1] = this.temp; this.i++; this.state = 'insSort'; result = undefined; continue; } }
-                    else return [this.temp, this.items[this.j]]; continue;
-                }
+                if (this.j >= this.runStart) { if (result !== undefined) { if (result === 0) { this.items[this.j+1] = this.items[this.j]; this.j--; result = undefined; } else { this.items[this.j+1] = this.temp; this.i++; this.state = 'insSort'; result = undefined; continue; } } else return [this.temp, this.items[this.j]]; continue; }
                 this.items[this.j+1] = this.temp; this.i++; this.state = 'insSort'; continue;
             }
             if (this.state === 'mergeLoop') {
                 if (this.runs.length <= 1) { if (this.runs.length === 1) this.items = this.runs[0]; return null; }
                 if (this.mergeState === 'init') { this.newRuns = []; this.rIdx = 0; this.mergeState = 'pair'; }
-                if (this.mergeState === 'pair') {
-                    if (this.rIdx < this.runs.length - 1) { this.A = this.runs[this.rIdx]; this.B = this.runs[this.rIdx+1]; this.ai = 0; this.bi = 0; this.resArr = []; this.mergeState = 'work'; }
-                    else { if (this.rIdx === this.runs.length - 1) this.newRuns.push(this.runs[this.rIdx]); this.runs = this.newRuns; this.mergeState = 'init'; continue; }
-                }
-                if (this.mergeState === 'work') {
-                    if (result !== undefined) { if (result === 0) this.resArr.push(this.A[this.ai++]); else this.resArr.push(this.B[this.bi++]); result = undefined; }
-                    if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]];
-                    while (this.ai < this.A.length) this.resArr.push(this.A[this.ai++]);
-                    while (this.bi < this.B.length) this.resArr.push(this.B[this.bi++]);
-                    this.newRuns.push(this.resArr); this.rIdx += 2; this.mergeState = 'pair';
-                }
+                if (this.mergeState === 'pair') { if (this.rIdx < this.runs.length - 1) { this.A = this.runs[this.rIdx]; this.B = this.runs[this.rIdx+1]; this.ai = 0; this.bi = 0; this.resArr = []; this.mergeState = 'work'; } else { if (this.rIdx === this.runs.length - 1) this.newRuns.push(this.runs[this.rIdx]); this.runs = this.newRuns; this.mergeState = 'init'; continue; } }
+                if (this.mergeState === 'work') { if (result !== undefined) { if (result === 0) this.resArr.push(this.A[this.ai++]); else this.resArr.push(this.B[this.bi++]); result = undefined; } if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]]; while (this.ai < this.A.length) this.resArr.push(this.A[this.ai++]); while (this.bi < this.B.length) this.resArr.push(this.B[this.bi++]); this.newRuns.push(this.resArr); this.rIdx += 2; this.mergeState = 'pair'; }
             }
         }
     }
@@ -1474,18 +1236,18 @@ class TriplePivotQuicksortProvider extends Provider {
             if (this.state === 'insCompare') {
                 if (this.iJ >= this.l) {
                     if (result !== undefined) {
-                        if (result === 0) { this.items[this.iJ+1] = this.items[this.iJ]; this.iJ--; result = undefined; }
+                        if (result === 1) { [this.items[this.iJ+1], this.items[this.iJ]] = [this.items[this.iJ], this.items[this.iJ+1]]; this.iJ--; result = undefined; }
                         else { this.items[this.iJ+1] = this.iTemp; this.iI++; this.state = 'insStart'; result = undefined; continue; }
-                    } else return [this.iTemp, this.items[this.iJ]];
+                    } else return [this.items[this.iJ], this.iTemp];
                     continue;
                 }
                 this.items[this.iJ+1] = this.iTemp; this.iI++; this.state = 'insStart'; continue;
             }
             if (this.state === 'pivots') {
                 let a = this.l, b = this.l+1, c = this.r;
-                if (this.pS === 0) { if (result !== undefined) { if (result === 0) [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.pS=1; result=undefined; } else return [this.items[a], this.items[b]]; }
-                if (this.pS === 1) { if (result !== undefined) { if (result === 0) [this.items[b], this.items[c]] = [this.items[c], this.items[b]]; this.pS=2; result=undefined; } else return [this.items[b], this.items[c]]; }
-                if (this.pS === 2) { if (result !== undefined) { if (result === 0) [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.pS=3; result=undefined; } else return [this.items[a], this.items[b]]; }
+                if (this.pS === 0) { if (result !== undefined) { if (result === 1) [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.pS=1; result=undefined; } else return [this.items[a], this.items[b]]; }
+                if (this.pS === 1) { if (result !== undefined) { if (result === 1) [this.items[a], this.items[c]] = [this.items[c], this.items[a]]; this.pS=2; result=undefined; } else return [this.items[a], this.items[c]]; }
+                if (this.pS === 2) { if (result !== undefined) { if (result === 1) [this.items[b], this.items[c]] = [this.items[c], this.items[b]]; this.pS=3; result=undefined; } else return [this.items[b], this.items[c]]; }
                 if (this.pS === 3) {
                     this.p1 = this.items[this.l]; this.p2 = this.items[this.l+1]; this.p3 = this.items[this.r];
                     this.i = this.l + 2; this.j = this.l + 2; this.k = this.r - 1;
@@ -1495,11 +1257,11 @@ class TriplePivotQuicksortProvider extends Provider {
             if (this.state === 'partition') {
                 if (this.j <= this.k) {
                     if (this.sub === 'p1') {
-                        if (result !== undefined) { if (result === 0) { [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; this.i++; this.j++; this.sub = 'p1'; result = undefined; } else { this.sub = 'p2'; result = undefined; } }
+                        if (result !== undefined) { if (result === 0) { [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; this.i++; this.j++; this.sub = 'p1'; result = undefined; } else this.sub = 'p2'; }
                         if (this.sub === 'p1' && this.j <= this.k) return [this.items[this.j], this.p1];
                     }
                     if (this.sub === 'p2') {
-                        if (result !== undefined) { if (result === 0) { this.j++; this.sub = 'p1'; result = undefined; } else { this.sub = 'p3'; result = undefined; } }
+                        if (result !== undefined) { if (result === 0) { this.j++; this.sub = 'p1'; result = undefined; } else this.sub = 'p3'; }
                         if (this.sub === 'p2' && this.j <= this.k) return [this.items[this.j], this.p2];
                     }
                     if (this.sub === 'p3') {
@@ -1522,39 +1284,7 @@ class MergeSort3WayProvider extends KWayMergeSortProvider { constructor(n) { sup
 
 class MergeSort4WayProvider extends KWayMergeSortProvider { constructor(n) { super(n, 4); } }
 
-function simulate(n, ProviderClass, trials = 250) {
-    let totalComps = 0, totalTau = 0, maxUniqueBattles = n * (n - 1) / 2, hasDuplicates = false;
-    for (let t = 0; t < trials; t++) {
-        const trueStrengths = Array.from({ length: n }, () => Math.random() * 2000);
-        const provider = new ProviderClass(n);
-        const wins = new Float64Array(n), adjMaps = Array.from({ length: n }, () => new Map());
-        const matchesMap = new Map();
-        let pair = provider.next(), uniqueBattles = 0, totalIterations = 0;
-        while (pair && totalIterations < 1000000) {
-            totalIterations++;
-            const [a, b] = pair; if (a === undefined || b === undefined) break;
-            const pairKey = a < b ? `${a}-${b}` : `${b}-${a}`;
-            const match = matchesMap.get(pairKey);
-            let res;
-            if (match) {
-                hasDuplicates = true;
-                res = match.a === a ? match.result : 1 - match.result;
-            } else {
-                uniqueBattles++;
-                res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
-                matchesMap.set(pairKey, { a, b, result: res });
-                wins[a] += res; wins[b] += 1 - res;
-                adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
-                adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
-            }
-            pair = provider.next(res); if (uniqueBattles >= maxUniqueBattles) break;
-        }
-        const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
-        totalComps += uniqueBattles; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
-    } return { avgComps: totalComps / trials, avgTau: totalTau / trials, hasDuplicates };
-}
-
-const N = 100, algos = [
+const algos = [
     { name: 'Ford-Johnson', class: FJProvider },
     { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Bottom-up Merge Sort', class: BottomUpMergeSortProvider },
@@ -1622,18 +1352,38 @@ const N = 100, algos = [
 ];
 
 
-if (require.main === module) {
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+if (isMainThread) {
     const args = process.argv.slice(2);
     const n_val = args[0] ? parseInt(args[0]) : 100;
     const trials_val = args[1] ? parseInt(args[1]) : 250;
-    console.log(`Simulating N=${n_val}, trials=${trials_val}\nAlgorithm\tAvg Battles\tAvg Kendall Tau\tDuplicates`);
-    for (const algo of algos) {
-        process.stdout.write(`Starting ${algo.name}... `);
+    const numWorkers = require('os').cpus().length || 4;
+    const itemsPerWorker = Math.ceil(algos.length / numWorkers);
+    console.log(`Simulating N=${n_val}, trials=${trials_val} with ${numWorkers} workers\nAlgorithm\tAvg Battles\tAvg Kendall Tau\tDuplicates`);
+    let completed = 0;
+    for (let i = 0; i < numWorkers; i++) {
+        const start = i * itemsPerWorker;
+        const end = Math.min(start + itemsPerWorker, algos.length);
+        if (start >= end) continue;
+        const workerAlgos = algos.slice(start, end).map(a => ({ name: a.name, className: a.class.name }));
+        const worker = new Worker(__filename, { workerData: { workerAlgos, n: n_val, trials: trials_val } });
+        worker.on('message', (res) => {
+            console.log(`${res.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}\t${res.hasDuplicates ? "YES" : "NO"}`);
+        });
+        worker.on('exit', () => {
+            completed++;
+            if (completed === numWorkers) process.exit(0);
+        });
+    }
+} else {
+    const { workerAlgos, n, trials } = workerData;
+    for (const algo of workerAlgos) {
         try {
-            const res = simulate(n_val, algo.class, trials_val);
-            process.stdout.write(`\r${algo.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}\t${res.hasDuplicates ? "YES" : "NO"}\n`);
+            const Cls = eval(algo.className);
+            const res = simulate(n, Cls, trials);
+            parentPort.postMessage({ name: algo.name, ...res });
         } catch (e) {
-            process.stdout.write(`\r${algo.name}\tERROR: ${e.message}\n`);
+            parentPort.postMessage({ name: algo.name, avgComps: 0, avgTau: 0, hasDuplicates: false, error: e.message });
         }
     }
 }
