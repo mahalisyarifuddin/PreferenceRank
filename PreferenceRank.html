@@ -1056,15 +1056,14 @@
 					this.items = Array.from({ length: count }, (_, i) => i);
 					this.stack = [{ l: 0, r: count - 1, state: 0 }];
 				}
+				getProgress(step) {
+					return `${step}/~${this._est}`;
+				}
 				next(_, result) {
 					while (this.stack.length > 0) {
 						let f = this.stack[this.stack.length - 1];
 						if (f.state === 0) {
-							if (f.l >= f.r) {
-								this.stack.pop();
-								if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
-								continue;
-							}
+							if (f.l >= f.r) { this.pop(); continue; }
 							f.mid = Math.floor((f.l + f.r) / 2);
 							this.stack.push({ l: f.l, r: f.mid, state: 0 });
 							continue;
@@ -1080,7 +1079,7 @@
 						}
 						if (f.state === 3) {
 							if (result !== undefined) {
-								if (result === 1) this.items[f.k++] = f.leftArr[f.i++];
+								if (result >= 0.5) this.items[f.k++] = f.leftArr[f.i++];
 								else this.items[f.k++] = f.rightArr[f.j++];
 								result = undefined;
 							}
@@ -1089,14 +1088,14 @@
 							}
 							while (f.i < f.leftArr.length) this.items[f.k++] = f.leftArr[f.i++];
 							while (f.j < f.rightArr.length) this.items[f.k++] = f.rightArr[f.j++];
-							this.stack.pop();
-							if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
+							this.pop();
 						}
 					}
 					return null;
 				}
-				getProgress(step) {
-					return `${step}/~${Math.max(step, this._est)}`;
+				pop() {
+					this.stack.pop();
+					if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
 				}
 				snap() {
 					return JSON.stringify({ items: this.items, stack: this.stack });
