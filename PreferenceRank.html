@@ -1582,7 +1582,8 @@
 					elements.results.appendChild(headerWrapper);
 					const filterDiv = document.createElement('div');
 					filterDiv.className = 'filter-wrap';
-					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" aria-label="${this.string('filter')}" value="${this.filterTerm || ''}">`;
+					filterDiv.innerHTML = `<input type="search" id="resultFilter" placeholder="${this.string('filter')}" aria-label="${this.string('filter')}">`;
+					filterDiv.firstChild.value = this.filterTerm || '';
 					elements.results.appendChild(filterDiv);
 					elements.results.appendChild(elements.showGradeRow);
 					elements.showGradeRow.classList.remove('hidden');
