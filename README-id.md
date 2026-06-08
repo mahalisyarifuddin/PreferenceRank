@@ -17,14 +17,14 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 - **Peringkat Cepat:** Menggunakan **Merge Sort** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **penilaian Bradley-Terry murni** untuk representasi yang akurat.
 
 ### Analisis Algoritma
-Berdasarkan analisis komparatif terhadap 64 algoritma pengurutan (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Merge Sort** diidentifikasi sebagai **titik lutut matematika** optimal untuk peringkat preferensi manusia dengan akurasi tinggi tanpa perbandingan berulang.
+Berdasarkan analisis komparatif terhadap 65 algoritma pengurutan (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Merge Sort** diidentifikasi sebagai **titik lutut matematika** optimal untuk peringkat preferensi manusia dengan akurasi tinggi tanpa perbandingan berulang.
 
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertarungan | Rata-rata Kendall Tau | Duplikat | Status Pareto |
 | :--- | :--- | :--- | :--- | :--- |
 | Ford-Johnson | ~527 | 0.89 | TIDAK | Pareto-optimal |
 | In-place Merge Sort | ~542 | 0.90 | TIDAK | Pareto-optimal |
-| **Merge Sort** | ~542 | 0.91 | TIDAK | **Titik Lutut** |
+| **Merge Sort** | ~542 | 0.90 | TIDAK | **Titik Lutut** |
 | Full Rank | ~4950 | 1.00 | TIDAK | Pareto-optimal |
 
 *Peringkat Cepat mengurangi pertarungan sekitar 89% dibandingkan dengan Peringkat Penuh sambil tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan duplikat (seperti Shellsort) dikecualikan dari produksi untuk memastikan efisiensi pengguna yang maksimal.*
