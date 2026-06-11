@@ -22,16 +22,11 @@ Berdasarkan analisis perbandingan terhadap 68 algoritma pengurutan yang berbeda 
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
 | :--- | :--- | :--- | :--- | :--- |
-| Ford-Johnson | ~526 | 0.89 | TIDAK | Pareto-optimal |
+| Ford-Johnson | ~527 | 0.89 | TIDAK | Pareto-optimal |
 | In-place Merge Sort | ~542 | 0.90 | TIDAK | Pareto-optimal |
-| Rotation Merge Sort | ~716 | 0.92 | TIDAK | Pareto-optimal |
 | **Merge Sort** | ~542 | 0.90 | TIDAK | **Titik Lutut** |
+| Rotation Merge Sort | ~719 | 0.92 | TIDAK | Pareto-optimal |
 | Full Rank | ~4950 | 1.00 | TIDAK | Pareto-optimal |
-
-*Peringkat Cepat mengurangi pertarungan sekitar 89% dibandingkan dengan Peringkat Penuh sambil tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan duplikat (seperti Shellsort) dikecualikan dari produksi untuk memastikan efisiensi pengguna yang maksimal.*
-
-## Detail Teknis
-PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Maximum Likelihood Estimate (MLE) untuk model Bradley-Terry. Pendekatan iteratif ini memastikan konvergensi yang terjamin dan perhitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi operasi matriks.
 
 Berdasarkan **analisis titik lutut**, ambang batas konvergensi ditetapkan ke 1e-7. Nilai ini memberikan pengurangan rata-rata ~43% dalam jumlah iterasi dibandingkan dengan presisi yang lebih tinggi (1e-12) sambil memastikan kesalahan kekuatan logaritmik tetap jauh di bawah ambang batas yang mempengaruhi pembulatan skor Elo integer.
 
