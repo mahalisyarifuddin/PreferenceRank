@@ -4,7 +4,7 @@ This document summarizes the extensive benchmarking and analysis performed to op
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared 65 sorting algorithms. A key requirement for production is the elimination of duplicate pairwise comparisons. Algorithms that request the same pair twice are now identified and excluded from the Pareto-optimal knee point analysis to ensure maximum user efficiency.
+We compared 67 distinct sorting algorithms. A key requirement for production is the elimination of duplicate pairwise comparisons. Algorithms that request the same pair twice are now identified and excluded from the Pareto-optimal knee point analysis to ensure maximum user efficiency.
 
 ### Benchmarking Methodology
 - **N Value:** 100
@@ -22,6 +22,8 @@ We compared 65 sorting algorithms. A key requirement for production is the elimi
 | Ford-Johnson | 526.71 | 0.8880 | NO | Pareto-optimal |
 | In-place Merge Sort | 541.60 | 0.9038 | NO | Pareto-optimal |
 | **Merge Sort** | 541.74 | 0.9023 | NO | **Production Knee Point** |
+| Bucket Sort | 757.80 | 0.8007 | NO | Dominated |
+| Radix Sort | 4527.58 | 0.9458 | YES | Dominated |
 | Full Rank | 4950.00 | 1.0000 | NO | Pareto-optimal |
 | Intelligent Design | 0.00 | -0.0069 | NO | Dominated |
 | Socialist Sort | 0.00 | -0.0056 | NO | Dominated |
