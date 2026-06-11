@@ -774,6 +774,121 @@ class HeapSortProvider extends Provider {
     }
 }
 
+class RotationMergeSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.width = 16;
+        this.i = 0;
+        this.state = 'insertion_pass';
+        this.mergeStack = [];
+    }
+    reverse(l, r) {
+        while (l < r) {
+            let t = this.items[l]; this.items[l] = this.items[r]; this.items[r] = t;
+            l++; r--;
+        }
+    }
+    rotate(l, m, r) {
+        if (l >= m || m >= r) return;
+        this.reverse(l, m - 1);
+        this.reverse(m, r - 1);
+        this.reverse(l, r - 1);
+    }
+    next(result) {
+        while (true) {
+            if (this.state === 'insertion_pass') {
+                if (this.i < this.n) {
+                    this.ins_i = this.i + 1;
+                    this.ins_end = Math.min(this.i + 16, this.n);
+                    this.state = 'insertion_work';
+                } else {
+                    this.width = 16;
+                    this.i = 0;
+                    this.state = 'merge_pass';
+                }
+                continue;
+            }
+            if (this.state === 'insertion_work') {
+                if (this.ins_i < this.ins_end) {
+                    if (this.ins_subState === undefined) {
+                        this.ins_temp = this.items[this.ins_i];
+                        this.ins_j = this.ins_i - 1;
+                        this.ins_subState = 'compare';
+                    }
+                    if (this.ins_subState === 'compare') {
+                        if (result !== undefined) {
+                            if (result === 0) {
+                                this.items[this.ins_j + 1] = this.items[this.ins_j];
+                                this.ins_j--;
+                                result = undefined;
+                            } else {
+                                this.items[this.ins_j + 1] = this.ins_temp;
+                                this.ins_i++;
+                                this.ins_subState = undefined;
+                                result = undefined;
+                                continue;
+                            }
+                        }
+                        if (this.ins_j >= this.i) return [this.ins_temp, this.items[this.ins_j]];
+                        this.items[this.ins_j + 1] = this.ins_temp;
+                        this.ins_i++;
+                        this.ins_subState = undefined;
+                        continue;
+                    }
+                } else {
+                    this.i += 16;
+                    this.state = 'insertion_pass';
+                }
+                continue;
+            }
+            if (this.state === 'merge_pass') {
+                if (this.width < this.n) {
+                    if (this.i + this.width < this.n) {
+                        let l = this.i, m = this.i + this.width, r = Math.min(this.i + 2 * this.width, this.n);
+                        this.mergeStack = [{ l, m, r }];
+                        this.state = 'merging';
+                    } else {
+                        this.width *= 2; this.i = 0;
+                    }
+                } else return null;
+                continue;
+            }
+            if (this.state === 'merging') {
+                if (this.mergeStack.length === 0) {
+                    this.i += 2 * this.width;
+                    this.state = 'merge_pass';
+                    continue;
+                }
+                let f = this.mergeStack[this.mergeStack.length - 1];
+                if (f.l >= f.m || f.m >= f.r) { this.mergeStack.pop(); continue; }
+                if (f.subState === undefined) {
+                    f.m1 = Math.floor((f.l + f.m) / 2);
+                    f.lo = f.m; f.hi = f.r;
+                    f.subState = 'binSearch';
+                }
+                if (f.subState === 'binSearch') {
+                    if (result !== undefined) {
+                        if (result === 1) f.lo = f.mid + 1; else f.hi = f.mid;
+                        result = undefined;
+                    }
+                    if (f.lo < f.hi) {
+                        f.mid = Math.floor((f.lo + f.hi) / 2);
+                        return [this.items[f.m1], this.items[f.mid]];
+                    }
+                    f.m2 = f.lo;
+                    this.rotate(f.m1, f.m, f.m2);
+                    let newM = f.m1 + (f.m2 - f.m);
+                    this.mergeStack.pop();
+                    this.mergeStack.push({ l: newM + 1, m: f.m2, r: f.r });
+                    this.mergeStack.push({ l: f.l, m: f.m1, r: newM });
+                    continue;
+                }
+            }
+        }
+    }
+}
+
+
 class InPlaceMergeSortProvider extends Provider {
     constructor(n) { super(n); this.stack = [{ l: 0, r: n - 1, state: 0 }]; }
     next(result) {
@@ -1600,6 +1715,7 @@ const algos = [
     { name: '3-way Merge Sort', class: MergeSort3WayProvider },
     { name: '4-way Merge Sort', class: MergeSort4WayProvider },
     { name: 'In-place Merge Sort', class: InPlaceMergeSortProvider },
+    { name: 'Rotation Merge Sort', class: RotationMergeSortProvider },
     { name: 'Timsort', class: TimsortProvider },
     { name: 'Powersort', class: PowersortProvider },
     { name: 'Parallel Merge Sort', class: ParallelMergeSortProvider },

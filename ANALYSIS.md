@@ -4,7 +4,7 @@ This document summarizes the extensive benchmarking and analysis performed to op
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared 67 distinct sorting algorithms. A key requirement for production is the elimination of duplicate pairwise comparisons. Algorithms that request the same pair twice are now identified and excluded from the Pareto-optimal knee point analysis to ensure maximum user efficiency.
+We compared 68 distinct sorting algorithms. A key requirement for production is the elimination of duplicate pairwise comparisons. Algorithms that request the same pair twice are now identified and excluded from the Pareto-optimal knee point analysis to ensure maximum user efficiency.
 
 ### Benchmarking Methodology
 - **N Value:** 100
@@ -21,6 +21,7 @@ We compared 67 distinct sorting algorithms. A key requirement for production is 
 | Miracle Sort | 99.00 | 0.5443 | NO | Pareto-optimal |
 | Ford-Johnson | 526.50 | 0.8883 | NO | Pareto-optimal |
 | In-place Merge Sort | 541.92 | 0.9032 | NO | Pareto-optimal |
+| Rotation Merge Sort | 716.28 | 0.9157 | NO | Pareto-optimal |
 | **Merge Sort** | 542.40 | 0.9043 | NO | **Production Knee Point** |
 | 4-way Merge Sort | 543.64 | 0.9049 | NO | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | NO | Pareto-optimal |
@@ -83,6 +84,35 @@ We compared 67 distinct sorting algorithms. A key requirement for production is 
 | Pancake Sort | 3075.65 | 0.9684 | YES | Dominated |
 | Radix Sort | 4537.68 | 0.9477 | YES | Dominated |
 | Bogosort | 4950.00 | 1.0000 | YES | Dominated |
+
+## 2. In-place and Block Merge Sort Comparison
+
+The following sections detail the trade-offs between vanilla merge sort, basic in-place merge sort, and block merge sort variants.
+
+### Memory Usage
+
+* **Vanilla Merge Sort:** Requires O(n) auxiliary space. It allocates a secondary scratchpad array of identical size to the input to handle data blending.
+* **In-Place Merge Sort:** Requires O(1) auxiliary space for iterative variants, or $O(\log n)$ space for recursive versions to manage the call stack. No secondary data buffer is generated.
+
+### Time Complexity and Performance
+
+* **Vanilla Merge Sort:** Guarantees a strict $O(n \log n)$ time complexity across best, worst, and average cases. It is fast in practice because elements are copied sequentially, which maximizes CPU cache efficiency.
+* **In-Place Merge Sort:** Often degrades in speed. Basic implementations drop to O(n²) time due to frequent internal element shifts (similar to insertion sort mechanics). Rotation-based in-place merge (like `Rotation Merge Sort`) achieves $O(n \log^2 n)$ but runs significantly slower due to intense pointer swap overhead and poor CPU cache locality. Highly optimized block merge sorts achieve $O(n \log n)$ but are extremely complex to implement.
+
+### Algorithmic Stability
+
+* **Vanilla Merge Sort:** Inherently stable. It naturally preserves the original relative order of duplicate elements because it merges left-to-right from distinct arrays.
+* **In-Place Merge Sort:** Frequently unstable. To avoid allocating memory, most versions must pass elements around via complex data rotations or internal swaps, which typically destroys the relative ordering of identical keys.
+* **Block Merge Sort:** A highly complex variant that achieves stable $O(n \log n)$ sorting with O(1) auxiliary space by using an internal buffer extracted from the data itself.
+
+### Structural Comparison
+
+| Feature | Vanilla Merge Sort | In-Place (Rotation) | Block Merge Sort |
+| :--- | :--- | :--- | :--- |
+| Time Complexity | $O(n \log n)$ | $O(n \log^2 n)$ | $O(n \log n)$ |
+| Auxiliary Space | O(n) | O(1) or $O(\log n)$ | O(1) |
+| Stability | Stable | Unstable | Stable |
+| Implementation Complexity | Simple | Moderate | Very High |
 
 ### Battle Count Estimate Regression
 For Merge Sort (the new Production Knee Point):

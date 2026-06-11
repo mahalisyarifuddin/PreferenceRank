@@ -4,7 +4,7 @@ Dokumen ini merangkum tolok ukur dan analisis ekstensif yang dilakukan untuk men
 
 ## 1. Perbandingan Algoritma Pengurutan (N=100)
 
-Kami membandingkan 67 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal untuk memastikan efisiensi pengguna yang maksimal.
+Kami membandingkan 68 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal untuk memastikan efisiensi pengguna yang maksimal.
 
 ### Metodologi Tolok Ukur
 - **N Value:** 100
@@ -21,6 +21,7 @@ Kami membandingkan 67 algoritma pengurutan. Persyaratan utama untuk produksi ada
 | Miracle Sort | 99.00 | 0.5443 | TIDAK | Pareto-optimal |
 | Ford-Johnson | 526.50 | 0.8883 | TIDAK | Pareto-optimal |
 | In-place Merge Sort | 541.92 | 0.9032 | TIDAK | Pareto-optimal |
+| Rotation Merge Sort | 716.28 | 0.9157 | TIDAK | Pareto-optimal |
 | **Merge Sort** | 542.40 | 0.9043 | TIDAK | **Titik Lutut Produksi** |
 | 4-way Merge Sort | 543.64 | 0.9049 | TIDAK | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | TIDAK | Pareto-optimal |
@@ -83,6 +84,35 @@ Kami membandingkan 67 algoritma pengurutan. Persyaratan utama untuk produksi ada
 | Pancake Sort | 3075.65 | 0.9684 | YA | Terdominasi |
 | Radix Sort | 4537.68 | 0.9477 | YA | Terdominasi |
 | Bogosort | 4950.00 | 1.0000 | YA | Terdominasi |
+
+## 2. Perbandingan In-place dan Block Merge Sort
+
+Bagian berikut merinci trade-off antara vanilla merge sort, basic in-place merge sort, dan varian block merge sort.
+
+### Penggunaan Memori
+
+* **Vanilla Merge Sort:** Memerlukan ruang tambahan O(n). Ini mengalokasikan array scratchpad sekunder dengan ukuran yang sama dengan input untuk menangani pencampuran data.
+* **In-Place Merge Sort:** Memerlukan ruang tambahan O(1) untuk varian iteratif, atau $O(\log n)$ untuk versi rekursif untuk mengelola tumpukan panggilan. Tidak ada buffer data sekunder yang dihasilkan.
+
+### Kompleksitas Waktu dan Performa
+
+* **Vanilla Merge Sort:** Menjamin kompleksitas waktu $O(n \log n)$ yang ketat di kasus terbaik, terburuk, dan rata-rata. Ini cepat dalam praktiknya karena elemen disalin secara berurutan, yang memaksimalkan efisiensi cache CPU.
+* **In-Place Merge Sort:** Seringkali mengalami penurunan kecepatan. Implementasi dasar turun ke waktu O(n²) karena pergeseran elemen internal yang sering (mirip dengan mekanika insertion sort). Penggabungan in-place berbasis rotasi (seperti `Rotation Merge Sort`) mencapai $O(n \log^2 n)$ tetapi berjalan jauh lebih lambat karena overhead swap pointer yang intens dan lokalitas cache CPU yang buruk. Varian block merge sort yang sangat dioptimalkan mencapai $O(n \log n)$ tetapi sangat kompleks untuk diimplementasikan.
+
+### Stabilitas Algoritma
+
+* **Vanilla Merge Sort:** Inheren stabil. Secara alami mempertahankan urutan relatif asli dari elemen duplikat karena menggabungkan dari kiri ke kanan dari array yang berbeda.
+* **In-Place Merge Sort:** Seringkali tidak stabil. Untuk menghindari alokasi memori, sebagian besar versi harus memindahkan elemen melalui rotasi data yang kompleks atau swap internal, yang biasanya merusak urutan relatif dari kunci yang identik.
+* **Block Merge Sort:** Varian yang sangat kompleks yang mencapai pengurutan $O(n \log n)$ yang stabil dengan ruang tambahan O(1) dengan menggunakan buffer internal yang diekstraksi dari data itu sendiri.
+
+### Perbandingan Struktural
+
+| Fitur | Vanilla Merge Sort | In-Place (Rotasi) | Block Merge Sort |
+| :--- | :--- | :--- | :--- |
+| Kompleksitas Waktu | $O(n \log n)$ | $O(n \log^2 n)$ | $O(n \log n)$ |
+| Ruang Tambahan | O(n) | O(1) atau $O(\log n)$ | O(1) |
+| Stabilitas | Stabil | Tidak Stabil | Stabil |
+| Kompleksitas Implementasi | Sederhana | Sedang | Sangat Tinggi |
 
 ### Regresi Estimasi Jumlah Pertempuran
 Untuk Merge Sort (Titik Lutut Produksi yang baru):
