@@ -22,7 +22,7 @@ Based on a comparative analysis of 67 distinct sorting algorithms (see [ANALYSIS
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |
 | :--- | :--- | :--- | :--- | :--- |
-| Ford-Johnson | ~527 | 0.89 | NO | Pareto-optimal |
+| Ford-Johnson | ~526 | 0.89 | NO | Pareto-optimal |
 | In-place Merge Sort | ~542 | 0.90 | NO | Pareto-optimal |
 | **Merge Sort** | ~542 | 0.90 | NO | **Knee Point** |
 | Full Rank | ~4950 | 1.00 | NO | Pareto-optimal |
