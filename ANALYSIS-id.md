@@ -4,7 +4,7 @@ Dokumen ini merangkum tolok ukur dan analisis ekstensif yang dilakukan untuk men
 
 ## 1. Perbandingan Algoritma Pengurutan (N=100)
 
-Kami membandingkan 65 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal untuk memastikan efisiensi pengguna yang maksimal.
+Kami membandingkan 67 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal untuk memastikan efisiensi pengguna yang maksimal.
 
 ### Metodologi Tolok Ukur
 - **N Value:** 100
@@ -22,6 +22,8 @@ Kami membandingkan 65 algoritma pengurutan. Persyaratan utama untuk produksi ada
 | Ford-Johnson | 526.71 | 0.8880 | TIDAK | Pareto-optimal |
 | In-place Merge Sort | 541.60 | 0.9038 | TIDAK | Pareto-optimal |
 | **Merge Sort** | 541.74 | 0.9023 | TIDAK | **Titik Lutut Produksi** |
+| Bucket Sort | 757.80 | 0.8007 | TIDAK | Terdominasi |
+| Radix Sort | 4527.58 | 0.9458 | YA | Terdominasi |
 | Full Rank | 4950.00 | 1.0000 | TIDAK | Pareto-optimal |
 | Intelligent Design | 0.00 | -0.0069 | TIDAK | Terdominasi |
 | Socialist Sort | 0.00 | -0.0056 | TIDAK | Terdominasi |

@@ -179,6 +179,30 @@ class BozosortProvider extends Provider {
     }
 }
 
+class BucketSortProvider extends Provider {
+    constructor(n) { super(n); this.numBuckets = Math.max(2, Math.floor(Math.sqrt(n))); this.state = 'init'; }
+    next(result) {
+        while (true) {
+            if (this.state === 'init') { this.pivots = []; for (let i = 0; i < this.numBuckets - 1; i++) this.pivots.push(this.items[i]); this.others = this.items.slice(this.numBuckets - 1); this.pivotSorter = new MergeSortProvider(this.pivots.length); this.pivotSorter.items = this.pivots; this.state = 'sort_pivots'; }
+            if (this.state === 'sort_pivots') { const res = this.pivotSorter.next(result); if (res) return res; this.pivots = this.pivotSorter.items; this.buckets = Array.from({ length: this.numBuckets }, () => []); this.itemIdx = 0; this.state = 'distribute'; result = undefined; }
+            if (this.state === 'distribute') { if (this.itemIdx < this.others.length) { this.currentItem = this.others[this.itemIdx]; this.lo = 0; this.hi = this.pivots.length; this.state = 'binary_search'; } else { this.bucketIdx = 0; this.state = 'sort_buckets'; } continue; }
+            if (this.state === 'binary_search') {
+                if (result !== undefined) { if (result === 1) this.lo = this.mid + 1; else this.hi = this.mid; result = undefined; }
+                if (this.lo < this.hi) { this.mid = (this.lo + this.hi) >> 1; return [this.currentItem, this.pivots[this.mid]]; }
+                this.buckets[this.lo].push(this.currentItem); this.itemIdx++; this.state = 'distribute'; continue;
+            }
+            if (this.state === 'sort_buckets') {
+                if (this.bucketIdx < this.buckets.length) {
+                    if (this.buckets[this.bucketIdx].length > 1) { this.bucketSorter = new InsertionSortProvider(this.buckets[this.bucketIdx].length); this.bucketSorter.items = this.buckets[this.bucketIdx]; this.state = 'sorting_bucket'; }
+                    else { this.bucketIdx++; }
+                } else { this.items = []; for (let i = 0; i < this.numBuckets; i++) { if (i > 0) this.items.push(this.pivots[i - 1]); for (let x of this.buckets[i]) this.items.push(x); } return null; }
+                continue;
+            }
+            if (this.state === 'sorting_bucket') { const res = this.bucketSorter.next(result); if (res) return res; this.buckets[this.bucketIdx] = this.bucketSorter.items; this.bucketIdx++; this.state = 'sort_buckets'; result = undefined; continue; }
+        }
+    }
+}
+
 class BubbleSortProvider extends Provider {
     constructor(n) { super(n); this.i = 0; this.j = 0; this.swapped = false; }
     next(result) {
@@ -1207,6 +1231,24 @@ class QuicksortRTLProvider extends Provider {
     }
 }
 
+class RadixSortProvider extends Provider {
+    constructor(n) { super(n); this.pass = 0; this.numPasses = Math.ceil(Math.log2(n)); this.state = 'init_pass'; }
+    next(result) {
+        while (this.pass < this.numPasses) {
+            if (this.state === 'init_pass') { this.pivot = this.items[Math.floor(Math.random() * this.items.length)]; this.lo_bucket = []; this.hi_bucket = []; this.idx = 0; this.state = 'partition'; }
+            if (this.state === 'partition') {
+                if (result !== undefined) { if (result === 0) this.hi_bucket.push(this.items[this.idx]); else this.lo_bucket.push(this.items[this.idx]); this.idx++; result = undefined; }
+                if (this.idx < this.n) return [this.items[this.idx], this.pivot];
+                this.items = [...this.lo_bucket, ...this.hi_bucket]; this.pass++; this.state = 'init_pass'; continue;
+            }
+        }
+        if (!this.finalSort) { this.finalSort = new InsertionSortProvider(this.n); this.finalSort.items = this.items; }
+        const res = this.finalSort.next(result);
+        if (res === null) this.items = this.finalSort.items;
+        return res;
+    }
+}
+
 class QuicksortRandomProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
@@ -1564,6 +1606,7 @@ const algos = [
     { name: 'Hayate-Shiki', class: HayateShikiProvider },
     { name: 'Shellsort', class: ShellSortProvider },
     { name: 'Quicksort (RTL)', class: QuicksortRTLProvider },
+    { name: 'Radix Sort', class: RadixSortProvider },
     { name: 'Quicksort (LTR)', class: QuicksortLTRProvider },
     { name: 'Quicksort (Random)', class: QuicksortRandomProvider },
     { name: 'Quicksort (Middle)', class: QuicksortMiddleProvider },
@@ -1578,6 +1621,7 @@ const algos = [
     { name: 'PDQSort', class: PDQSortProvider },
     { name: 'Parallel Quicksort', class: ParallelQuicksortProvider },
     { name: 'Bubble Sort', class: BubbleSortProvider },
+    { name: 'Bucket Sort', class: BucketSortProvider },
     { name: 'Selection Sort', class: SelectionSortProvider },
     { name: 'Insertion Sort', class: InsertionSortProvider },
     { name: 'Binary Insertion', class: BinaryInsertionSortProvider },
