@@ -4,7 +4,7 @@ Dokumen ini merangkum tolok ukur dan analisis ekstensif yang dilakukan untuk men
 
 ## 1. Perbandingan Algoritma Pengurutan (N=100)
 
-Kami membandingkan 68 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal untuk memastikan efisiensi pengguna yang maksimal.
+Kami membandingkan 68 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal (menggunakan sumbu skala log untuk jumlah pertempuran unik) untuk memastikan efisiensi pengguna yang maksimal.
 
 ### Metodologi Tolok Ukur
 - **N Value:** 100

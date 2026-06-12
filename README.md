@@ -17,7 +17,7 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Merge Sort** for efficient, non-duplicating pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 68 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Merge Sort** was identified as the optimal **mathematical knee point** for high-accuracy human preference ranking without redundant comparisons.
+Based on a comparative analysis of 68 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Merge Sort** was identified as the optimal **mathematical knee point** (using log-scale analysis) for high-accuracy human preference ranking without redundant comparisons.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |

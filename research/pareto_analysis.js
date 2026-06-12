@@ -19,9 +19,9 @@ const pareto_pts = algos.map((name, i) => ({ name, b: battles[i], t: tau[i], m: 
     .filter(p => p.m)
     .sort((a, b) => a.b - b.b); // ENSURE POINTS ARE ORDERED BY COST
 
-const pb = pareto_pts.map(p => p.b), pt = pareto_pts.map(p => p.t);
-const b_min = Math.min(...pb), b_max = Math.max(...pb), t_min = Math.min(...pt), t_max = Math.max(...pt);
-const xs_n = pb.map(b => (b - b_min) / (b_max - b_min)), ys_n = pt.map(t => (t - t_min) / (t_max - t_min));
+const pb_log = pareto_pts.map(p => Math.log10(p.b + 1)), pt = pareto_pts.map(p => p.t);
+const b_min = Math.min(...pb_log), b_max = Math.max(...pb_log), t_min = Math.min(...pt), t_max = Math.max(...pt);
+const xs_n = pb_log.map(b => (b - b_min) / (b_max - b_min)), ys_n = pt.map(t => (t - t_min) / (t_max - t_min));
 
 // Method 1: Max Perpendicular Distance from Endpoint Chord
 let max_dist = -1, perp_knee_idx = -1;
