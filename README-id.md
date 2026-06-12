@@ -21,15 +21,12 @@ Berdasarkan analisis perbandingan terhadap 68 algoritma pengurutan yang berbeda 
 
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
-| :--- | :--- | :--- | :--- | :--- |
+|-----------|-----------------------|-----------------------|-----------|---------------|
 | Ford-Johnson | ~527 | 0.89 | TIDAK | Pareto-optimal |
-| In-place Merge Sort | ~542 | 0.90 | TIDAK | Pareto-optimal |
+| In-place Merge Sort | ~541 | 0.90 | TIDAK | Pareto-optimal |
 | **Merge Sort** | ~542 | 0.90 | TIDAK | **Titik Lutut** |
 | Rotation Merge Sort | ~719 | 0.92 | TIDAK | Pareto-optimal |
 | Full Rank | ~4950 | 1.00 | TIDAK | Pareto-optimal |
-
-Berdasarkan **analisis titik lutut**, ambang batas konvergensi ditetapkan ke 1e-7. Nilai ini memberikan pengurangan rata-rata ~43% dalam jumlah iterasi dibandingkan dengan presisi yang lebih tinggi (1e-12) sambil memastikan kesalahan kekuatan logaritmik tetap jauh di bawah ambang batas yang mempengaruhi pembulatan skor Elo integer.
-
 ## Mulai Cepat
 1. Unduh file `PreferenceRank.html` dari repositori.
 2. Buka file tersebut di peramban web modern apa pun.
