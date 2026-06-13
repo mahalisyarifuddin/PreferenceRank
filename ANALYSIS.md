@@ -91,6 +91,22 @@ We compared 78 distinct sorting algorithms. A key requirement for production is 
 | Pancake Sort | 3083.92 | 0.9687 | YES | Dominated |
 | Radix Sort | 4525.35 | 0.9450 | YES | Dominated |
 | Bogosort | 4950.00 | 1.0000 | YES | Dominated |
+
+### Why Vanilla Merge Sort is the Knee Point
+
+Vanilla Merge Sort is designated as the **mathematical knee point** because it represents the optimal balance between user effort (number of comparisons) and ranking accuracy (Kendall Tau correlation).
+
+#### 1. Mathematical Optimization (Log-Scale Knee)
+The "knee point" is identified using the **Kneedle method** and **Max Perpendicular Distance** from the endpoint chord on the Pareto frontier. When plotting accuracy against effort on a log-scale axis ($log_{10}(\text{battles} + 1)$), Merge Sort occupies the "elbow" of the curve.
+*   **Diminishing Returns:** Moving from "Miracle Sort" (99 battles, 0.54 Tau) to "Merge Sort" (~542 battles, 0.90 Tau) yields a massive gain in accuracy.
+*   **Saturation:** Moving beyond Merge Sort to "Rotation Merge Sort" (~712 battles) only increases accuracy to **0.91**. The additional 170 battles yield only a marginal 1% gain, marking Merge Sort as the point of peak efficiency.
+
+#### 2. The "No Duplicates" Constraint
+PreferenceRank prioritizes user efficiency by excluding any algorithm that produces duplicate comparisons. Many high-performance algorithms (Timsort, Quicksort, Shellsort) are disqualified because they are optimized for computer memory access patterns rather than minimizing unique human decisions. Merge Sort is a "Pure Unique" algorithm, ensuring every battle provides fresh data to the scoring model.
+
+#### 3. Stability and Implementation
+While In-place and Rotation Merge Sort variants also appear on the Pareto frontier, the **Vanilla** implementation is selected for production due to its inherent **stability** (preserving relative order of ties) and simplicity, which avoids the performance overhead of complex data rotations.
+
 ## 2. In-place and Block Merge Sort Comparison
 
 The following sections detail the trade-offs between vanilla merge sort, basic in-place merge sort, and block merge sort variants.

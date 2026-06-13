@@ -91,6 +91,22 @@ Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi ada
 | Pancake Sort | 3083.92 | 0.9687 | YA | Terdominasi |
 | Radix Sort | 4525.35 | 0.9450 | YA | Terdominasi |
 | Bogosort | 4950.00 | 1.0000 | YA | Terdominasi |
+
+### Mengapa Vanilla Merge Sort adalah Titik Lutut
+
+Vanilla Merge Sort ditetapkan sebagai **titik lutut matematis** karena mewakili keseimbangan optimal antara upaya pengguna (jumlah perbandingan) dan akurasi peringkat (korelasi Kendall Tau).
+
+#### 1. Optimalisasi Matematis (Lutut Skala Log)
+"Titik lutut" diidentifikasi menggunakan **metode Kneedle** dan **Jarak Tegak Lurus Maksimum** dari akord titik akhir pada garis depan Pareto. Saat memplot akurasi terhadap upaya pada sumbu skala log ($log_{10}(\text{pertempuran} + 1)$), Merge Sort menempati bagian "siku" dari kurva tersebut.
+*   **Hasil yang Menurun:** Berpindah dari "Miracle Sort" (99 pertempuran, 0.54 Tau) ke "Merge Sort" (~542 pertempuran, 0.90 Tau) menghasilkan peningkatan akurasi yang masif.
+*   **Saturasi:** Berpindah melampaui Merge Sort ke "Rotation Merge Sort" (~712 pertempuran) hanya meningkatkan akurasi menjadi **0.91**. Tambahan 170 pertempuran hanya menghasilkan keuntungan marjinal 1%, menandai Merge Sort sebagai titik efisiensi puncak.
+
+#### 2. Batasan "Tanpa Duplikasi"
+PreferenceRank memprioritaskan efisiensi pengguna dengan mengecualikan algoritma apa pun yang menghasilkan perbandingan duplikat. Banyak algoritma berkinerja tinggi (Timsort, Quicksort, Shellsort) didiskualifikasi karena dioptimalkan untuk pola akses memori komputer daripada meminimalkan keputusan manusia yang unik. Merge Sort adalah algoritma "Murni Unik", memastikan setiap pertarungan memberikan data segar ke model penilaian.
+
+#### 3. Stabilitas dan Implementasi
+Meskipun varian In-place dan Rotation Merge Sort juga muncul di garis depan Pareto, implementasi **Vanilla** dipilih untuk produksi karena **stabilitas** bawaannya (mempertahankan urutan relatif dari hasil seri) dan kesederhanaannya, yang menghindari overhead performa dari rotasi data yang kompleks.
+
 Bagian berikut merinci trade-off antara vanilla merge sort, basic in-place merge sort, dan varian block merge sort.
 
 ### Penggunaan Memori
