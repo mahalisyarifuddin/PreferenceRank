@@ -17,16 +17,17 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 - **Peringkat Cepat:** Menggunakan **Merge Sort** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **penilaian Bradley-Terry murni** untuk representasi yang akurat.
 
 ### Analisis Algoritma
-Berdasarkan analisis perbandingan terhadap 68 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Merge Sort** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
+Berdasarkan analisis perbandingan terhadap 78 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Merge Sort** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
 
 **Perbandingan (N=100):**
-| Algoritma | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
-|-----------|-----------------------|-----------------------|-----------|---------------|
-| Ford-Johnson | ~527 | 0.89 | TIDAK | Pareto-optimal |
-| In-place Merge Sort | ~541 | 0.90 | TIDAK | Pareto-optimal |
-| **Merge Sort** | ~542 | 0.90 | TIDAK | **Titik Lutut** |
-| Rotation Merge Sort | ~719 | 0.92 | TIDAK | Pareto-optimal |
-| Full Rank | ~4950 | 1.00 | TIDAK | Pareto-optimal |
+| Algoritma | Rata-rata Pertempuran | Rata-rata Kendall Tau |
+|-----------|-----------------------|-----------------------|
+| Ford-Johnson | 526.92 | 0.8886 |
+| In-place Merge Sort | 541.42 | 0.9029 |
+| **Merge Sort** | 542.64 | 0.9029 |
+| 4-way Merge Sort | 544.30 | 0.9030 |
+| Rotation Merge Sort | 712.26 | 0.9158 |
+| Full Rank | 4950.00 | 1.0000 |
 ## Mulai Cepat
 1. Unduh file `PreferenceRank.html` dari repositori.
 2. Buka file tersebut di peramban web modern apa pun.
