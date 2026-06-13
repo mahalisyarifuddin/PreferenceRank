@@ -563,6 +563,203 @@ class PDQSortProvider extends Provider {
     }
 }
 
+class RecursiveBubbleSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ n, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.n <= 1) { this.stack.pop(); continue; }
+            if (f.state === 0) { f.i = 0; f.state = 1; }
+            if (f.state === 1) {
+                if (result !== undefined) { if (result === 0) [this.items[f.i], this.items[f.i + 1]] = [this.items[f.i + 1], this.items[f.i]]; f.i++; result = undefined; }
+                if (f.i < f.n - 1) return [this.items[f.i], this.items[f.i + 1]];
+                this.stack.push({ n: f.n - 1, state: 0 }); f.state = 2; continue;
+            }
+            if (f.state === 2) { this.stack.pop(); }
+        } return null;
+    }
+}
+
+class RecursiveInsertionSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ n, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.n <= 1) { this.stack.pop(); continue; }
+            if (f.state === 0) { this.stack.push({ n: f.n - 1, state: 0 }); f.state = 1; continue; }
+            if (f.state === 1) { f.temp = this.items[f.n - 1]; f.j = f.n - 2; f.state = 2; }
+            if (f.state === 2) {
+                if (result !== undefined) { if (result === 0) { this.items[f.j + 1] = this.items[f.j]; f.j--; result = undefined; } else { this.items[f.j + 1] = f.temp; this.stack.pop(); result = undefined; continue; } }
+                if (f.j >= 0) return [f.temp, this.items[f.j]];
+                this.items[f.j + 1] = f.temp; this.stack.pop();
+            }
+        } return null;
+    }
+}
+
+class RecursiveSelectionSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ i: 0, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.i >= this.n - 1) { this.stack.pop(); continue; }
+            if (f.state === 0) { f.minIdx = f.i; f.j = f.i + 1; f.state = 1; }
+            if (f.state === 1) {
+                if (result !== undefined) { if (result === 0) f.minIdx = f.j; f.j++; result = undefined; }
+                if (f.j < this.n) return [this.items[f.minIdx], this.items[f.j]];
+                [this.items[f.i], this.items[f.minIdx]] = [this.items[f.minIdx], this.items[f.i]];
+                this.stack.push({ i: f.i + 1, state: 0 }); f.state = 2; continue;
+            }
+            if (f.state === 2) { this.stack.pop(); }
+        } return null;
+    }
+}
+
+class RecursiveCocktailSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ l: 0, r: n - 1, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.l >= f.r) { this.stack.pop(); continue; }
+            if (f.state === 0) { f.i = f.l; f.state = 1; }
+            if (f.state === 1) {
+                if (result !== undefined) { if (result === 0) [this.items[f.i], this.items[f.i + 1]] = [this.items[f.i + 1], this.items[f.i]]; f.i++; result = undefined; }
+                if (f.i < f.r) return [this.items[f.i], this.items[f.i + 1]];
+                f.i = f.r - 1; f.state = 2; continue;
+            }
+            if (f.state === 2) {
+                if (result !== undefined) { if (result === 0) [this.items[f.i], this.items[f.i + 1]] = [this.items[f.i + 1], this.items[f.i]]; f.i--; result = undefined; }
+                if (f.i >= f.l) return [this.items[f.i], this.items[f.i + 1]];
+                this.stack.push({ l: f.l + 1, r: f.r - 1, state: 0 }); f.state = 3; continue;
+            }
+            if (f.state === 3) { this.stack.pop(); }
+        } return null;
+    }
+}
+
+class RecursiveGnomeSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [1]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let i = this.stack[this.stack.length - 1];
+            if (i >= this.n) { this.stack.pop(); continue; }
+            if (i === 0) { this.stack.pop(); this.stack.push(1); continue; }
+            if (result !== undefined) {
+                if (result === 1) { this.stack.pop(); this.stack.push(i + 1); }
+                else { [this.items[i], this.items[i - 1]] = [this.items[i - 1], this.items[i]]; this.stack.pop(); this.stack.push(i - 1); }
+                result = undefined; continue;
+            }
+            return [this.items[i], this.items[i - 1]];
+        } return null;
+    }
+}
+
+class RecursiveBinaryInsertionSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ n, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.n <= 1) { this.stack.pop(); continue; }
+            if (f.state === 0) { this.stack.push({ n: f.n - 1, state: 0 }); f.state = 1; continue; }
+            if (f.state === 1) { f.temp = this.items[f.n - 1]; f.lo = 0; f.hi = f.n - 1; f.state = 2; }
+            if (f.state === 2) {
+                if (result !== undefined) { if (result === 1) f.lo = f.mid + 1; else f.hi = f.mid; result = undefined; }
+                if (f.lo < f.hi) { f.mid = (f.lo + f.hi) >> 1; return [f.temp, this.items[f.mid]]; }
+                for (let k = f.n - 1; k > f.lo; k--) this.items[k] = this.items[k - 1];
+                this.items[f.lo] = f.temp; this.stack.pop();
+            }
+        } return null;
+    }
+}
+
+class RecursiveDoubleSelectionSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ l: 0, r: n - 1, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.l >= f.r) { this.stack.pop(); continue; }
+            if (f.state === 0) { f.minIdx = f.l; f.maxIdx = f.l; f.i = f.l + 1; f.state = 1; f.compType = 'min'; }
+            if (f.state === 1) {
+                if (result !== undefined) {
+                    if (f.compType === 'min') { if (result === 0) f.minIdx = f.i; f.compType = 'max'; }
+                    else { if (result === 1) f.maxIdx = f.i; f.i++; f.compType = 'min'; }
+                    result = undefined;
+                }
+                if (f.i <= f.r) {
+                    if (f.compType === 'min') return [this.items[f.minIdx], this.items[f.i]];
+                    else return [this.items[f.maxIdx], this.items[f.i]];
+                }
+                [this.items[f.l], this.items[f.minIdx]] = [this.items[f.minIdx], this.items[f.l]];
+                if (f.maxIdx === f.l) f.maxIdx = f.minIdx;
+                [this.items[f.r], this.items[f.maxIdx]] = [this.items[f.maxIdx], this.items[f.r]];
+                this.stack.push({ l: f.l + 1, r: f.r - 1, state: 0 }); f.state = 2; continue;
+            }
+            if (f.state === 2) { this.stack.pop(); }
+        } return null;
+    }
+}
+
+class RecursiveShellSortProvider extends Provider {
+    constructor(n) { super(n); this.gaps = [701, 301, 132, 57, 23, 10, 4, 1].filter(g => g < n); this.stack = [{ gIdx: 0, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.gIdx >= this.gaps.length) { this.stack.pop(); continue; }
+            if (f.state === 0) { f.gap = this.gaps[f.gIdx]; f.i = f.gap; f.state = 1; }
+            if (f.state === 1) {
+                if (f.i < this.n) { f.temp = this.items[f.i]; f.j = f.i; f.state = 2; }
+                else { this.stack.push({ gIdx: f.gIdx + 1, state: 0 }); f.state = 3; continue; }
+            }
+            if (f.state === 2) {
+                if (result !== undefined) { if (result === 0) { this.items[f.j] = this.items[f.j - f.gap]; f.j -= f.gap; result = undefined; }
+                    else { this.items[f.j] = f.temp; f.i++; f.state = 1; result = undefined; continue; } }
+                if (f.j >= f.gap) return [f.temp, this.items[f.j - f.gap]];
+                this.items[f.j] = f.temp; f.i++; f.state = 1; continue;
+            }
+            if (f.state === 3) { this.stack.pop(); }
+        } return null;
+    }
+}
+
+class RecursiveCombSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ gap: n, state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.state === 0) { f.gap = Math.floor(f.gap / 1.3); if (f.gap < 1) f.gap = 1; f.i = 0; f.swapped = false; f.state = 1; }
+            if (f.state === 1) {
+                if (result !== undefined) { if (result === 0) { [this.items[f.i], this.items[f.i + f.gap]] = [this.items[f.i + f.gap], this.items[f.i]]; f.swapped = true; } f.i++; result = undefined; }
+                if (f.i + f.gap < this.n) return [this.items[f.i], this.items[f.i + f.gap]];
+                if (f.gap === 1 && !f.swapped) { this.stack.pop(); continue; }
+                this.stack.push({ gap: f.gap, state: 0 }); f.state = 2; continue;
+            }
+            if (f.state === 2) { this.stack.pop(); }
+        } return null;
+    }
+}
+
+class RecursiveOddEvenSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ state: 0 }]; }
+    next(result) {
+        while (this.stack.length > 0) {
+            let f = this.stack[this.stack.length - 1];
+            if (f.state === 0) { f.swapped = false; f.i = 1; f.state = 1; }
+            if (f.state === 1) {
+                if (result !== undefined) { if (result === 0) { [this.items[f.i], this.items[f.i + 1]] = [this.items[f.i + 1], this.items[f.i]]; f.swapped = true; } f.i += 2; result = undefined; }
+                if (f.i < this.n - 1) return [this.items[f.i], this.items[f.i + 1]];
+                f.i = 0; f.state = 2; continue;
+            }
+            if (f.state === 2) {
+                if (result !== undefined) { if (result === 0) { [this.items[f.i], this.items[f.i + 1]] = [this.items[f.i + 1], this.items[f.i]]; f.swapped = true; } f.i += 2; result = undefined; }
+                if (f.i < this.n - 1) return [this.items[f.i], this.items[f.i + 1]];
+                if (!f.swapped) { this.stack.pop(); continue; }
+                this.stack.push({ state: 0 }); f.state = 3; continue;
+            }
+            if (f.state === 3) { this.stack.pop(); }
+        } return null;
+    }
+}
+
 class FJProvider extends Provider {
     constructor(n) { super(n); this.stack = [{ items: Array.from({ length: n }, (_, i) => i), state: 0 }]; }
     next(result) {
@@ -1707,6 +1904,16 @@ class MergeSort3WayProvider extends KWayMergeSortProvider { constructor(n) { sup
 class MergeSort4WayProvider extends KWayMergeSortProvider { constructor(n) { super(n, 4); } }
 
 const algos = [
+    { name: 'Recursive Bubble', class: RecursiveBubbleSortProvider },
+    { name: 'Recursive Insertion', class: RecursiveInsertionSortProvider },
+    { name: 'Recursive Selection', class: RecursiveSelectionSortProvider },
+    { name: 'Recursive Cocktail', class: RecursiveCocktailSortProvider },
+    { name: 'Recursive Gnome', class: RecursiveGnomeSortProvider },
+    { name: 'Recursive Binary Insertion', class: RecursiveBinaryInsertionSortProvider },
+    { name: 'Recursive Double Selection', class: RecursiveDoubleSelectionSortProvider },
+    { name: 'Recursive Shellsort', class: RecursiveShellSortProvider },
+    { name: 'Recursive Comb Sort', class: RecursiveCombSortProvider },
+    { name: 'Recursive Odd-Even Sort', class: RecursiveOddEvenSortProvider },
     { name: 'Ford-Johnson', class: FJProvider },
     { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Bottom-up Merge Sort', class: BottomUpMergeSortProvider },

@@ -17,16 +17,17 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Merge Sort** for efficient, non-duplicating pair generation, combined with **pure Bradley-Terry scoring** for accurate representation.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 68 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Merge Sort** was identified as the optimal **mathematical knee point** (using log-scale analysis) for high-accuracy human preference ranking without redundant comparisons.
+Based on a comparative analysis of 78 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Merge Sort** was identified as the optimal **mathematical knee point** (using log-scale analysis) for high-accuracy human preference ranking without redundant comparisons.
 
 **Comparison (N=100):**
-| Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |
-|-----------|-------------|-----------------|------------|---------------|
-| Ford-Johnson | ~527 | 0.89 | NO | Pareto-optimal |
-| In-place Merge Sort | ~541 | 0.90 | NO | Pareto-optimal |
-| **Merge Sort** | ~542 | 0.90 | NO | **Knee Point** |
-| Rotation Merge Sort | ~719 | 0.92 | NO | Pareto-optimal |
-| Full Rank | ~4950 | 1.00 | NO | Pareto-optimal |
+| Algorithm | Avg Battles | Avg Kendall Tau |
+|-----------|-------------|-----------------|
+| Ford-Johnson | 526.92 | 0.8886 |
+| In-place Merge Sort | 541.42 | 0.9029 |
+| **Merge Sort** | 542.64 | 0.9029 |
+| 4-way Merge Sort | 544.30 | 0.9030 |
+| Rotation Merge Sort | 712.26 | 0.9158 |
+| Full Rank | 4950.00 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons (like Shellsort) are excluded from production to ensure maximum user efficiency.*
 
 ## Technical Details
