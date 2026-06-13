@@ -97,7 +97,7 @@ Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi ada
 Vanilla Merge Sort ditetapkan sebagai **titik lutut matematis** karena mewakili keseimbangan optimal antara upaya pengguna (jumlah perbandingan) dan akurasi peringkat (korelasi Kendall Tau).
 
 #### 1. Optimalisasi Matematis (Lutut Skala Log)
-"Titik lutut" diidentifikasi menggunakan **metode Kneedle** dan **Jarak Tegak Lurus Maksimum** dari akord titik akhir pada garis depan Pareto. Saat memplot akurasi terhadap upaya pada sumbu skala log ($log_{10}(\text{pertempuran} + 1)$), Merge Sort menempati bagian "siku" dari kurva tersebut.
+"Titik lutut" diidentifikasi menggunakan **metode Kneedle** dan **Jarak Tegak Lurus Maksimum** dari akord titik akhir pada garis depan Pareto. Saat memplot akurasi terhadap upaya pada sumbu skala log (log10(pertempuran + 1)), Merge Sort menempati bagian "siku" dari kurva tersebut.
 *   **Hasil yang Menurun:** Berpindah dari "Miracle Sort" (99 pertempuran, 0.54 Tau) ke "Merge Sort" (~542 pertempuran, 0.90 Tau) menghasilkan peningkatan akurasi yang masif.
 *   **Saturasi:** Berpindah melampaui Merge Sort ke "Rotation Merge Sort" (~712 pertempuran) hanya meningkatkan akurasi menjadi **0.91**. Tambahan 170 pertempuran hanya menghasilkan keuntungan marjinal 1%, menandai Merge Sort sebagai titik efisiensi puncak.
 
@@ -112,31 +112,31 @@ Bagian berikut merinci trade-off antara vanilla merge sort, basic in-place merge
 ### Penggunaan Memori
 
 * **Vanilla Merge Sort:** Memerlukan ruang tambahan O(n). Ini mengalokasikan array scratchpad sekunder dengan ukuran yang sama dengan input untuk menangani pencampuran data.
-* **In-Place Merge Sort:** Memerlukan ruang tambahan O(1) untuk varian iteratif, atau $O(\log n)$ untuk versi rekursif untuk mengelola tumpukan panggilan. Tidak ada buffer data sekunder yang dihasilkan.
+* **In-Place Merge Sort:** Memerlukan ruang tambahan O(1) untuk varian iteratif, atau O(log n) untuk versi rekursif untuk mengelola tumpukan panggilan. Tidak ada buffer data sekunder yang dihasilkan.
 
 ### Kompleksitas Waktu dan Performa
 
-* **Vanilla Merge Sort:** Menjamin kompleksitas waktu $O(n \log n)$ yang ketat di kasus terbaik, terburuk, dan rata-rata. Ini cepat dalam praktiknya karena elemen disalin secara berurutan, yang memaksimalkan efisiensi cache CPU.
-* **In-Place Merge Sort:** Seringkali mengalami penurunan kecepatan. Implementasi dasar turun ke waktu O(n²) karena pergeseran elemen internal yang sering (mirip dengan mekanika insertion sort). Penggabungan in-place berbasis rotasi (seperti `Rotation Merge Sort`) mencapai $O(n \log^2 n)$ tetapi berjalan jauh lebih lambat karena overhead swap pointer yang intens dan lokalitas cache CPU yang buruk. Varian block merge sort yang sangat dioptimalkan mencapai $O(n \log n)$ tetapi sangat kompleks untuk diimplementasikan.
+* **Vanilla Merge Sort:** Menjamin kompleksitas waktu O(n log n) yang ketat di kasus terbaik, terburuk, dan rata-rata. Ini cepat dalam praktiknya karena elemen disalin secara berurutan, yang memaksimalkan efisiensi cache CPU.
+* **In-Place Merge Sort:** Seringkali mengalami penurunan kecepatan. Implementasi dasar turun ke waktu O(n^2) karena pergeseran elemen internal yang sering (mirip dengan mekanika insertion sort). Penggabungan in-place berbasis rotasi (seperti `Rotation Merge Sort`) mencapai O(n log^2 n) tetapi berjalan jauh lebih lambat karena overhead swap pointer yang intens dan lokalitas cache CPU yang buruk. Varian block merge sort yang sangat dioptimalkan mencapai O(n log n) tetapi sangat kompleks untuk diimplementasikan.
 
 ### Stabilitas Algoritma
 
 * **Vanilla Merge Sort:** Inheren stabil. Secara alami mempertahankan urutan relatif asli dari elemen duplikat karena menggabungkan dari kiri ke kanan dari array yang berbeda.
 * **In-Place Merge Sort:** Seringkali tidak stabil. Untuk menghindari alokasi memori, sebagian besar versi harus memindahkan elemen melalui rotasi data yang kompleks atau swap internal, yang biasanya merusak urutan relatif dari kunci yang identik.
-* **Block Merge Sort:** Varian yang sangat kompleks yang mencapai pengurutan $O(n \log n)$ yang stabil dengan ruang tambahan O(1) dengan menggunakan buffer internal yang diekstraksi dari data itu sendiri.
+* **Block Merge Sort:** Varian yang sangat kompleks yang mencapai pengurutan O(n log n) yang stabil dengan ruang tambahan O(1) dengan menggunakan buffer internal yang diekstraksi dari data itu sendiri.
 
 ### Perbandingan Struktural
 
 | Fitur | Vanilla Merge Sort | In-Place (Rotasi) | Block Merge Sort |
 | :--- | :--- | :--- | :--- |
-| Kompleksitas Waktu | $O(n \log n)$ | $O(n \log^2 n)$ | $O(n \log n)$ |
-| Ruang Tambahan | O(n) | O(1) atau $O(\log n)$ | O(1) |
+| Kompleksitas Waktu | O(n log n) | O(n log^2 n) | O(n log n) |
+| Ruang Tambahan | O(n) | O(1) atau O(log n) | O(1) |
 | Stabilitas | Stabil | Tidak Stabil | Stabil |
 | Kompleksitas Implementasi | Sederhana | Sedang | Sangat Tinggi |
 
 ### Regresi Estimasi Jumlah Pertempuran
 Untuk Merge Sort (Titik Lutut Produksi yang baru):
-- **Formula:** `Pertempuran Unik ≈ N * log2(N) - (N - 1)`
+- **Formula:** `Pertempuran Unik ~ N * log2(N) - (N - 1)`
 - For N=100, ini memprediksi ~565 battles (disimulasikan ~542 unique rata-rata).
 
 ---
