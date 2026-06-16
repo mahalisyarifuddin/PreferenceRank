@@ -16,7 +16,7 @@ Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi ada
 | Intelligent Design | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
 | Socialist Sort | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
 | Genghis Khan Sort | 99.00 | 0.3565 | TIDAK | Pareto-optimal |
-| PrismChain Rank | 520.00 | 0.9157 | TIDAK | Pareto-optimal |
+| Bottom-up Merge Sort | 520.00 | 0.9157 | TIDAK | Pareto-optimal |
 | **Ford-Johnson** | 526.98 | 0.9995 | TIDAK | **Titik Lutut Produksi** |
 | In-place Merge Sort | 541.60 | 0.9996 | TIDAK | Pareto-optimal |
 | Rotation Merge Sort | 715.96 | 0.9998 | TIDAK | Pareto-optimal |
@@ -93,20 +93,20 @@ Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi ada
 | Radix Sort | 4536.64 | 0.9976 | YA | Terdominasi |
 | Bogosort | 4950.00 | 0.5034 | YA | Terdominasi |
 
-### Mengapa PrismChain Rank adalah Titik Lutut Produksi
+### Mengapa Ford-Johnson adalah Titik Lutut Produksi
 
 Ford-Johnson ditetapkan sebagai **titik lutut matematis** karena mewakili keseimbangan absolut yang optimal antara upaya pengguna (jumlah perbandingan) dan akurasi peringkat (korelasi Kendall Tau) dengan memanfaatkan kemenangan transitif bayangan.
 
 #### 1. Optimalisasi Matematis (Lutut Skala Log)
-"Titik lutut" diidentifikasi menggunakan **metode Kneedle** dan **Jarak Tegak Lurus Maksimum** dari akord titik akhir pada garis depan Pareto. Saat memplot akurasi terhadap upaya pada sumbu skala log (log10(pertempuran + 1)), PrismChain Rank menempati bagian "siku" dari kurva tersebut.
-*   **Hasil yang Menurun:** Berpindah dari "Miracle Sort" (99 pertempuran, 0.55 Tau) ke "PrismChain Rank" (~520 pertempuran, 0.92 Tau) menghasilkan peningkatan akurasi yang masif.
-*   **Dominasi:** PrismChain Rank mencapai akurasi yang lebih tinggi (~0.92) dengan lebih sedikit pertempuran (~520) daripada Vanilla Merge Sort (~0.90 Tau, ~542 pertempuran), secara efektif menggeser seluruh garis depan Pareto menuju efisiensi yang lebih tinggi.
+"Titik lutut" diidentifikasi menggunakan **metode Kneedle** dan **Jarak Tegak Lurus Maksimum** dari akord titik akhir pada garis depan Pareto. Saat memplot akurasi terhadap upaya pada sumbu skala log (log10(pertempuran + 1)), Ford-Johnson menempati bagian "siku" dari kurva tersebut.
+*   **Hasil yang Menurun:** Berpindah dari "Genghis Khan Sort" (99 pertempuran, 0.36 Tau) ke "Ford-Johnson" (~527 pertempuran, 0.999 Tau) menghasilkan pengurutan yang hampir sempurna dengan upaya minimal.
+*   **Dominasi:** Ford-Johnson mencapai akurasi yang hampir sempurna (~0.999) dengan lebih sedikit pertempuran (~527) daripada Vanilla Merge Sort (~0.90 Tau, ~542 pertempuran), secara efektif menggeser seluruh garis depan Pareto menuju efisiensi yang lebih tinggi.
 
 #### 2. Batasan "Tanpa Duplikasi"
-PreferenceRank memprioritaskan efisiensi pengguna dengan mengecualikan algoritma apa pun yang menghasilkan perbandingan duplikat. Banyak algoritma berkinerja tinggi (Timsort, Quicksort, Shellsort) didiskualifikasi karena dioptimalkan untuk pola akses memori komputer daripada meminimalkan keputusan manusia yang unik. PrismChain Rank adalah algoritma "Murni Unik", memastikan setiap pertarungan memberikan data segar ke model penilaian.
+PreferenceRank memprioritaskan efisiensi pengguna dengan mengecualikan algoritma apa pun yang menghasilkan perbandingan duplikat. Banyak algoritma berkinerja tinggi (Timsort, Quicksort, Shellsort) didiskualifikasi karena dioptimalkan untuk pola akses memori komputer daripada meminimalkan keputusan manusia yang unik. Ford-Johnson adalah algoritma "Murni Unik", memastikan setiap pertarungan memberikan data segar ke model penilaian.
 
 #### 3. Kemenangan Bayangan dan Penutupan Transitif
-PrismChain Rank mencapai kinerja unggulnya dengan menerapkan **penutupan transitif bayangan** pada hasil tulang punggung penggabungan parsial. Hal ini memungkinkan model Bradley-Terry untuk memanfaatkan kemenangan yang disimpulkan tanpa memerlukan pertempuran pengguna tambahan, memaksimalkan informasi yang diekstraksi dari setiap keputusan.
+Ford-Johnson mencapai kinerja unggulnya dengan menerapkan **penutupan transitif bayangan** pada hasil tulang punggung penggabungan parsial. Hal ini memungkinkan model Bradley-Terry untuk memanfaatkan kemenangan yang disimpulkan tanpa memerlukan pertempuran pengguna tambahan, memaksimalkan informasi yang diekstraksi dari setiap keputusan.
 
 Bagian berikut merinci trade-off antara vanilla merge sort, basic in-place merge sort, dan varian block merge sort.
 
@@ -136,7 +136,7 @@ Bagian berikut merinci trade-off antara vanilla merge sort, basic in-place merge
 | Kompleksitas Implementasi | Sederhana | Sedang | Sangat Tinggi |
 
 ### Regresi Estimasi Jumlah Pertempuran
-Untuk PrismChain Rank (Titik Lutut Produksi yang baru):
+Untuk Ford-Johnson (Titik Lutut Produksi yang baru):
 - **Formula:** `Pertempuran Unik ~ N * log2(N) - 1.44 * N` (untuk N >= 16)
 - For N=100, ini memprediksi ~520 battles (disimulasikan ~520 unique rata-rata).
 

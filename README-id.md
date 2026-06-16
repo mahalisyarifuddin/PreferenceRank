@@ -14,7 +14,7 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 
 - **Peringkat Penuh (Bawaan):** Menggunakan sistem round-robin yang komprehensif (Pertarungan = N(N-1)/2). Menjamin preferensi yang paling akurat tetapi tumbuh secara kuadratik. Terbaik untuk daftar kecil (<20 pilihan).
 
-- **Peringkat Cepat:** Menggunakan **PrismChain Rank** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **kemenangan transitif bayangan** untuk akurasi yang unggul.
+- **Peringkat Cepat:** Menggunakan **Ford-Johnson** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **kemenangan transitif bayangan** untuk akurasi yang unggul.
 
 ### Analisis Algoritma
 Berdasarkan analisis perbandingan terhadap 78 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Ford-Johnson** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
@@ -23,7 +23,7 @@ Berdasarkan analisis perbandingan terhadap 78 algoritma pengurutan yang berbeda 
 | Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau |
 |-----------|-----------------------|-----------------------|
 | Genghis Khan Sort | 99.00 | 0.3565 |
-| PrismChain Rank | 520.00 | 0.9157 |
+| Bottom-up Merge Sort | 520.00 | 0.9157 |
 | **Ford-Johnson** | 526.98 | 0.9995 |
 | In-place Merge Sort | 541.60 | 0.9996 |
 | Rotation Merge Sort | 715.96 | 0.9998 |

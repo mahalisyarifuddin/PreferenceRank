@@ -14,7 +14,7 @@ PreferenceRank offers two distinct modes to sort your items:
 
 - **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
 
-- **Quick Rank:** Uses **PrismChain Rank** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
+- **Quick Rank:** Uses **Ford-Johnson** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
 
 ### Algorithm Analysis
 Based on a comparative analysis of 78 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** was identified as the optimal **mathematical knee point** (using log-scale analysis) for high-accuracy human preference ranking without redundant comparisons.
@@ -23,7 +23,7 @@ Based on a comparative analysis of 78 distinct sorting algorithms (see [ANALYSIS
 | Algorithm | Avg Battles | Avg Kendall Tau |
 |-----------|-------------|-----------------|
 | Genghis Khan Sort | 99.00 | 0.3565 |
-| PrismChain Rank | 520.00 | 0.9157 |
+| Bottom-up Merge Sort | 520.00 | 0.9157 |
 | **Ford-Johnson** | 526.98 | 0.9995 |
 | In-place Merge Sort | 541.60 | 0.9996 |
 | Rotation Merge Sort | 715.96 | 0.9998 |

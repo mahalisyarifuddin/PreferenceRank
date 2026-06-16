@@ -770,7 +770,7 @@ class RecursiveOddEvenSortProvider extends Provider {
     }
 }
 
-class FJProvider extends Provider {
+class QuickPairProvider extends Provider {
     constructor(n) { super(n); this.stack = [{ items: Array.from({ length: n }, (_, i) => i), state: 0 }]; }
     next(result) {
         while (this.stack.length > 0) {
@@ -1242,9 +1242,9 @@ class MergeSortProvider extends Provider {
     }
 }
 
-class PrismChainProvider extends BottomUpMergeSortProvider {
+class QuickMergeSortProvider extends BottomUpMergeSortProvider {
     static estimate(n) { return n < 16 ? Math.round(n * Math.log2(n) - n + 1) : Math.max(n - 1, Math.round(n * Math.log2(n) - 1.44 * n)); }
-    constructor(n) { super(n); this.budget = PrismChainProvider.estimate(n); this.asked = 0; this.done = false; }
+    constructor(n) { super(n); this.budget = QuickMergeSortProvider.estimate(n); this.asked = 0; this.done = false; }
     next(result) {
         if (this.done) return null;
         if (result !== undefined) {
@@ -1948,8 +1948,8 @@ const algos = [
     { name: 'Recursive Shellsort', class: RecursiveShellSortProvider },
     { name: 'Recursive Comb Sort', class: RecursiveCombSortProvider },
     { name: 'Recursive Odd-Even Sort', class: RecursiveOddEvenSortProvider },
-    { name: 'PrismChain Rank', class: PrismChainProvider },
-    { name: 'Ford-Johnson', class: FJProvider },
+    { name: 'Bottom-up Merge Sort (Quick)', class: QuickMergeSortProvider },
+    { name: 'Ford-Johnson (Quick)', class: QuickPairProvider },
     { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Bottom-up Merge Sort', class: BottomUpMergeSortProvider },
     { name: 'Natural Merge Sort', class: NaturalMergeSortProvider },
@@ -2021,7 +2021,7 @@ const algos = [
 
 
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-module.exports = { simulate, MergeSortProvider, PrismChainProvider, BottomUpMergeSortProvider, FJProvider };
+if (typeof module !== "undefined" && module.exports) module.exports = { simulate, MergeSortProvider, QuickMergeSortProvider, BottomUpMergeSortProvider, QuickPairProvider };
 if (isMainThread && require.main === module) {
     const args = process.argv.slice(2);
     const n_val = args[0] ? parseInt(args[0]) : 100;
