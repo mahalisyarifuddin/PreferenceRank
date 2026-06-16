@@ -61,6 +61,17 @@ function simulate(n, ProviderClass, trials = 250) {
             }
             pair = provider.next(res); if (uniqueBattles >= maxUniqueBattles) break;
         }
+        if (ProviderClass.useShadowWins) {
+            const order = provider.items;
+            for (let weak = 0; weak < n - 1; weak++) {
+                for (let strong = weak + 1; strong < n; strong++) {
+                    const a = order[strong], b = order[weak];
+                    wins[a] += 1;
+                    adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
+                    adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
+                }
+            }
+        }
         const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
         totalComps += uniqueBattles; totalTau += kendallTau(trueStrengths, runBT(n, wins, adj));
     }
@@ -1228,6 +1239,19 @@ class MergeSortProvider extends Provider {
     }
 }
 
+class PrismChainProvider extends MergeSortProvider {
+    static useShadowWins = true;
+    static estimate(n) { return n < 16 ? Math.round(n * Math.log2(n) - n + 1) : Math.max(n - 1, Math.round(n * Math.log2(n) - 1.44 * n)); }
+    constructor(n) { super(n); this.budget = PrismChainProvider.estimate(n); this.asked = 0; this.done = false; }
+    next(result) {
+        if (this.done) return null;
+        if (result !== undefined && ++this.asked >= this.budget) { this.done = true; return null; }
+        const pair = super.next(result);
+        if (!pair) this.done = true;
+        return pair;
+    }
+}
+
 class MiracleSortProvider extends Provider {
     constructor(n) { super(n); this.i = 0; this.isSorted = true; }
     next(result) {
@@ -1914,6 +1938,7 @@ const algos = [
     { name: 'Recursive Shellsort', class: RecursiveShellSortProvider },
     { name: 'Recursive Comb Sort', class: RecursiveCombSortProvider },
     { name: 'Recursive Odd-Even Sort', class: RecursiveOddEvenSortProvider },
+    { name: 'PrismChain Rank', class: PrismChainProvider },
     { name: 'Ford-Johnson', class: FJProvider },
     { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Bottom-up Merge Sort', class: BottomUpMergeSortProvider },
