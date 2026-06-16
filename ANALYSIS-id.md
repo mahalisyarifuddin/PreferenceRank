@@ -11,91 +11,91 @@ Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi ada
 - **Trials:** 250 per algorithm.
 
 ### Hasil (N=100)
-| Algoritma | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
+| Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
 |-----------|-----------------------|-----------------------|-----------|---------------|
-| Exit Sort | 0.00 | 0.0038 | TIDAK | Pareto-optimal |
-| Quantum Bogo | 1.74 | 0.0105 | TIDAK | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5483 | TIDAK | Pareto-optimal |
-| **PrismChain Rank** | 520.00 | 0.9229 | TIDAK | **Titik Lutut Produksi** |
+| Intelligent Design | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
+| Socialist Sort | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
+| Genghis Khan Sort | 99.00 | 0.3565 | TIDAK | Pareto-optimal |
+| PrismChain Rank | 520.00 | 0.9157 | TIDAK | Pareto-optimal |
+| **Ford-Johnson** | 526.98 | 0.9995 | TIDAK | **Titik Lutut Produksi** |
+| In-place Merge Sort | 541.60 | 0.9996 | TIDAK | Pareto-optimal |
+| Rotation Merge Sort | 715.96 | 0.9998 | TIDAK | Pareto-optimal |
 | Full Rank | 4950.00 | 1.0000 | TIDAK | Pareto-optimal |
-| Intelligent Design | 0.00 | -0.0012 | TIDAK | Terdominasi |
-| Socialist Sort | 0.00 | -0.0007 | TIDAK | Terdominasi |
-| BogoBogoSort | 44.87 | 0.0903 | YA | Terdominasi |
-| Stalin Sort | 99.00 | 0.1043 | TIDAK | Terdominasi |
-| Thanos Sort | 99.00 | 0.5456 | YA | Terdominasi |
-| Genghis Khan Sort | 99.00 | 0.3474 | TIDAK | Terdominasi |
-| Heap Sort | 99.36 | 0.4815 | YA | Terdominasi |
-| Sleep Sort | 100.00 | -0.0140 | TIDAK | Terdominasi |
-| 3-Way Quicksort | 100.00 | 0.3586 | YA | Terdominasi |
-| Smooth Sort | 100.01 | 0.4909 | YA | Terdominasi |
-| Silly Sort | 138.00 | 0.2389 | YA | Terdominasi |
-| PDQSort | 195.26 | 0.5422 | YA | Terdominasi |
-| Hater Sort | 195.93 | 0.6628 | YA | Terdominasi |
-| Patience Sort | 197.97 | 0.4821 | YA | Terdominasi |
-| Quicksort (Hoare) | 204.38 | 0.5383 | YA | Terdominasi |
-| Random Sort | 243.23 | 0.6493 | YA | Terdominasi |
-| Ford-Johnson | 527.06 | 0.8880 | TIDAK | Terdominasi |
-| Triple-Pivot Quicksort | 530.10 | 0.8286 | YA | Terdominasi |
-| Binary Insertion | 530.81 | 0.8862 | TIDAK | Terdominasi |
-| Recursive Binary Insertion | 530.88 | 0.8859 | TIDAK | Terdominasi |
-| Timsort | 532.69 | 0.8976 | YA | Terdominasi |
-| Cycle Sort | 535.76 | 0.4528 | YA | Terdominasi |
-| Merge Sort | 541.83 | 0.9028 | TIDAK | Terdominasi |
-| In-place Merge Sort | 541.92 | 0.9048 | TIDAK | Terdominasi |
-| 4-way Merge Sort | 543.70 | 0.9032 | TIDAK | Terdominasi |
-| Tournament Sort | 557.97 | 0.8873 | TIDAK | Terdominasi |
-| Ping-pong Merge Sort | 558.13 | 0.8865 | TIDAK | Terdominasi |
-| Bottom-up Merge Sort | 558.31 | 0.8865 | TIDAK | Terdominasi |
-| Parallel Merge Sort | 558.60 | 0.8868 | TIDAK | Terdominasi |
-| Powersort | 562.07 | 0.9085 | YA | Terdominasi |
-| 3-way Merge Sort | 567.59 | 0.8814 | TIDAK | Terdominasi |
-| Natural Merge Sort | 578.50 | 0.8930 | YA | Terdominasi |
-| Quicksort (Ninther) | 603.62 | 0.8424 | YA | Terdominasi |
-| Tree Sort | 643.44 | 0.8364 | TIDAK | Terdominasi |
-| Parallel Quicksort | 644.90 | 0.8365 | TIDAK | Terdominasi |
-| Quicksort (RTL) | 646.32 | 0.8370 | TIDAK | Terdominasi |
-| Quicksort (Middle) | 647.48 | 0.8375 | TIDAK | Terdominasi |
-| Dual-Pivot Quicksort | 648.23 | 0.8373 | TIDAK | Terdominasi |
-| Quicksort (Random) | 648.98 | 0.8374 | TIDAK | Terdominasi |
-| Stable Quicksort | 650.32 | 0.8368 | TIDAK | Terdominasi |
-| Quicksort (LTR) | 655.66 | 0.8368 | TIDAK | Terdominasi |
-| Shellsort | 671.71 | 0.9331 | YA | Terdominasi |
-| Recursive Shellsort | 672.92 | 0.9316 | YA | Terdominasi |
-| Quicksort (Mo3) | 711.33 | 0.8268 | YA | Terdominasi |
-| Rotation Merge Sort | 715.24 | 0.9161 | TIDAK | Terdominasi |
-| BlockQuicksort | 717.58 | 0.8070 | TIDAK | Terdominasi |
-| Intro Sort | 723.76 | 0.8076 | YA | Terdominasi |
-| Strand Sort | 743.33 | 0.8176 | TIDAK | Terdominasi |
-| Bucket Sort | 764.08 | 0.7997 | TIDAK | Terdominasi |
-| Comb Sort | 851.46 | 0.9745 | YA | Terdominasi |
-| Recursive Comb Sort | 851.53 | 0.9748 | YA | Terdominasi |
-| Hayate-Shiki | 931.10 | 0.7831 | YA | Terdominasi |
-| Bitonic Sort | 1037.80 | 0.9571 | YA | Terdominasi |
-| Circle Sort | 1216.41 | 0.9697 | YA | Terdominasi |
-| Slowsort | 1322.11 | 0.9461 | YA | Terdominasi |
-| Recursive Bubble | 2565.82 | 0.8028 | YA | Terdominasi |
-| Gnome Sort | 2570.18 | 0.8032 | YA | Terdominasi |
-| Insertion Sort | 2571.49 | 0.8030 | TIDAK | Terdominasi |
-| Recursive Gnome | 2577.45 | 0.8022 | YA | Terdominasi |
-| Cocktail Shaker | 2580.36 | 0.8055 | YA | Terdominasi |
-| Recursive Cocktail | 2581.96 | 0.8091 | YA | Terdominasi |
-| Bubble Sort | 2582.86 | 0.8041 | YA | Terdominasi |
-| Recursive Insertion | 2589.20 | 0.8041 | TIDAK | Terdominasi |
-| Odd-Even Sort | 2597.12 | 0.8045 | YA | Terdominasi |
-| Recursive Odd-Even Sort | 2603.07 | 0.8068 | YA | Terdominasi |
-| Selection Sort | 2732.62 | 0.8899 | YA | Terdominasi |
-| Cocktail Selection | 2738.38 | 0.9234 | YA | Terdominasi |
-| Double Selection | 2743.47 | 0.9217 | YA | Terdominasi |
-| Recursive Selection | 2756.91 | 0.8905 | YA | Terdominasi |
-| Recursive Double Selection | 2766.54 | 0.9215 | YA | Terdominasi |
-| Stooge Sort | 2890.85 | 0.9900 | YA | Terdominasi |
-| Pancake Sort | 3101.09 | 0.9693 | YA | Terdominasi |
-| Radix Sort | 4523.60 | 0.9464 | YA | Terdominasi |
-| Bogosort | 4950.00 | 1.0000 | YA | Terdominasi |
+| Exit Sort | 0.00 | 0.0059 | TIDAK | Terdominasi |
+| Quantum Bogo | 1.65 | 0.0027 | TIDAK | Terdominasi |
+| BogoBogoSort | 45.10 | 0.0108 | YA | Terdominasi |
+| Smooth Sort | 98.86 | 0.0212 | YA | Terdominasi |
+| Stalin Sort | 99.00 | 0.1094 | TIDAK | Terdominasi |
+| Thanos Sort | 99.00 | 0.5474 | YA | Terdominasi |
+| Miracle Sort | 99.00 | 0.0115 | TIDAK | Terdominasi |
+| Heap Sort | 99.42 | 0.0092 | YA | Terdominasi |
+| Sleep Sort | 100.00 | 0.0012 | TIDAK | Terdominasi |
+| 3-Way Quicksort | 100.79 | 0.0021 | YA | Terdominasi |
+| Silly Sort | 138.00 | 0.0160 | YA | Terdominasi |
+| PDQSort | 194.12 | 0.0695 | YA | Terdominasi |
+| Hater Sort | 196.01 | 0.0316 | YA | Terdominasi |
+| Quicksort (Hoare) | 197.22 | 0.3437 | YA | Terdominasi |
+| Patience Sort | 198.31 | 0.0081 | YA | Terdominasi |
+| Random Sort | 225.86 | 0.0323 | YA | Terdominasi |
+| Binary Insertion | 530.12 | 0.9995 | TIDAK | Terdominasi |
+| Recursive Binary Insertion | 530.63 | 0.9994 | TIDAK | Terdominasi |
+| Triple-Pivot Quicksort | 532.69 | 0.8642 | YA | Terdominasi |
+| Timsort | 532.70 | 0.9995 | YA | Terdominasi |
+| Merge Sort | 541.65 | 0.9996 | TIDAK | Terdominasi |
+| 4-way Merge Sort | 543.54 | 0.9995 | TIDAK | Terdominasi |
+| Bottom-up Merge Sort | 558.12 | 0.9995 | TIDAK | Terdominasi |
+| Parallel Merge Sort | 558.34 | 0.9994 | TIDAK | Terdominasi |
+| Tournament Sort | 558.46 | 0.0281 | TIDAK | Terdominasi |
+| Ping-pong Merge Sort | 558.79 | 0.9994 | TIDAK | Terdominasi |
+| Powersort | 561.78 | 0.9995 | YA | Terdominasi |
+| 3-way Merge Sort | 567.79 | 0.9994 | TIDAK | Terdominasi |
+| Natural Merge Sort | 577.34 | 0.9994 | YA | Terdominasi |
+| Quicksort (Ninther) | 605.01 | 0.9991 | YA | Terdominasi |
+| Stable Quicksort | 639.76 | 0.9983 | TIDAK | Terdominasi |
+| Cycle Sort | 642.75 | 0.0917 | YA | Terdominasi |
+| Quicksort (LTR) | 643.04 | 0.9983 | TIDAK | Terdominasi |
+| Tree Sort | 647.28 | 0.0306 | TIDAK | Terdominasi |
+| Dual-Pivot Quicksort | 649.88 | 0.9983 | TIDAK | Terdominasi |
+| Parallel Quicksort | 650.35 | 0.9983 | TIDAK | Terdominasi |
+| Quicksort (Middle) | 650.62 | 0.9983 | TIDAK | Terdominasi |
+| Quicksort (RTL) | 651.60 | 0.9982 | TIDAK | Terdominasi |
+| Quicksort (Random) | 653.86 | 0.9983 | TIDAK | Terdominasi |
+| Recursive Shellsort | 670.30 | 0.9996 | YA | Terdominasi |
+| Shellsort | 671.97 | 0.9996 | YA | Terdominasi |
+| Quicksort (Mo3) | 712.38 | 0.9975 | YA | Terdominasi |
+| BlockQuicksort | 721.98 | 0.9975 | TIDAK | Terdominasi |
+| Intro Sort | 722.02 | -0.7603 | TIDAK | Terdominasi |
+| Strand Sort | 741.47 | 0.0733 | TIDAK | Terdominasi |
+| Bucket Sort | 770.85 | 0.9972 | TIDAK | Terdominasi |
+| Recursive Comb Sort | 850.55 | 0.9999 | YA | Terdominasi |
+| Comb Sort | 852.49 | 0.9999 | YA | Terdominasi |
+| Hayate-Shiki | 932.11 | 0.2892 | YA | Terdominasi |
+| Bitonic Sort | 1036.82 | 0.6474 | YA | Terdominasi |
+| Circle Sort | 1203.00 | 0.9619 | YA | Terdominasi |
+| Slowsort | 1318.67 | 0.6127 | YA | Terdominasi |
+| Gnome Sort | 2546.68 | 0.9943 | YA | Terdominasi |
+| Bubble Sort | 2548.95 | 0.9943 | YA | Terdominasi |
+| Recursive Insertion | 2562.23 | 0.9943 | TIDAK | Terdominasi |
+| Recursive Bubble | 2563.32 | 0.9944 | YA | Terdominasi |
+| Insertion Sort | 2567.80 | 0.9942 | TIDAK | Terdominasi |
+| Recursive Gnome | 2576.45 | 0.9942 | YA | Terdominasi |
+| Recursive Cocktail | 2584.30 | 0.9943 | YA | Terdominasi |
+| Cocktail Shaker | 2592.21 | 0.9942 | YA | Terdominasi |
+| Recursive Odd-Even Sort | 2625.33 | 0.9942 | YA | Terdominasi |
+| Odd-Even Sort | 2640.50 | 0.9943 | YA | Terdominasi |
+| Selection Sort | 2737.22 | 0.9954 | YA | Terdominasi |
+| Double Selection | 2742.19 | 0.9969 | YA | Terdominasi |
+| Recursive Selection | 2742.29 | 0.9954 | YA | Terdominasi |
+| Cocktail Selection | 2744.95 | 0.9971 | YA | Terdominasi |
+| Recursive Double Selection | 2775.99 | 0.9969 | YA | Terdominasi |
+| Stooge Sort | 2903.40 | 1.0000 | YA | Terdominasi |
+| Pancake Sort | 3070.74 | 0.9994 | YA | Terdominasi |
+| Radix Sort | 4536.64 | 0.9976 | YA | Terdominasi |
+| Bogosort | 4950.00 | 0.5034 | YA | Terdominasi |
 
-### Mengapa PrismChain Rank adalah Titik Lutut
+### Mengapa PrismChain Rank adalah Titik Lutut Produksi
 
-PrismChain Rank ditetapkan sebagai **titik lutut matematis** karena mewakili keseimbangan absolut yang optimal antara upaya pengguna (jumlah perbandingan) dan akurasi peringkat (korelasi Kendall Tau) dengan memanfaatkan kemenangan transitif bayangan.
+Ford-Johnson ditetapkan sebagai **titik lutut matematis** karena mewakili keseimbangan absolut yang optimal antara upaya pengguna (jumlah perbandingan) dan akurasi peringkat (korelasi Kendall Tau) dengan memanfaatkan kemenangan transitif bayangan.
 
 #### 1. Optimalisasi Matematis (Lutut Skala Log)
 "Titik lutut" diidentifikasi menggunakan **metode Kneedle** dan **Jarak Tegak Lurus Maksimum** dari akord titik akhir pada garis depan Pareto. Saat memplot akurasi terhadap upaya pada sumbu skala log (log10(pertempuran + 1)), PrismChain Rank menempati bagian "siku" dari kurva tersebut.

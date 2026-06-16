@@ -1046,6 +1046,95 @@
 				}
 				restore() {}
 			}
+						class FJProvider {
+				constructor(count) {
+					this.count = count;
+					this.items = Array.from({ length: count }, (_, i) => i);
+					this.stack = [{ items: this.items, state: 0 }];
+				}
+				static estimate(n) {
+					// Formula for Ford-Johnson (Merge-Insertion) comparisons
+					if (n <= 1) return 0;
+					let win = Math.floor(n / 2);
+					return win + FJProvider.estimate(win) + FJProvider.estimate(n - win); // Rough upper bound
+				}
+				getProgress(step) {
+					return step + ' / ' + FJProvider.estimate(this.count);
+				}
+				next(_, result) {
+					while (this.stack.length > 0) {
+						const frame = this.stack[this.stack.length - 1];
+						if (frame.state === 0) {
+							if (frame.items.length <= 1) { this.pop(frame.items); continue; }
+							frame.half = frame.items.length >> 1; frame.winners = []; frame.losers = []; frame.pairIdx = 0; frame.state = 1;
+						}
+						if (frame.state === 1) {
+							if (result !== undefined && frame.pairIdx > 0) {
+								const i = 2 * (frame.pairIdx - 1), a = frame.items[i], b = frame.items[i+1];
+								result >= 0.5 ? (frame.winners.push(a), frame.losers.push(b)) : (frame.winners.push(b), frame.losers.push(a));
+								result = undefined;
+							}
+							if (this.isTransitiveDiscovery) { result = this._lastTransitiveResult; this.isTransitiveDiscovery = false; continue; }
+							if (frame.pairIdx < frame.half) {
+								const a = frame.items[2 * frame.pairIdx], b = frame.items[2 * frame.pairIdx + 1];
+								frame.pairIdx++; return [a, b];
+							}
+							frame.state = 2; this.stack.push({ items: frame.winners, state: 0 }); continue;
+						}
+						if (frame.state === 3) {
+							frame.sortedWinners = frame.childResult; frame.loserOf = {};
+							frame.winners.forEach((w, i) => frame.loserOf[w] = frame.losers[i]);
+							frame.chain = [frame.loserOf[frame.sortedWinners[0]], ...frame.sortedWinners];
+							frame.posMap = {}; frame.chain.forEach((it, idx) => frame.posMap[it] = idx);
+							frame.m = frame.sortedWinners.length; frame.jPrev = 1; frame.jA = 1; frame.jB = 3; frame.state = 4;
+						}
+						if (frame.state === 4) {
+							if (frame.jPrev < frame.m) {
+								if (frame.k === undefined) frame.k = Math.min(frame.jB, frame.m);
+								if (frame.k > frame.jPrev) {
+									frame.bk = frame.loserOf[frame.sortedWinners[frame.k - 1]];
+									frame.lo = 0; frame.hi = frame.posMap[frame.sortedWinners[frame.k - 1]];
+									frame.state = 6; continue;
+								}
+								frame.jPrev = Math.min(frame.jB, frame.m);
+								const nextJB = frame.jB + 2 * frame.jA; frame.jA = frame.jB; frame.jB = nextJB; frame.k = undefined;
+								continue;
+							}
+							frame.state = 5;
+						}
+						if (frame.state === 5) {
+							if (frame.items.length & 1 && !frame.oddDone) {
+								frame.bk = frame.items[frame.items.length - 1];
+								frame.lo = 0; frame.hi = frame.chain.length;
+								frame.oddDone = true; frame.state = 7; continue;
+							}
+							this.pop(frame.chain); continue;
+						}
+						if (frame.state === 6 || frame.state === 7) {
+							if (result !== undefined) {
+								result >= 0.5 ? frame.lo = frame.mid + 1 : frame.hi = frame.mid;
+								result = undefined;
+							}
+							if (this.isTransitiveDiscovery) { result = this._lastTransitiveResult; this.isTransitiveDiscovery = false; continue; }
+							if (frame.lo < frame.hi) {
+								frame.mid = (frame.lo + frame.hi) >> 1;
+								return [frame.bk, frame.chain[frame.mid]];
+							}
+							frame.chain.splice(frame.lo, 0, frame.bk);
+							for (let i = frame.lo; i < frame.chain.length; i++) frame.posMap[frame.chain[i]] = i;
+							frame.state = (frame.state === 6) ? (frame.k--, 4) : 5; continue;
+						}
+					}
+					return null;
+				}
+				pop(res) {
+					this.stack.pop();
+					if (this.stack.length > 0) { const p = this.stack[this.stack.length - 1]; p.childResult = res; p.state++; }
+					else { this.items = res; }
+				}
+				snap() { return JSON.stringify({ stack: this.stack, items: this.items }); }
+				restore(data) { if (data) Object.assign(this, JSON.parse(data)); }
+			}
 			class PrismChainProvider {
 				static estimate(n) {
 					if (n === 0) return 0;
@@ -1055,74 +1144,52 @@
 					this.count = count;
 					this._est = PrismChainProvider.estimate(count);
 					this.items = Array.from({ length: count }, (_, i) => i);
-					this.stack = [{ l: 0, r: count - 1, state: 0 }];
+					this.width = 1; this.i = 0; this.state = 'merge';
 					this.asked = 0;
 					this.done = false;
 				}
 				getProgress(step) {
-					return `${step}/${this._est}`;
+					return step + '/' + this._est;
 				}
 				next(_, result) {
 					if (this.done) return null;
-					while (this.stack.length > 0) {
-						let f = this.stack[this.stack.length - 1];
-						if (f.state === 0) {
-							if (f.l >= f.r) { this.pop(); continue; }
-							f.mid = Math.floor((f.l + f.r) / 2);
-							this.stack.push({ l: f.l, r: f.mid, state: 0 });
-							continue;
+					while (this.width < this.count) {
+						if (this.state === 'merge') {
+							if (this.i < this.count) {
+								this.l = this.i; this.mid = Math.min(this.i + this.width, this.count); this.r = Math.min(this.i + 2 * this.width, this.count);
+								this.L = this.items.slice(this.l, this.mid); this.R = this.items.slice(this.mid, this.r);
+								this.ii = 0; this.jj = 0; this.k = this.l; this.state = 'work';
+							} else { this.width *= 2; this.i = 0; continue; }
 						}
-						if (f.state === 1) {
-							this.stack.push({ l: f.mid + 1, r: f.r, state: 0 });
-							continue;
-						}
-						if (f.state === 2) {
-							f.leftArr = this.items.slice(f.l, f.mid + 1);
-							f.rightArr = this.items.slice(f.mid + 1, f.r + 1);
-							f.i = 0; f.j = 0; f.k = f.l; f.state = 3;
-						}
-						if (f.state === 3) {
+						if (this.state === 'work') {
 							if (result !== undefined) {
-								if (result >= 0.5) this.items[f.k++] = f.leftArr[f.i++];
-								else this.items[f.k++] = f.rightArr[f.j++];
+								if (result >= 0.5) this.items[this.k++] = this.L[this.ii++]; else this.items[this.k++] = this.R[this.jj++];
 								result = undefined;
-								if (++this.asked >= this._est) { this.done = true; return null; }
+								if (this.isTransitiveDiscovery) { result = this._lastTransitiveResult; this.isTransitiveDiscovery = false; continue; }
+								else if (++this.asked >= this._est) {
+									while (this.ii < this.L.length) this.items[this.k++] = this.L[this.ii++];
+									while (this.jj < this.R.length) this.items[this.k++] = this.R[this.jj++];
+									this.done = true; return null;
+								}
 							}
-							if (f.i < f.leftArr.length && f.j < f.rightArr.length) {
-								return [f.leftArr[f.i], f.rightArr[f.j]];
-							}
-							while (f.i < f.leftArr.length) this.items[f.k++] = f.leftArr[f.i++];
-							while (f.j < f.rightArr.length) this.items[f.k++] = f.rightArr[f.j++];
-							this.pop();
+							if (this.ii < this.L.length && this.jj < this.R.length) return [this.L[this.ii], this.R[this.jj]];
+							while (this.ii < this.L.length) this.items[this.k++] = this.L[this.ii++];
+							while (this.jj < this.R.length) this.items[this.k++] = this.R[this.jj++];
+							this.i += 2 * this.width; this.state = 'merge';
 						}
 					}
-					this.done = true;
-					return null;
-				}
-				pop() {
-					this.stack.pop();
-					if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
+					this.done = true; return null;
 				}
 				snap() {
-					return JSON.stringify({ items: this.items, stack: this.stack, asked: this.asked, done: this.done });
+					return JSON.stringify({ items: this.items, width: this.width, i: this.i, state: this.state, l: this.l, mid: this.mid, r: this.r, L: this.L, R: this.R, ii: this.ii, jj: this.jj, k: this.k, asked: this.asked, done: this.done });
 				}
 				restore(data, matches) {
 					if (!data) return matches && this._start(matches);
-					try {
-						const parsed = JSON.parse(data);
-						this.items = parsed.items;
-						this.stack = parsed.stack;
-						this.asked = parsed.asked || 0;
-						this.done = !!parsed.done;
-					} catch {
-						matches && this._start(matches);
-					}
+					try { Object.assign(this, JSON.parse(data)); } catch { matches && this._start(matches); }
 				}
 				_start(matches) {
 					this.items = Array.from({ length: this.count }, (_, i) => i);
-					this.stack = [{ l: 0, r: this.count - 1, state: 0 }];
-					this.asked = 0;
-					this.done = false;
+					this.width = 1; this.i = 0; this.state = 'merge'; this.asked = 0; this.done = false;
 					this.next();
 					for (const m of matches) this.next(undefined, m.result);
 				}
@@ -1239,7 +1306,7 @@
 						battle: this.provider ? {
 							...this,
 							provider: this.provider,
-							providerType: this.provider instanceof PrismChainProvider ? 'quick' : 'full'
+							providerType: this.provider instanceof FJProvider ? 'quick' : 'full'
 						} : null
 					}));
 				}
@@ -1364,9 +1431,10 @@
 						return;
 					}
 					elements.items.value = unique.join('\n');
+					const n = unique.length;
 					Object.assign(this, {
 						items: unique,
-						scores: Array(unique.length).fill(1e3),
+						scores: Array(n).fill(1e3),
 						matches: [],
 						pair: null,
 						swapped: false,
@@ -1375,10 +1443,12 @@
 						history: [],
 						busy: false,
 						swaps: {},
-						dirty: true
+						dirty: true,
+						reach: new Uint8Array(n * n)
 					});
+					for (let i = 0; i < n; i++) this.reach[i * n + i] = 1;
 					elements.undo.disabled = true;
-					this.provider = new (elements.quickRank.checked ? PrismChainProvider : FullPairProvider)(unique.length);
+					this.provider = new (elements.quickRank.checked ? FJProvider : FullPairProvider)(unique.length);
 					elements.tieWrap.classList.toggle('hidden', !this.allowTies);
 					this.updateHelp();
 					this.display('battleSection');
@@ -1397,23 +1467,15 @@
 					const adjMaps = Array.from({
 						length: n
 					}, ()=>new Map());
-					for (const {a, b, result} of this.matches) {
-						wins[a] += result;
-						wins[b] += 1 - result;
-						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
-						adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
-					}
-					if (this.provider instanceof PrismChainProvider && !this.pair) {
-						const order = this.provider.items;
-						for (let i = 0; i < n; i++) {
-							for (let j = i + 1; j < n; j++) {
-								const a = order[i], b = order[j];
-								wins[a] += 1;
-								adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
-								adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
-							}
+					for (let i = 0; i < n; i++) {
+						for (let j = 0; j < n; j++) {
+							if (i === j || !this.reach[i * n + j]) continue;
+							wins[i] += 1;
+							adjMaps[i].set(j, (adjMaps[i].get(j) || 0) + 1);
+							adjMaps[j].set(i, (adjMaps[j].get(i) || 0) + 1);
 						}
 					}
+
 					this.adj = adjMaps.map(m=>{
 						const row = new Int32Array(m.size * 2);
 						let k = 0;
@@ -1508,15 +1570,27 @@
 						pair: this.pair,
 						step: this.step,
 						swapped: this.swapped,
-						state: this.provider.snap()
+						state: this.provider.snap(),
+						reach: new Uint8Array(this.reach)
 					});
-					const [a,b] = this.pair;
+					const [a,b] = this.pair, n = this.items.length;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
 					this.matches.push({
 						a,
 						b,
 						result
 					});
+					if (result === 1 || result === 0) {
+						const [w, l] = result === 1 ? [a, b] : [b, a];
+						if (!this.reach[w * n + l]) {
+							this.reach[w * n + l] = 1;
+							for (let i = 0; i < n; i++) {
+								if (this.reach[i * n + w]) {
+									for (let j = 0; j < n; j++) if (this.reach[l * n + j]) this.reach[i * n + j] = 1;
+								}
+							}
+						}
+					}
 					this.dirty = true;
 					this.step++;
 					elements.undo.disabled = false;
@@ -1529,7 +1603,13 @@
 				}
 				next(result) {
 					this.clear();
-					const nextPair = this.provider.next(this, result);
+					const n = this.items.length;
+					let nextPair = this.provider.next(this, result);
+					while (nextPair && (this.reach[nextPair[0] * n + nextPair[1]] || this.reach[nextPair[1] * n + nextPair[0]])) {
+						this.provider.isTransitiveDiscovery = true;
+						this.provider._lastTransitiveResult = this.reach[nextPair[0] * n + nextPair[1]] ? 1 : 0;
+						nextPair = this.provider.next(this, this.provider._lastTransitiveResult);
+					}
 					if (!nextPair)
 						return this.pair = null,
 						this.results();
@@ -1767,7 +1847,8 @@
 						Object.assign(this, {
 							step: last.step,
 							pair: last.pair,
-							swapped: last.swapped
+							swapped: last.swapped,
+							reach: last.reach
 						});
 						this.provider.restore(last.state, this.matches);
 						this.render();
