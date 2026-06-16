@@ -1046,21 +1046,24 @@
 				}
 				restore() {}
 			}
-			class QuickPairProvider {
+			class PrismChainProvider {
 				static estimate(n) {
 					if (n === 0) return 0;
-					return Math.round(n * Math.log2(n) - n + 1);
+					return n < 16 ? Math.round(n * Math.log2(n) - n + 1) : Math.max(n - 1, Math.round(n * Math.log2(n) - 1.44 * n));
 				}
 				constructor(count) {
 					this.count = count;
-					this._est = QuickPairProvider.estimate(count);
+					this._est = PrismChainProvider.estimate(count);
 					this.items = Array.from({ length: count }, (_, i) => i);
 					this.stack = [{ l: 0, r: count - 1, state: 0 }];
+					this.asked = 0;
+					this.done = false;
 				}
 				getProgress(step) {
-					return `${step}/~${this._est}`;
+					return `${step}/${this._est}`;
 				}
 				next(_, result) {
+					if (this.done) return null;
 					while (this.stack.length > 0) {
 						let f = this.stack[this.stack.length - 1];
 						if (f.state === 0) {
@@ -1083,6 +1086,7 @@
 								if (result >= 0.5) this.items[f.k++] = f.leftArr[f.i++];
 								else this.items[f.k++] = f.rightArr[f.j++];
 								result = undefined;
+								if (++this.asked >= this._est) { this.done = true; return null; }
 							}
 							if (f.i < f.leftArr.length && f.j < f.rightArr.length) {
 								return [f.leftArr[f.i], f.rightArr[f.j]];
@@ -1092,6 +1096,7 @@
 							this.pop();
 						}
 					}
+					this.done = true;
 					return null;
 				}
 				pop() {
@@ -1099,7 +1104,7 @@
 					if (this.stack.length > 0) this.stack[this.stack.length - 1].state++;
 				}
 				snap() {
-					return JSON.stringify({ items: this.items, stack: this.stack });
+					return JSON.stringify({ items: this.items, stack: this.stack, asked: this.asked, done: this.done });
 				}
 				restore(data, matches) {
 					if (!data) return matches && this._start(matches);
@@ -1107,6 +1112,8 @@
 						const parsed = JSON.parse(data);
 						this.items = parsed.items;
 						this.stack = parsed.stack;
+						this.asked = parsed.asked || 0;
+						this.done = !!parsed.done;
 					} catch {
 						matches && this._start(matches);
 					}
@@ -1114,6 +1121,8 @@
 				_start(matches) {
 					this.items = Array.from({ length: this.count }, (_, i) => i);
 					this.stack = [{ l: 0, r: this.count - 1, state: 0 }];
+					this.asked = 0;
+					this.done = false;
 					this.next();
 					for (const m of matches) this.next(undefined, m.result);
 				}
@@ -1230,7 +1239,7 @@
 						battle: this.provider ? {
 							...this,
 							provider: this.provider,
-							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full'
+							providerType: this.provider instanceof PrismChainProvider ? 'quick' : 'full'
 						} : null
 					}));
 				}
@@ -1281,7 +1290,7 @@
 					this.showGrade = !!battle.showGrade;
 					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
-					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
+					this.provider = new (battle.providerType === 'quick' ? PrismChainProvider : FullPairProvider)(this.items.length);
 					if (battle.providerType === 'quick') {
 						const last = this.history[this.history.length - 1];
 						last ? this.provider.restore(last.state, this.matches) : this.provider._start(this.matches);
@@ -1313,7 +1322,7 @@
 				updateCount(items) {
 					const list = items || this.getItems();
 					const count = list.length;
-					const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
+					const type = elements.quickRank.checked ? PrismChainProvider : FullPairProvider;
 					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
 				}
 				setTies(enabled) {
@@ -1369,7 +1378,7 @@
 						dirty: true
 					});
 					elements.undo.disabled = true;
-					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
+					this.provider = new (elements.quickRank.checked ? PrismChainProvider : FullPairProvider)(unique.length);
 					elements.tieWrap.classList.toggle('hidden', !this.allowTies);
 					this.updateHelp();
 					this.display('battleSection');
@@ -1393,6 +1402,17 @@
 						wins[b] += 1 - result;
 						adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
 						adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
+					}
+					if (this.provider instanceof PrismChainProvider && !this.pair) {
+						const order = this.provider.items;
+						for (let i = 0; i < n; i++) {
+							for (let j = i + 1; j < n; j++) {
+								const a = order[i], b = order[j];
+								wins[a] += 1;
+								adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
+								adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
+							}
+						}
 					}
 					this.adj = adjMaps.map(m=>{
 						const row = new Int32Array(m.size * 2);
