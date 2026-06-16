@@ -1046,20 +1046,22 @@
 				}
 				restore() {}
 			}
-						class QuickPairProvider {
+			class QuickPairProvider {
 				constructor(count) {
 					this.count = count;
 					this.items = Array.from({ length: count }, (_, i) => i);
 					this.stack = [{ items: this.items, state: 0 }];
 				}
-				static estimate(n) {
-					// Formula for Ford-Johnson (Merge-Insertion) comparisons
+				static _roughEstimate(n) {
 					if (n <= 1) return 0;
 					let win = Math.floor(n / 2);
-					return win + BottomUpMergeSortProvider.estimate(win) + BottomUpMergeSortProvider.estimate(n - win); // Rough upper bound
+					return win + QuickPairProvider._roughEstimate(win) + QuickPairProvider._roughEstimate(n - win);
+				}
+				static estimate(n) {
+					return QuickPairProvider._roughEstimate(n);
 				}
 				getProgress(step) {
-					return step + ' / ' + BottomUpMergeSortProvider.estimate(this.count);
+					return step + ' / ' + QuickPairProvider.estimate(this.count);
 				}
 				next(_, result) {
 					while (this.stack.length > 0) {
@@ -1135,65 +1137,7 @@
 				snap() { return JSON.stringify({ stack: this.stack, items: this.items }); }
 				restore(data) { if (data) Object.assign(this, JSON.parse(data)); }
 			}
-			class BottomUpMergeSortProvider {
-				static estimate(n) {
-					if (n === 0) return 0;
-					return n < 16 ? Math.round(n * Math.log2(n) - n + 1) : Math.max(n - 1, Math.round(n * Math.log2(n) - 1.44 * n));
-				}
-				constructor(count) {
-					this.count = count;
-					this._est = BottomUpMergeSortProvider.estimate(count);
-					this.items = Array.from({ length: count }, (_, i) => i);
-					this.width = 1; this.i = 0; this.state = 'merge';
-					this.asked = 0;
-					this.done = false;
-				}
-				getProgress(step) {
-					return step + '/' + this._est;
-				}
-				next(_, result) {
-					if (this.done) return null;
-					while (this.width < this.count) {
-						if (this.state === 'merge') {
-							if (this.i < this.count) {
-								this.l = this.i; this.mid = Math.min(this.i + this.width, this.count); this.r = Math.min(this.i + 2 * this.width, this.count);
-								this.L = this.items.slice(this.l, this.mid); this.R = this.items.slice(this.mid, this.r);
-								this.ii = 0; this.jj = 0; this.k = this.l; this.state = 'work';
-							} else { this.width *= 2; this.i = 0; continue; }
-						}
-						if (this.state === 'work') {
-							if (result !== undefined) {
-								if (result >= 0.5) this.items[this.k++] = this.L[this.ii++]; else this.items[this.k++] = this.R[this.jj++];
-								result = undefined;
-								if (this.isTransitiveDiscovery) { result = this._lastTransitiveResult; this.isTransitiveDiscovery = false; continue; }
-								else if (++this.asked >= this._est) {
-									while (this.ii < this.L.length) this.items[this.k++] = this.L[this.ii++];
-									while (this.jj < this.R.length) this.items[this.k++] = this.R[this.jj++];
-									this.done = true; return null;
-								}
-							}
-							if (this.ii < this.L.length && this.jj < this.R.length) return [this.L[this.ii], this.R[this.jj]];
-							while (this.ii < this.L.length) this.items[this.k++] = this.L[this.ii++];
-							while (this.jj < this.R.length) this.items[this.k++] = this.R[this.jj++];
-							this.i += 2 * this.width; this.state = 'merge';
-						}
-					}
-					this.done = true; return null;
-				}
-				snap() {
-					return JSON.stringify({ items: this.items, width: this.width, i: this.i, state: this.state, l: this.l, mid: this.mid, r: this.r, L: this.L, R: this.R, ii: this.ii, jj: this.jj, k: this.k, asked: this.asked, done: this.done });
-				}
-				restore(data, matches) {
-					if (!data) return matches && this._start(matches);
-					try { Object.assign(this, JSON.parse(data)); } catch { matches && this._start(matches); }
-				}
-				_start(matches) {
-					this.items = Array.from({ length: this.count }, (_, i) => i);
-					this.width = 1; this.i = 0; this.state = 'merge'; this.asked = 0; this.done = false;
-					this.next();
-					for (const m of matches) this.next(undefined, m.result);
-				}
-			}
+
 			class PreferenceRank {
 				constructor() {
 					Object.assign(this, {
