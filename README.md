@@ -28,7 +28,8 @@ Based on a comparative analysis of 78 distinct sorting algorithms (see [ANALYSIS
 | **PrismChain Rank** | 520.00 | 0.9229 |
 | Rotation Merge Sort | 715.24 | 0.9161 |
 | Full Rank | 4950.00 | 1.0000 |
-*Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons (like Shellsort) are excluded from production to ensure maximum user efficiency.*
+
+*Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
 
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
