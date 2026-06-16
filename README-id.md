@@ -29,7 +29,7 @@ Berdasarkan analisis perbandingan terhadap 78 algoritma pengurutan yang berbeda 
 | Rotation Merge Sort | 715.24 | 0.9161 |
 | Full Rank | 4950.00 | 1.0000 |
 
-*Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.
+*Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.*
 
 ## Mulai Cepat
 1. Unduh file `PreferenceRank.html` dari repositori.
