@@ -14,19 +14,19 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 
 - **Peringkat Penuh (Bawaan):** Menggunakan sistem round-robin yang komprehensif (Pertarungan = N(N-1)/2). Menjamin preferensi yang paling akurat tetapi tumbuh secara kuadratik. Terbaik untuk daftar kecil (<20 pilihan).
 
-- **Peringkat Cepat:** Menggunakan **Merge Sort** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **penilaian Bradley-Terry murni** untuk representasi yang akurat.
+- **Peringkat Cepat:** Menggunakan **PrismChain Rank** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **kemenangan transitif bayangan** untuk akurasi yang unggul.
 
 ### Analisis Algoritma
-Berdasarkan analisis perbandingan terhadap 78 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Merge Sort** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
+Berdasarkan analisis perbandingan terhadap 78 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **PrismChain Rank** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
 
 **Perbandingan (N=100):**
 | Algoritma | Rata-rata Pertempuran | Rata-rata Kendall Tau |
 |-----------|-----------------------|-----------------------|
-| Ford-Johnson | 526.92 | 0.8886 |
-| In-place Merge Sort | 541.42 | 0.9029 |
-| **Merge Sort** | 542.64 | 0.9029 |
-| 4-way Merge Sort | 544.30 | 0.9030 |
-| Rotation Merge Sort | 712.26 | 0.9158 |
+| Miracle Sort | 99.00 | 0.5483 |
+| Ford-Johnson | 527.06 | 0.8880 |
+| In-place Merge Sort | 541.92 | 0.9048 |
+| **PrismChain Rank** | 520.00 | 0.9229 |
+| Rotation Merge Sort | 715.24 | 0.9161 |
 | Full Rank | 4950.00 | 1.0000 |
 ## Mulai Cepat
 1. Unduh file `PreferenceRank.html` dari repositori.
