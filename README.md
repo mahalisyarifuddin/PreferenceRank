@@ -14,19 +14,19 @@ PreferenceRank offers two distinct modes to sort your items:
 
 - **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
 
-- **Quick Rank:** Uses **PrismChain Rank** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
+- **Quick Rank:** Uses **Ford-Johnson** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 78 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **PrismChain Rank** was identified as the optimal **mathematical knee point** (using log-scale analysis) for high-accuracy human preference ranking without redundant comparisons.
+Based on a comparative analysis of 78 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** was identified as the optimal **mathematical knee point** (using log-scale analysis) for high-accuracy human preference ranking without redundant comparisons.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau |
 |-----------|-------------|-----------------|
-| Miracle Sort | 99.00 | 0.5483 |
-| Ford-Johnson | 527.06 | 0.8880 |
-| In-place Merge Sort | 541.92 | 0.9048 |
-| **PrismChain Rank** | 520.00 | 0.9229 |
-| Rotation Merge Sort | 715.24 | 0.9161 |
+| Genghis Khan Sort | 99.00 | 0.3565 |
+| Bottom-up Merge Sort | 520.00 | 0.9157 |
+| **Ford-Johnson** | 526.98 | 0.9995 |
+| In-place Merge Sort | 541.60 | 0.9996 |
+| Rotation Merge Sort | 715.96 | 0.9998 |
 | Full Rank | 4950.00 | 1.0000 |
 
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*

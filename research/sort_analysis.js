@@ -33,43 +33,42 @@ function kendallTau(arr1, arr2) {
 
 function simulate(n, ProviderClass, trials = 250) {
     let totalComps = 0, totalTau = 0, maxUniqueBattles = n * (n - 1) / 2, hasDuplicates = false;
-    const trueStrengths = new Float64Array(n);
-    const wins = new Float64Array(n);
-    const adjMaps = Array.from({ length: n }, () => new Map());
+    const trueStrengths = new Float64Array(n), wins = new Float64Array(n);
+    const reach = new Uint8Array(n * n), adjMaps = Array.from({ length: n }, () => new Map());
     for (let t = 0; t < trials; t++) {
         for (let i = 0; i < n; i++) trueStrengths[i] = Math.random() * 2000;
-        const provider = new ProviderClass(n);
-        wins.fill(0); for (let i = 0; i < n; i++) adjMaps[i].clear();
-        const matchesMap = new Map();
-        let pair = provider.next(), uniqueBattles = 0, totalIterations = 0;
+        const provider = new ProviderClass(n); wins.fill(0); reach.fill(0); for (let i = 0; i < n; i++) { reach[i * n + i] = 1; adjMaps[i].clear(); }
+        const matchesMap = new Map(); let pair = provider.next(), uniqueBattles = 0, totalIterations = 0;
         while (pair && totalIterations < 1000000) {
-            totalIterations++;
-            const [a, b] = pair;
-            const pairKey = a < b ? (a << 16) | b : (b << 16) | a;
-            const matchResult = matchesMap.get(pairKey);
+            totalIterations++; const [a, b] = pair;
+            const pairKey = a < b ? (a << 16) | b : (b << 16) | a, matchResult = matchesMap.get(pairKey);
             let res;
             if (matchResult !== undefined) {
-                hasDuplicates = true;
-                res = matchResult.a === a ? matchResult.res : 1 - matchResult.res;
+                hasDuplicates = true; res = matchResult.a === a ? matchResult.res : 1 - matchResult.res;
+            } else if (reach[a * n + b] || reach[b * n + a]) {
+                res = reach[a * n + b] ? 1 : 0;
+                provider.isTransitiveDiscovery = true;
             } else {
-                uniqueBattles++;
-                res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
+                uniqueBattles++; res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
                 matchesMap.set(pairKey, { a, res });
-                wins[a] += res; wins[b] += 1 - res;
-                adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
-                adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
+                const [w, l] = res === 1 ? [a, b] : [b, a];
+                if (!reach[w * n + l]) {
+                    reach[w * n + l] = 1;
+                    for (let i = 0; i < n; i++) {
+                        if (reach[i * n + w]) {
+                            for (let j = 0; j < n; j++) if (reach[l * n + j]) reach[i * n + j] = 1;
+                        }
+                    }
+                }
             }
             pair = provider.next(res); if (uniqueBattles >= maxUniqueBattles) break;
         }
-        if (ProviderClass.useShadowWins) {
-            const order = provider.items;
-            for (let weak = 0; weak < n - 1; weak++) {
-                for (let strong = weak + 1; strong < n; strong++) {
-                    const a = order[strong], b = order[weak];
-                    wins[a] += 1;
-                    adjMaps[a].set(b, (adjMaps[a].get(b) || 0) + 1);
-                    adjMaps[b].set(a, (adjMaps[b].get(a) || 0) + 1);
-                }
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                if (i === j || !reach[i * n + j]) continue;
+                wins[i] += 1;
+                adjMaps[i].set(j, (adjMaps[i].get(j) || 0) + 1);
+                adjMaps[j].set(i, (adjMaps[j].get(i) || 0) + 1);
             }
         }
         const adj = adjMaps.map(m => { const row = new Int32Array(m.size * 2); let k = 0; for (const [j, c] of m) { row[k++] = j; row[k++] = c; } return row; });
@@ -169,7 +168,7 @@ class BottomUpMergeSortProvider extends Provider {
                 } else { this.width *= 2; this.i = 0; continue; }
             }
             if (this.state === 'work') {
-                if (result !== undefined) { if (result === 0) this.items[this.k++] = this.L[this.ii++]; else this.items[this.k++] = this.R[this.jj++]; result = undefined; }
+                if (result !== undefined) { if (result === 1) this.items[this.k++] = this.L[this.ii++]; else this.items[this.k++] = this.R[this.jj++]; result = undefined; }
                 if (this.ii < this.L.length && this.jj < this.R.length) return [this.L[this.ii], this.R[this.jj]];
                 while (this.ii < this.L.length) this.items[this.k++] = this.L[this.ii++];
                 while (this.jj < this.R.length) this.items[this.k++] = this.R[this.jj++];
@@ -771,7 +770,7 @@ class RecursiveOddEvenSortProvider extends Provider {
     }
 }
 
-class FJProvider extends Provider {
+class QuickPairProvider extends Provider {
     constructor(n) { super(n); this.stack = [{ items: Array.from({ length: n }, (_, i) => i), state: 0 }]; }
     next(result) {
         while (this.stack.length > 0) {
@@ -808,7 +807,11 @@ class FJProvider extends Provider {
             }
         } return null;
     }
-    pop(res) { this.stack.pop(); if (this.stack.length > 0) { const p = this.stack[this.stack.length - 1]; p.childResult = res; p.state++; } }
+    pop(res) {
+        this.stack.pop();
+        if (this.stack.length > 0) { const p = this.stack[this.stack.length - 1]; p.childResult = res; p.state++; }
+        else { this.items = res; }
+    }
 }
 
 class GenghisKhanSortProvider extends Provider {
@@ -1239,13 +1242,20 @@ class MergeSortProvider extends Provider {
     }
 }
 
-class PrismChainProvider extends MergeSortProvider {
-    static useShadowWins = true;
+class QuickMergeSortProvider extends BottomUpMergeSortProvider {
     static estimate(n) { return n < 16 ? Math.round(n * Math.log2(n) - n + 1) : Math.max(n - 1, Math.round(n * Math.log2(n) - 1.44 * n)); }
-    constructor(n) { super(n); this.budget = PrismChainProvider.estimate(n); this.asked = 0; this.done = false; }
+    constructor(n) { super(n); this.budget = QuickMergeSortProvider.estimate(n); this.asked = 0; this.done = false; }
     next(result) {
         if (this.done) return null;
-        if (result !== undefined && ++this.asked >= this.budget) { this.done = true; return null; }
+        if (result !== undefined) {
+            if (this.isTransitiveDiscovery) { this.isTransitiveDiscovery = false; }
+            else if (++this.asked >= this.budget) {
+            if (this.state === 'work') {
+                while (this.ii < this.L.length) this.items[this.k++] = this.L[this.ii++];
+                while (this.jj < this.R.length) this.items[this.k++] = this.R[this.jj++];
+            }
+            this.done = true; return null; }
+        }
         const pair = super.next(result);
         if (!pair) this.done = true;
         return pair;
@@ -1377,7 +1387,7 @@ class PingPongMergeSortProvider extends Provider {
                 } else { this.width *= 2; this.onAux = !this.onAux; this.state = 'init'; continue; }
             }
             if (this.state === 'work') {
-                if (result !== undefined) { if (result === 0) this.dst[this.k++] = this.src[this.ii++]; else this.dst[this.k++] = this.src[this.jj++]; result = undefined; }
+                if (result !== undefined) { if (result === 1) this.dst[this.k++] = this.src[this.ii++]; else this.dst[this.k++] = this.src[this.jj++]; result = undefined; }
                 if (this.ii < this.mid && this.jj < this.r) return [this.src[this.ii], this.src[this.jj]];
                 while (this.ii < this.mid) this.dst[this.k++] = this.src[this.ii++];
                 while (this.jj < this.r) this.dst[this.k++] = this.src[this.jj++];
@@ -1938,8 +1948,8 @@ const algos = [
     { name: 'Recursive Shellsort', class: RecursiveShellSortProvider },
     { name: 'Recursive Comb Sort', class: RecursiveCombSortProvider },
     { name: 'Recursive Odd-Even Sort', class: RecursiveOddEvenSortProvider },
-    { name: 'PrismChain Rank', class: PrismChainProvider },
-    { name: 'Ford-Johnson', class: FJProvider },
+    { name: 'Bottom-up Merge Sort (Quick)', class: QuickMergeSortProvider },
+    { name: 'Ford-Johnson (Quick)', class: QuickPairProvider },
     { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Bottom-up Merge Sort', class: BottomUpMergeSortProvider },
     { name: 'Natural Merge Sort', class: NaturalMergeSortProvider },
@@ -2011,7 +2021,8 @@ const algos = [
 
 
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-if (isMainThread) {
+if (typeof module !== "undefined" && module.exports) module.exports = { simulate, MergeSortProvider, QuickMergeSortProvider, BottomUpMergeSortProvider, QuickPairProvider };
+if (isMainThread && require.main === module) {
     const args = process.argv.slice(2);
     const n_val = args[0] ? parseInt(args[0]) : 100;
     const trials_val = args[1] ? parseInt(args[1]) : 250;
@@ -2033,7 +2044,7 @@ if (isMainThread) {
             if (completed === numWorkers) process.exit(0);
         });
     }
-} else {
+} else if (workerData) {
     const { workerAlgos, n, trials } = workerData;
     for (const algo of workerAlgos) {
         try {
