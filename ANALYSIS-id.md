@@ -16,7 +16,7 @@ Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi ada
 | Intelligent Design | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
 | Socialist Sort | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
 | Genghis Khan Sort | 99.00 | 0.3565 | TIDAK | Pareto-optimal |
-| Bottom-up Merge Sort (Quick) | 520.00 | 0.9157 | TIDAK | Pareto-optimal |
+| Bottom-up Merge Sort | 520.00 | 0.9157 | TIDAK | Pareto-optimal |
 | **Ford-Johnson** | 526.98 | 0.9995 | TIDAK | **Titik Lutut Produksi** |
 | In-place Merge Sort | 541.60 | 0.9996 | TIDAK | Pareto-optimal |
 | Rotation Merge Sort | 715.96 | 0.9998 | TIDAK | Pareto-optimal |
