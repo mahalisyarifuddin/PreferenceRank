@@ -16,7 +16,7 @@ We compared 78 distinct sorting algorithms. A key requirement for production is 
 | Intelligent Design | 0.00 | 0.0067 | NO | Pareto-optimal |
 | Socialist Sort | 0.00 | 0.0067 | NO | Pareto-optimal |
 | Genghis Khan Sort | 99.00 | 0.3565 | NO | Pareto-optimal |
-| Bottom-up Merge Sort (Quick) | 520.00 | 0.9157 | NO | Pareto-optimal |
+| Bottom-up Merge Sort | 520.00 | 0.9157 | NO | Pareto-optimal |
 | **Ford-Johnson** | 526.98 | 0.9995 | NO | **Knee Point** |
 | In-place Merge Sort | 541.60 | 0.9996 | NO | Pareto-optimal |
 | Rotation Merge Sort | 715.96 | 0.9998 | NO | Pareto-optimal |
