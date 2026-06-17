@@ -137,8 +137,8 @@ Bagian berikut merinci trade-off antara vanilla merge sort, basic in-place merge
 
 ### Regresi Estimasi Jumlah Pertempuran
 Untuk Ford-Johnson (Titik Lutut Produksi yang baru):
-- **Formula:** $S(n) = \sum_{k=1}^{n} \lceil \log_2(\frac{3k}{4}) \rceil$
-- Untuk N=100, ini memprediksi 534 pertempuran (batas kasus terburuk).
+- **Formula:** Pertempuran Unik ~ N * log2(N) - 1.408 * N + 3
+- Untuk N=100, ini memprediksi 527 pertempuran (sesuai rata-rata simulasi).
 
 ---
 
