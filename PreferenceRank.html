@@ -1052,13 +1052,8 @@
 					this.items = Array.from({ length: count }, (_, i) => i);
 					this.stack = [{ items: this.items, state: 0 }];
 				}
-				static _roughEstimate(n) {
-					if (n <= 1) return 0;
-					let win = Math.floor(n / 2);
-					return win + QuickPairProvider._roughEstimate(win) + QuickPairProvider._roughEstimate(n - win);
-				}
 				static estimate(n) {
-					return QuickPairProvider._roughEstimate(n);
+					return n <= 1 ? 0 : Math.round(n * Math.log2(n) - 1.408 * n + 3);
 				}
 				getProgress(step) {
 					return step + ' / ' + QuickPairProvider.estimate(this.count);

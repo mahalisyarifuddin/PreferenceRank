@@ -137,8 +137,8 @@ Bagian berikut merinci trade-off antara vanilla merge sort, basic in-place merge
 
 ### Regresi Estimasi Jumlah Pertempuran
 Untuk Ford-Johnson (Titik Lutut Produksi yang baru):
-- **Formula:** `Pertempuran Unik ~ N * log2(N) - 1.44 * N` (untuk N >= 16)
-- For N=100, ini memprediksi ~520 battles (disimulasikan ~520 unique rata-rata).
+- **Formula:** Pertempuran Unik ~ N * log2(N) - 1.408 * N + 3
+- Untuk N=100, ini memprediksi 527 pertempuran (sesuai rata-rata simulasi).
 
 ---
 
