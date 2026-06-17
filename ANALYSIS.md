@@ -139,8 +139,8 @@ The following sections detail the trade-offs between vanilla merge sort, basic i
 
 ### Battle Count Estimate Regression
 For Ford-Johnson (the new Production Knee Point):
-- **Formula:** `Unique Battles ~ N * log2(N) - 1.411 * N + 3.6` (for N >= 16)
-- For N=100, this predicts ~527 battles (matching simulation).
+- **Formula:** $S(n) = \sum_{k=1}^{n} \lceil \log_2(\frac{3k}{4}) \rceil$
+- For N=100, this predicts 534 battles (worst-case bound).
 
 ---
 

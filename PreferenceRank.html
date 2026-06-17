@@ -1053,7 +1053,9 @@
 					this.stack = [{ items: this.items, state: 0 }];
 				}
 				static estimate(n) {
-					return n <= 1 ? 0 : Math.round(n < 16 ? n * Math.log2(n) - n + 1 : n * Math.log2(n) - 1.411 * n + 3.6);
+					let sum = 0;
+					for (let k = 1; k <= n; k++) sum += Math.ceil(Math.log2(3 * k / 4));
+					return sum;
 				}
 				getProgress(step) {
 					return step + ' / ' + QuickPairProvider.estimate(this.count);
