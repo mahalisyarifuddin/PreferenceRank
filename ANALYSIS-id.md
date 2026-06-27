@@ -4,7 +4,7 @@ Dokumen ini merangkum tolok ukur dan analisis ekstensif yang dilakukan untuk men
 
 ## 1. Perbandingan Algoritma Pengurutan (N=100)
 
-Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal (menggunakan sumbu skala log untuk jumlah pertempuran unik) untuk memastikan efisiensi pengguna yang maksimal.
+Kami membandingkan 80 algoritma pengurutan. Persyaratan utama untuk produksi adalah penghapusan perbandingan pasangan duplikat. Algoritma yang meminta pasangan yang sama dua kali sekarang diidentifikasi dan dikeluarkan dari analisis titik lutut Pareto-optimal (menggunakan sumbu skala log untuk jumlah pertempuran unik) untuk memastikan efisiensi pengguna yang maksimal.
 
 ### Metodologi Tolok Ukur
 - **N Value:** 100
@@ -12,87 +12,86 @@ Kami membandingkan 78 algoritma pengurutan. Persyaratan utama untuk produksi ada
 
 ### Hasil (N=100)
 | Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
-|-----------|-----------------------|-----------------------|-----------|---------------|
-| Intelligent Design | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
-| Socialist Sort | 0.00 | 0.0067 | TIDAK | Pareto-optimal |
-| Genghis Khan Sort | 99.00 | 0.3565 | TIDAK | Pareto-optimal |
-| Bottom-up Merge Sort | 520.00 | 0.9157 | TIDAK | Pareto-optimal |
-| **Ford-Johnson** | 526.98 | 0.9995 | TIDAK | **Titik Lutut Produksi** |
-| In-place Merge Sort | 541.60 | 0.9996 | TIDAK | Pareto-optimal |
-| Rotation Merge Sort | 715.96 | 0.9998 | TIDAK | Pareto-optimal |
-| Full Rank | 4950.00 | 1.0000 | TIDAK | Pareto-optimal |
-| Exit Sort | 0.00 | 0.0059 | TIDAK | Terdominasi |
-| Quantum Bogo | 1.65 | 0.0027 | TIDAK | Terdominasi |
-| BogoBogoSort | 45.10 | 0.0108 | YA | Terdominasi |
-| Smooth Sort | 98.86 | 0.0212 | YA | Terdominasi |
-| Stalin Sort | 99.00 | 0.1094 | TIDAK | Terdominasi |
-| Thanos Sort | 99.00 | 0.5474 | YA | Terdominasi |
-| Miracle Sort | 99.00 | 0.0115 | TIDAK | Terdominasi |
-| Heap Sort | 99.42 | 0.0092 | YA | Terdominasi |
-| Sleep Sort | 100.00 | 0.0012 | TIDAK | Terdominasi |
-| 3-Way Quicksort | 100.79 | 0.0021 | YA | Terdominasi |
-| Silly Sort | 138.00 | 0.0160 | YA | Terdominasi |
-| PDQSort | 194.12 | 0.0695 | YA | Terdominasi |
-| Hater Sort | 196.01 | 0.0316 | YA | Terdominasi |
-| Quicksort (Hoare) | 197.22 | 0.3437 | YA | Terdominasi |
-| Patience Sort | 198.31 | 0.0081 | YA | Terdominasi |
-| Random Sort | 225.86 | 0.0323 | YA | Terdominasi |
-| Binary Insertion | 530.12 | 0.9995 | TIDAK | Terdominasi |
-| Recursive Binary Insertion | 530.63 | 0.9994 | TIDAK | Terdominasi |
-| Triple-Pivot Quicksort | 532.69 | 0.8642 | YA | Terdominasi |
-| Timsort | 532.70 | 0.9995 | YA | Terdominasi |
-| Merge Sort | 541.65 | 0.9996 | TIDAK | Terdominasi |
-| 4-way Merge Sort | 543.54 | 0.9995 | TIDAK | Terdominasi |
-| Bottom-up Merge Sort | 558.12 | 0.9995 | TIDAK | Terdominasi |
-| Parallel Merge Sort | 558.34 | 0.9994 | TIDAK | Terdominasi |
-| Tournament Sort | 558.46 | 0.0281 | TIDAK | Terdominasi |
-| Ping-pong Merge Sort | 558.79 | 0.9994 | TIDAK | Terdominasi |
-| Powersort | 561.78 | 0.9995 | YA | Terdominasi |
-| 3-way Merge Sort | 567.79 | 0.9994 | TIDAK | Terdominasi |
-| Natural Merge Sort | 577.34 | 0.9994 | YA | Terdominasi |
-| Quicksort (Ninther) | 605.01 | 0.9991 | YA | Terdominasi |
-| Stable Quicksort | 639.76 | 0.9983 | TIDAK | Terdominasi |
-| Cycle Sort | 642.75 | 0.0917 | YA | Terdominasi |
-| Quicksort (LTR) | 643.04 | 0.9983 | TIDAK | Terdominasi |
-| Tree Sort | 647.28 | 0.0306 | TIDAK | Terdominasi |
-| Dual-Pivot Quicksort | 649.88 | 0.9983 | TIDAK | Terdominasi |
-| Parallel Quicksort | 650.35 | 0.9983 | TIDAK | Terdominasi |
-| Quicksort (Middle) | 650.62 | 0.9983 | TIDAK | Terdominasi |
-| Quicksort (RTL) | 651.60 | 0.9982 | TIDAK | Terdominasi |
-| Quicksort (Random) | 653.86 | 0.9983 | TIDAK | Terdominasi |
-| Recursive Shellsort | 670.30 | 0.9996 | YA | Terdominasi |
-| Shellsort | 671.97 | 0.9996 | YA | Terdominasi |
-| Quicksort (Mo3) | 712.38 | 0.9975 | YA | Terdominasi |
-| BlockQuicksort | 721.98 | 0.9975 | TIDAK | Terdominasi |
-| Intro Sort | 722.02 | -0.7603 | TIDAK | Terdominasi |
-| Strand Sort | 741.47 | 0.0733 | TIDAK | Terdominasi |
-| Bucket Sort | 770.85 | 0.9972 | TIDAK | Terdominasi |
-| Recursive Comb Sort | 850.55 | 0.9999 | YA | Terdominasi |
-| Comb Sort | 852.49 | 0.9999 | YA | Terdominasi |
-| Hayate-Shiki | 932.11 | 0.2892 | YA | Terdominasi |
-| Bitonic Sort | 1036.82 | 0.6474 | YA | Terdominasi |
-| Circle Sort | 1203.00 | 0.9619 | YA | Terdominasi |
-| Slowsort | 1318.67 | 0.6127 | YA | Terdominasi |
-| Gnome Sort | 2546.68 | 0.9943 | YA | Terdominasi |
-| Bubble Sort | 2548.95 | 0.9943 | YA | Terdominasi |
-| Recursive Insertion | 2562.23 | 0.9943 | TIDAK | Terdominasi |
-| Recursive Bubble | 2563.32 | 0.9944 | YA | Terdominasi |
-| Insertion Sort | 2567.80 | 0.9942 | TIDAK | Terdominasi |
-| Recursive Gnome | 2576.45 | 0.9942 | YA | Terdominasi |
-| Recursive Cocktail | 2584.30 | 0.9943 | YA | Terdominasi |
-| Cocktail Shaker | 2592.21 | 0.9942 | YA | Terdominasi |
-| Recursive Odd-Even Sort | 2625.33 | 0.9942 | YA | Terdominasi |
-| Odd-Even Sort | 2640.50 | 0.9943 | YA | Terdominasi |
-| Selection Sort | 2737.22 | 0.9954 | YA | Terdominasi |
-| Double Selection | 2742.19 | 0.9969 | YA | Terdominasi |
-| Recursive Selection | 2742.29 | 0.9954 | YA | Terdominasi |
-| Cocktail Selection | 2744.95 | 0.9971 | YA | Terdominasi |
-| Recursive Double Selection | 2775.99 | 0.9969 | YA | Terdominasi |
-| Stooge Sort | 2903.40 | 1.0000 | YA | Terdominasi |
-| Pancake Sort | 3070.74 | 0.9994 | YA | Terdominasi |
-| Radix Sort | 4536.64 | 0.9976 | YA | Terdominasi |
-| Bogosort | 4950.00 | 0.5034 | YA | Terdominasi |
-
+|-----------|-------------|-----------------|------------|---------------|
+| Sleep Sort | 0.00 | 0.0105 | TIDAK | Pareto-optimal |
+| Quantum Bogo | 1.70 | 0.0128 | TIDAK | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5432 | TIDAK | Pareto-optimal |
+| Bottom-up Merge Sort (Quick) | 520.00 | 0.9810 | TIDAK | Pareto-optimal |
+| **Ford-Johnson** | 526.65 | 1.0000 | TIDAK | **Titik Lutut Produksi** |
+| Intelligent Design | 0.00 | -0.0094 | TIDAK | Terdominasi |
+| Socialist Sort | 0.00 | -0.0057 | TIDAK | Terdominasi |
+| Exit Sort | 0.00 | -0.0020 | TIDAK | Terdominasi |
+| BogoBogoSort | 25.88 | 0.1001 | YA | Terdominasi |
+| Silly Sort | 71.44 | 0.2465 | YA | Terdominasi |
+| Stalin Sort | 99.00 | 0.0956 | TIDAK | Terdominasi |
+| Thanos Sort | 99.00 | 0.5446 | YA | Terdominasi |
+| Genghis Khan Sort | 99.00 | 0.3464 | TIDAK | Terdominasi |
+| Hater Sort | 187.90 | 0.6617 | YA | Terdominasi |
+| Random Sort | 207.07 | 0.6355 | YA | Terdominasi |
+| PDQSort | 389.19 | 0.8649 | YA | Terdominasi |
+| Binary Insertion | 530.44 | 1.0000 | TIDAK | Terdominasi |
+| Recursive Binary Insertion | 530.71 | 1.0000 | TIDAK | Terdominasi |
+| Timsort | 532.94 | 1.0000 | YA | Terdominasi |
+| In-place Merge Sort | 541.22 | 1.0000 | TIDAK | Terdominasi |
+| Merge Sort | 541.74 | 1.0000 | TIDAK | Terdominasi |
+| 4-way Merge Sort | 543.41 | 1.0000 | TIDAK | Terdominasi |
+| Powersort | 557.00 | 1.0000 | YA | Terdominasi |
+| Bottom-up Merge Sort | 557.39 | 1.0000 | TIDAK | Terdominasi |
+| Parallel Merge Sort | 558.20 | 1.0000 | TIDAK | Terdominasi |
+| Tournament Sort | 558.51 | 1.0000 | TIDAK | Terdominasi |
+| Ping-pong Merge Sort | 558.79 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (Ninther) | 563.21 | 1.0000 | YA | Terdominasi |
+| 3-way Merge Sort | 567.29 | 1.0000 | TIDAK | Terdominasi |
+| Natural Merge Sort | 573.44 | 1.0000 | YA | Terdominasi |
+| Slowsort | 588.65 | 0.9515 | YA | Terdominasi |
+| Triple-Pivot Quicksort | 603.79 | 1.0000 | YA | Terdominasi |
+| Recursive Shellsort | 629.90 | 1.0000 | YA | Terdominasi |
+| Shellsort | 630.69 | 1.0000 | YA | Terdominasi |
+| Cycle Sort | 642.19 | 1.0000 | YA | Terdominasi |
+| Quicksort (RTL) | 643.53 | 1.0000 | TIDAK | Terdominasi |
+| Dual-Pivot Quicksort | 644.68 | 1.0000 | TIDAK | Terdominasi |
+| 3-Way Quicksort | 645.98 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (LTR) | 647.11 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (Middle) | 648.91 | 1.0000 | TIDAK | Terdominasi |
+| Stable Quicksort | 649.61 | 1.0000 | TIDAK | Terdominasi |
+| Parallel Quicksort | 649.71 | 1.0000 | TIDAK | Terdominasi |
+| Tree Sort | 651.29 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (Random) | 651.74 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (Hoare) | 654.99 | 1.0000 | YA | Terdominasi |
+| Quicksort (Mo3) | 675.68 | 1.0000 | YA | Terdominasi |
+| Circle Sort | 675.81 | 1.0000 | YA | Terdominasi |
+| Stooge Sort | 685.61 | 1.0000 | YA | Terdominasi |
+| Heap Sort | 714.26 | 1.0000 | YA | Terdominasi |
+| Rotation Merge Sort | 715.39 | 1.0000 | TIDAK | Terdominasi |
+| Smooth Sort | 715.68 | 1.0000 | YA | Terdominasi |
+| Intro Sort | 717.01 | 1.0000 | TIDAK | Terdominasi |
+| BlockQuicksort | 717.16 | 1.0000 | TIDAK | Terdominasi |
+| Comb Sort | 720.02 | 1.0000 | YA | Terdominasi |
+| Recursive Comb Sort | 722.44 | 1.0000 | YA | Terdominasi |
+| Bitonic Sort | 760.10 | 1.0000 | YA | Terdominasi |
+| Bucket Sort | 762.92 | 1.0000 | TIDAK | Terdominasi |
+| Bogosort | 809.84 | 1.0000 | YA | Terdominasi |
+| Full Rank | 810.80 | 1.0000 | TIDAK | Terdominasi |
+| Hayate-Shiki | 843.03 | 0.8808 | YA | Terdominasi |
+| Radix Sort | 894.55 | 1.0000 | YA | Terdominasi |
+| Patience Sort | 1015.22 | 1.0000 | YA | Terdominasi |
+| Strand Sort | 1126.76 | 1.0000 | YA | Terdominasi |
+| Pancake Sort | 1246.99 | 1.0000 | YA | Terdominasi |
+| Cocktail Selection | 2119.36 | 1.0000 | YA | Terdominasi |
+| Selection Sort | 2222.24 | 1.0000 | YA | Terdominasi |
+| Recursive Selection | 2223.15 | 1.0000 | YA | Terdominasi |
+| Recursive Double Selection | 2333.34 | 1.0000 | YA | Terdominasi |
+| Double Selection | 2366.46 | 1.0000 | YA | Terdominasi |
+| Insertion Sort | 2552.02 | 1.0000 | TIDAK | Terdominasi |
+| Recursive Insertion | 2561.01 | 1.0000 | TIDAK | Terdominasi |
+| Gnome Sort | 2565.27 | 1.0000 | YA | Terdominasi |
+| Bubble Sort | 2566.15 | 1.0000 | YA | Terdominasi |
+| Recursive Bubble | 2570.96 | 1.0000 | YA | Terdominasi |
+| Recursive Gnome | 2572.12 | 1.0000 | YA | Terdominasi |
+| Cocktail Shaker | 2572.25 | 1.0000 | YA | Terdominasi |
+| Recursive Cocktail | 2585.98 | 1.0000 | YA | Terdominasi |
+| Recursive Odd-Even Sort | 2589.52 | 1.0000 | YA | Terdominasi |
+| Odd-Even Sort | 2616.65 | 1.0000 | YA | Terdominasi |
 ### Mengapa Ford-Johnson adalah Titik Lutut Produksi
 
 Ford-Johnson ditetapkan sebagai **titik lutut matematis** karena mewakili keseimbangan absolut yang optimal antara upaya pengguna (jumlah perbandingan) dan akurasi peringkat (korelasi Kendall Tau) dengan memanfaatkan kemenangan transitif bayangan.
@@ -100,7 +99,7 @@ Ford-Johnson ditetapkan sebagai **titik lutut matematis** karena mewakili keseim
 #### 1. Optimalisasi Matematis (Lutut Skala Log)
 "Titik lutut" diidentifikasi menggunakan **metode Kneedle** dan **Jarak Tegak Lurus Maksimum** dari akord titik akhir pada garis depan Pareto. Saat memplot akurasi terhadap upaya pada sumbu skala log (log10(pertempuran + 1)), Ford-Johnson menempati bagian "siku" dari kurva tersebut.
 *   **Hasil yang Menurun:** Berpindah dari "Genghis Khan Sort" (99 pertempuran, 0.36 Tau) ke "Ford-Johnson" (~527 pertempuran, 0.999 Tau) menghasilkan pengurutan yang hampir sempurna dengan upaya minimal.
-*   **Dominasi:** Ford-Johnson mencapai akurasi yang hampir sempurna (~0.999) dengan lebih sedikit pertempuran (~527) daripada Vanilla Merge Sort (~0.90 Tau, ~542 pertempuran), secara efektif menggeser seluruh garis depan Pareto menuju efisiensi yang lebih tinggi.
+*   **Dominasi:** Ford-Johnson mencapai akurasi yang hampir sempurna (~0.999) dengan lebih sedikit pertempuran (~527) daripada Quick Merge Sort (~0.90 Tau, ~542 pertempuran), secara efektif menggeser seluruh garis depan Pareto menuju efisiensi yang lebih tinggi.
 
 #### 2. Batasan "Tanpa Duplikasi"
 PreferenceRank memprioritaskan efisiensi pengguna dengan mengecualikan algoritma apa pun yang menghasilkan perbandingan duplikat. Banyak algoritma berkinerja tinggi (Timsort, Quicksort, Shellsort) didiskualifikasi karena dioptimalkan untuk pola akses memori komputer daripada meminimalkan keputusan manusia yang unik. Ford-Johnson adalah algoritma "Murni Unik", memastikan setiap pertarungan memberikan data segar ke model penilaian.

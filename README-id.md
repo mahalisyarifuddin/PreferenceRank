@@ -17,18 +17,13 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 - **Peringkat Cepat:** Menggunakan **Ford-Johnson** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **kemenangan transitif bayangan** untuk akurasi yang unggul.
 
 ### Analisis Algoritma
-Berdasarkan analisis perbandingan terhadap 78 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Ford-Johnson** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
+Berdasarkan analisis perbandingan terhadap 80 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Ford-Johnson** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
 
 **Perbandingan (N=100):**
 | Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau |
-|-----------|-----------------------|-----------------------|
-| Genghis Khan Sort | 99.00 | 0.3565 |
-| Bottom-up Merge Sort | 520.00 | 0.9157 |
-| **Ford-Johnson** | 526.98 | 0.9995 |
-| In-place Merge Sort | 541.60 | 0.9996 |
-| Rotation Merge Sort | 715.96 | 0.9998 |
-| Full Rank | 4950.00 | 1.0000 |
-
+|-----------|-------------|-----------------|
+| Bottom-up Merge Sort (Quick) | 520.00 | 0.9810 |
+| **Ford-Johnson** | 526.65 | 1.0000 |
 *Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.*
 
 ## Mulai Cepat
