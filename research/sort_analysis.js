@@ -2052,7 +2052,7 @@ const algos = [
     { name: 'Recursive Shellsort', class: RecursiveShellSortProvider },
     { name: 'Recursive Comb Sort', class: RecursiveCombSortProvider },
     { name: 'Recursive Odd-Even Sort', class: RecursiveOddEvenSortProvider },
-    { name: 'Bottom-up Merge Sort (Quick)', class: QuickMergeSortProvider },
+    { name: 'Budgeted Merge Sort', class: QuickMergeSortProvider },
     { name: 'Ford-Johnson (Quick)', class: QuickPairProvider },
     { name: 'Merge Sort', class: MergeSortProvider },
     { name: 'Bottom-up Merge Sort', class: BottomUpMergeSortProvider },

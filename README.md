@@ -22,8 +22,8 @@ Based on a comparative analysis of 80 distinct sorting algorithms (see [ANALYSIS
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau |
 |-----------|-------------|-----------------|
-| Bottom-up Merge Sort (Quick) | 520.00 | 0.9810 |
-| **Ford-Johnson** | 526.65 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9804 |
+| **Ford-Johnson (Quick)** | 527.01 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
 
 ## Technical Details

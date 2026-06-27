@@ -22,8 +22,8 @@ Berdasarkan analisis perbandingan terhadap 80 algoritma pengurutan yang berbeda 
 **Perbandingan (N=100):**
 | Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau |
 |-----------|-------------|-----------------|
-| Bottom-up Merge Sort (Quick) | 520.00 | 0.9810 |
-| **Ford-Johnson** | 526.65 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9804 |
+| **Ford-Johnson (Quick)** | 527.01 | 1.0000 |
 *Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.*
 
 ## Mulai Cepat
