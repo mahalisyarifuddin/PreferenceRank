@@ -1668,7 +1668,7 @@
 						row.innerHTML = `
 						<div class="lb-main" role="button" tabindex="0" aria-expanded="false">
 							<div class="lb-col-rank"><span class="chevron" aria-hidden="true">&#x203a;</span><span>${rank}</span></div>
-							<div class="lb-col-item">${new Option(item).innerHTML}</div>
+							<div class="lb-col-item"></div>
 							${this.showGrade ? `<div class="lb-col-grade">${this.getGrade(score)}</div>` : ''}
 							<div class="lb-col-score">${score}${ci !== null ? `<span class="ci-badge">±${ci}</span>` : ''}</div>
 						</div>
@@ -1678,6 +1678,7 @@
 								<div class="detail-item"><span class="detail-label">${this.string('matches')}</span><span class="detail-value">${itemMatches[x]}</span></div>
 							</div>
 						</div>`;
+						row.querySelector('.lb-col-item').textContent = item;
 						const main = row.querySelector('.lb-main');
 						const toggle = ()=>{
 							const isExpanded = row.classList.toggle('expanded');
