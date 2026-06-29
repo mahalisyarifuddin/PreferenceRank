@@ -143,11 +143,27 @@ For Ford-Johnson (the new Production Knee Point):
 
 ---
 
-## 3. Bradley-Terry Convergence Analysis
+## 3. Search Algorithm Analysis
+
+While PreferenceRank focuses on ranking, the underlying sorting algorithms frequently utilize search techniques to place items. We compared Linear Search and Binary Search to quantify their efficiency in terms of unique comparisons ("battles").
+
+### Results (Average Battles)
+| N | Linear Search | Binary Search | Efficiency Gain |
+|---|---|---|---|
+| 10 | 5.51 | 2.89 | ~47% |
+| 100 | 50.24 | 5.80 | ~88% |
+| 1000 | 499.94 | 8.99 | ~98% |
+
+### Analysis
+Binary search demonstrates logarithmic efficiency (O(log N)), drastically reducing the number of comparisons as the list size grows. This efficiency is directly reflected in sorting performance; for example, **Binary Insertion Sort** (~531 battles at N=100) significantly outperforms vanilla **Insertion Sort** (~2547 battles at N=100) by utilizing binary search for element placement.
+
+---
+
+## 4. Bradley-Terry Convergence Analysis
 
 We analyzed the Minorization-Maximization (MM) algorithm's convergence and identified 1e-7 as the knee point threshold. This optimization saves ~43% of iterations while maintaining a maximum score error of <0.001 (negligible for integer-rounded scores).
 
-## 4. Benchmark Stability and Trial Optimization
+## 5. Benchmark Stability and Trial Optimization
 
 To ensure the reliability of our rankings, we analyzed the impact of trial counts on benchmark stability. The optimal trial count was identified as **200** using a log-scale knee point analysis of the standard error of the mean (SEM).
 

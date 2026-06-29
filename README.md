@@ -26,6 +26,9 @@ Based on a comparative analysis of 80 distinct sorting algorithms (see [ANALYSIS
 | **Ford-Johnson (Quick)** | 527.01 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
 
+### Search Analysis
+We also analyzed the efficiency of search algorithms within the context of comparison-based operations. Binary search achieves logarithmic efficiency ($O(\log N)$), significantly outperforming linear search ($O(N)$) as list sizes grow, which is critical for algorithms like Binary Insertion Sort. Detailed benchmarks for N=10, 100, and 1000 can be found in [ANALYSIS.md](ANALYSIS.md).
+
 ## Technical Details
 PreferenceRank uses the **Minorization-Maximization (MM) algorithm** to find the Maximum Likelihood Estimate (MLE) for the Bradley-Terry model. This iterative approach ensures guaranteed convergence and efficient score calculations (O(N²) per iteration), maintaining accuracy and stability even for larger datasets without the computational overhead of matrix operations.
 

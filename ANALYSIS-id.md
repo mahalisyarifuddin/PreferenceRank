@@ -141,11 +141,27 @@ Untuk Ford-Johnson (Titik Lutut Produksi yang baru):
 
 ---
 
-## 3. Analisis Konvergensi Bradley-Terry
+## 3. Analisis Algoritma Pencarian
+
+Meskipun PreferenceRank berfokus pada pemeringkatan, algoritma pengurutan yang mendasarinya sering kali menggunakan teknik pencarian untuk menempatkan item. Kami membandingkan Pencarian Linear (Linear Search) dan Pencarian Biner (Binary Search) untuk mengukur efisiensinya dalam hal perbandingan unik ("pertempuran").
+
+### Hasil (Rata-rata Pertempuran)
+| N | Pencarian Linear | Pencarian Biner | Keuntungan Efisiensi |
+|---|---|---|---|
+| 10 | 5.51 | 2.89 | ~47% |
+| 100 | 50.24 | 5.80 | ~88% |
+| 1000 | 499.94 | 8.99 | ~98% |
+
+### Analisis
+Pencarian biner menunjukkan efisiensi logaritmik (O(log N)), yang secara drastis mengurangi jumlah perbandingan seiring bertambahnya ukuran daftar. Efisiensi ini tercermin langsung dalam kinerja pengurutan; misalnya, **Binary Insertion Sort** (~531 pertempuran pada N=100) secara signifikan mengungguli **Insertion Sort** standar (~2547 pertempuran pada N=100) dengan memanfaatkan pencarian biner untuk penempatan elemen.
+
+---
+
+## 4. Analisis Konvergensi Bradley-Terry
 
 Kami menganalisis konvergensi algoritma Minorization-Maximization (MM) dan mengidentifikasi 1e-7 sebagai ambang titik lutut. Optimalisasi ini menghemat ~43% iterasi sambil mempertahankan kesalahan skor maksimum <0,001 (diabaikan untuk skor integer yang dibulatkan).
 
-## 4. Stabilitas Tolok Ukur dan Optimasi Uji Coba
+## 5. Stabilitas Tolok Ukur dan Optimasi Uji Coba
 
 Untuk memastikan keandalan peringkat kami, kami menganalisis dampak jumlah uji coba terhadap stabilitas tolok ukur. Jumlah uji coba optimal diidentifikasi sebagai **200** menggunakan analisis titik lutut skala log dari kesalahan standar rata-rata (SEM).
 

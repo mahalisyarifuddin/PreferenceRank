@@ -26,6 +26,14 @@ Berdasarkan analisis perbandingan terhadap 80 algoritma pengurutan yang berbeda 
 | **Ford-Johnson (Quick)** | 527.01 | 1.0000 |
 *Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.*
 
+### Analisis Pencarian
+Kami juga menganalisis efisiensi algoritma pencarian dalam konteks operasi berbasis perbandingan. Pencarian biner mencapai efisiensi logaritmik ($O(\log N)$), secara signifikan mengungguli pencarian linear ($O(N)$) seiring bertambahnya ukuran daftar, yang sangat penting untuk algoritma seperti Binary Insertion Sort. Tolok ukur terperinci untuk N=10, 100, dan 1000 dapat ditemukan di [ANALYSIS-id.md](ANALYSIS-id.md).
+
+## Rincian Teknis
+PreferenceRank menggunakan **algoritma Minorization-Maximization (MM)** untuk menemukan Estimasi Kemungkinan Maksimum (MLE) bagi model Bradley-Terry. Pendekatan iteratif ini memastikan konvergensi yang terjamin dan penghitungan skor yang efisien (O(N²) per iterasi), menjaga akurasi dan stabilitas bahkan untuk kumpulan data yang lebih besar tanpa beban komputasi operasi matriks.
+
+Berdasarkan **analisis titik lutut**, ambang konvergensi ditetapkan ke 1e-7. Nilai ini memberikan pengurangan rata-rata ~43% dalam jumlah iterasi dibandingkan dengan presisi yang lebih tinggi (1e-12) sambil memastikan kesalahan log-strength tetap berada di bawah ambang batas yang mempengaruhi pembulatan skor Elo integer.
+
 ## Mulai Cepat
 1. Unduh file `PreferenceRank.html` dari repositori.
 2. Buka file tersebut di peramban web modern apa pun.
