@@ -13,173 +13,90 @@ Kami membandingkan 87 algoritma pengurutan. Persyaratan utama untuk produksi ada
 ### Hasil (N=100)
 | Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau | Duplikasi | Status Pareto |
 |-----------|-------------|-----------------|------------|---------------|
-| Sleep Sort | 0.00 | -0.0034 | NO |  Pareto-optimal |
-
-| Quantum Bogo | 1.59 | 0.0086 | NO |  Pareto-optimal |
-
-| Miracle Sort | 99.00 | 0.5044 | NO |  Pareto-optimal |
-
-| Budgeted Merge Sort | 520.00 | 0.9633 | NO |  Pareto-optimal |
-
-| **Ford-Johnson (Quick)** | 526.84 | 1.0000 | NO |  **Titik Lutut Produksi** |
-
-| Intelligent Design | 0.00 | -0.0027 | NO |  Terdominasi |
-
-| Socialist Sort | 0.00 | -0.0018 | NO |  Terdominasi |
-
-| Exit Sort | 0.00 | 0.0023 | NO |  Terdominasi |
-
-| BogoBogoSort | 26.50 | 0.0015 | YES |  Terdominasi |
-
-| Silly Sort | 71.31 | 0.1265 | YES |  Terdominasi |
-
-| Stalin Sort | 99.00 | 0.0403 | NO |  Terdominasi |
-
-| Thanos Sort | 99.00 | 0.4947 | YES |  Terdominasi |
-
-| Genghis Khan Sort | 99.00 | 0.3582 | NO |  Terdominasi |
-
-| Hater Sort | 187.90 | 0.5598 | YES |  Terdominasi |
-
-| Random Sort | 212.36 | 0.5539 | YES |  Terdominasi |
-
-| Recursive Binary Insertion | 530.88 | 1.0000 | NO |  Terdominasi |
-
-| Binary Gnome | 530.09 | 1.0000 | NO |  Terdominasi |
-
-| Binary Insertion | 530.19 | 1.0000 | NO |  Terdominasi |
-
-| Timsort | 532.03 | 1.0000 | YES |  Terdominasi |
-
-| In-place Merge Sort | 541.80 | 1.0000 | NO |  Terdominasi |
-
-| Merge Sort | 541.70 | 1.0000 | NO |  Terdominasi |
-
-| 4-way Merge Sort | 541.91 | 1.0000 | NO |  Terdominasi |
-
-| Parallel Merge Sort | 558.92 | 1.0000 | NO |  Terdominasi |
-
-| Powersort | 556.58 | 1.0000 | YES |  Terdominasi |
-
-| Tournament Sort | 558.64 | 1.0000 | NO |  Terdominasi |
-
-| Bottom-up Merge Sort | 558.50 | 1.0000 | NO |  Terdominasi |
-
-| Ping-pong Merge Sort | 558.36 | 1.0000 | NO |  Terdominasi |
-
-| Quicksort (Ninther) | 563.43 | 1.0000 | YES |  Terdominasi |
-
-| 3-way Merge Sort | 567.47 | 1.0000 | NO |  Terdominasi |
-
-| Natural Merge Sort | 574.03 | 1.0000 | YES |  Terdominasi |
-
-| Slowsort | 587.45 | 0.9434 | YES |  Terdominasi |
-
-| Triple-Pivot Quicksort | 612.89 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Shellsort | 629.41 | 1.0000 | YES |  Terdominasi |
-
-| Shellsort | 628.50 | 1.0000 | YES |  Terdominasi |
-
-| Tree Sort | 641.87 | 1.0000 | NO |  Terdominasi |
-
-| Stable Quicksort | 636.94 | 1.0000 | NO |  Terdominasi |
-
-| Quicksort (Random) | 650.41 | 1.0000 | NO |  Terdominasi |
-
-| Quicksort (RTL) | 647.44 | 1.0000 | NO |  Terdominasi |
-
-| Quicksort (Middle) | 647.32 | 1.0000 | NO |  Terdominasi |
-
-| Cycle Sort | 650.31 | 1.0000 | YES |  Terdominasi |
-
-| Binary Patience | 616.15 | 1.0000 | YES |  Terdominasi |
-
-| 3-Way Quicksort | 655.76 | 1.0000 | NO |  Terdominasi |
-
-| Quicksort (Hoare) | 659.50 | 1.0000 | YES |  Terdominasi |
-
-| Quicksort (LTR) | 645.52 | 1.0000 | NO |  Terdominasi |
-
-| Parallel Quicksort | 648.10 | 1.0000 | NO |  Terdominasi |
-
-| Dual-Pivot Quicksort | 653.62 | 1.0000 | NO |  Terdominasi |
-
-| Quicksort (Mo3) | 683.28 | 1.0000 | YES |  Terdominasi |
-
-| Circle Sort | 676.01 | 1.0000 | YES |  Terdominasi |
-
-| Stooge Sort | 689.07 | 1.0000 | YES |  Terdominasi |
-
-| Rotation Merge Sort | 714.14 | 1.0000 | NO |  Terdominasi |
-
-| BlockQuicksort | 720.32 | 1.0000 | NO |  Terdominasi |
-
-| Heap Sort | 717.29 | 1.0000 | YES |  Terdominasi |
-
-| Smooth Sort | 718.78 | 1.0000 | YES |  Terdominasi |
-
-| Comb Sort | 721.29 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Comb Sort | 720.66 | 1.0000 | YES |  Terdominasi |
-
-| Binary Shell | 675.92 | 1.0000 | YES |  Terdominasi |
-
-| Intro Sort | 715.91 | 1.0000 | NO |  Terdominasi |
-
-| PDQSort | 741.35 | 1.0000 | YES |  Terdominasi |
-
-| Bucket Sort | 787.75 | 1.0000 | NO |  Terdominasi |
-
-| Bitonic Sort | 761.04 | 1.0000 | YES |  Terdominasi |
-
-| Binary Merge | 785.93 | 1.0000 | NO |  Terdominasi |
-
-| Full Rank | 810.37 | 1.0000 | NO |  Terdominasi |
-
-| Bogosort | 811.64 | 1.0000 | YES |  Terdominasi |
-
-| Binary Bottom-up Merge | 837.20 | 1.0000 | NO |  Terdominasi |
-
-| Hayate-Shiki | 845.65 | 0.8410 | YES |  Terdominasi |
-
-| Radix Sort | 921.33 | 1.0000 | YES |  Terdominasi |
-
-| Patience Sort | 1022.40 | 1.0000 | YES |  Terdominasi |
-
-| Strand Sort | 1129.54 | 1.0000 | YES |  Terdominasi |
-
-| Pancake Sort | 1261.09 | 1.0000 | YES |  Terdominasi |
-
-| Cocktail Selection | 2097.59 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Selection | 2209.41 | 1.0000 | YES |  Terdominasi |
-
-| Selection Sort | 2215.76 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Double Selection | 2344.50 | 1.0000 | YES |  Terdominasi |
-
-| Double Selection | 2364.53 | 1.0000 | YES |  Terdominasi |
-
-| Bubble Sort | 2557.46 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Insertion | 2588.43 | 1.0000 | NO |  Terdominasi |
-
-| Insertion Sort | 2572.92 | 1.0000 | NO |  Terdominasi |
-
-| Recursive Gnome | 2547.43 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Cocktail | 2550.98 | 1.0000 | YES |  Terdominasi |
-
-| Gnome Sort | 2580.57 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Bubble | 2598.00 | 1.0000 | YES |  Terdominasi |
-
-| Odd-Even Sort | 2600.40 | 1.0000 | YES |  Terdominasi |
-
-| Cocktail Shaker | 2575.37 | 1.0000 | YES |  Terdominasi |
-
-| Recursive Odd-Even Sort | 2598.40 | 1.0000 | YES |  Terdominasi |
+| **Ford-Johnson (Quick)** | 526.84 | 1.0000 | TIDAK | **Titik Lutut Produksi** |
+| Exit Sort | 0.00 | 0.0023 | TIDAK | Pareto-optimal |
+| Quantum Bogo | 1.59 | 0.0086 | TIDAK | Pareto-optimal |
+| Miracle Sort | 99.00 | 0.5044 | TIDAK | Pareto-optimal |
+| Budgeted Merge Sort | 520.00 | 0.9633 | TIDAK | Pareto-optimal |
+| Socialist Sort | 0.00 | -0.0018 | TIDAK | Terdominasi |
+| Intelligent Design | 0.00 | -0.0027 | TIDAK | Terdominasi |
+| Sleep Sort | 0.00 | -0.0034 | TIDAK | Terdominasi |
+| BogoBogoSort | 26.50 | 0.0015 | YA | Terdominasi |
+| Silly Sort | 71.31 | 0.1265 | YA | Terdominasi |
+| Thanos Sort | 99.00 | 0.4947 | YA | Terdominasi |
+| Genghis Khan Sort | 99.00 | 0.3582 | TIDAK | Terdominasi |
+| Stalin Sort | 99.00 | 0.0403 | TIDAK | Terdominasi |
+| Hater Sort | 187.90 | 0.5598 | YA | Terdominasi |
+| Random Sort | 212.36 | 0.5539 | YA | Terdominasi |
+| Binary Gnome | 530.09 | 1.0000 | TIDAK | Terdominasi |
+| Binary Insertion | 530.19 | 1.0000 | TIDAK | Terdominasi |
+| Recursive Binary Insertion | 530.88 | 1.0000 | TIDAK | Terdominasi |
+| Timsort | 532.03 | 1.0000 | YA | Terdominasi |
+| Merge Sort | 541.70 | 1.0000 | TIDAK | Terdominasi |
+| In-place Merge Sort | 541.80 | 1.0000 | TIDAK | Terdominasi |
+| 4-way Merge Sort | 541.91 | 1.0000 | TIDAK | Terdominasi |
+| Powersort | 556.58 | 1.0000 | YA | Terdominasi |
+| Ping-pong Merge Sort | 558.36 | 1.0000 | TIDAK | Terdominasi |
+| Bottom-up Merge Sort | 558.50 | 1.0000 | TIDAK | Terdominasi |
+| Tournament Sort | 558.64 | 1.0000 | TIDAK | Terdominasi |
+| Parallel Merge Sort | 558.92 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (Ninther) | 563.43 | 1.0000 | YA | Terdominasi |
+| 3-way Merge Sort | 567.47 | 1.0000 | TIDAK | Terdominasi |
+| Natural Merge Sort | 574.03 | 1.0000 | YA | Terdominasi |
+| Slowsort | 587.45 | 0.9434 | YA | Terdominasi |
+| Triple-Pivot Quicksort | 612.89 | 1.0000 | YA | Terdominasi |
+| Binary Patience | 616.15 | 1.0000 | YA | Terdominasi |
+| Shellsort | 628.50 | 1.0000 | YA | Terdominasi |
+| Recursive Shellsort | 629.41 | 1.0000 | YA | Terdominasi |
+| Stable Quicksort | 636.94 | 1.0000 | TIDAK | Terdominasi |
+| Tree Sort | 641.87 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (LTR) | 645.52 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (Middle) | 647.32 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (RTL) | 647.44 | 1.0000 | TIDAK | Terdominasi |
+| Parallel Quicksort | 648.10 | 1.0000 | TIDAK | Terdominasi |
+| Cycle Sort | 650.31 | 1.0000 | YA | Terdominasi |
+| Quicksort (Random) | 650.41 | 1.0000 | TIDAK | Terdominasi |
+| Dual-Pivot Quicksort | 653.62 | 1.0000 | TIDAK | Terdominasi |
+| 3-Way Quicksort | 655.76 | 1.0000 | TIDAK | Terdominasi |
+| Quicksort (Hoare) | 659.50 | 1.0000 | YA | Terdominasi |
+| Binary Shell | 675.92 | 1.0000 | YA | Terdominasi |
+| Circle Sort | 676.01 | 1.0000 | YA | Terdominasi |
+| Quicksort (Mo3) | 683.28 | 1.0000 | YA | Terdominasi |
+| Stooge Sort | 689.07 | 1.0000 | YA | Terdominasi |
+| Rotation Merge Sort | 714.14 | 1.0000 | TIDAK | Terdominasi |
+| Intro Sort | 715.91 | 1.0000 | TIDAK | Terdominasi |
+| Heap Sort | 717.29 | 1.0000 | YA | Terdominasi |
+| Smooth Sort | 718.78 | 1.0000 | YA | Terdominasi |
+| BlockQuicksort | 720.32 | 1.0000 | TIDAK | Terdominasi |
+| Recursive Comb Sort | 720.66 | 1.0000 | YA | Terdominasi |
+| Comb Sort | 721.29 | 1.0000 | YA | Terdominasi |
+| PDQSort | 741.35 | 1.0000 | YA | Terdominasi |
+| Bitonic Sort | 761.04 | 1.0000 | YA | Terdominasi |
+| Binary Merge | 785.93 | 1.0000 | TIDAK | Terdominasi |
+| Bucket Sort | 787.75 | 1.0000 | TIDAK | Terdominasi |
+| Full Rank | 810.37 | 1.0000 | TIDAK | Terdominasi |
+| Bogosort | 811.64 | 1.0000 | YA | Terdominasi |
+| Binary Bottom-up Merge | 837.20 | 1.0000 | TIDAK | Terdominasi |
+| Hayate-Shiki | 845.65 | 0.8410 | YA | Terdominasi |
+| Radix Sort | 921.33 | 1.0000 | YA | Terdominasi |
+| Patience Sort | 1022.40 | 1.0000 | YA | Terdominasi |
+| Strand Sort | 1129.54 | 1.0000 | YA | Terdominasi |
+| Pancake Sort | 1261.09 | 1.0000 | YA | Terdominasi |
+| Cocktail Selection | 2097.59 | 1.0000 | YA | Terdominasi |
+| Recursive Selection | 2209.41 | 1.0000 | YA | Terdominasi |
+| Selection Sort | 2215.76 | 1.0000 | YA | Terdominasi |
+| Recursive Double Selection | 2344.50 | 1.0000 | YA | Terdominasi |
+| Double Selection | 2364.53 | 1.0000 | YA | Terdominasi |
+| Recursive Gnome | 2547.43 | 1.0000 | YA | Terdominasi |
+| Recursive Cocktail | 2550.98 | 1.0000 | YA | Terdominasi |
+| Bubble Sort | 2557.46 | 1.0000 | YA | Terdominasi |
+| Insertion Sort | 2572.92 | 1.0000 | TIDAK | Terdominasi |
+| Cocktail Shaker | 2575.37 | 1.0000 | YA | Terdominasi |
+| Gnome Sort | 2580.57 | 1.0000 | YA | Terdominasi |
+| Recursive Insertion | 2588.43 | 1.0000 | TIDAK | Terdominasi |
+| Recursive Bubble | 2598.00 | 1.0000 | YA | Terdominasi |
+| Recursive Odd-Even Sort | 2598.40 | 1.0000 | YA | Terdominasi |
+| Odd-Even Sort | 2600.40 | 1.0000 | YA | Terdominasi |
 
 ### Mengapa Ford-Johnson adalah Titik Lutut Produksi
 
