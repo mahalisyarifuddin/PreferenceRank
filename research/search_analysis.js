@@ -52,7 +52,6 @@ function simulate(n, ProviderClass, trials = 10000) {
     for (let t = 0; t < trials; t++) {
         // target index in [0, n-1].
         // For simplicity, we assume the target is always in the array for these basic tests.
-        // The GFG article mentions searching for a target element.
         const targetIdx = Math.floor(Math.random() * n);
         const provider = new ProviderClass(n);
         let result;
