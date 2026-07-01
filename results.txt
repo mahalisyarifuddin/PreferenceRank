@@ -1,0 +1,86 @@
+Simulating N=100, trials=250 with 4 workers
+Algorithm	Avg Battles	Avg Kendall Tau	Duplicates
+3-way Merge Sort	566.98	1.0000	NO
+Recursive Bubble	2573.82	1.0000	YES
+Tree Sort	650.31	1.0000	NO
+BlockQuicksort	716.51	1.0000	NO
+4-way Merge Sort	543.55	1.0000	NO
+Recursive Insertion	2571.40	1.0000	NO
+PDQSort	733.74	1.0000	YES
+In-place Merge Sort	541.90	1.0000	NO
+Parallel Quicksort	646.11	1.0000	NO
+Recursive Selection	2213.09	1.0000	YES
+Rotation Merge Sort	716.25	1.0000	NO
+Bubble Sort	2582.07	1.0000	YES
+Timsort	532.54	1.0000	YES
+Recursive Cocktail	2584.35	1.0000	YES
+Bucket Sort	764.14	1.0000	NO
+Powersort	557.57	1.0000	YES
+Recursive Gnome	2556.45	1.0000	YES
+BogoBogoSort	25.90	0.0885	YES
+Stalin Sort	99.00	0.0974	NO
+Thanos Sort	99.00	0.5419	YES
+Miracle Sort	99.00	0.5439	NO
+Intelligent Design	0.00	0.0053	NO
+Quantum Bogo	1.66	0.0224	NO
+Parallel Merge Sort	558.98	1.0000	NO
+Selection Sort	2239.11	1.0000	YES
+Hayate-Shiki	844.80	0.8803	YES
+Recursive Binary Insertion	530.82	1.0000	NO
+Intro Sort	726.74	1.0000	NO
+Shellsort	630.55	1.0000	YES
+Insertion Sort	2571.07	1.0000	NO
+Recursive Double Selection	2358.47	1.0000	YES
+Strand Sort	1132.34	1.0000	YES
+Patience Sort	4.33	0.0271	YES
+Binary Insertion	530.49	1.0000	NO
+Quicksort (RTL)	643.34	1.0000	NO
+Recursive Shellsort	630.00	1.0000	YES
+Smooth Sort	715.91	1.0000	YES
+Radix Sort	891.56	1.0000	YES
+Gnome Sort	2561.68	1.0000	YES
+Recursive Comb Sort	718.72	1.0000	YES
+Circle Sort	673.88	1.0000	YES
+Quicksort (LTR)	649.52	1.0000	NO
+Recursive Odd-Even Sort	2611.72	1.0000	YES
+Double Selection	2346.88	1.0000	YES
+Stooge Sort	688.33	1.0000	YES
+Quicksort (Random)	648.36	1.0000	NO
+Binary Gnome	530.99	1.0000	NO
+Cocktail Selection	2092.46	1.0000	YES
+Socialist Sort	0.00	0.0048	NO
+Quicksort (Middle)	650.46	1.0000	NO
+Genghis Khan Sort	99.00	0.3337	NO
+Binary Shell	673.04	1.0000	YES
+Hater Sort	187.89	0.6646	YES
+Exit Sort	0.00	-0.0061	NO
+Random Sort	216.07	0.6530	YES
+Silly Sort	71.33	0.2418	YES
+Sleep Sort	0.00	-0.0079	NO
+Quicksort (Mo3)	669.64	1.0000	YES
+Binary Patience	612.45	1.0000	YES
+Quicksort (Ninther)	562.17	1.0000	YES
+Quicksort (Hoare)	649.73	1.0000	YES
+Binary Merge	4.14	0.0313	YES
+3-Way Quicksort	642.58	1.0000	NO
+Binary Bottom-up Merge	836.41	1.0000	NO
+Budgeted Merge Sort	520.00	0.9808	NO
+Dual-Pivot Quicksort	645.14	1.0000	NO
+Ford-Johnson (Quick)	526.58	1.0000	NO
+Triple-Pivot Quicksort	605.17	1.0000	YES
+Merge Sort	541.90	1.0000	NO
+Stable Quicksort	638.91	1.0000	NO
+Bottom-up Merge Sort	558.80	1.0000	NO
+Natural Merge Sort	572.73	1.0000	YES
+Ping-pong Merge Sort	557.65	1.0000	NO
+Bogosort	810.90	1.0000	YES
+Full Rank	806.20	1.0000	NO
+Cycle Sort	648.08	1.0000	YES
+Bitonic Sort	762.48	1.0000	YES
+Heap Sort	716.80	1.0000	YES
+Comb Sort	725.26	1.0000	YES
+Tournament Sort	558.72	1.0000	NO
+Odd-Even Sort	2592.52	1.0000	YES
+Slowsort	590.15	0.9505	YES
+Pancake Sort	1249.52	1.0000	YES
+Cocktail Shaker	2581.46	1.0000	YES
