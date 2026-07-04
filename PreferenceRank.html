@@ -1297,12 +1297,7 @@
 					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
-					if (battle.providerType === 'quick') {
-						const last = this.history[this.history.length - 1];
-						last ? this.provider.restore(last.state, this.matches) : this.provider._start(this.matches);
-					} else {
-						Object.assign(this.provider, battle.provider);
-					}
+					Object.assign(this.provider, battle.provider);
 					elements.allowTies.checked = this.allowTies;
 					elements.quickRank.checked = battle.providerType === 'quick';
 					this.setTies(this.allowTies);

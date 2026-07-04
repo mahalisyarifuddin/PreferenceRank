@@ -7,3 +7,8 @@
 **Mode:** Medic
 **Learning:** In vanilla JS projects, interpolating user inputs into an `innerHTML` string (e.g. `div.innerHTML = "<input value='" + userInput + "'>"`) exposes an XSS vulnerability.
 **Action:** When dynamically constructing HTML nodes that require user input values, either create the node with `innerHTML` lacking the value and then explicitly set `element.value = userInput`, or use proper DOM element creation techniques (e.g., `document.createElement`). Ensure no ad-hoc tests (like JS files or `package.json` configurations generated for verifying the XSS fix) are left behind.
+
+## 2024-05-24 - QuickPairProvider State Restoration
+**Mode:** Medic
+**Learning:** `QuickPairProvider` manages its execution via a serializable state stack and plain object properties, unlike previous sorting providers that relied on replaying history via `_start()` or `restore()`. Therefore, it can be directly hydrated from `localStorage` using `Object.assign`. Calling the non-existent `_start` or the improperly functioning `restore` causes the app to crash or lose state when resuming a session.
+**Action:** When restoring provider state for new algorithms in `restoreBattle`, rely on flat property assignment if the provider was designed to cleanly serialize its internal state to the `localStorage` payload, avoiding the invocation of specialized lifecycle methods that are no longer part of the provider's API.
