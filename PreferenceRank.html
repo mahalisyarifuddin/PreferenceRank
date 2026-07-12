@@ -1410,6 +1410,17 @@
 						}
 					}
 
+					if (this.matches) {
+						for (const match of this.matches) {
+							if (match.result === 0.5) {
+								wins[match.a] += 0.5;
+								wins[match.b] += 0.5;
+								adjMaps[match.a].set(match.b, (adjMaps[match.a].get(match.b) || 0) + 1);
+								adjMaps[match.b].set(match.a, (adjMaps[match.b].get(match.a) || 0) + 1);
+							}
+						}
+					}
+
 					this.adj = adjMaps.map(m=>{
 						const row = new Int32Array(m.size * 2);
 						let k = 0;
