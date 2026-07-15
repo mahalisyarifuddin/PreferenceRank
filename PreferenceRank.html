@@ -1034,17 +1034,20 @@
 						this.pairs[i] = this.pairs[j];
 						this.pairs[j] = temp;
 					}
+					this.index = 0;
 				}
-				next(state) {
-					return this.pairs[state.step];
+				next() {
+					return this.index < this.pairs.length ? this.pairs[this.index++] : null;
 				}
 				getProgress(step) {
 					return `${step}/${this.pairs.length}`;
 				}
 				snap() {
-					return null;
+					return this.index;
 				}
-				restore() {}
+				restore(state) {
+					state !== null && state !== undefined && (this.index = state);
+				}
 			}
 			class QuickPairProvider {
 				constructor(count) {
@@ -1550,7 +1553,7 @@
 					this.clear();
 					const n = this.items.length;
 					let nextPair = this.provider.next(this, result);
-					while (nextPair && (this.reach[nextPair[0] * n + nextPair[1]] || this.reach[nextPair[1] * n + nextPair[0]])) {
+					while (this.provider instanceof QuickPairProvider && nextPair && (this.reach[nextPair[0] * n + nextPair[1]] || this.reach[nextPair[1] * n + nextPair[0]])) {
 						this.provider.isTransitiveDiscovery = true;
 						this.provider._lastTransitiveResult = this.reach[nextPair[0] * n + nextPair[1]] ? 1 : 0;
 						nextPair = this.provider.next(this, this.provider._lastTransitiveResult);
