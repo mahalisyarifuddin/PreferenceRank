@@ -1553,7 +1553,7 @@
 					this.clear();
 					const n = this.items.length;
 					let nextPair = this.provider.next(this, result);
-					while (nextPair && (this.reach[nextPair[0] * n + nextPair[1]] || this.reach[nextPair[1] * n + nextPair[0]])) {
+					while (this.provider instanceof QuickPairProvider && nextPair && (this.reach[nextPair[0] * n + nextPair[1]] || this.reach[nextPair[1] * n + nextPair[0]])) {
 						this.provider.isTransitiveDiscovery = true;
 						this.provider._lastTransitiveResult = this.reach[nextPair[0] * n + nextPair[1]] ? 1 : 0;
 						nextPair = this.provider.next(this, this.provider._lastTransitiveResult);
