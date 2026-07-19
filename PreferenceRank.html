@@ -1295,6 +1295,8 @@
 				}
 				restoreBattle(battle) {
 					Object.assign(this, battle);
+					if (this.reach) this.reach = new Uint8Array(Object.values(this.reach));
+					if (this.history) this.history.forEach(h => { if (h.reach) h.reach = new Uint8Array(Object.values(h.reach)); });
 					this.dirty = true;
 					this.showGrade = !!battle.showGrade;
 					elements.showGrade.checked = this.showGrade;
