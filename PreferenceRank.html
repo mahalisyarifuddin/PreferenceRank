@@ -1177,8 +1177,16 @@
 						this.save();
 					}
 					;
-					elements.allowTies.onchange = e=>this.setTies(e.target.checked);
-					elements.quickRank.onchange = ()=>this.updateInputState();
+					elements.allowTies.onchange = e=>{
+						this.setTies(e.target.checked);
+						this.save();
+					}
+					;
+					elements.quickRank.onchange = ()=>{
+						this.updateInputState();
+						this.save();
+					}
+					;
 					elements.showGrade.onchange = e=>{
 						this.showGrade = e.target.checked;
 						this.save();
@@ -1243,7 +1251,9 @@
 						settings: {
 							theme: elements.theme.value,
 							language: this.language,
-							showGrade: this.showGrade
+							showGrade: this.showGrade,
+							allowTies: elements.allowTies.checked,
+							quickRank: elements.quickRank.checked
 						},
 						battle: this.provider ? {
 							...this,
@@ -1259,7 +1269,10 @@
 							data.settings && (this.theme(data.settings.theme),
 							this.lang(data.settings.language),
 							this.showGrade = !!data.settings.showGrade,
-							elements.showGrade.checked = this.showGrade);
+							elements.showGrade.checked = this.showGrade,
+							elements.allowTies.checked = !!data.settings.allowTies,
+							this.setTies(elements.allowTies.checked),
+							elements.quickRank.checked = !!data.settings.quickRank);
 							data.inputValue && (elements.items.value = data.inputValue,
 							this.updateInputState());
 							if (data.battle) return data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle);
@@ -1287,9 +1300,6 @@
 				startNewSession() {
 					elements.sessionModal.classList.add('hidden');
 					this.pending = null;
-					elements.items.value = '';
-					elements.allowTies.checked = false;
-					elements.quickRank.checked = false;
 					this.updateInputState();
 					this.reset();
 				}
