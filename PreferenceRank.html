@@ -1306,7 +1306,6 @@
 				restoreBattle(battle) {
 					Object.assign(this, battle);
 					if (this.reach) this.reach = new Uint8Array(Object.values(this.reach));
-					if (this.history) this.history.forEach(h => { if (h.reach) h.reach = new Uint8Array(Object.values(h.reach)); });
 					this.dirty = true;
 					this.showGrade = !!battle.showGrade;
 					elements.showGrade.checked = this.showGrade;
@@ -1530,8 +1529,7 @@
 						pair: this.pair,
 						step: this.step,
 						swapped: this.swapped,
-						state: this.provider.snap(),
-						reach: new Uint8Array(this.reach)
+						state: this.provider.snap()
 					});
 					const [a,b] = this.pair, n = this.items.length;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
@@ -1805,11 +1803,29 @@
 						const last = this.history.pop();
 						while (this.matches.length > last.step) this.matches.pop();
 						this.dirty = true;
+
+						const n = this.items.length;
+						this.reach = new Uint8Array(n * n);
+						for (let i = 0; i < n; i++) this.reach[i * n + i] = 1;
+
+						for (const match of this.matches) {
+							if (match.result === 1 || match.result === 0) {
+								const [w, l] = match.result === 1 ? [match.a, match.b] : [match.b, match.a];
+								if (!this.reach[w * n + l]) {
+									this.reach[w * n + l] = 1;
+									for (let i = 0; i < n; i++) {
+										if (this.reach[i * n + w]) {
+											for (let j = 0; j < n; j++) if (this.reach[l * n + j]) this.reach[i * n + j] = 1;
+										}
+									}
+								}
+							}
+						}
+
 						Object.assign(this, {
 							step: last.step,
 							pair: last.pair,
-							swapped: last.swapped,
-							reach: last.reach
+							swapped: last.swapped
 						});
 						this.provider.restore(last.state, this.matches);
 						this.render();

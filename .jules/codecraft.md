@@ -17,3 +17,8 @@
 **Mode:** Medic
 **Learning:** When saving session state to `localStorage`, `Uint8Array` objects (like the `reach` matrix) are serialized by `JSON.stringify` into plain objects with numeric string keys (e.g., `{"0": 1, "1": 0}`). When loaded via `JSON.parse`, they remain plain objects. Simply assigning these parsed objects back to properties expected to be `Uint8Array`s will cause downstream type errors when methods relying on array behavior or `new Uint8Array(plainObject)` are called.
 **Action:** When restoring serialized state that contains Typed Arrays, explicitly reconstruct the objects using `new Uint8Array(Object.values(parsedObject))` to ensure subsequent operations that depend on Typed Array semantics function correctly.
+
+## 2024-05-18 - [Fix localStorage QuotaExceededError from History bloat]
+**Mode:** ⚡ Bolt
+**Learning:** `Uint8Array` objects stored in arrays and stringified via JSON.stringify() expand massively (turning into dictionaries like `{"0":1, "1":0, ...}`). This causes massive state bloat in the `history` stack (e.g. 45MB for N=100), leading to `QuotaExceededError` in `localStorage`.
+**Action:** Do not serialize full state arrays (like $O(N^2)$ `reach` matrices) into the history stack when they can be deterministically rebuilt from a linear action log (like `matches`) during `undo()`.
