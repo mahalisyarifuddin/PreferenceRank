@@ -1521,6 +1521,16 @@
 					this.scores = Array.from(rawScores, v => Math.max(0, v + offset));
 					this.dirty = false;
 				}
+				_applyTransitiveClosure(w, l, n) {
+					if (!this.reach[w * n + l]) {
+						this.reach[w * n + l] = 1;
+						for (let i = 0; i < n; i++) {
+							if (this.reach[i * n + w]) {
+								for (let j = 0; j < n; j++) if (this.reach[l * n + j]) this.reach[i * n + j] = 1;
+							}
+						}
+					}
+				}
 				choose(winner) {
 					if (this.busy || elements.battleSection.classList.contains('hidden'))
 						return;
@@ -1540,14 +1550,7 @@
 					});
 					if (result === 1 || result === 0) {
 						const [w, l] = result === 1 ? [a, b] : [b, a];
-						if (!this.reach[w * n + l]) {
-							this.reach[w * n + l] = 1;
-							for (let i = 0; i < n; i++) {
-								if (this.reach[i * n + w]) {
-									for (let j = 0; j < n; j++) if (this.reach[l * n + j]) this.reach[i * n + j] = 1;
-								}
-							}
-						}
+						this._applyTransitiveClosure(w, l, n);
 					}
 					this.dirty = true;
 					this.step++;
@@ -1811,14 +1814,7 @@
 						for (const match of this.matches) {
 							if (match.result === 1 || match.result === 0) {
 								const [w, l] = match.result === 1 ? [match.a, match.b] : [match.b, match.a];
-								if (!this.reach[w * n + l]) {
-									this.reach[w * n + l] = 1;
-									for (let i = 0; i < n; i++) {
-										if (this.reach[i * n + w]) {
-											for (let j = 0; j < n; j++) if (this.reach[l * n + j]) this.reach[i * n + j] = 1;
-										}
-									}
-								}
+								this._applyTransitiveClosure(w, l, n);
 							}
 						}
 
