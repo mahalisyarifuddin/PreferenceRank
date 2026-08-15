@@ -1255,11 +1255,14 @@
 							allowTies: elements.allowTies.checked,
 							quickRank: elements.quickRank.checked
 						},
-						battle: this.provider ? {
-							...this,
-							provider: this.provider,
-							providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full'
-						} : null
+						battle: this.provider ? (()=>{
+							const { reach, ...battleData } = this;
+							return {
+								...battleData,
+								provider: this.provider,
+								providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full'
+							};
+						})() : null
 					}));
 				}
 				load() {
@@ -1305,7 +1308,7 @@
 				}
 				restoreBattle(battle) {
 					Object.assign(this, battle);
-					if (this.reach) this.reach = new Uint8Array(Object.values(this.reach));
+					this._rebuildReach();
 					this.dirty = true;
 					this.showGrade = !!battle.showGrade;
 					elements.showGrade.checked = this.showGrade;
@@ -1520,6 +1523,17 @@
 					}
 					this.scores = Array.from(rawScores, v => Math.max(0, v + offset));
 					this.dirty = false;
+				}
+				_rebuildReach() {
+					const n = this.items.length;
+					this.reach = new Uint8Array(n * n);
+					for (let i = 0; i < n; i++) this.reach[i * n + i] = 1;
+					for (const match of this.matches) {
+						if (match.result === 1 || match.result === 0) {
+							const [w, l] = match.result === 1 ? [match.a, match.b] : [match.b, match.a];
+							this._applyTransitiveClosure(w, l, n);
+						}
+					}
 				}
 				_applyTransitiveClosure(w, l, n) {
 					if (!this.reach[w * n + l]) {
@@ -1806,17 +1820,7 @@
 						const last = this.history.pop();
 						while (this.matches.length > last.step) this.matches.pop();
 						this.dirty = true;
-
-						const n = this.items.length;
-						this.reach = new Uint8Array(n * n);
-						for (let i = 0; i < n; i++) this.reach[i * n + i] = 1;
-
-						for (const match of this.matches) {
-							if (match.result === 1 || match.result === 0) {
-								const [w, l] = match.result === 1 ? [match.a, match.b] : [match.b, match.a];
-								this._applyTransitiveClosure(w, l, n);
-							}
-						}
+						this._rebuildReach();
 
 						Object.assign(this, {
 							step: last.step,
