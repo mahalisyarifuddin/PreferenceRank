@@ -2070,7 +2070,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 							quickRank: elements.quickRank.checked
 						},
 						battle: this.provider ? (()=>{
-							const { reach, ...battleData } = this;
+							const { reach, adj, stats, _rawScores, currentRanking, ...battleData } = this;
 							return {
 								...battleData,
 								provider: this.provider,
