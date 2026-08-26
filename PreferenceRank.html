@@ -1116,9 +1116,9 @@
 
 		@media (max-width: 600px) {
 			#battle, #tieWrap, #restartWrap { flex-direction: column; }
-			.lb-col-rank { flex: 0 0 64px; }
-			.lb-col-grade { flex: 0 0 56px; }
-			.lb-col-score { flex: 0 0 70px; }
+			.lb-col-rank { flex: 0 0 85px; }
+			.lb-col-grade { flex: 0 0 50px; }
+			.lb-col-score { flex: 0 0 85px; }
 		}
 
 		/* Rules unique to this app that have no equivalent in the core.
@@ -2070,7 +2070,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 							quickRank: elements.quickRank.checked
 						},
 						battle: this.provider ? (()=>{
-							const { reach, adj, stats, _rawScores, currentRanking, ...battleData } = this;
+							const { reach, ...battleData } = this;
 							return {
 								...battleData,
 								provider: this.provider,
