@@ -11,6 +11,7 @@ Kami membandingkan 85 algoritma pengurutan yang berbeda. Pengujian ini menambahk
 - **Uji coba:** 250 per algoritma.
 - **Perintah pengujian:** `node research/sort_analysis.js 100 250`
 - **Metrik:** rata-rata jumlah pertempuran unik dan rata-rata Kendall Tau terhadap kekuatan sebenarnya yang dibuat secara acak.
+- **Catatan uji ulang (2026-09-03):** audit ketepatan atas seluruh 85 provider ([research/PROVIDER_AUDIT.md](research/PROVIDER_AUDIT.md)) memperbaiki Intro Sort (orientasi perbandingan campuran), Tournament Sort (elemen terlemah terhapus), dan Hayate-Shiki (komparator penggabungan terbalik; Kendall Tau naik dari 0.8426 menjadi 1.0000). "Radix Sort" — yang bukan radix sort — diganti dengan **Binary Quicksort** yang setia, "Smooth Sort" diganti label menjadi **Heap Sort (Smooth Proxy)**, dan Silly Sort kini menjalankan rekursi silly yang sebenarnya. Baris keenam algoritma tersebut diukur ulang dengan protokol yang sama; baris lainnya dipertahankan dari run awal (setiap algoritma disimulasikan secara independen). Frontier Pareto dan titik lutut Ford-Johnson tidak berubah.
 
 ### Hasil (N=100)
 
@@ -22,12 +23,12 @@ Kami membandingkan 85 algoritma pengurutan yang berbeda. Pengujian ini menambahk
 | Sleep Sort | 0.00 | -0.0051 | TIDAK | Terdominasi |
 | Quantum Bogo | 1.65 | 0.0020 | TIDAK | Pareto-optimal |
 | BogoBogoSort | 26.63 | 0.0068 | YA | Terdominasi |
-| Silly Sort | 71.65 | 0.1126 | YA | Terdominasi |
 | Thanos Sort | 99.00 | 0.4994 | YA | Terdominasi |
 | Miracle Sort | 99.00 | 0.4991 | TIDAK | Pareto-optimal |
 | Genghis Khan Sort | 99.00 | 0.3576 | TIDAK | Terdominasi |
 | Stalin Sort | 99.00 | 0.0340 | TIDAK | Terdominasi |
 | Hater Sort | 188.08 | 0.5638 | YA | Terdominasi |
+| Silly Sort | 202.56 | 0.1266 | YA | Terdominasi |
 | Random Sort | 209.52 | 0.5567 | YA | Terdominasi |
 | Budgeted Merge Sort | 520.00 | 0.9631 | TIDAK | Pareto-optimal |
 | Ford-Johnson (Quick) | 526.64 | 1.0000 | TIDAK | **Titik pilihan produksi** |
@@ -40,7 +41,7 @@ Kami membandingkan 85 algoritma pengurutan yang berbeda. Pengujian ini menambahk
 | 4-way Merge Sort | 543.93 | 1.0000 | TIDAK | Terdominasi |
 | Powersort | 557.14 | 1.0000 | YA | Terdominasi |
 | Ping-pong Merge Sort | 558.13 | 1.0000 | TIDAK | Terdominasi |
-| Tournament Sort | 558.46 | 1.0000 | TIDAK | Terdominasi |
+| Tournament Sort | 558.27 | 1.0000 | TIDAK | Terdominasi |
 | Bottom-up Merge Sort | 558.53 | 1.0000 | TIDAK | Terdominasi |
 | Parallel Merge Sort | 558.88 | 1.0000 | TIDAK | Terdominasi |
 | Quicksort (Ninther) | 562.76 | 1.0000 | YA | Terdominasi |
@@ -55,6 +56,7 @@ Kami membandingkan 85 algoritma pengurutan yang berbeda. Pengujian ini menambahk
 | Tree Sort | 643.05 | 1.0000 | TIDAK | Terdominasi |
 | Quicksort (RTL) | 643.28 | 1.0000 | TIDAK | Terdominasi |
 | Dual-Pivot Quicksort | 646.42 | 1.0000 | TIDAK | Terdominasi |
+| Binary Quicksort | 646.49 | 1.0000 | TIDAK | Terdominasi |
 | 3-Way Quicksort | 647.17 | 1.0000 | TIDAK | Terdominasi |
 | Parallel Quicksort | 648.95 | 1.0000 | TIDAK | Terdominasi |
 | Quicksort (Middle) | 650.32 | 1.0000 | TIDAK | Terdominasi |
@@ -68,11 +70,11 @@ Kami membandingkan 85 algoritma pengurutan yang berbeda. Pengujian ini menambahk
 | Stooge Sort | 686.91 | 1.0000 | YA | Terdominasi |
 | Rotation Merge Sort | 714.30 | 1.0000 | TIDAK | Terdominasi |
 | Heap Sort | 715.19 | 1.0000 | YA | Terdominasi |
-| Smooth Sort | 716.61 | 1.0000 | YA | Terdominasi |
-| Intro Sort | 716.90 | 1.0000 | TIDAK | Terdominasi |
+| Heap Sort (Smooth Proxy) | 716.96 | 1.0000 | YA | Terdominasi |
 | BlockQuicksort | 717.91 | 1.0000 | TIDAK | Terdominasi |
 | Comb Sort | 718.41 | 1.0000 | YA | Terdominasi |
 | Recursive Comb Sort | 721.14 | 1.0000 | YA | Terdominasi |
+| Intro Sort | 724.86 | 1.0000 | TIDAK | Terdominasi |
 | PDQSort | 728.18 | 1.0000 | YA | Terdominasi |
 | Bitonic Sort | 759.97 | 1.0000 | YA | Terdominasi |
 | Bucket Sort | 766.26 | 1.0000 | TIDAK | Terdominasi |
@@ -80,9 +82,8 @@ Kami membandingkan 85 algoritma pengurutan yang berbeda. Pengujian ini menambahk
 | Full Rank | 810.80 | 1.0000 | TIDAK | Terdominasi |
 | Bogosort | 810.89 | 1.0000 | YA | Terdominasi |
 | Binary Bottom-up Merge | 836.42 | 1.0000 | TIDAK | Terdominasi |
-| Hayate-Shiki | 844.89 | 0.8426 | YA | Terdominasi |
-| Radix Sort | 878.08 | 1.0000 | YA | Terdominasi |
 | Patience Sort | 1006.82 | 1.0000 | YA | Terdominasi |
+| Hayate-Shiki | 1024.12 | 1.0000 | YA | Terdominasi |
 | Strand Sort | 1116.82 | 1.0000 | YA | Terdominasi |
 | Pancake Sort | 1251.65 | 1.0000 | YA | Terdominasi |
 | Cocktail Selection | 2105.65 | 1.0000 | YA | Terdominasi |

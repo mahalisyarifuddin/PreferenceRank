@@ -37,18 +37,22 @@ function rng(seed) {
     };
 }
 const strengthsFor = (n, seed) => {
+    // Non-monotonic distinct strengths: the identity permutation must NOT be
+    // sorted in either direction, otherwise a provider that does nothing
+    // would falsely pass the ASC check.
     const rand = rng(seed * 7919 + n * 104729 + 13), s = [];
-    for (let i = 0; i < n; i++) s.push(i + rand() * 0.999);
+    for (let i = 0; i < n; i++) s.push(rand() * 1000 + i * 1e-7);
     return s;
 };
 
 const LOSSY = new Set(['Stalin Sort', 'Thanos Sort', 'Genghis Khan Sort']);
 const NONSORTING = new Set([
     'Exit Sort', 'Intelligent Design', 'Socialist Sort', 'Sleep Sort',
-    'Quantum Bogo', 'Hater Sort', 'Random Sort', 'Silly Sort', 'Miracle Sort',
+    'Quantum Bogo', 'Hater Sort', 'Random Sort', 'Miracle Sort',
 ]);
 const ENUMERATOR = new Set(['Full Rank']);
-const BOGOLIKE = { 'Bogosort': 5, 'BogoBogoSort': 5, 'Bozo Sort': 7 };
+// Probabilistic/exponential sorts: only feasible for tiny n.
+const BOGOLIKE = { 'Bogosort': 5, 'BogoBogoSort': 5, 'Bozo Sort': 7, 'Silly Sort': 14 };
 
 const NS = [2, 3, 4, 5, 7, 8, 9, 15, 16, 17, 31, 32, 33, 50, 63, 64, 65, 100, 127, 128];
 const seedsFor = (n) => (n <= 17 ? 40 : n <= 33 ? 15 : n <= 65 ? 8 : 4);

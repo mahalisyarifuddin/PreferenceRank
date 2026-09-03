@@ -1,85 +1,85 @@
-Recursive Bubble	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"375.2"}
-Recursive Insertion	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
-Recursive Selection	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_DESC","avgSteps":"375.2"}
+Recursive Bubble	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":402,"verdict":"SORTED_DESC","avgSteps":"375.2"}
+Recursive Insertion	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"199.0"}
+Recursive Selection	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":402,"verdict":"SORTED_DESC","avgSteps":"375.2"}
 Recursive Cocktail	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_DESC","avgSteps":"383.3"}
-Recursive Gnome	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
-Recursive Binary Insertion	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"53.7"}
+Recursive Gnome	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":461,"verdict":"SORTED_ASC","avgSteps":"384.1"}
+Recursive Binary Insertion	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"61.5"}
 Recursive Double Selection	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_DESC","avgSteps":"383.3"}
-Recursive Shellsort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"45.9"}
-Recursive Comb Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_DESC","avgSteps":"125.6"}
-Recursive Odd-Even Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_DESC","avgSteps":"395.6"}
-Binary Gnome	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"53.7"}
-Binary Shell	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":289,"verdict":"SORTED_ASC","avgSteps":"105.4"}
-Binary Patience	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_ASC","avgSteps":"112.2"}
-Binary Merge	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"97.7"}
-Binary Bottom-up Merge	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"102.1"}
-Budgeted Merge Sort	{"runs":489,"desc":449,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"40.0"}
-Ford-Johnson (Quick)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"52.4"}
-Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"42.4"}
-Bottom-up Merge Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"40.0"}
-Natural Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
-Ping-pong Merge Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"40.0"}
-3-way Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"53.2"}
-4-way Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"44.3"}
-In-place Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"42.4"}
-Rotation Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"25.7"}
-Timsort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
-Powersort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
-Parallel Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"45.7"}
-Hayate-Shiki	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_ASC","avgSteps":"16.8"}
-Shellsort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"45.9"}
-Quicksort (RTL)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-Radix Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_ASC","avgSteps":"390.3"}
-Quicksort (LTR)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-Quicksort (Random)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"73.2"}
-Quicksort (Middle)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"53.7"}
-Quicksort (Mo3)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_ASC","avgSteps":"419.7"}
-Quicksort (Ninther)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":249,"verdict":"SORTED_ASC","avgSteps":"78.1"}
-Quicksort (Hoare)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-3-Way Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"112.0"}
-Dual-Pivot Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-Triple-Pivot Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"255.2"}
-Stable Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-BlockQuicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"95.4"}
-PDQSort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":89,"verdict":"SORTED_ASC","avgSteps":"25.8"}
-Parallel Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-Bubble Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"375.2"}
-Bucket Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"45.7"}
-Selection Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_DESC","avgSteps":"375.2"}
-Insertion Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
+Recursive Shellsort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":314,"verdict":"SORTED_ASC","avgSteps":"79.9"}
+Recursive Comb Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":445,"verdict":"SORTED_DESC","avgSteps":"134.2"}
+Recursive Odd-Even Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":458,"verdict":"SORTED_DESC","avgSteps":"359.7"}
+Binary Gnome	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"61.5"}
+Binary Shell	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":341,"verdict":"SORTED_ASC","avgSteps":"115.2"}
+Binary Patience	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":458,"verdict":"SORTED_ASC","avgSteps":"90.9"}
+Binary Merge	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"81.4"}
+Binary Bottom-up Merge	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"82.9"}
+Budgeted Merge Sort	{"runs":489,"desc":168,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"59.7"}
+Ford-Johnson (Quick)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"61.1"}
+Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"62.8"}
+Bottom-up Merge Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"64.3"}
+Natural Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":423,"verdict":"SORTED_ASC","avgSteps":"71.6"}
+Ping-pong Merge Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"64.3"}
+3-way Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"65.9"}
+4-way Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"63.2"}
+In-place Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"62.8"}
+Rotation Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"85.7"}
+Timsort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":292,"verdict":"SORTED_ASC","avgSteps":"62.3"}
+Powersort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":388,"verdict":"SORTED_ASC","avgSteps":"73.5"}
+Parallel Merge Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"64.2"}
+Hayate-Shiki	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_ASC","avgSteps":"118.6"}
+Shellsort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":314,"verdict":"SORTED_ASC","avgSteps":"79.9"}
+Quicksort (RTL)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"72.6"}
+Binary Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"72.5"}
+Quicksort (LTR)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"73.4"}
+Quicksort (Random)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"71.2"}
+Quicksort (Middle)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"71.9"}
+Quicksort (Mo3)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_ASC","avgSteps":"101.6"}
+Quicksort (Ninther)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":249,"verdict":"SORTED_ASC","avgSteps":"84.2"}
+Quicksort (Hoare)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":461,"verdict":"SORTED_ASC","avgSteps":"106.0"}
+3-Way Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"73.8"}
+Dual-Pivot Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"73.4"}
+Triple-Pivot Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":223,"verdict":"SORTED_ASC","avgSteps":"69.4"}
+Stable Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"73.7"}
+BlockQuicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"85.7"}
+PDQSort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":89,"verdict":"SORTED_ASC","avgSteps":"95.6"}
+Parallel Quicksort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"72.6"}
+Bubble Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":385,"verdict":"SORTED_DESC","avgSteps":"367.7"}
+Bucket Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"81.0"}
+Selection Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":402,"verdict":"SORTED_DESC","avgSteps":"375.2"}
+Insertion Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"199.0"}
 I Can't Believe It Can Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_ASC","avgSteps":"767.3"}
-Binary Insertion	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"53.7"}
-Gnome Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
+Binary Insertion	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"61.5"}
+Gnome Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":461,"verdict":"SORTED_ASC","avgSteps":"384.1"}
 Stooge Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_DESC","avgSteps":"11593.1"}
-Bogosort	{"runs":130,"desc":130,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":130,"verdict":"SORTED_DESC","avgSteps":"45.8"}
+Bogosort	{"runs":130,"desc":130,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":97,"verdict":"SORTED_DESC","avgSteps":"32.7"}
 Full Rank	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"ENUMERATOR","avgSteps":"375.2"}
-Cycle Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-Bitonic Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":409,"verdict":"SORTED_ASC","avgSteps":"137.6"}
-Heap Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":409,"verdict":"SORTED_ASC","avgSteps":"119.8"}
-Comb Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_DESC","avgSteps":"125.6"}
-Tournament Sort	{"runs":489,"desc":0,"asc":0,"none":489,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"BROKEN","avgSteps":"40.0"}
-Odd-Even Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_DESC","avgSteps":"395.6"}
-Slowsort	{"runs":489,"desc":0,"asc":481,"none":0,"timeouts":8,"badpair":0,"dupRuns":441,"verdict":"TIMEOUT","avgSteps":"24365.5"}
-Pancake Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-Cocktail Shaker	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"375.2"}
-Tree Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"375.2"}
-BogoBogoSort	{"runs":130,"desc":130,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":130,"verdict":"SORTED_DESC","avgSteps":"38.5"}
-Stalin Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED(lossy) ASC","avgSteps":"15.8"}
-Thanos Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":409,"verdict":"SORTED(lossy) BOTH","avgSteps":"27.6"}
+Cycle Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":461,"verdict":"SORTED_ASC","avgSteps":"1040.2"}
+Bitonic Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":390,"verdict":"SORTED_ASC","avgSteps":"137.6"}
+Heap Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":422,"verdict":"SORTED_ASC","avgSteps":"114.5"}
+Comb Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":445,"verdict":"SORTED_DESC","avgSteps":"134.2"}
+Tournament Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_DESC","avgSteps":"64.3"}
+Odd-Even Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":458,"verdict":"SORTED_DESC","avgSteps":"358.1"}
+Slowsort	{"runs":489,"desc":0,"asc":481,"none":0,"timeouts":8,"badpair":0,"dupRuns":412,"verdict":"TIMEOUT","avgSteps":"24365.5"}
+Pancake Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":396,"verdict":"SORTED_ASC","avgSteps":"375.2"}
+Cocktail Shaker	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":388,"verdict":"SORTED_DESC","avgSteps":"301.2"}
+Tree Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"73.7"}
+BogoBogoSort	{"runs":130,"desc":130,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":107,"verdict":"SORTED_DESC","avgSteps":"22.6"}
+Stalin Sort	{"runs":489,"desc":0,"asc":416,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED(lossy) ASC/BOTH","avgSteps":"15.8"}
+Thanos Sort	{"runs":489,"desc":193,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":409,"verdict":"SORTED(lossy) BOTH/DESC","avgSteps":"27.6"}
 Miracle Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"NON_SORTING(by design)","avgSteps":"15.8"}
 Intelligent Design	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"NON_SORTING(by design)","avgSteps":"0.0"}
-Quantum Bogo	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"NON_SORTING(by design)","avgSteps":"1.0"}
-Intro Sort	{"runs":489,"desc":0,"asc":400,"none":89,"timeouts":0,"badpair":0,"dupRuns":89,"verdict":"BROKEN","avgSteps":"179.4"}
-Strand Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"15.8"}
-Patience Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_ASC","avgSteps":"420.9"}
-Smooth Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":409,"verdict":"SORTED_ASC","avgSteps":"119.8"}
-Circle Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_DESC","avgSteps":"84.7"}
+Quantum Bogo	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"NON_SORTING(by design)","avgSteps":"1.6"}
+Intro Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED_ASC","avgSteps":"85.6"}
+Strand Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":435,"verdict":"SORTED_ASC","avgSteps":"115.2"}
+Patience Sort	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":458,"verdict":"SORTED_ASC","avgSteps":"121.7"}
+Heap Sort (Smooth Proxy)	{"runs":489,"desc":0,"asc":489,"none":0,"timeouts":0,"badpair":0,"dupRuns":422,"verdict":"SORTED_ASC","avgSteps":"114.5"}
+Circle Sort	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_DESC","avgSteps":"233.4"}
 Double Selection	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":489,"verdict":"SORTED_DESC","avgSteps":"383.3"}
-Cocktail Selection	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"SORTED_DESC","avgSteps":"375.2"}
+Cocktail Selection	{"runs":489,"desc":489,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":404,"verdict":"SORTED_DESC","avgSteps":"375.2"}
 Socialist Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"NON_SORTING(by design)","avgSteps":"0.0"}
 Genghis Khan Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"SORTED(lossy) BOTH","avgSteps":"15.8"}
-Hater Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":460,"verdict":"NON_SORTING(by design)","avgSteps":"33.7"}
+Hater Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":462,"verdict":"NON_SORTING(by design)","avgSteps":"33.7"}
 Exit Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"NON_SORTING(by design)","avgSteps":"0.0"}
-Random Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":395,"verdict":"NON_SORTING(by design)","avgSteps":"44.6"}
-Silly Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":449,"verdict":"NON_SORTING(by design)","avgSteps":"4370.1"}
+Random Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":370,"verdict":"NON_SORTING(by design)","avgSteps":"43.2"}
+Silly Sort	{"runs":139,"desc":0,"asc":139,"none":0,"timeouts":0,"badpair":0,"dupRuns":75,"verdict":"SORTED_ASC","avgSteps":"13.8"}
 Sleep Sort	{"runs":489,"desc":0,"asc":0,"none":0,"timeouts":0,"badpair":0,"dupRuns":0,"verdict":"NON_SORTING(by design)","avgSteps":"16.8"}

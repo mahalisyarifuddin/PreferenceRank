@@ -8,6 +8,8 @@
 1. **Web verification** — each implementation was compared against the canonical published definition of its algorithm (papers, reference implementations, and standard references; links inline below).
 2. **Automated differential testing** — the new harness [`research/audit_correctness.js`](audit_correctness.js) drives every provider with a deterministic comparison oracle (`result = 1` iff the first item's strength is greater — the exact convention of `simulate()` in `sort_analysis.js`), over N ∈ {2…128} with up to 40 seeds per N (~490 runs per provider; raw output in [`audit_results.txt`](audit_results.txt)). It verifies termination, valid pair requests, and sortedness of the final `items` array, and records the sort direction and duplicate-pair behavior.
 
+> **Remediation status (2026-09-03): all recommendations implemented and re-verified — see the [Remediation log](#remediation-log-implemented-2026-09-03).** During remediation the harness was hardened (non-monotonic strengths) and unmasked one additional genuine bug the original run had missed: **Hayate-Shiki's merge comparator was inverted** (previously masked because the original harness's test inputs were pre-sorted — Hayate-Shiki's best case). It is fixed; the original "✅ faithful" verdict for Hayate-Shiki below is superseded. Final state: **85/85 providers verified correct** (Slowsort times out only at N ≥ 127, which is inherent; the benchmark caps it identically).
+
 ---
 
 ## Verdict legend
@@ -102,7 +104,7 @@ Duplicate pairs are inherent to several algorithms (Fung's compares every positi
 | **3-Way Quicksort** | Dijkstra/Bentley-McIlroy Dutch-flag partition (`lt/eq/gt`, pivot = first element) ✓. |
 | **Heap Sort** | Standard Floyd heapsort: build by sifting from `⌊n/2⌋−1`, extract max to end, sift root; two comparisons per level (larger child, then parent). ✓ |
 | **BlockQuicksort** | ⚠️ **Sorts, but is not BlockQuicksort.** Edelkamp & Weiß's algorithm partitions via two offset buffers filled block-wise (B = 128 in the ESA 2016 paper) to avoid branch mispredictions ([paper](https://kclpure.kcl.ac.uk/ws/portalfiles/portal/123577916/BlockQuicksort_Avoiding_Branch_Mispredictions_EDELKAMP_PublishedAugust2016_VoR_CC_BY_.pdf)). The provider is a plain two-index (Hoare-style) partition with first-element pivot plus insertion below 16 — none of the block machinery. Reclassify as "quicksort (Hoare, first-element pivot, ins<16)". |
-| **Hayate-Shiki** | ✅ Structurally faithful adaptation of 颯式 ([EmuraDaisuke/SortingAlgorithm.HayateShiki](https://github.com/EmuraDaisuke/SortingAlgorithm.HayateShiki)): comparison-based stable merge sort, N-sized external band with a descending column placed from the far end, part closure on `min ≤ v < max`, insertion (`cnIns = 32`) to secure part length, and carry-triggered sequential merges (the `(n^(n+1))&n` trailing-ones trick) instead of recursion — matching the documented "merge parts; merge sequentially to avoid recursion". Deviation: the ascending column stays in the main array rather than the external band. |
+| **Hayate-Shiki** | 🔧 **Fixed during remediation** (originally mis-cleared as faithful). The part-construction logic is a faithful adaptation of 颯式 ([EmuraDaisuke/SortingAlgorithm.HayateShiki](https://github.com/EmuraDaisuke/SortingAlgorithm.HayateShiki)): comparison-based stable merge sort, N-sized external band with a descending column placed from the far end, part closure on `min ≤ v < max`, insertion (`cnIns = 32`) to secure part length, and carry-triggered sequential merges (the `(n^(n+1))&n` trailing-ones trick) instead of recursion — matching the documented "merge parts; merge sequentially to avoid recursion". But the **part-merge comparator was inverted** (`result === 1` emitted `u1` on "u1 stronger" → strongest-first merging into an ascending pipeline), corrupting output whenever two or more parts formed (N ≥ 33 on random inputs; the first audit's monotonic test strengths were pre-sorted and masked it). Fixed to emit the weaker item first; benchmark Kendall Tau moved 0.8426 → 1.0000. Deviation (unchanged): the ascending column stays in the main array rather than the external band. |
 | **Bogosort / Bozosort / BogoBogoSort** | Bogosort = generate-and-test; the provider shuffles at the first detected inversion and rescans — semantically equivalent, expected ~(e−1)·n! comparisons ([running-time analysis](https://www.wikiwand.com/en/articles/Bogosort)). Bozosort = swap two random elements until sorted ✓. Bogobogosort follows the recursive prefix-restart definition (verify growing prefix, shuffle the copy and restart on failure) ✓ ([definition](https://wiki2.org/en/Bogosort)). All three verified to actually sort for n ≤ 5/5/7 within the step cap; they are infeasible by design at benchmark N — hence their truncated τ in ANALYSIS.md. |
 | **Pancake, Cycle, Gnome, Cocktail Shaker, Cocktail/Double Selection, Odd-Even, Bubble, Selection, Insertion, Binary Insertion, Tree, Tournament (mechanics), Natural Merge, K-way/3-way/4-way Merge, In-place Merge, Rotation Merge, Ping-pong Merge, Parallel Merge/Quicksort (sequentialized), Stable Quicksort, Bucket (see below)** | Textbook-standard state-machine encodings; all empirically sort. Specifics: Cycle sort counts rank by linear scan and rotates cycles ✓; Pancake finds max by comparisons and flips (flips free — correct adaptation for a comparison benchmark); Rotation merge = standard in-place merge via binary search + rotation recursion with 16-block insertion pre-pass; In-place merge uses the O(n²)-move shift merge (comparisons stay n log n); ping-pong alternates src/dst each width pass ✓; k-way merges use winner trees ✓; Bucket sort is a comparison-based adaptation (sample pivots → binary-search distribution → insertion-sorted buckets), legitimate given there are no keys, but "bucket sort" canonically assumes uniform-distribution keys — ⚠️ adapted. |
 | **Budgeted Merge Sort** | App-specific (not an external algorithm): bottom-up merge sort truncated at `budget = round(n·log₂n − 1.44n)` comparisons (520 at N=100 — matches README). Verified: stops at budget; sorts whenever the budget suffices (the 40 "unsorted" harness rows are all budget-exhausted runs — by design). The class name `QuickMergeSortProvider` is a misnomer (it is not Dalkhov's QuickMergesort), but ANALYSIS.md labels it "Budgeted Merge Sort", which is accurate. |
@@ -121,15 +123,59 @@ Duplicate pairs are inherent to several algorithms (Fung's compares every positi
 | Ford-Johnson avg 526.64 battles, τ 1.0000 at N=100 | ✅ Consistent with F(100) = 534 worst case and the ⌈log₂ 100!⌉ = 525 lower bound; Jacobsthal insertion order verified |
 | Budgeted Merge Sort 520.00 (τ 0.9631) | ✅ Budget formula and behavior verified |
 | "85 distinct sorting algorithms" | ✅ 85 registered providers (with the caveat that Binary Gnome = Binary Insertion, Smooth = Heap, and several are adapted/mislabeled — so fewer than 85 *distinct* algorithms in the strict sense) |
-| Intro Sort τ 1.0000 / Smooth 716.61 / Radix 395.9 battles etc. | ⚠️ Numbers are reproducible under the reach-based metric, but "Intro Sort" does not actually sort at n ≥ 31, "Smooth Sort" *is* Heap Sort, and "Radix Sort" is a random-pivot quicksort + insertion sort |
+| Intro Sort τ 1.0000 / Smooth 716.61 / Radix 878.08 battles etc. | ⚠️ Numbers are reproducible under the reach-based metric, but "Intro Sort" did not actually sort at n ≥ 31, "Smooth Sort" *is* Heap Sort, and "Radix Sort" was a random-pivot quicksort + insertion sort. *(All three remediated on 2026-09-03 — see the [Remediation log](#remediation-log-implemented-2026-09-03).)* |
 
 ## Recommendations (optional fixes)
+
+> All five recommendations were implemented on 2026-09-03 — see the [Remediation log](#remediation-log-implemented-2026-09-03). The list below is retained for the record.
 
 1. **Intro Sort**: make the insertion branch and heap fallback interpret results the same way as the partition (or invert the partition) — one-line semantic fix; then re-verify.
 2. **Tournament Sort**: move the `sortedCount === n` check *after* the final `out.push(winner)`.
 3. **Rename or reimplement** "Radix Sort" (e.g., "Binary Quicksort (random pivot)") and "Smooth Sort" (either implement Leonardo heaps or relabel "Heap Sort (proxy)").
 4. **Normalize orientation** (pick strongest-first to match the app) or document the convention per provider.
 5. **Silly Sort**: either add its swap logic or replace with a meme provider that declares its non-functioning nature (e.g., document alongside Exit/Random sort).
+
+## Remediation log (implemented 2026-09-03)
+
+All changes live in [`research/sort_analysis.js`](sort_analysis.js); every provider was re-verified with the (hardened) harness afterwards.
+
+### Code fixes
+
+| # | Provider | Change | Re-audit result |
+|---|---|---|---|
+| 1 | `IntroSortProvider` | Partition now swaps on `result === 0` (Lomuto-ASC), matching the already-ASC insertion and heapsort branches — a one-token orientation fix. | SORTED_ASC, 489/489 runs (previously failed all n ≥ 31) |
+| 2 | `TournamentSortProvider` | The final winner is pushed **before** the completion break (the old code broke one push early and dropped the weakest element). | SORTED_DESC, full length, 489/489 runs |
+| 3 | `HayateShikiProvider` *(new finding)* | Part-merge comparator un-inverted: `result === 0` (u1 weaker) now emits `u1` first, consistent with the ascending part construction. Unmasked by the hardened harness (see below). | SORTED_ASC, 489/489 runs; benchmark τ 0.8426 → 1.0000 |
+| 4 | `RadixSortProvider` → `BinaryQuicksortProvider` | The mislabeled "Radix Sort" (fixed ⌈log₂n⌉ random-pivot passes + full insertion sort) was replaced by a genuine **Binary Quicksort**: recursive two-bucket partition around a random pivot value, pivot placed between buckets, each element compared once per level → zero duplicate pairs. | SORTED_ASC, 489/489 runs, 0 duplicate-pair runs |
+| 5 | `SmoothSortProvider` | Relabeled **"Heap Sort (Smooth Proxy)"** in the registry (it delegates to heapsort; implementing Dijkstra's Leonardo-heap smoothsort was judged out of scope for a benchmark row). Proxy behavior now stated in a code comment. | SORTED_ASC, 489/489 runs |
+| 6 | `SillySortProvider` | Now implements the classic silly recursion (compare/swap endpoints of `[i,j]`, then sort `[i+1,j]` and `[i,j-1]` — correct by induction, Θ(2ⁿ) comparisons). The old provider ignored every comparison result and could never sort. No canonical definition exists; the definition used is documented in the class comment. | SORTED_ASC, 139/139 runs at n ≤ 14 (exponential → capped, like the bogo family) |
+| 7 | Orientation convention | Documented in a header comment above the `algos` registry in `sort_analysis.js` (21 strongest-first vs 51 weakest-first providers, and why `simulate()` is direction-agnostic). Per-provider orientation is recorded in `audit_results.txt`. Flipping 51 providers' semantics was rejected as unjustifiable churn/risk for a research script. | n/a (documentation) |
+
+### Harness hardening
+
+`audit_correctness.js` now generates **non-monotonic** item strengths (the identity permutation is no longer sorted in either direction). The original harness's monotonic strengths made any pre-sorted-input pass trivially for ASC providers — which is exactly how the Hayate-Shiki merge bug escaped the first audit (its parts pipeline is adaptive, so pre-sorted input never formed a second part).
+
+### Benchmark refresh (`node research/sort_analysis.js 100 250`)
+
+Rows for the six affected algorithms were re-measured and merged into `results.txt`, `ANALYSIS.md`, and `ANALYSIS-id.md` (other rows retained; each algorithm is an independent experiment):
+
+| Algorithm | Before | After |
+|---|---|---|
+| Intro Sort | 716.90 battles / τ 1.0000 / NO dups *(array unsorted at n ≥ 31)* | **724.86 / 1.0000 / NO** *(now actually sorts)* |
+| Tournament Sort | 558.46 / 1.0000 / NO *(dropped last element)* | **558.27 / 1.0000 / NO** *(comparison sequence unchanged, as predicted)* |
+| Hayate-Shiki | 844.89 / **0.8426** / YES *(broken merges)* | **1024.12 / 1.0000** / YES |
+| Radix Sort → Binary Quicksort | 878.08 / 1.0000 / YES | **646.49 / 1.0000 / NO** |
+| Smooth Sort → Heap Sort (Smooth Proxy) | 716.61 / 1.0000 / YES | **716.96 / 1.0000 / YES** (heapsort numbers, as expected) |
+| Silly Sort | 71.65 / 0.1126 / YES *(ignored results)* | **202.56 / 0.1266 / YES** *(real work until the 1M-iteration cap)* |
+
+The Pareto frontier and the Ford-Johnson production knee point are unchanged (`research/pareto_analysis.js` output identical); README claims (Budgeted 520.00, Ford-Johnson 526.64, ~89% battle reduction) are unaffected.
+
+### Final verification
+
+```bash
+node research/audit_correctness.js   # 85/85 correct: 51 ASC + 21 DESC + 1 enumerator
+                                      # + 3 lossy jokes + 8 non-sorting jokes + Slowsort (inherent timeout at n ≥ 127)
+```
 
 ## Reproducing
 
