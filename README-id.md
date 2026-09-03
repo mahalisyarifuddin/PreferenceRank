@@ -17,13 +17,13 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 - **Peringkat Cepat:** Menggunakan **Ford-Johnson** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **kemenangan transitif bayangan** untuk akurasi yang unggul.
 
 ### Analisis Algoritma
-Berdasarkan analisis perbandingan terhadap 84 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Ford-Johnson** diidentifikasi sebagai **titik lutut matematis** yang optimal (menggunakan analisis skala log) untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan.
+Berdasarkan analisis perbandingan terhadap 85 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Ford-Johnson** tetap menjadi **titik lutut produksi** yang praktis untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan. Pengujian ulang ini juga mencakup algoritma "I Can't Believe It Can Sort" karya Stanley P. Y. Fung.
 
 **Perbandingan (N=100):**
 | Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau |
 |-----------|-------------|-----------------|
-| Budgeted Merge Sort | 520.00 | 0.9633 |
-| **Ford-Johnson (Quick)** | 526.84 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9631 |
+| **Ford-Johnson (Quick)** | 526.64 | 1.0000 |
 *Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.*
 
 ### Analisis Pencarian

@@ -1,117 +1,123 @@
 # Analysis of Sorting Algorithms and Convergence in PreferenceRank
 
-This document summarizes the extensive benchmarking and analysis performed to optimize the pair generation and scoring system in PreferenceRank, focusing on **pure, non-duplicate comparisons** as the primary criterion for algorithm selection.
+This document summarizes the benchmarking and analysis used to optimize the pair-generation and scoring system in PreferenceRank, focusing on **pure, non-duplicate comparisons** as the primary criterion for algorithm selection.
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared 87 distinct sorting algorithms. A key requirement for production is the elimination of duplicate pairwise comparisons. Algorithms that request the same pair twice are now identified and excluded from the Pareto-optimal knee point analysis (using a log-scale axis for unique battle counts) to ensure maximum user efficiency.
+We compared 85 distinct sorting algorithms. This run adds Stanley P. Y. Fung's ["I Can't Believe It Can Sort"](https://arxiv.org/abs/2110.01111) algorithm. Algorithms that request duplicate pairs are identified and excluded from the Pareto-optimal analysis so that the production choice reflects unique human decisions.
 
 ### Benchmarking Methodology
 - **N Value:** 100
 - **Trials:** 250 per algorithm.
+- **Run command:** `node research/sort_analysis.js 100 250`
+- **Metric:** average number of unique battles and average Kendall Tau against randomly generated ground-truth strengths.
 
 ### Results (N=100)
+
 | Algorithm | Avg Battles | Avg Kendall Tau | Duplicates | Pareto Status |
 |-----------|-------------|-----------------|------------|---------------|
-| **Ford-Johnson (Quick)** | 526.84 | 1.0000 | NO | **Knee Point** |
-| Exit Sort | 0.00 | 0.0023 | NO | Pareto-optimal |
-| Quantum Bogo | 1.59 | 0.0086 | NO | Pareto-optimal |
-| Miracle Sort | 99.00 | 0.5044 | NO | Pareto-optimal |
-| Budgeted Merge Sort | 520.00 | 0.9633 | NO | Pareto-optimal |
-| Socialist Sort | 0.00 | -0.0018 | NO | Dominated |
-| Intelligent Design | 0.00 | -0.0027 | NO | Dominated |
-| Sleep Sort | 0.00 | -0.0034 | NO | Dominated |
-| BogoBogoSort | 26.50 | 0.0015 | YES | Dominated |
-| Silly Sort | 71.31 | 0.1265 | YES | Dominated |
-| Thanos Sort | 99.00 | 0.4947 | YES | Dominated |
-| Genghis Khan Sort | 99.00 | 0.3582 | NO | Dominated |
-| Stalin Sort | 99.00 | 0.0403 | NO | Dominated |
-| Hater Sort | 187.90 | 0.5598 | YES | Dominated |
-| Random Sort | 212.36 | 0.5539 | YES | Dominated |
-| Binary Gnome | 530.09 | 1.0000 | NO | Dominated |
-| Binary Insertion | 530.19 | 1.0000 | NO | Dominated |
-| Recursive Binary Insertion | 530.88 | 1.0000 | NO | Dominated |
-| Timsort | 532.03 | 1.0000 | YES | Dominated |
-| Merge Sort | 541.70 | 1.0000 | NO | Dominated |
-| In-place Merge Sort | 541.80 | 1.0000 | NO | Dominated |
-| 4-way Merge Sort | 541.91 | 1.0000 | NO | Dominated |
-| Powersort | 556.58 | 1.0000 | YES | Dominated |
-| Ping-pong Merge Sort | 558.36 | 1.0000 | NO | Dominated |
-| Bottom-up Merge Sort | 558.50 | 1.0000 | NO | Dominated |
-| Tournament Sort | 558.64 | 1.0000 | NO | Dominated |
-| Parallel Merge Sort | 558.92 | 1.0000 | NO | Dominated |
-| Quicksort (Ninther) | 563.43 | 1.0000 | YES | Dominated |
-| 3-way Merge Sort | 567.47 | 1.0000 | NO | Dominated |
-| Natural Merge Sort | 574.03 | 1.0000 | YES | Dominated |
-| Slowsort | 587.45 | 0.9434 | YES | Dominated |
-| Triple-Pivot Quicksort | 612.89 | 1.0000 | YES | Dominated |
-| Binary Patience | 616.15 | 1.0000 | YES | Dominated |
-| Shellsort | 628.50 | 1.0000 | YES | Dominated |
-| Recursive Shellsort | 629.41 | 1.0000 | YES | Dominated |
-| Stable Quicksort | 636.94 | 1.0000 | NO | Dominated |
-| Tree Sort | 641.87 | 1.0000 | NO | Dominated |
-| Quicksort (LTR) | 645.52 | 1.0000 | NO | Dominated |
-| Quicksort (Middle) | 647.32 | 1.0000 | NO | Dominated |
-| Quicksort (RTL) | 647.44 | 1.0000 | NO | Dominated |
-| Parallel Quicksort | 648.10 | 1.0000 | NO | Dominated |
-| Cycle Sort | 650.31 | 1.0000 | YES | Dominated |
-| Quicksort (Random) | 650.41 | 1.0000 | NO | Dominated |
-| Dual-Pivot Quicksort | 653.62 | 1.0000 | NO | Dominated |
-| 3-Way Quicksort | 655.76 | 1.0000 | NO | Dominated |
-| Quicksort (Hoare) | 659.50 | 1.0000 | YES | Dominated |
-| Binary Shell | 675.92 | 1.0000 | YES | Dominated |
-| Circle Sort | 676.01 | 1.0000 | YES | Dominated |
-| Quicksort (Mo3) | 683.28 | 1.0000 | YES | Dominated |
-| Stooge Sort | 689.07 | 1.0000 | YES | Dominated |
-| Rotation Merge Sort | 714.14 | 1.0000 | NO | Dominated |
-| Intro Sort | 715.91 | 1.0000 | NO | Dominated |
-| Heap Sort | 717.29 | 1.0000 | YES | Dominated |
-| Smooth Sort | 718.78 | 1.0000 | YES | Dominated |
-| BlockQuicksort | 720.32 | 1.0000 | NO | Dominated |
-| Recursive Comb Sort | 720.66 | 1.0000 | YES | Dominated |
-| Comb Sort | 721.29 | 1.0000 | YES | Dominated |
-| PDQSort | 741.35 | 1.0000 | YES | Dominated |
-| Bitonic Sort | 761.04 | 1.0000 | YES | Dominated |
-| Binary Merge | 785.93 | 1.0000 | NO | Dominated |
-| Bucket Sort | 787.75 | 1.0000 | NO | Dominated |
-| Full Rank | 810.37 | 1.0000 | NO | Dominated |
-| Bogosort | 811.64 | 1.0000 | YES | Dominated |
-| Binary Bottom-up Merge | 837.20 | 1.0000 | NO | Dominated |
-| Hayate-Shiki | 845.65 | 0.8410 | YES | Dominated |
-| Radix Sort | 921.33 | 1.0000 | YES | Dominated |
-| Patience Sort | 1022.40 | 1.0000 | YES | Dominated |
-| Strand Sort | 1129.54 | 1.0000 | YES | Dominated |
-| Pancake Sort | 1261.09 | 1.0000 | YES | Dominated |
-| Cocktail Selection | 2097.59 | 1.0000 | YES | Dominated |
-| Recursive Selection | 2209.41 | 1.0000 | YES | Dominated |
-| Selection Sort | 2215.76 | 1.0000 | YES | Dominated |
-| Recursive Double Selection | 2344.50 | 1.0000 | YES | Dominated |
-| Double Selection | 2364.53 | 1.0000 | YES | Dominated |
-| Recursive Gnome | 2547.43 | 1.0000 | YES | Dominated |
-| Recursive Cocktail | 2550.98 | 1.0000 | YES | Dominated |
-| Bubble Sort | 2557.46 | 1.0000 | YES | Dominated |
-| Insertion Sort | 2572.92 | 1.0000 | NO | Dominated |
-| Cocktail Shaker | 2575.37 | 1.0000 | YES | Dominated |
-| Gnome Sort | 2580.57 | 1.0000 | YES | Dominated |
-| Recursive Insertion | 2588.43 | 1.0000 | NO | Dominated |
-| Recursive Bubble | 2598.00 | 1.0000 | YES | Dominated |
-| Recursive Odd-Even Sort | 2598.40 | 1.0000 | YES | Dominated |
-| Odd-Even Sort | 2600.40 | 1.0000 | YES | Dominated |
+| Exit Sort | 0.00 | 0.0014 | NO | Pareto-optimal |
+| Intelligent Design | 0.00 | 0.0008 | NO | Dominated |
+| Socialist Sort | 0.00 | -0.0016 | NO | Dominated |
+| Sleep Sort | 0.00 | -0.0051 | NO | Dominated |
+| Quantum Bogo | 1.65 | 0.0020 | NO | Pareto-optimal |
+| BogoBogoSort | 26.63 | 0.0068 | YES | Dominated |
+| Silly Sort | 71.65 | 0.1126 | YES | Dominated |
+| Thanos Sort | 99.00 | 0.4994 | YES | Dominated |
+| Miracle Sort | 99.00 | 0.4991 | NO | Pareto-optimal |
+| Genghis Khan Sort | 99.00 | 0.3576 | NO | Dominated |
+| Stalin Sort | 99.00 | 0.0340 | NO | Dominated |
+| Hater Sort | 188.08 | 0.5638 | YES | Dominated |
+| Random Sort | 209.52 | 0.5567 | YES | Dominated |
+| Budgeted Merge Sort | 520.00 | 0.9631 | NO | Pareto-optimal |
+| Ford-Johnson (Quick) | 526.64 | 1.0000 | NO | **Production knee** |
+| Recursive Binary Insertion | 530.59 | 1.0000 | NO | Dominated |
+| Binary Gnome | 531.26 | 1.0000 | NO | Dominated |
+| Binary Insertion | 531.37 | 1.0000 | NO | Dominated |
+| Timsort | 532.77 | 1.0000 | YES | Dominated |
+| Merge Sort | 542.27 | 1.0000 | NO | Dominated |
+| In-place Merge Sort | 542.29 | 1.0000 | NO | Dominated |
+| 4-way Merge Sort | 543.93 | 1.0000 | NO | Dominated |
+| Powersort | 557.14 | 1.0000 | YES | Dominated |
+| Ping-pong Merge Sort | 558.13 | 1.0000 | NO | Dominated |
+| Tournament Sort | 558.46 | 1.0000 | NO | Dominated |
+| Bottom-up Merge Sort | 558.53 | 1.0000 | NO | Dominated |
+| Parallel Merge Sort | 558.88 | 1.0000 | NO | Dominated |
+| Quicksort (Ninther) | 562.76 | 1.0000 | YES | Dominated |
+| 3-way Merge Sort | 567.70 | 1.0000 | NO | Dominated |
+| Natural Merge Sort | 573.28 | 1.0000 | YES | Dominated |
+| Slowsort | 580.84 | 0.9465 | YES | Dominated |
+| Triple-Pivot Quicksort | 607.78 | 1.0000 | YES | Dominated |
+| Binary Patience | 612.35 | 1.0000 | YES | Dominated |
+| Shellsort | 629.84 | 1.0000 | YES | Dominated |
+| Recursive Shellsort | 630.39 | 1.0000 | YES | Dominated |
+| Cycle Sort | 642.53 | 1.0000 | YES | Dominated |
+| Tree Sort | 643.05 | 1.0000 | NO | Dominated |
+| Quicksort (RTL) | 643.28 | 1.0000 | NO | Dominated |
+| Dual-Pivot Quicksort | 646.42 | 1.0000 | NO | Dominated |
+| 3-Way Quicksort | 647.17 | 1.0000 | NO | Dominated |
+| Parallel Quicksort | 648.95 | 1.0000 | NO | Dominated |
+| Quicksort (Middle) | 650.32 | 1.0000 | NO | Dominated |
+| Stable Quicksort | 651.65 | 1.0000 | NO | Dominated |
+| Quicksort (LTR) | 652.04 | 1.0000 | NO | Dominated |
+| Quicksort (Hoare) | 652.35 | 1.0000 | YES | Dominated |
+| Quicksort (Random) | 652.83 | 1.0000 | NO | Dominated |
+| Binary Shell | 672.12 | 1.0000 | YES | Dominated |
+| Quicksort (Mo3) | 675.50 | 1.0000 | YES | Dominated |
+| Circle Sort | 676.34 | 1.0000 | YES | Dominated |
+| Stooge Sort | 686.91 | 1.0000 | YES | Dominated |
+| Rotation Merge Sort | 714.30 | 1.0000 | NO | Dominated |
+| Heap Sort | 715.19 | 1.0000 | YES | Dominated |
+| Smooth Sort | 716.61 | 1.0000 | YES | Dominated |
+| Intro Sort | 716.90 | 1.0000 | NO | Dominated |
+| BlockQuicksort | 717.91 | 1.0000 | NO | Dominated |
+| Comb Sort | 718.41 | 1.0000 | YES | Dominated |
+| Recursive Comb Sort | 721.14 | 1.0000 | YES | Dominated |
+| PDQSort | 728.18 | 1.0000 | YES | Dominated |
+| Bitonic Sort | 759.97 | 1.0000 | YES | Dominated |
+| Bucket Sort | 766.26 | 1.0000 | NO | Dominated |
+| Binary Merge | 786.55 | 1.0000 | NO | Dominated |
+| Full Rank | 810.80 | 1.0000 | NO | Dominated |
+| Bogosort | 810.89 | 1.0000 | YES | Dominated |
+| Binary Bottom-up Merge | 836.42 | 1.0000 | NO | Dominated |
+| Hayate-Shiki | 844.89 | 0.8426 | YES | Dominated |
+| Radix Sort | 878.08 | 1.0000 | YES | Dominated |
+| Patience Sort | 1006.82 | 1.0000 | YES | Dominated |
+| Strand Sort | 1116.82 | 1.0000 | YES | Dominated |
+| Pancake Sort | 1251.65 | 1.0000 | YES | Dominated |
+| Cocktail Selection | 2105.65 | 1.0000 | YES | Dominated |
+| Recursive Selection | 2213.13 | 1.0000 | YES | Dominated |
+| Selection Sort | 2217.96 | 1.0000 | YES | Dominated |
+| Double Selection | 2331.02 | 1.0000 | YES | Dominated |
+| Recursive Double Selection | 2348.08 | 1.0000 | YES | Dominated |
+| Recursive Gnome | 2556.46 | 1.0000 | YES | Dominated |
+| Recursive Insertion | 2568.33 | 1.0000 | NO | Dominated |
+| Bubble Sort | 2569.73 | 1.0000 | YES | Dominated |
+| Gnome Sort | 2576.56 | 1.0000 | YES | Dominated |
+| Insertion Sort | 2577.76 | 1.0000 | NO | Dominated |
+| I Can't Believe It Can Sort | 2577.82 | 1.0000 | YES | Dominated |
+| Cocktail Shaker | 2578.00 | 1.0000 | YES | Dominated |
+| Recursive Bubble | 2578.36 | 1.0000 | YES | Dominated |
+| Recursive Cocktail | 2597.78 | 1.0000 | YES | Dominated |
+| Odd-Even Sort | 2601.10 | 1.0000 | YES | Dominated |
+| Recursive Odd-Even Sort | 2608.76 | 1.0000 | YES | Dominated |
 
-### Why Ford-Johnson is the Knee Point
+### Interpretation of the new entry
 
+Fung's algorithm is implemented as the two nested loops from the paper: every position `i` is compared with every position `j`, swapping when `A[i] < A[j]`. The state-machine provider preserves that order and therefore makes **N² positional comparison requests**. At N=100, the rerun measured **2,577.82 unique battles**, a **1.0000 Kendall Tau**, and **duplicate requests: YES**. The duplicate flag is expected: the algorithm deliberately revisits pairs as the array changes. It sorts correctly, but is excluded from the production frontier under PreferenceRank's no-duplicate constraint.
 
-Ford-Johnson is designated as the **mathematical knee point** because it represents the absolute optimal balance between user effort (number of comparisons) and ranking accuracy (Kendall Tau correlation) by leveraging inferred transitive wins.
+### Why Ford-Johnson remains the Production Knee Point
 
-#### 1. Mathematical Optimization (Log-Scale Knee)
-The "knee point" is identified using the **Kneedle method** and **Max Perpendicular Distance** from the endpoint chord on the Pareto frontier. When plotting accuracy against effort on a log-scale axis (log10(battles + 1)), Ford-Johnson occupies the "elbow" of the curve.
-*   **Diminishing Returns:** Moving from "Miracle Sort" (99 battles, 0.54 Tau) to "Ford-Johnson (Quick)" (~527 battles, 1.000 Tau) yields a near-perfect sort with minimal effort.
-*   **Dominance:** Ford-Johnson achieves near-perfect accuracy (~0.999) with fewer battles (~527) than Budgeted Merge Sort (~0.98 Tau, ~520 battles), effectively shifting the entire Pareto frontier towards higher efficiency.
+Ford-Johnson remains the production choice because it is the first practical no-duplicate point in the fresh frontier to reach perfect ranking accuracy: **526.64 battles** and **1.0000 Kendall Tau**. Budgeted Merge Sort uses slightly fewer battles (**520.00**) but reaches only **0.9631 Tau**. The newly benchmarked algorithm is therefore a useful correctness and efficiency comparison, not a replacement for Quick Rank.
 
-#### 2. The "No Duplicates" Constraint
-PreferenceRank prioritizes user efficiency by excluding any algorithm that produces duplicate comparisons. Many high-performance algorithms (Timsort, Quicksort, Shellsort) are disqualified because they are optimized for computer memory access patterns rather than minimizing unique human decisions. Ford-Johnson is a "Pure Unique" algorithm, ensuring every battle provides fresh data to the scoring model.
+The Pareto analysis can be recomputed with `node research/pareto_analysis.js`; it reads the current `results.txt` rather than maintaining a second hard-coded result set. The no-duplicate frontier for this run contains Exit Sort, Quantum Bogo, Miracle Sort, Budgeted Merge Sort, and Ford-Johnson. The low-battle points trade away ranking accuracy; Ford-Johnson is the selected operational knee because it is the first frontier entry at the 1.0000 accuracy ceiling while still avoiding duplicate user questions.
 
-#### 3. Shadow Wins and Transitive Closure
+#### The "No Duplicates" Constraint
+
+PreferenceRank prioritizes user efficiency by excluding any algorithm that produces duplicate comparisons. Many high-performance algorithms (Timsort, Quicksort, Shellsort) are optimized for computer memory access patterns rather than minimizing unique human decisions. Ford-Johnson is a "Pure Unique" algorithm, ensuring every battle provides fresh data to the scoring model.
+
+#### Shadow Wins and Transitive Closure
+
 Ford-Johnson achieves its superior performance by applying a **shadow transitive closure** on the results of the partial merge spine. This allows the Bradley-Terry model to utilize inferred wins without requiring additional user battles, maximizing the information extracted from every decision.
 
 ## 2. In-place and Block Merge Sort Comparison
@@ -144,7 +150,7 @@ The following sections detail the trade-offs between vanilla merge sort, basic i
 | Implementation Complexity | Simple | Moderate | Very High |
 
 ### Battle Count Estimate Regression
-For Ford-Johnson (the new Production Knee Point):
+For Ford-Johnson (the production knee point):
 - **Formula:** Unique Battles ~ N * log2(N) - 1.408 * N + 3
 - For N=100, this predicts 527 battles (matching simulation average).
 

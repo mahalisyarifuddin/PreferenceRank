@@ -17,13 +17,13 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Ford-Johnson** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 87 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** was identified as the optimal **mathematical knee point** (using log-scale analysis) for high-accuracy human preference ranking without redundant comparisons.
+Based on a comparative analysis of 85 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** remains the practical **production knee point** for high-accuracy human preference ranking without redundant comparisons. The rerun also includes Stanley P. Y. Fung's "I Can't Believe It Can Sort" algorithm.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau |
 |-----------|-------------|-----------------|
-| Budgeted Merge Sort | 520.00 | 0.9633 |
-| **Ford-Johnson (Quick)** | 526.84 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9631 |
+| **Ford-Johnson (Quick)** | 526.64 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
 
 ### Search Analysis
