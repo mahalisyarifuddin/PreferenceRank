@@ -1273,6 +1273,44 @@ class InsertionSortProvider extends Provider {
     }
 }
 
+/**
+ * Stanley P. Y. Fung's "I Can't Believe It Can Sort" algorithm.
+ *
+ * The original algorithm deliberately compares every pair of positions:
+ *
+ *     for i = 0 .. n - 1
+ *         for j = 0 .. n - 1
+ *             if (A[i] < A[j]) swap(A[i], A[j])
+ *
+ * A pair is yielded in the same order as the nested loops.  The benchmark
+ * supplies 1 when the first item wins and 0 when it loses, so a losing
+ * comparison is the swap condition from the paper.
+ */
+class ICantBelieveItCanSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.i = 0;
+        this.j = 0;
+    }
+
+    next(result) {
+        if (result !== undefined) {
+            if (result === 0) {
+                [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]];
+            }
+            this.j++;
+            result = undefined;
+        }
+
+        while (this.i < this.n) {
+            if (this.j < this.n) return [this.items[this.i], this.items[this.j]];
+            this.i++;
+            this.j = 0;
+        }
+        return null;
+    }
+}
+
 class IntelligentDesignSortProvider extends Provider {
     constructor(n) { super(n); }
     next() { return null; }
@@ -2285,6 +2323,7 @@ const algos = [
     { name: 'Bucket Sort', class: BucketSortProvider },
     { name: 'Selection Sort', class: SelectionSortProvider },
     { name: 'Insertion Sort', class: InsertionSortProvider },
+    { name: "I Can't Believe It Can Sort", class: ICantBelieveItCanSortProvider },
     { name: 'Binary Insertion', class: BinaryInsertionSortProvider },
     { name: 'Gnome Sort', class: GnomeSortProvider },
     { name: 'Stooge Sort', class: StoogeSortProvider },
@@ -2324,7 +2363,14 @@ const algos = [
 
 
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-if (typeof module !== "undefined" && module.exports) module.exports = { simulate, MergeSortProvider, QuickMergeSortProvider, BottomUpMergeSortProvider, QuickPairProvider };
+if (typeof module !== "undefined" && module.exports) module.exports = {
+    simulate,
+    MergeSortProvider,
+    QuickMergeSortProvider,
+    BottomUpMergeSortProvider,
+    QuickPairProvider,
+    ICantBelieveItCanSortProvider
+};
 if (isMainThread && require.main === module) {
     const args = process.argv.slice(2);
     const n_val = args[0] ? parseInt(args[0]) : 100;
