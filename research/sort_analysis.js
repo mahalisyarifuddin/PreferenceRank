@@ -967,7 +967,11 @@ class HayateShikiProvider extends Provider {
                 const t = this.mergeTasks[this.mergeTasks.length - 1];
                 if (t.state === 'INIT') { t.res = []; t.i = 0; t.j = 0; t.state = 'COMPARE'; }
                 if (t.state === 'COMPARE') {
-                    if (result !== undefined) { if (result === 1) t.res.push(t.u1[t.i++]); else t.res.push(t.u2[t.j++]); result = undefined; }
+                    // ASC merge: the WEAKER item (result === 0 means u1[i] is
+                    // not stronger than u2[j]) must be emitted first. This was
+                    // previously inverted, corrupting multi-part merges
+                    // (n >= 33 with random strengths). See PROVIDER_AUDIT.md.
+                    if (result !== undefined) { if (result === 0) t.res.push(t.u1[t.i++]); else t.res.push(t.u2[t.j++]); result = undefined; }
                     if (t.i < t.u1.length && t.j < t.u2.length) return [t.u1[t.i], t.u2[t.j]];
                     const merged = t.res.concat(t.u1.slice(t.i)).concat(t.u2.slice(t.j));
                     this.mergeTasks.pop(); if (t.callback) t.callback(merged); continue;
@@ -1317,13 +1321,18 @@ class IntelligentDesignSortProvider extends Provider {
 }
 
 class IntroSortProvider extends Provider {
+    // Musser's introsort: quicksort with depth limit 2*floor(log2(n)), heapsort
+    // fallback, insertion sort for small ranges. NOTE: all three sub-algorithms
+    // must interpret results identically (result===0 while scanning means
+    // items[j] <= pivot => Lomuto ASC); an orientation mismatch here previously
+    // broke sorting for n >= 31 (see research/PROVIDER_AUDIT.md, Finding 1).
     constructor(n) { super(n); this.depthLimit = 2 * Math.floor(Math.log2(n)); this.stack = [{l: 0, r: n - 1, d: 0}]; this.state = 'pop'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'pop') {
             if (this.state === 'pop') { if (this.stack.length === 0) return null; const {l, r, d} = this.stack.pop(); if (l >= r) continue; if (r - l <= 16) { this.iL = l; this.iR = r; this.iI = l + 1; this.state = 'insStart'; continue; } if (d > this.depthLimit) { this.state = 'heap'; this.hl = l; this.hr = r; this.hi = Math.floor((r - l + 1) / 2) - 1; this.h_state = 'heapify'; this.h_size = r - l + 1; this.h_curr = null; continue; } this.low = l; this.high = r; this.d = d; this.pivotVal = this.items[r]; this.p_i = l - 1; this.p_j = l; this.state = 'partition'; }
             if (this.state === 'insStart') { if (this.iI <= this.iR) { this.iTemp = this.items[this.iI]; this.iJ = this.iI - 1; this.state = 'insCompare'; continue; } this.state = 'pop'; continue; }
             if (this.state === 'insCompare') { if (this.iJ >= this.iL) { if (result !== undefined) { if (result === 0) { this.items[this.iJ + 1] = this.items[this.iJ]; this.iJ--; result = undefined; } else { this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; result = undefined; continue; } } else return [this.iTemp, this.items[this.iJ]]; continue; } this.items[this.iJ + 1] = this.iTemp; this.iI++; this.state = 'insStart'; continue; }
-            if (this.state === 'partition') { if (result !== undefined) { if (result === 1) { this.p_i++; [this.items[this.p_i], this.items[this.p_j]] = [this.items[this.p_j], this.items[this.p_i]]; } this.p_j++; result = undefined; } if (this.p_j < this.high) return [this.items[this.p_j], this.pivotVal]; [this.items[this.p_i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.p_i + 1]]; let p = this.p_i + 1; this.stack.push({l: p + 1, r: this.high, d: this.d + 1}, {l: this.low, r: p - 1, d: this.d + 1}); this.state = 'pop'; }
+            if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.p_i++; [this.items[this.p_i], this.items[this.p_j]] = [this.items[this.p_j], this.items[this.p_i]]; } this.p_j++; result = undefined; } if (this.p_j < this.high) return [this.items[this.p_j], this.pivotVal]; [this.items[this.p_i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.p_i + 1]]; let p = this.p_i + 1; this.stack.push({l: p + 1, r: this.high, d: this.d + 1}, {l: this.low, r: p - 1, d: this.d + 1}); this.state = 'pop'; }
             if (this.state === 'heap') {
               if (this.h_curr === null) {
                 if (this.h_state === 'heapify') {
@@ -1907,26 +1916,47 @@ class QuicksortRTLProvider extends Provider {
     }
 }
 
-class RadixSortProvider extends Provider {
-    constructor(n) { super(n); this.pass = 0; this.numPasses = Math.ceil(Math.log2(n)); this.state = 'init_pass'; }
+/**
+ * Binary quicksort — the comparison-based analogue of MSD radix exchange.
+ * Partitions each segment around a randomly chosen pivot VALUE into a
+ * "<= pivot" bucket and a "> pivot" bucket, places the pivot between them,
+ * and recurses on both buckets. Each element is compared against its
+ * segment's pivot exactly once, so no pair is ever requested twice.
+ *
+ * Replaces the former "RadixSortProvider" (fixed ceil(log2 n) random-pivot
+ * passes over the whole array plus a full insertion sort), which was NOT a
+ * radix sort: true radix sort is non-comparative (digit/counting passes) and
+ * cannot be expressed as a comparison provider. See
+ * research/PROVIDER_AUDIT.md, Finding 4.
+ */
+class BinaryQuicksortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [[0, n]]; this.state = 'start'; }
     next(result) {
-        while (this.pass < this.numPasses) {
-            if (this.state === 'init_pass') {
-              this.pIdx = Math.floor(Math.random() * this.items.length);
-              this.pivot = this.items[this.pIdx]; this.lo_bucket = []; this.hi_bucket = []; this.idx = 0; this.state = 'partition';
+        while (true) {
+            if (this.state === 'start') {
+                if (this.stack.length === 0) return null;
+                const seg = this.stack.pop();
+                if (seg[1] - seg[0] < 2) continue;
+                this.lo = seg[0]; this.hi = seg[1];
+                this.pivotIdx = this.lo + Math.floor(Math.random() * (this.hi - this.lo));
+                this.pivot = this.items[this.pivotIdx];
+                this.lo_bucket = []; this.hi_bucket = [];
+                this.idx = this.lo; this.state = 'scan'; continue;
             }
-            if (this.state === 'partition') {
-              if (result !== undefined) { (result === 0 ? this.hi_bucket : this.lo_bucket).push(this.items[this.idx]); this.idx++; result = undefined; }
-              while (this.idx < this.items.length && this.idx === this.pIdx) this.idx++;
-              if (this.idx < this.items.length) return [this.items[this.idx], this.pivot];
-              this.lo_bucket.push(this.pivot);
-              this.items = [...this.lo_bucket, ...this.hi_bucket]; this.pass++; this.state = 'init_pass'; continue;
+            if (this.state === 'scan') {
+                if (result !== undefined) {
+                    (result === 0 ? this.lo_bucket : this.hi_bucket).push(this.items[this.idx]);
+                    this.idx++; result = undefined;
+                }
+                while (this.idx < this.hi && this.idx === this.pivotIdx) this.idx++;
+                if (this.idx < this.hi) return [this.items[this.idx], this.pivot];
+                const out = this.lo_bucket.concat([this.pivot], this.hi_bucket);
+                for (let k = 0; k < out.length; k++) this.items[this.lo + k] = out[k];
+                const pivotPos = this.lo + this.lo_bucket.length;
+                this.stack.push([pivotPos + 1, this.hi], [this.lo, pivotPos]);
+                this.state = 'start'; continue;
             }
         }
-        if (!this.finalSort) { this.finalSort = new InsertionSortProvider(this.n); this.finalSort.items = this.items; }
-        const res = this.finalSort.next(result);
-        if (res === null) this.items = this.finalSort.items;
-        return res;
     }
 }
 
@@ -1975,15 +2005,33 @@ class ShellSortProvider extends Provider {
     }
 }
 
+/**
+ * "Silly sort" — deliberately absurd recursive exchange sort (meme family;
+ * no single canonical definition exists, this is the classic silly
+ * recursion): for interval [i, j], compare/swap the two endpoints, then
+ * recursively sort [i+1, j] and [i, j-1]. Correct by induction (after the
+ * second call both overlapping windows of length len-1 are sorted and the
+ * endpoint is the maximum), but it takes Theta(2^(j-i)) comparisons.
+ *
+ * The previous provider pushed four sub-intervals per frame and ignored
+ * every comparison result, so it could never sort (see
+ * research/PROVIDER_AUDIT.md, Finding 6).
+ */
 class SillySortProvider extends Provider {
-    constructor(n) { super(n); this.stack = [{i:0, j:n-1}]; this.compCount = 0; }
+    constructor(n) { super(n); this.stack = [{ i: 0, j: n - 1, state: 0 }]; }
     next(result) {
-        while (this.stack.length > 0 && this.compCount < 10000) {
-            let {i, j} = this.stack.pop(); if (i >= j) continue;
-            let m = Math.floor((i+j)/2);
-            this.stack.push({i:i, j:j-1}, {i:i+1, j:j}, {i:i, j:m}, {i:m+1, j:j});
-            this.compCount++;
-            return [this.items[i], this.items[j]];
+        while (this.stack.length > 0) {
+            const f = this.stack[this.stack.length - 1];
+            if (f.state === 0) {
+                if (f.i >= f.j) { this.stack.pop(); continue; }
+                if (result !== undefined) {
+                    if (result === 1) [this.items[f.i], this.items[f.j]] = [this.items[f.j], this.items[f.i]];
+                    this.stack.push({ i: f.i + 1, j: f.j, state: 0 }); f.state = 1; result = undefined; continue;
+                }
+                return [this.items[f.i], this.items[f.j]];
+            }
+            if (f.state === 1) { this.stack.push({ i: f.i, j: f.j - 1, state: 0 }); f.state = 2; continue; }
+            if (f.state === 2) { this.stack.pop(); continue; }
         } return null;
     }
 }
@@ -2008,6 +2056,10 @@ class SlowsortProvider extends Provider {
 }
 
 class SmoothSortProvider extends Provider {
+  // Honest labelling: this is a PROXY that delegates to HeapSortProvider, not
+  // Dijkstra's smoothsort (Leonardo heaps, O(n) best case). Kept so the
+  // benchmark suite size is unchanged; registered as "Heap Sort (Smooth
+  // Proxy)". See research/PROVIDER_AUDIT.md, Finding 5.
   constructor(n){ super(n); }
   next(result){
     if(!this.proxy){ this.proxy=new HeapSortProvider(this.n); this.proxy.items=this.items; }
@@ -2190,8 +2242,11 @@ class TournamentSortProvider extends Provider {
                     if (this.tree[right] === -1) { this.tree[parent] = this.tree[left]; this.p = parent; continue; }
                     return [this.tree[left], this.tree[right]];
                 }
-                this.sortedCount++; if (this.sortedCount === this.n) break;
-                let winner = this.tree[1]; this.out.push(winner); this.tree[this.size + winner] = -1; this.p = this.size + winner;
+                // Push the winner BEFORE counting completion: an early break
+                // here used to drop the final (weakest) element.
+                let winner = this.tree[1]; this.out.push(winner); this.sortedCount++;
+                if (this.sortedCount >= this.n) break;
+                this.tree[this.size + winner] = -1; this.p = this.size + winner;
             }
         } this.items = this.out; return null;
     }
@@ -2273,6 +2328,16 @@ class MergeSort3WayProvider extends KWayMergeSortProvider { constructor(n) { sup
 
 class MergeSort4WayProvider extends KWayMergeSortProvider { constructor(n) { super(n, 4); } }
 
+// ORIENTATION CONVENTION (see research/PROVIDER_AUDIT.md, Finding 3):
+// providers do not agree on which end of `items` holds the strongest item.
+// ASC providers (merge/quicksort/insertion families and most others — the
+// majority) leave `items` weakest-first; DESC providers (bubble, selection,
+// comb, bottom-up & ping-pong merge, cocktail, circle, stooge, bogo variants)
+// leave it strongest-first, which matches the app's best-first display.
+// `simulate()` is direction-agnostic (it ranks via the transitive reach of
+// comparison results, never provider.items), so this only matters to code
+// that consumes a provider's final array. The per-provider orientation is
+// recorded in research/audit_results.txt from research/audit_correctness.js.
 const algos = [
     { name: 'Recursive Bubble', class: RecursiveBubbleSortProvider },
     { name: 'Recursive Insertion', class: RecursiveInsertionSortProvider },
@@ -2305,7 +2370,7 @@ const algos = [
     { name: 'Hayate-Shiki', class: HayateShikiProvider },
     { name: 'Shellsort', class: ShellSortProvider },
     { name: 'Quicksort (RTL)', class: QuicksortRTLProvider },
-    { name: 'Radix Sort', class: RadixSortProvider },
+    { name: 'Binary Quicksort', class: BinaryQuicksortProvider },
     { name: 'Quicksort (LTR)', class: QuicksortLTRProvider },
     { name: 'Quicksort (Random)', class: QuicksortRandomProvider },
     { name: 'Quicksort (Middle)', class: QuicksortMiddleProvider },
@@ -2348,7 +2413,7 @@ const algos = [
     { name: 'Intro Sort', class: IntroSortProvider },
     { name: 'Strand Sort', class: StrandSortProvider },
     { name: 'Patience Sort', class: PatienceSortProvider },
-    { name: 'Smooth Sort', class: SmoothSortProvider },
+    { name: 'Heap Sort (Smooth Proxy)', class: SmoothSortProvider },
     { name: 'Circle Sort', class: CircleSortProvider },
     { name: 'Double Selection', class: DoubleSelectionSortProvider },
     { name: 'Cocktail Selection', class: CocktailSelectionSortProvider },

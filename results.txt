@@ -37,10 +37,10 @@ Rotation Merge Sort	714.30	1.0000	NO
 Timsort	532.77	1.0000	YES
 Powersort	557.14	1.0000	YES
 Parallel Merge Sort	558.88	1.0000	NO
-Hayate-Shiki	844.89	0.8426	YES
+Hayate-Shiki	1024.12	1.0000	YES
 Shellsort	629.84	1.0000	YES
 Quicksort (RTL)	643.28	1.0000	NO
-Radix Sort	878.08	1.0000	YES
+Binary Quicksort	646.49	1.0000	NO
 Quicksort (LTR)	652.04	1.0000	NO
 Quicksort (Random)	652.83	1.0000	NO
 Quicksort (Middle)	650.32	1.0000	NO
@@ -59,7 +59,7 @@ Cycle Sort	642.53	1.0000	YES
 Bitonic Sort	759.97	1.0000	YES
 Heap Sort	715.19	1.0000	YES
 Comb Sort	718.41	1.0000	YES
-Tournament Sort	558.46	1.0000	NO
+Tournament Sort	558.27	1.0000	NO
 Odd-Even Sort	2601.10	1.0000	YES
 Slowsort	580.84	0.9465	YES
 Pancake Sort	1251.65	1.0000	YES
@@ -71,10 +71,10 @@ Thanos Sort	99.00	0.4994	YES
 Miracle Sort	99.00	0.4991	NO
 Intelligent Design	0.00	0.0008	NO
 Quantum Bogo	1.65	0.0020	NO
-Intro Sort	716.90	1.0000	NO
+Intro Sort	724.86	1.0000	NO
 Strand Sort	1116.82	1.0000	YES
 Patience Sort	1006.82	1.0000	YES
-Smooth Sort	716.61	1.0000	YES
+Heap Sort (Smooth Proxy)	716.96	1.0000	YES
 Circle Sort	676.34	1.0000	YES
 Double Selection	2331.02	1.0000	YES
 Cocktail Selection	2105.65	1.0000	YES
@@ -83,5 +83,5 @@ Genghis Khan Sort	99.00	0.3576	NO
 Hater Sort	188.08	0.5638	YES
 Exit Sort	0.00	0.0014	NO
 Random Sort	209.52	0.5567	YES
-Silly Sort	71.65	0.1126	YES
+Silly Sort	202.56	0.1266	YES
 Sleep Sort	0.00	-0.0051	NO

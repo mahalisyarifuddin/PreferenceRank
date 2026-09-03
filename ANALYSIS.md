@@ -11,6 +11,7 @@ We compared 85 distinct sorting algorithms. This run adds Stanley P. Y. Fung's [
 - **Trials:** 250 per algorithm.
 - **Run command:** `node research/sort_analysis.js 100 250`
 - **Metric:** average number of unique battles and average Kendall Tau against randomly generated ground-truth strengths.
+- **Rerun note (2026-09-03):** a correctness audit of all 85 providers ([research/PROVIDER_AUDIT.md](research/PROVIDER_AUDIT.md)) fixed Intro Sort (mixed comparison orientations between its partition/insertion/heapsort branches), Tournament Sort (dropped the weakest element), and Hayate-Shiki (inverted merge comparator; Kendall Tau improves from 0.8426 to 1.0000). "Radix Sort" — which was not a radix sort — was replaced by a faithful **Binary Quicksort**, "Smooth Sort" was relabeled **Heap Sort (Smooth Proxy)**, and Silly Sort now performs the actual silly recursion. Rows for these six algorithms were re-measured with the same protocol; all other rows are retained from the original run (each algorithm is simulated independently). The Pareto frontier and the Ford-Johnson knee point are unchanged.
 
 ### Results (N=100)
 
@@ -22,12 +23,12 @@ We compared 85 distinct sorting algorithms. This run adds Stanley P. Y. Fung's [
 | Sleep Sort | 0.00 | -0.0051 | NO | Dominated |
 | Quantum Bogo | 1.65 | 0.0020 | NO | Pareto-optimal |
 | BogoBogoSort | 26.63 | 0.0068 | YES | Dominated |
-| Silly Sort | 71.65 | 0.1126 | YES | Dominated |
 | Thanos Sort | 99.00 | 0.4994 | YES | Dominated |
 | Miracle Sort | 99.00 | 0.4991 | NO | Pareto-optimal |
 | Genghis Khan Sort | 99.00 | 0.3576 | NO | Dominated |
 | Stalin Sort | 99.00 | 0.0340 | NO | Dominated |
 | Hater Sort | 188.08 | 0.5638 | YES | Dominated |
+| Silly Sort | 202.56 | 0.1266 | YES | Dominated |
 | Random Sort | 209.52 | 0.5567 | YES | Dominated |
 | Budgeted Merge Sort | 520.00 | 0.9631 | NO | Pareto-optimal |
 | Ford-Johnson (Quick) | 526.64 | 1.0000 | NO | **Production knee** |
@@ -40,7 +41,7 @@ We compared 85 distinct sorting algorithms. This run adds Stanley P. Y. Fung's [
 | 4-way Merge Sort | 543.93 | 1.0000 | NO | Dominated |
 | Powersort | 557.14 | 1.0000 | YES | Dominated |
 | Ping-pong Merge Sort | 558.13 | 1.0000 | NO | Dominated |
-| Tournament Sort | 558.46 | 1.0000 | NO | Dominated |
+| Tournament Sort | 558.27 | 1.0000 | NO | Dominated |
 | Bottom-up Merge Sort | 558.53 | 1.0000 | NO | Dominated |
 | Parallel Merge Sort | 558.88 | 1.0000 | NO | Dominated |
 | Quicksort (Ninther) | 562.76 | 1.0000 | YES | Dominated |
@@ -55,6 +56,7 @@ We compared 85 distinct sorting algorithms. This run adds Stanley P. Y. Fung's [
 | Tree Sort | 643.05 | 1.0000 | NO | Dominated |
 | Quicksort (RTL) | 643.28 | 1.0000 | NO | Dominated |
 | Dual-Pivot Quicksort | 646.42 | 1.0000 | NO | Dominated |
+| Binary Quicksort | 646.49 | 1.0000 | NO | Dominated |
 | 3-Way Quicksort | 647.17 | 1.0000 | NO | Dominated |
 | Parallel Quicksort | 648.95 | 1.0000 | NO | Dominated |
 | Quicksort (Middle) | 650.32 | 1.0000 | NO | Dominated |
@@ -68,11 +70,11 @@ We compared 85 distinct sorting algorithms. This run adds Stanley P. Y. Fung's [
 | Stooge Sort | 686.91 | 1.0000 | YES | Dominated |
 | Rotation Merge Sort | 714.30 | 1.0000 | NO | Dominated |
 | Heap Sort | 715.19 | 1.0000 | YES | Dominated |
-| Smooth Sort | 716.61 | 1.0000 | YES | Dominated |
-| Intro Sort | 716.90 | 1.0000 | NO | Dominated |
+| Heap Sort (Smooth Proxy) | 716.96 | 1.0000 | YES | Dominated |
 | BlockQuicksort | 717.91 | 1.0000 | NO | Dominated |
 | Comb Sort | 718.41 | 1.0000 | YES | Dominated |
 | Recursive Comb Sort | 721.14 | 1.0000 | YES | Dominated |
+| Intro Sort | 724.86 | 1.0000 | NO | Dominated |
 | PDQSort | 728.18 | 1.0000 | YES | Dominated |
 | Bitonic Sort | 759.97 | 1.0000 | YES | Dominated |
 | Bucket Sort | 766.26 | 1.0000 | NO | Dominated |
@@ -80,9 +82,8 @@ We compared 85 distinct sorting algorithms. This run adds Stanley P. Y. Fung's [
 | Full Rank | 810.80 | 1.0000 | NO | Dominated |
 | Bogosort | 810.89 | 1.0000 | YES | Dominated |
 | Binary Bottom-up Merge | 836.42 | 1.0000 | NO | Dominated |
-| Hayate-Shiki | 844.89 | 0.8426 | YES | Dominated |
-| Radix Sort | 878.08 | 1.0000 | YES | Dominated |
 | Patience Sort | 1006.82 | 1.0000 | YES | Dominated |
+| Hayate-Shiki | 1024.12 | 1.0000 | YES | Dominated |
 | Strand Sort | 1116.82 | 1.0000 | YES | Dominated |
 | Pancake Sort | 1251.65 | 1.0000 | YES | Dominated |
 | Cocktail Selection | 2105.65 | 1.0000 | YES | Dominated |
