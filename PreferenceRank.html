@@ -2229,15 +2229,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					if (!this.dirty && this.scores?.length === n)
 						return;
 					const wins = new Float64Array(n);
-					const adjMaps = Array.from({
-						length: n
-					}, ()=>new Map());
+					const adjCounts = new Uint32Array(n * n);
 					for (let i = 0; i < n; i++) {
 						for (let j = 0; j < n; j++) {
 							if (i === j || !this.reach[i * n + j]) continue;
 							wins[i] += 1;
-							adjMaps[i].set(j, (adjMaps[i].get(j) || 0) + 1);
-							adjMaps[j].set(i, (adjMaps[j].get(i) || 0) + 1);
+							adjCounts[i * n + j] += 1;
+							adjCounts[j * n + i] += 1;
 						}
 					}
 
@@ -2246,22 +2244,29 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 							if (match.result === 0.5) {
 								wins[match.a] += 0.5;
 								wins[match.b] += 0.5;
-								adjMaps[match.a].set(match.b, (adjMaps[match.a].get(match.b) || 0) + 1);
-								adjMaps[match.b].set(match.a, (adjMaps[match.b].get(match.a) || 0) + 1);
+								adjCounts[match.a * n + match.b] += 1;
+								adjCounts[match.b * n + match.a] += 1;
 							}
 						}
 					}
 
-					this.adj = adjMaps.map(m=>{
-						const row = new Int32Array(m.size * 2);
+					this.adj = Array.from({ length: n }, (_, i) => {
+						const offset = i * n;
+						let size = 0;
+						for (let j = 0; j < n; j++) {
+							if (adjCounts[offset + j] > 0) size++;
+						}
+						const row = new Int32Array(size * 2);
 						let k = 0;
-						for (const [j,c] of m) {
-							row[k++] = j;
-							row[k++] = c;
+						for (let j = 0; j < n; j++) {
+							const c = adjCounts[offset + j];
+							if (c > 0) {
+								row[k++] = j;
+								row[k++] = c;
+							}
 						}
 						return row;
-					}
-					);
+					});
 					const W = new Float64Array(n);
 					for (let i = 0; i < n; i++)
 						W[i] = wins[i] + 0.5;
@@ -2403,7 +2408,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						return this.pair = null,
 						this.results();
 					this.pair = nextPair;
-					this.swapped = this.swaps[[...nextPair].sort().join('-')] ??= Math.random() < .5;
+					const swapKey = nextPair[0] < nextPair[1] ? `${nextPair[0]}-${nextPair[1]}` : `${nextPair[1]}-${nextPair[0]}`;
+					this.swapped = this.swaps[swapKey] ??= Math.random() < .5;
 					this.render();
 				}
 				render() {
