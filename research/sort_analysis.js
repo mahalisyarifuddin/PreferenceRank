@@ -4685,6 +4685,837 @@ class BovoSortProvider extends Provider {
     }
 }
 
+
+// ---------------------------------------------------------------------------
+// Web expansion 3 (2026-09-11)
+//
+// CoroutineSortProvider lets the ports below read like their published
+// pseudocode while preserving the benchmark's one-comparison-at-a-time API.
+// A yielded pair [a,b] receives 1 exactly when a is stronger than b.  The
+// helpers therefore maintain an ASC (weakest-first) internal order.
+// ---------------------------------------------------------------------------
+class CoroutineSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this._iterator = this.sort();
+        this._started = false;
+    }
+    next(result) {
+        const step = this._iterator.next(this._started ? result : undefined);
+        this._started = true;
+        return step.done ? null : step.value;
+    }
+    *sort() {}
+    *_greater(a, b) { return (yield [a, b]) === 1; }
+    *_less(a, b) { return (yield [a, b]) === 0; }
+    *_insertion(arr) {
+        for (let i = 1; i < arr.length; i++) {
+            const key = arr[i];
+            let j = i;
+            while (j > 0) {
+                if (!(yield* this._less(key, arr[j - 1]))) break;
+                arr[j] = arr[j - 1]; j--;
+            }
+            arr[j] = key;
+        }
+        return arr;
+    }
+    *_binaryInsertion(arr) {
+        for (let i = 1; i < arr.length; i++) {
+            const key = arr[i]; let lo = 0, hi = i;
+            while (lo < hi) {
+                const mid = (lo + hi) >> 1;
+                if (yield* this._less(key, arr[mid])) hi = mid;
+                else lo = mid + 1;
+            }
+            for (let j = i; j > lo; j--) arr[j] = arr[j - 1];
+            arr[lo] = key;
+        }
+        return arr;
+    }
+    *_merge(A, B) {
+        const out = []; let i = 0, j = 0;
+        while (i < A.length && j < B.length) {
+            if (yield* this._greater(A[i], B[j])) out.push(B[j++]);
+            else out.push(A[i++]);
+        }
+        return out.concat(A.slice(i), B.slice(j));
+    }
+    *_mergeSort(arr, cutoff = 1) {
+        if (arr.length <= 1) return arr.slice();
+        if (arr.length <= cutoff) return yield* this._insertion(arr.slice());
+        const mid = arr.length >> 1;
+        const left = yield* this._mergeSort(arr.slice(0, mid), cutoff);
+        const right = yield* this._mergeSort(arr.slice(mid), cutoff);
+        return yield* this._merge(left, right);
+    }
+    *_medianOf(arr) {
+        const a = arr.slice();
+        yield* this._insertion(a);
+        return a[a.length >> 1];
+    }
+    *_stableQuick(arr, cutoff = 16, sample = 3) {
+        if (arr.length <= 1) return arr.slice();
+        if (arr.length <= cutoff) return yield* this._insertion(arr.slice());
+        let picks;
+        if (sample >= 9 && arr.length >= 9) {
+            picks = [];
+            for (let i = 0; i < 9; i++) picks.push(arr[Math.floor(i * (arr.length - 1) / 8)]);
+            const thirds = [];
+            for (let i = 0; i < 9; i += 3) thirds.push(yield* this._medianOf(picks.slice(i, i + 3)));
+            picks = thirds;
+        } else {
+            picks = [arr[0], arr[arr.length >> 1], arr[arr.length - 1]];
+        }
+        const pivot = yield* this._medianOf(picks);
+        const left = [], right = [];
+        let skippedPivot = false;
+        for (const x of arr) {
+            if (!skippedPivot && x === pivot) { skippedPivot = true; continue; }
+            if (yield* this._greater(x, pivot)) right.push(x); else left.push(x);
+        }
+        const L = yield* this._stableQuick(left, cutoff, sample);
+        const R = yield* this._stableQuick(right, cutoff, sample);
+        return L.concat([pivot], R);
+    }
+    *_twinSort(arr) {
+        const n = arr.length;
+        if (n < 2) return arr.slice();
+        let index = 0, end = n - 2;
+        while (index <= end) {
+            if (!(yield* this._greater(arr[index], arr[index + 1]))) { index += 2; continue; }
+            const start = index; index += 2;
+            while (true) {
+                if (index > end) {
+                    if (start === 0 && (n % 2 === 0 || (yield* this._greater(arr[index - 1], arr[index])))) {
+                        arr.reverse(); return arr;
+                    }
+                    break;
+                }
+                if (yield* this._greater(arr[index], arr[index + 1])) {
+                    if (yield* this._greater(arr[index - 1], arr[index])) { index += 2; continue; }
+                    [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                }
+                break;
+            }
+            let l = start, r = index - 1;
+            while (l < r) { [arr[l], arr[r]] = [arr[r], arr[l]]; l++; r--; }
+            index += 2;
+        }
+        for (let width = 2; width < n; width *= 2) {
+            for (let lo = 0; lo + width < n; lo += 2 * width) {
+                const mid = lo + width, hi = Math.min(n, lo + 2 * width);
+                if (!(yield* this._greater(arr[mid - 1], arr[mid]))) continue;
+                const merged = yield* this._merge(arr.slice(lo, mid), arr.slice(mid, hi));
+                arr.splice(lo, merged.length, ...merged);
+            }
+        }
+        return arr;
+    }
+    *_tournamentMerge(runs, recordLosers = false) {
+        runs = runs.filter(r => r.length > 0);
+        if (runs.length === 0) return [];
+        if (runs.length === 1) return runs[0].slice();
+        let leaves = 1; while (leaves < runs.length) leaves <<= 1;
+        const tree = new Array(2 * leaves).fill(-1), losers = new Array(leaves).fill(-1);
+        const pos = new Array(runs.length).fill(0);
+        for (let i = 0; i < runs.length; i++) tree[leaves + i] = i;
+        const choose = function* (self, a, b, node) {
+            if (a < 0) return b; if (b < 0) return a;
+            const aw = runs[a][pos[a]], bw = runs[b][pos[b]];
+            const aGreater = yield* self._greater(aw, bw);
+            const win = aGreater ? b : a;
+            if (recordLosers) losers[node] = aGreater ? a : b;
+            return win;
+        };
+        for (let node = leaves - 1; node >= 1; node--)
+            tree[node] = yield* choose(this, tree[node * 2], tree[node * 2 + 1], node);
+        const out = [];
+        if (recordLosers) {
+            // In a loser tree the overall winner stays in a register. After
+            // advancing its input run, replay only against the loser saved at
+            // each ancestor; the new loser is written back at that node.
+            let winner = tree[1];
+            while (winner >= 0) {
+                const source = winner;
+                out.push(runs[source][pos[source]++]);
+                let challenger = pos[source] < runs[source].length ? source : -1;
+                for (let node = (leaves + source) >> 1; node >= 1; node >>= 1) {
+                    const opponent = losers[node];
+                    if (challenger < 0) {
+                        challenger = opponent; losers[node] = -1;
+                    } else if (opponent >= 0) {
+                        const challengerGreater = yield* this._greater(
+                            runs[challenger][pos[challenger]], runs[opponent][pos[opponent]]
+                        );
+                        if (challengerGreater) {
+                            losers[node] = challenger; challenger = opponent;
+                        } else {
+                            losers[node] = opponent;
+                        }
+                    }
+                }
+                winner = challenger;
+            }
+            return out;
+        }
+        while (tree[1] >= 0) {
+            const source = tree[1]; out.push(runs[source][pos[source]++]);
+            let node = leaves + source;
+            tree[node] = pos[source] < runs[source].length ? source : -1;
+            for (node >>= 1; node >= 1; node >>= 1)
+                tree[node] = yield* choose(this, tree[node * 2], tree[node * 2 + 1], node);
+        }
+        return out;
+    }
+}
+
+/** Stable selection: select each minimum, then shift-and-insert instead of
+ * swapping it over equal records. Source: Sorting Wiki, Stable Selection. */
+class StableSelectionSortProvider extends CoroutineSortProvider {
+    *sort() {
+        for (let i = 0; i + 1 < this.items.length; i++) {
+            let min = i;
+            for (let j = i + 1; j < this.items.length; j++)
+                if (yield* this._less(this.items[j], this.items[min])) min = j;
+            const key = this.items[min];
+            while (min > i) { this.items[min] = this.items[min - 1]; min--; }
+            this.items[i] = key;
+        }
+    }
+}
+
+/** Morwenn's center-out double insertion sort: consume two outer records per
+ * round and insert the low/high member from opposite ends of the sorted core. */
+class DoubleInsertionSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const input = this.items.slice(), n = input.length;
+        if (n < 2) return;
+        let lo = (n - 1) >> 1, hi = n >> 1;
+        let core;
+        if (lo === hi) { core = [input[lo]]; lo--; hi++; }
+        else {
+            if (yield* this._greater(input[lo], input[hi])) core = [input[hi], input[lo]];
+            else core = [input[lo], input[hi]];
+            lo--; hi++;
+        }
+        while (lo >= 0 || hi < n) {
+            if (lo < 0) { const x = input[hi++]; let p = core.length;
+                while (p > 0 && (yield* this._less(x, core[p - 1]))) p--;
+                core.splice(p, 0, x); continue; }
+            if (hi >= n) { const x = input[lo--]; let p = 0;
+                while (p < core.length && !(yield* this._less(x, core[p]))) p++;
+                core.splice(p, 0, x); continue; }
+            let low = input[lo--], high = input[hi++];
+            if (yield* this._greater(low, high)) [low, high] = [high, low];
+            let p = 0;
+            while (p < core.length && !(yield* this._less(low, core[p]))) p++;
+            core.splice(p, 0, low);
+            p = core.length;
+            while (p > 0 && (yield* this._less(high, core[p - 1]))) p--;
+            core.splice(p, 0, high);
+        }
+        this.items = core;
+    }
+}
+
+/** 3-Smooth Comb uses every gap 2^p*3^q below n, descending, and needs only
+ * one final gap-1 pass. Source: Sorting Wiki, Combsort / 3-Smooth Comb. */
+class ThreeSmoothCombSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const gaps = new Set([1]);
+        for (let a = 1; a < this.n; a *= 2)
+            for (let g = a; g < this.n; g *= 3) gaps.add(g);
+        for (const gap of [...gaps].sort((a, b) => b - a)) {
+            for (let i = 0; i + gap < this.n; i++) {
+                if (yield* this._greater(this.items[i], this.items[i + gap]))
+                    [this.items[i], this.items[i + gap]] = [this.items[i + gap], this.items[i]];
+            }
+        }
+    }
+}
+
+class GapInsertionSortProvider extends CoroutineSortProvider {
+    gaps() { return [1]; }
+    *sort() {
+        const gaps = [...new Set(this.gaps().filter(g => g > 0 && g < this.n))].sort((a, b) => b - a);
+        if (!gaps.includes(1)) gaps.push(1);
+        for (const gap of gaps) {
+            for (let i = gap; i < this.n; i++) {
+                const key = this.items[i]; let j = i;
+                while (j >= gap && (yield* this._less(key, this.items[j - gap]))) {
+                    this.items[j] = this.items[j - gap]; j -= gap;
+                }
+                this.items[j] = key;
+            }
+        }
+    }
+}
+/** Pratt's Shellsort: all 3-smooth increments, but gapped insertion passes
+ * rather than 3-Smooth Comb's compare-exchange passes. */
+class PrattShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const s = new Set([1]); for (let a=1;a<this.n;a*=2) for(let g=a;g<this.n;g*=3)s.add(g); return [...s]; }
+}
+/** Tokuda's empirically tuned Shellsort increment sequence. */
+class TokudaShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g=[]; for(let k=1;;k++){const x=Math.ceil((9*Math.pow(9/4,k-1)-4)/5);if(x>=this.n)break;g.push(x);}return g; }
+}
+/** Sedgewick's 1986 alternating Shellsort increment sequence. */
+class SedgewickShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g=[]; for(let k=0;;k++){const x=k%2===0?9*(Math.pow(2,k)-Math.pow(2,k/2))+1:8*Math.pow(2,k)-6*Math.pow(2,(k+1)/2)+1;if(x>=this.n)break;g.push(x);}return g; }
+}
+
+/** cpp-sort-style d-ary heap: incremental heap construction followed by
+ * repeated maximum extraction. D=3 and D=4 are separately registered. */
+class DAryHeapSortProvider extends CoroutineSortProvider {
+    constructor(n, arity) { super(n); this.arity = arity; }
+    *_siftUp(heap, at) {
+        while (at > 0) { const p = Math.floor((at - 1) / this.arity);
+            if (!(yield* this._less(heap[p], heap[at]))) break;
+            [heap[p], heap[at]] = [heap[at], heap[p]]; at = p; }
+    }
+    *_siftDown(heap, at, size) {
+        while (at * this.arity + 1 < size) {
+            let best = at * this.arity + 1;
+            const last = Math.min(size, best + this.arity);
+            for (let c = best + 1; c < last; c++) if (yield* this._less(heap[best], heap[c])) best = c;
+            if (!(yield* this._less(heap[at], heap[best]))) break;
+            [heap[at], heap[best]] = [heap[best], heap[at]]; at = best;
+        }
+    }
+    *sort() {
+        const h = this.items;
+        for (let i = 1; i < h.length; i++) yield* this._siftUp(h, i);
+        for (let size = h.length; size > 1; size--) {
+            [h[0], h[size - 1]] = [h[size - 1], h[0]];
+            yield* this._siftDown(h, 0, size - 1);
+        }
+    }
+}
+class TernaryHeapSortProvider extends DAryHeapSortProvider { constructor(n) { super(n, 3); } }
+class QuaternaryHeapSortProvider extends DAryHeapSortProvider { constructor(n) { super(n, 4); } }
+
+/** External/out-of-place heapsort: incremental min-heap plus remove-min into
+ * a separate output stream (the external-heap form used by QuickXsort). */
+class OutOfPlaceHeapSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const heap = [];
+        for (const x of this.items) {
+            heap.push(x); let i = heap.length - 1;
+            while (i > 0) { const p = (i - 1) >> 1;
+                if (!(yield* this._less(heap[i], heap[p]))) break;
+                [heap[i], heap[p]] = [heap[p], heap[i]]; i = p; }
+        }
+        const out = [];
+        while (heap.length) {
+            out.push(heap[0]); const tail = heap.pop(); if (!heap.length) break;
+            heap[0] = tail; let i = 0;
+            while (i * 2 + 1 < heap.length) {
+                let c = i * 2 + 1;
+                if (c + 1 < heap.length && (yield* this._less(heap[c + 1], heap[c]))) c++;
+                if (!(yield* this._less(heap[c], heap[i]))) break;
+                [heap[c], heap[i]] = [heap[i], heap[c]]; i = c;
+            }
+        }
+        this.items = out;
+    }
+}
+
+/** Atkinson-Sack-Santoro-Strothotte min-max heap. Even levels are min levels,
+ * odd levels max levels; sort is repeated delete-min from the double-ended PQ. */
+class MinMaxHeapSortProvider extends CoroutineSortProvider {
+    _minLevel(i) { return (Math.floor(Math.log2(i + 1)) & 1) === 0; }
+    *_extremeIndex(h, indices, wantMin) {
+        let best = indices[0];
+        for (let k = 1; k < indices.length; k++) {
+            const isLess = yield* this._less(h[indices[k]], h[best]);
+            if (wantMin ? isLess : !isLess) best = indices[k];
+        }
+        return best;
+    }
+    *_trickle(h, i, size) {
+        while (2 * i + 1 < size) {
+            const cand = [];
+            for (let c = 2 * i + 1; c <= 2 * i + 2 && c < size; c++) cand.push(c);
+            for (let c = 4 * i + 3; c <= 4 * i + 6 && c < size; c++) cand.push(c);
+            const minLevel = this._minLevel(i);
+            const m = yield* this._extremeIndex(h, cand, minLevel);
+            const better = minLevel ? (yield* this._less(h[m], h[i])) : (yield* this._less(h[i], h[m]));
+            if (!better) break;
+            const grandchild = m >= 4 * i + 3;
+            [h[m], h[i]] = [h[i], h[m]];
+            if (!grandchild) break;
+            const p = (m - 1) >> 1;
+            const crosses = minLevel ? (yield* this._less(h[p], h[m])) : (yield* this._less(h[m], h[p]));
+            if (crosses) [h[p], h[m]] = [h[m], h[p]];
+            i = m;
+        }
+    }
+    *sort() {
+        const h = this.items.slice();
+        for (let i = (h.length >> 1) - 1; i >= 0; i--) yield* this._trickle(h, i, h.length);
+        const out = [];
+        while (h.length) {
+            out.push(h[0]); const tail = h.pop();
+            if (h.length) { h[0] = tail; yield* this._trickle(h, 0, h.length); }
+        }
+        this.items = out;
+    }
+}
+
+/** Levcopoulos-Petersson Poplar sort. The input is decomposed into perfect
+ * post-order heaps of size 2^k-1; roots compete before each extraction. */
+class PoplarSortProvider extends CoroutineSortProvider {
+    *_sift(a, first, size) {
+        if (size < 2) return;
+        const half = (size - 1) >> 1, root = first + size - 1;
+        const lr = first + half - 1, rr = root - 1;
+        let best = root;
+        if (yield* this._less(a[best], a[lr])) best = lr;
+        if (yield* this._less(a[best], a[rr])) best = rr;
+        if (best !== root) {
+            [a[root], a[best]] = [a[best], a[root]];
+            yield* this._sift(a, best === lr ? first : first + half, half);
+        }
+    }
+    *_make(a, first, size) {
+        if (size < 16) {
+            const part = a.slice(first, first + size); yield* this._insertion(part);
+            a.splice(first, size, ...part); return;
+        }
+        const half = (size - 1) >> 1;
+        yield* this._make(a, first, half); yield* this._make(a, first + half, half);
+        yield* this._sift(a, first, size);
+    }
+    *sort() {
+        const a = this.items, pops = [];
+        let largest = 1; while (largest * 2 + 1 <= a.length) largest = largest * 2 + 1;
+        let at = 0, size = largest;
+        while (size > 0) {
+            if (a.length - at >= size) { yield* this._make(a, at, size); pops.push({start:at,size}); at += size; }
+            else size = (size - 1) >> 1;
+        }
+        while (pops.length) {
+            let best = 0;
+            for (let i = 1; i < pops.length; i++) {
+                const br = pops[best].start + pops[best].size - 1, ir = pops[i].start + pops[i].size - 1;
+                if (yield* this._less(a[br], a[ir])) best = i;
+            }
+            const last = pops.length - 1;
+            const br = pops[best].start + pops[best].size - 1, lr = pops[last].start + pops[last].size - 1;
+            if (best !== last) { [a[br], a[lr]] = [a[lr], a[br]]; yield* this._sift(a, pops[best].start, pops[best].size); }
+            const p = pops.pop();
+            if (p.size > 1) {
+                const half = (p.size - 1) >> 1;
+                pops.push({start:p.start,size:half}, {start:p.start+half,size:half});
+            }
+        }
+    }
+}
+
+/** McIlroy's MEL sort: greedily form encroaching lists, then merge the lists
+ * pairwise. This follows the original first-compatible-list formulation. */
+class MELSortProvider extends CoroutineSortProvider {
+    *_mel(input, cap = Infinity) {
+        const lists = [];
+        for (const x of input) {
+            let placed = false;
+            for (const list of lists) {
+                if (yield* this._less(x, list[0])) { list.unshift(x); placed = true; break; }
+                if (yield* this._less(list[list.length - 1], x)) { list.push(x); placed = true; break; }
+            }
+            if (!placed) { lists.push([x]); if (lists.length >= cap) return null; }
+        }
+        while (lists.length > 1) {
+            const next = [];
+            for (let i = 0; i < lists.length; i += 2)
+                next.push(i + 1 < lists.length ? (yield* this._merge(lists[i], lists[i + 1])) : lists[i]);
+            lists.splice(0, lists.length, ...next);
+        }
+        return lists[0] || [];
+    }
+    *sort() { this.items = yield* this._mel(this.items.slice()); }
+}
+
+/** Twinsort 1.1 comparison port: twin-swap pair preprocessing with reverse-run
+ * detection, followed by tail-oriented bottom-up merges from width two. */
+class TwinsortProvider extends CoroutineSortProvider {
+    *sort() { this.items = yield* this._twinSort(this.items.slice()); }
+}
+
+/** Boost/cpp-sort Spinsort comparison port. At n<=72 it is insertion sort;
+ * larger inputs recursively create ~32-item insertion runs and merge through
+ * an n/2 scratch range. Buffer moves are comparison-free in this benchmark. */
+class SpinSortProvider extends CoroutineSortProvider {
+    *sort() {
+        if (this.n <= 72) { this.items = yield* this._insertion(this.items.slice()); return; }
+        const half = (this.n + 1) >> 1;
+        const spinHalf = function* (self, a) {
+            if (a.length <= 32) return yield* self._insertion(a);
+            const m = (a.length + 1) >> 1;
+            return yield* self._merge(yield* spinHalf(self, a.slice(0,m)), yield* spinHalf(self, a.slice(m)));
+        };
+        this.items = yield* this._merge(
+            yield* spinHalf(this, this.items.slice(0, half)),
+            yield* spinHalf(this, this.items.slice(half))
+        );
+    }
+}
+
+/** Weave Merge recursively sorts halves, in-shuffles right/left records, then
+ * repairs the interleave with insertion. Source: Sorting Wiki, Weave Merge. */
+class WeaveMergeSortProvider extends CoroutineSortProvider {
+    *_weaveSort(a) {
+        if (a.length <= 1) return a;
+        const m = a.length >> 1;
+        const A = yield* this._weaveSort(a.slice(0,m)), B = yield* this._weaveSort(a.slice(m));
+        const woven = [];
+        for (let i=0;i<Math.max(A.length,B.length);i++) { if(i<B.length)woven.push(B[i]);if(i<A.length)woven.push(A[i]); }
+        return yield* this._insertion(woven);
+    }
+    *sort() { this.items = yield* this._weaveSort(this.items.slice()); }
+}
+
+/** QuickMergesort / QuickXsort comparison port: median-of-three stable
+ * partition; sort the largest side whose required half-buffer fits in the
+ * other side with mergesort, then recurse on the remaining side. */
+class QuickMergesortProvider extends CoroutineSortProvider {
+    *_qms(a) {
+        if (a.length <= 16) return yield* this._insertion(a);
+        const pivot = yield* this._medianOf([a[0],a[a.length>>1],a[a.length-1]]);
+        const L=[], R=[]; let skipped=false;
+        for(const x of a){if(!skipped&&x===pivot){skipped=true;continue;}if(yield* this._greater(x,pivot))R.push(x);else L.push(x);}
+        let left, right;
+        if (L.length >= Math.ceil(R.length/2)) { right = yield* this._mergeSort(R); left = yield* this._qms(L); }
+        else if (R.length >= Math.ceil(L.length/2)) { left = yield* this._mergeSort(L); right = yield* this._qms(R); }
+        else { left = yield* this._qms(L); right = yield* this._qms(R); }
+        return left.concat([pivot],right);
+    }
+    *sort(){this.items=yield* this._qms(this.items.slice());}
+}
+
+/** Four-way Powersort (Cawley Gelling et al.): natural runs, base-4 boundary
+ * powers, weakly increasing stack powers, and 2/3/4-way tournament merges. */
+class FourWayPowersortProvider extends CoroutineSortProvider {
+    _power(a,b){let x=(a.start+a.arr.length/2)/this.n,y=(b.start+b.arr.length/2)/this.n,p=0;while(true){const xd=Math.floor(x*4),yd=Math.floor(y*4);p++;if(xd!==yd)return p;x=x*4-xd;y=y*4-yd;}}
+    *_runs(){const runs=[];let s=0;while(s<this.n){if(s+1>=this.n){runs.push({start:s,arr:[this.items[s]]});break;}let i=s+1;const down=yield* this._greater(this.items[s],this.items[i]);i++;while(i<this.n){const gt=yield* this._greater(this.items[i-1],this.items[i]);if(gt!==down)break;i++;}let a=this.items.slice(s,i);if(down)a.reverse();runs.push({start:s,arr:a});s=i;}return runs;}
+    *_group(group){return yield* this._tournamentMerge(group.map(x=>x.arr));}
+    *sort(){
+        const runs=yield* this._runs();if(!runs.length){this.items=[];return;}const stack=[];let cur=runs[0];
+        for(let i=1;i<runs.length;i++){const next=runs[i],p=this._power(cur,next);
+            while(stack.length&&stack[stack.length-1].power>p){const q=stack[stack.length-1].power,g=[cur];while(stack.length&&stack[stack.length-1].power===q)g.unshift(stack.pop());cur={start:g[0].start,arr:yield* this._group(g)};}
+            stack.push({start:cur.start,arr:cur.arr,power:p});cur=next;
+        }
+        while(stack.length){const g=[cur];for(let k=0;k<3&&stack.length;k++)g.unshift(stack.pop());cur={start:g[0].start,arr:yield* this._group(g)};}
+        this.items=cur.arr;
+    }
+}
+
+/** External loser-tree merge: insertion-sort B=8 memory runs, then replay a
+ * loser-recording tournament path for the final k-way merge. */
+class LoserTreeMergeSortProvider extends CoroutineSortProvider {
+    *sort(){const runs=[];for(let i=0;i<this.n;i+=8)runs.push(yield* this._insertion(this.items.slice(i,i+8)));this.items=yield* this._tournamentMerge(runs,true);}
+}
+
+/** GrailSort no-external-buffer comparison skeleton. It faithfully models
+ * sorted collection of 2*ceil(sqrt(n)) distinct internal keys, pair runs,
+ * growing buffered merges, and final key merge. Block swaps/rotations are
+ * moves and intentionally invisible to a comparison-only benchmark. */
+class GrailSortProvider extends CoroutineSortProvider {
+    *sort(){
+        if(this.n<2)return;const target=Math.min(this.n,2*Math.ceil(Math.sqrt(this.n))),keys=[this.items[0]],rest=this.items.slice(1);
+        for(let i=0;i<rest.length&&keys.length<target;){const x=rest[i];let lo=0,hi=keys.length;while(lo<hi){const m=(lo+hi)>>1;if(yield* this._less(x,keys[m]))hi=m;else lo=m+1;}keys.splice(lo,0,x);rest.splice(i,1);}
+        let runs=[];for(let i=0;i<rest.length;i+=2)runs.push(yield* this._insertion(rest.slice(i,i+2)));
+        while(runs.length>1){const nr=[];for(let i=0;i<runs.length;i+=2)nr.push(i+1<runs.length?(yield* this._merge(runs[i],runs[i+1])):runs[i]);runs=nr;}
+        this.items=yield* this._merge(keys,runs[0]||[]);
+    }
+}
+
+/** WikiSort's public reference fixed-cache path: insertion-sort cache-sized
+ * base runs, skip already-ordered boundaries, then stable bottom-up block
+ * merges. The O(1)-memory rotation fallback is not selected at N=100. */
+class WikiSortProvider extends CoroutineSortProvider {
+    *sort(){let runs=[];for(let i=0;i<this.n;i+=8)runs.push(yield* this._insertion(this.items.slice(i,i+8)));
+        while(runs.length>1){const nr=[];for(let i=0;i<runs.length;i+=2){if(i+1>=runs.length){nr.push(runs[i]);continue;}const A=runs[i],B=runs[i+1];if(!(yield* this._greater(A[A.length-1],B[0])))nr.push(A.concat(B));else nr.push(yield* this._merge(A,B));}runs=nr;}this.items=runs[0]||[];}
+}
+
+/** Fluxsort 1.1 comparison port: median-of-three quartile pivot, stable
+ * out-of-place partition, recursive partitions, and Twinsort at <=64. */
+class FluxsortProvider extends CoroutineSortProvider {
+    *_flux(a){if(a.length<=64)return yield* this._twinSort(a);const pivot=yield* this._medianOf([a[a.length>>2],a[a.length>>1],a[(3*a.length)>>2]]);const L=[],R=[];let skipped=false;for(const x of a){if(!skipped&&x===pivot){skipped=true;L.push(x);continue;}if(yield* this._greater(x,pivot))R.push(x);else L.push(x);}return (yield* this._flux(L)).concat(yield* this._flux(R));}
+    *sort(){this.items=yield* this._flux(this.items.slice());}
+}
+
+/** Crumsort comparison port: full adjacent-pair analyzer, adaptive merge-sort
+ * fallback above 66% order, otherwise ninther quicksort with a 24-item base. */
+class CrumsortProvider extends CoroutineSortProvider {
+    *sort(){if(this.n<2)return;let ordered=0,up=0,down=0;for(let i=1;i<this.n;i++){if(yield* this._greater(this.items[i-1],this.items[i]))down++;else up++;}ordered=Math.max(up,down)/(this.n-1);
+        if(up===this.n-1) return;if(down===this.n-1){this.items.reverse();return;}
+        if(ordered>=2/3)this.items=yield* this._mergeSort(this.items.slice(),16);else this.items=yield* this._stableQuick(this.items.slice(),24,9);}
+}
+
+/** Glidesort comparison-level port: classify natural runs vs deferred 8-item
+ * logical runs, use Powersort's boundary policy, materialize unordered runs
+ * with stable quicksort only when a logical merge needs physical order. */
+class GlidesortProvider extends CoroutineSortProvider {
+    _power(a,b){let x=(a.start+a.arr.length/2)/this.n,y=(b.start+b.arr.length/2)/this.n,p=0;while(true){const xb=Math.floor(x*2),yb=Math.floor(y*2);if(xb!==yb)return p;x=x*2-xb;y=y*2-yb;p++;}}
+    *_logicalMerge(A,B){if(!A.sorted&&!B.sorted&&A.arr.length+B.arr.length<=Math.max(8,this.n>>1))return{start:A.start,arr:A.arr.concat(B.arr),sorted:false};const a=A.sorted?A.arr:(yield* this._stableQuick(A.arr,16,3));const b=B.sorted?B.arr:(yield* this._stableQuick(B.arr,16,3));return{start:A.start,arr:yield* this._merge(a,b),sorted:true};}
+    *_logicalRuns(){const out=[];let s=0;while(s<this.n){if(s+1>=this.n){out.push({start:s,arr:[this.items[s]],sorted:true});break;}let i=s+1,down=yield* this._greater(this.items[s],this.items[i]);i++;while(i<this.n){const gt=yield* this._greater(this.items[i-1],this.items[i]);if(gt!==down)break;i++;}if(i-s>=8){let a=this.items.slice(s,i);if(down)a.reverse();out.push({start:s,arr:a,sorted:true});s=i;}else{const e=Math.min(this.n,s+8);out.push({start:s,arr:this.items.slice(s,e),sorted:false});s=e;}}return out;}
+    *sort(){const rs=yield* this._logicalRuns();if(!rs.length){this.items=[];return;}const stack=[];let cur=rs[0];for(let i=1;i<rs.length;i++){const next=rs[i],p=this._power(cur,next);while(stack.length&&stack[stack.length-1].power>=p)cur=yield* this._logicalMerge(stack.pop(),cur);stack.push({...cur,power:p});cur=next;}while(stack.length)cur=yield* this._logicalMerge(stack.pop(),cur);if(!cur.sorted)cur={...cur,arr:yield* this._stableQuick(cur.arr,16,3),sorted:true};this.items=cur.arr;}
+}
+
+/** Blitsort comparison port: stable rotate-partition quick/merge hybrid. The
+ * median-of-nine partition and 24-item merge base are modeled; rotations do
+ * not add comparisons and stable arrays represent their resulting order. */
+class BlitsortProvider extends CoroutineSortProvider {
+    *sort(){this.items=yield* this._stableQuick(this.items.slice(),24,9);}
+}
+
+/** VQSort comparison model pinned to Google Highway c415565 (u64,
+ * ascending, AVX2: four 64-bit lanes and a 64-key base case). Algorithm and
+ * network source: Google Highway (Copyright 2021 Google LLC;
+ * Apache-2.0/BSD-3-Clause source files). It ports the current six-chunk
+ * median-of-three sampler, the exact 4/8/16-row Highway
+ * sorting/merging networks, lane-to-pivot partition comparisons, recursion,
+ * and the paper's degenerate min/max safeguard (standing in for the current
+ * primitive-only equality/two-value fast paths). SIMD concurrency, CompressStore's
+ * physical lane packing, cache effects, and instruction throughput are not
+ * representable as asynchronous human battles; stable partition buffers stand
+ * in for those moves. The fixed SFC64 state makes the sampling trace
+ * reproducible. */
+class VQSortAVX2Provider extends CoroutineSortProvider {
+    constructor(n) {
+        super(n);
+        // Highway seeds this thread-local SFC64-family state from entropy. A
+        // fixed nonzero stream changes only sampled chunk locations, not the
+        // fixed u64/AVX2 comparison architecture measured here.
+        this._vqState = [0x243f6a8885a308d3n, 0x13198a2e03707344n, 1n];
+    }
+    _random64() {
+        const mask = (1n << 64n) - 1n;
+        const [a, b, counter] = this._vqState;
+        const w = (counter + 1n) & mask;
+        const next = (a ^ w) & mask;
+        this._vqState[0] = (((b + ((b << 3n) & mask)) & mask) ^ (b >> 11n)) & mask;
+        this._vqState[1] = ((((b << 24n) & mask) | (b >> 40n)) + next) & mask;
+        this._vqState[2] = w;
+        return next;
+    }
+    _randomChunk(numChunks, bits) {
+        return Number((BigInt(bits >>> 0) * BigInt(numChunks)) >> 32n);
+    }
+    *_ordered(a, b) {
+        // null is Highway's LastValue padding and never becomes a battle.
+        if (a === null) return b === null ? [a, b] : [b, a];
+        if (b === null || a === b) return [a, b];
+        return (yield* this._greater(a, b)) ? [b, a] : [a, b];
+    }
+    *_sortVectorPair(vectors, i, j) {
+        for (let lane = 0; lane < vectors[i].length; lane++) {
+            const pair = yield* this._ordered(vectors[i][lane], vectors[j][lane]);
+            vectors[i][lane] = pair[0]; vectors[j][lane] = pair[1];
+        }
+    }
+    *_sortRows(vectors) {
+        const pairs4 = [[0,2],[1,3],[0,1],[2,3],[1,2]];
+        const pairs8 = [
+            [0,2],[1,3],[4,6],[5,7], [0,4],[1,5],[2,6],[3,7],
+            [0,1],[2,3],[4,5],[6,7], [2,4],[3,5], [1,4],[3,6],
+            [1,2],[3,4],[5,6]
+        ];
+        const pairs16 = [
+            [0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[12,13],[14,15],
+            [0,2],[1,3],[4,6],[5,7],[8,10],[9,11],[12,14],[13,15],
+            [0,4],[1,5],[2,6],[3,7],[8,12],[9,13],[10,14],[11,15],
+            [0,8],[1,9],[2,10],[3,11],[4,12],[5,13],[6,14],[7,15],
+            [5,10],[6,9],[3,12],[7,11],[13,14],[4,8],[1,2],[1,4],
+            [7,13],[2,8],[11,14],[2,4],[5,6],[9,10],[11,13],[3,8],
+            [7,12],[3,5],[6,8],[7,9],[10,12],[3,4],[5,6],[7,8],
+            [9,10],[11,12],[6,7],[8,9]
+        ];
+        const pairs = vectors.length === 4 ? pairs4 : vectors.length === 8 ? pairs8 : pairs16;
+        for (const [i, j] of pairs) yield* this._sortVectorPair(vectors, i, j);
+    }
+    _reverseGroups(vector, width) {
+        const out = vector.slice();
+        for (let start = 0; start < out.length; start += width) {
+            const end = Math.min(start + width, out.length);
+            for (let l = start, r = end - 1; l < r; l++, r--)
+                [out[l], out[r]] = [out[r], out[l]];
+        }
+        return out;
+    }
+    *_mergeRows(vectors, width) {
+        const rows = vectors.length;
+        // This is the generated Merge8x{2,4}/Merge16x{2,4} sequence: reverse
+        // each upper half in groups of width, then compare mirrored rows.
+        for (let span = rows; span >= 2; span >>= 1) {
+            for (let start = 0; start < rows; start += span) {
+                const half = span >> 1;
+                for (let r = start + half; r < start + span; r++)
+                    vectors[r] = this._reverseGroups(vectors[r], width);
+                for (let r = 0; r < half; r++)
+                    yield* this._sortVectorPair(vectors, start + r, start + span - 1 - r);
+            }
+        }
+        // Finish the in-vector merge: SortPairsDistance1 for x2; for x4,
+        // SortPairsReverse4 followed by SortPairsDistance1.
+        for (let span = width; span >= 2; span >>= 1) {
+            for (const vector of vectors) {
+                for (let start = 0; start < vector.length; start += span) {
+                    for (let i = 0; i < (span >> 1); i++) {
+                        const l = start + i, r = start + span - 1 - i;
+                        const pair = yield* this._ordered(vector[l], vector[r]);
+                        vector[l] = pair[0]; vector[r] = pair[1];
+                    }
+                }
+            }
+        }
+    }
+    *_baseCase(input) {
+        const n = input.length;
+        if (n <= 1) return input.slice();
+        if (n === 2) {
+            const pair = yield* this._ordered(input[0], input[1]);
+            return pair;
+        }
+        let rows, cols;
+        if (n <= 4) { rows = 4; cols = 1; }
+        else if (n <= 8) { rows = 8; cols = 1; }
+        else if (n <= 16) { rows = 8; cols = 2; }
+        else if (n <= 32) { rows = 8; cols = 4; }
+        else { rows = 16; cols = 4; } // AVX2 u64 BaseCaseNumLanes = 64
+        const padded = input.slice();
+        while (padded.length < rows * cols) padded.push(null);
+        const vectors = [];
+        for (let r = 0; r < rows; r++) vectors.push(padded.slice(r * cols, (r + 1) * cols));
+        yield* this._sortRows(vectors);
+        if (cols >= 2) yield* this._mergeRows(vectors, 2);
+        if (cols >= 4) yield* this._mergeRows(vectors, 4);
+        return vectors.flat().filter(x => x !== null).slice(0, n);
+    }
+    *_median3(a, b, c) {
+        // Highway MedianOf3: Sort2(v0,v2), Last(v0,v1), First(v1,v2).
+        const ac = yield* this._ordered(a, c);
+        const lob = yield* this._ordered(ac[0], b);
+        const midhi = yield* this._ordered(lob[1], ac[1]);
+        return midhi[0];
+    }
+    *_drawSamples(a, base) {
+        // uint64 chunks are 64 bytes = 8 keys. Model an initially 64-byte
+        // aligned input, so subrange alignment is determined by `base`.
+        const consume = (8 - (base & 7)) & 7;
+        const first = consume;
+        const numChunks = Math.floor((a.length - consume) / 8);
+        if (numChunks < 1) throw new Error('VQSort sample range is too small');
+        const bits = [];
+        for (let i = 0; i < 3; i++) {
+            const word = this._random64();
+            bits.push(Number(word & 0xffffffffn), Number((word >> 32n) & 0xffffffffn));
+        }
+        const offsets = bits.map(x => first + 8 * this._randomChunk(numChunks, x));
+        const samples = new Array(16);
+        for (let i = 0; i < 8; i += 4) {
+            for (let lane = 0; lane < 4; lane++) {
+                samples[i + lane] = yield* this._median3(
+                    a[offsets[0] + i + lane], a[offsets[1] + i + lane], a[offsets[2] + i + lane]);
+                samples[8 + i + lane] = yield* this._median3(
+                    a[offsets[3] + i + lane], a[offsets[4] + i + lane], a[offsets[5] + i + lane]);
+            }
+        }
+        return samples;
+    }
+    _pivotRank(samples) {
+        const mid = 8;
+        let prev = mid - 1;
+        while (samples[prev] === samples[mid]) {
+            if (prev === 0) return 0;
+            prev--;
+        }
+        let next = prev + 1;
+        while (samples[next] === samples[mid]) {
+            if (next === samples.length - 1) return prev;
+            next++;
+        }
+        return next - mid < mid - prev ? mid : prev;
+    }
+    *_partition(a, pivot) {
+        const left = [], right = [];
+        for (const x of a) {
+            if (x === pivot) { left.push(x); continue; }
+            if (yield* this._greater(x, pivot)) right.push(x); else left.push(x);
+        }
+        return [left, right];
+    }
+    *_minMax(a) {
+        if (!a.length) return [null, null];
+        let min, max, i;
+        if (a.length & 1) { min = max = a[0]; i = 1; }
+        else { const p = yield* this._ordered(a[0], a[1]); min = p[0]; max = p[1]; i = 2; }
+        for (; i + 1 < a.length; i += 2) {
+            const p = yield* this._ordered(a[i], a[i + 1]);
+            min = (yield* this._ordered(min, p[0]))[0];
+            max = (yield* this._ordered(max, p[1]))[1];
+        }
+        if (i < a.length) {
+            min = (yield* this._ordered(min, a[i]))[0];
+            max = (yield* this._ordered(max, a[i]))[1];
+        }
+        return [min, max];
+    }
+    *_heapSort(a) {
+        const sift = function* (self, end, root) {
+            while (true) {
+                let child = root * 2 + 1;
+                if (child >= end) return;
+                if (child + 1 < end && (yield* self._greater(a[child + 1], a[child]))) child++;
+                if (!(yield* self._greater(a[child], a[root]))) return;
+                [a[root], a[child]] = [a[child], a[root]]; root = child;
+            }
+        };
+        for (let root = (a.length >> 1) - 1; root >= 0; root--) yield* sift(this, a.length, root);
+        for (let end = a.length - 1; end > 0; end--) {
+            [a[0], a[end]] = [a[end], a[0]];
+            yield* sift(this, end, 0);
+        }
+        return a;
+    }
+    *_vqsort(a, base, levels) {
+        if (a.length <= 64) return yield* this._baseCase(a);
+        const samples = yield* this._drawSamples(a, base);
+        // Integer equality and sample-rank scans are primitive operations in
+        // Highway. Identity equality is likewise battle-free in this model.
+        const sortedSamples = yield* this._baseCase(samples);
+        const pivot = sortedSamples[this._pivotRank(sortedSamples)];
+        if (levels === 0) return yield* this._heapSort(a.slice());
+        let [left, right] = yield* this._partition(a, pivot);
+        if (right.length === 0) {
+            // Published-paper safeguard for a last-value pivot: scan min/max,
+            // stop if equal, otherwise repartition around the first value. The
+            // current native source instead uses primitive-key equality,
+            // PrevValue, and two-value paths unavailable to opaque battles.
+            const [first, last] = yield* this._minMax(a);
+            if (first === last) return a.slice();
+            [left, right] = yield* this._partition(a, first);
+            if (right.length === 0) return a.slice(); // indistinguishable ties
+        }
+        const L = yield* this._vqsort(left, base, levels - 1);
+        const R = yield* this._vqsort(right, base + left.length, levels - 1);
+        return L.concat(R);
+    }
+    *sort() { this.items = yield* this._vqsort(this.items.slice(), 0, 50); }
+}
+
+/** Optimized Pancake (Pancake Merge): recursive sort plus binary-search
+ * rotate merge. Published prefix-flip decompositions are comparison-free, so
+ * direct rotations preserve the exact comparison metric measured here. */
+class OptimizedPancakeSortProvider extends CoroutineSortProvider {
+    *_lowerBound(a,lo,hi,key){while(lo<hi){const m=(lo+hi)>>1;if(yield* this._less(a[m],key))lo=m+1;else hi=m;}return lo;}
+    *_rotateMerge(a,lo,mid,hi){const n1=mid-lo,n2=hi-mid;if(!n1||!n2)return;if(n1+n2===2){if(yield* this._greater(a[lo],a[mid]))[a[lo],a[mid]]=[a[mid],a[lo]];return;}let c1,c2;if(n1>n2){c1=lo+(n1>>1);c2=yield* this._lowerBound(a,mid,hi,a[c1]);}else{c2=mid+(n2>>1);c1=yield* this._lowerBound(a,lo,mid,a[c2]);}const left=a.slice(c1,mid),right=a.slice(mid,c2);a.splice(c1,c2-c1,...right,...left);const nm=c1+(c2-mid);yield* this._rotateMerge(a,lo,c1,nm);yield* this._rotateMerge(a,nm,c2,hi);}
+    *_pancake(a,lo,hi){if(hi-lo<=1)return;const mid=lo+((hi-lo)>>1);yield* this._pancake(a,lo,mid);yield* this._pancake(a,mid,hi);yield* this._rotateMerge(a,lo,mid,hi);}
+    *sort(){yield* this._pancake(this.items,0,this.n);}
+}
+
 // ORIENTATION CONVENTION (see research/PROVIDER_AUDIT.md, Finding 3):
 // providers do not agree on which end of `items` holds the strongest item.
 // ASC providers (merge/quicksort/insertion families and most others — the
@@ -4813,7 +5644,36 @@ const algos = [
     { name: 'Bubble Bogo', class: BubbleBogoSortProvider },
     { name: 'Odd-Even Bogo', class: OddEvenBogoSortProvider },
     { name: 'Bovo Sort', class: BovoSortProvider },
-    { name: 'Bozo Sort', class: BozosortProvider }
+    { name: 'Bozo Sort', class: BozosortProvider },
+    // Web expansion 3: additional comparison-sort families and production
+    // hybrids. See research/CANDIDATE_ALGORITHMS.md for source/fidelity notes.
+    { name: 'Stable Selection', class: StableSelectionSortProvider },
+    { name: 'Double Insertion', class: DoubleInsertionSortProvider },
+    { name: '3-Smooth Comb', class: ThreeSmoothCombSortProvider },
+    { name: 'Pratt Shellsort', class: PrattShellSortProvider },
+    { name: 'Tokuda Shellsort', class: TokudaShellSortProvider },
+    { name: 'Sedgewick Shellsort', class: SedgewickShellSortProvider },
+    { name: 'Ternary Heap', class: TernaryHeapSortProvider },
+    { name: 'Quaternary Heap', class: QuaternaryHeapSortProvider },
+    { name: 'Out-of-place Heap', class: OutOfPlaceHeapSortProvider },
+    { name: 'Min-Max Heap', class: MinMaxHeapSortProvider },
+    { name: 'Poplar Sort', class: PoplarSortProvider },
+    { name: 'MEL Sort', class: MELSortProvider },
+    { name: 'Twinsort', class: TwinsortProvider },
+    { name: 'Spin Sort', class: SpinSortProvider },
+    { name: 'Weave Merge', class: WeaveMergeSortProvider },
+    { name: 'QuickMergesort', class: QuickMergesortProvider },
+    { name: '4-way Powersort', class: FourWayPowersortProvider },
+    { name: 'Loser-Tree Merge', class: LoserTreeMergeSortProvider },
+    { name: 'GrailSort', class: GrailSortProvider },
+    { name: 'WikiSort', class: WikiSortProvider },
+    { name: 'Fluxsort', class: FluxsortProvider },
+    { name: 'Crumsort', class: CrumsortProvider },
+    { name: 'Glidesort', class: GlidesortProvider },
+    { name: 'Blitsort', class: BlitsortProvider },
+    { name: 'Optimized Pancake', class: OptimizedPancakeSortProvider },
+    // Fixed-profile comparison model; this is not a SIMD throughput result.
+    { name: 'VQSort (u64/AVX2 model)', class: VQSortAVX2Provider }
 ];
 
 
