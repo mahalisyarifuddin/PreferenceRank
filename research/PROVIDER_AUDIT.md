@@ -1,7 +1,7 @@
 # Correctness Audit of the State-Machine Sorting Providers
 
-**Date:** 2026-09-03
-**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks).
+**Date:** 2026-09-03 (batch-2 addendum 2026-09-11 below)
+**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to all 118 providers.
 
 **Method.** Every provider was audited two ways:
 
@@ -180,6 +180,67 @@ node research/audit_correctness.js   # 85/85 correct: 51 ASC + 21 DESC + 1 enume
 ## Reproducing
 
 ```bash
-node research/audit_correctness.js     # ~6 s; writes research/audit_results.txt
-node research/sort_analysis.js 100 250 # original benchmark (unchanged)
+node research/audit_correctness.js     # ~10 s; writes research/audit_results.txt
+node research/sort_analysis.js 100 250 # full 118-algorithm benchmark
 ```
+
+---
+
+# Batch-2 addendum (2026-09-11): 33 newly registered providers
+
+**Scope delta:** 32 newly implemented providers plus the registration of the previously unregistered `BozosortProvider` — the registry grows from 85 to **118 providers**. Every new provider was web-verified against its canonical definition (links inline) and passes the hardened harness (`audit_correctness.js`, non-monotonic strengths, N ∈ {2…128}); the full suite is **118/118 correct** (Slowsort's N ≥ 127 timeout is pre-existing and inherent).
+
+**Orientation delta:** +23 weakest-first (ASC), +10 strongest-first (DESC). New totals: **74 ASC + 31 DESC** + 1 enumerator + 3 lossy jokes + 8 non-sorting jokes (+ Slowsort, ASC with inherent timeouts). New DESC providers: Exchange Sort, Bingo Sort, Cocktail Bounds, Permutation Sort, Less/Exchange/Bubble/Odd-Even Bogo, Bovo Sort, Bozo Sort. All other new providers are ASC.
+
+**Harness delta:** `BOGOLIKE` caps extended — Permutation Sort: 8 (deterministic n!), Bovo Sort: 5 (factorial hitting time), Exchange/Bubble/Odd-Even Bogo: 17 (expected-polynomial inversion descent, capped for audit speed). Less Bogo is uncapped (expected ~1.5n² comparisons, light tails) and passes all 489 runs.
+
+## Batch-2 per-provider fidelity
+
+| Provider | Canonical source & verified details |
+|---|---|
+| **Batcher Odd-Even** | Batcher 1968 sorting network ([Wikipedia](https://en.wikipedia.org/wiki/Batcher_odd%E2%80%93even_mergesort)): recursive odd-even merge comparators over the next power of two, +∞ sentinel padding exactly like the repo's Bitonic provider. Non-adaptive, Θ(S log² S) positional comparators. ✅ |
+| **Bose-Nelson** | Bose & Nelson 1962 network ([bose-nelson.c recurrences](https://github.com/atinm/bose-nelson)): Pstar half-sorting + Pbracket merge cascade, ported to 0-based indices; works for any n with no padding. ✅ |
+| **Exchange Sort** | [Wikipedia](https://en.wikipedia.org/wiki/Exchange_sort): compare A[i] against every later A[j], eager swap on inversion. DESC to match the repo's selection sorts. ✅ |
+| **Bingo Sort** | [Wikipedia](https://en.wikipedia.org/wiki/Bingo_sort) maximal selection, DESC variant (repeatedly finds the minimum, pulls copies to the end). ✅ |
+| **Cocktail Bounds** | Cocktail shaker with shifting bounds ([Rosetta Code](https://rosettacode.org/wiki/Sorting_algorithms/Cocktail_sort)): last-swap position shrinks the window each pass. DESC. ✅ |
+| **Bottom-up Heap** | Wegener 1993 variant ([Wikipedia](https://en.wikipedia.org/wiki/Heapsort#Bottom-up_heapsort)): sift-down to a leaf comparing only children (1 comp/level), displaced value sifts back up. ✅ |
+| **Weak Heap** | Dutton 1993 ([Wikipedia](https://en.wikipedia.org/wiki/Weak_heap)): reverse-bit array, distinguished-ancestor joins for build (n−1 comps), merge-up extraction. ✅ |
+| **Smoothsort** | Genuine Dijkstra 1981 ([Wikipedia](https://en.wikipedia.org/wiki/Smoothsort)): Leonardo-heap forest, sift/trinkle/semitrinkle, grow-phase sift-vs-trinkle optimization, grow+shrink phases; stretch-order list encodes the same decomposition as the classic p-bit machine. The old "Heap Sort (Smooth Proxy)" row is retained for continuity. ✅ |
+| **Splay Sort** | Movahedi et al. 2014 ([Splay tree](https://en.wikipedia.org/wiki/Splay_tree)): BST insert + splay-to-root (zig/zig-zig/zig-zag), inorder traversal. ✅ |
+| **Cartesian Tree** | Min-Cartesian tree via the classic stack algorithm (≤ 2n−2 comps), then repeated min-extraction with a binary heap ([Wikipedia](https://en.wikipedia.org/wiki/Cartesian_tree)). ✅ |
+| **Treap Sort** | BST insert by strength with `Math.random` priorities (never oracle-compared), rotate-up on priority, inorder traversal ([Wikipedia](https://en.wikipedia.org/wiki/Treap)). ✅ |
+| **Skiplist Sort** | Fair-coin levels capped at ⌈log₂(n+1)⌉, search-and-splice per level, level-0 traversal ([Wikipedia](https://en.wikipedia.org/wiki/Skip_list)). ✅ |
+| **Shivers / Adaptive Shivers / Augmented Shivers** | Auger et al. 2018 merge policies ([arXiv:1809.08411](https://ar5iv.labs.arxiv.org/html/1809.08411)) on a shared Timsort-structured base (natural runs, descending reversed, run stack, stable merges, top-two collapse): Shivers merges top-two when log-lengths don't decrease; Adaptive uses the h−2/h−1/h log rule; Augmented adds the size-guard rule. ✅ |
+| **Peeksort** | Munro & Wild 2018 ([reference](https://github.com/sebawild/peeksort)): mid-run peeking with run-boundary-aware splits, insertion (≤ 24) with sorted-prefix skip. ✅ |
+| **Library Sort** | Bender et al. 2005 ([Wikipedia](https://en.wikipedia.org/wiki/Library_sort)): gapped insertion into a 2n array, binary search over gaps + comparison-based linear adjustment with verified neighbors, rebalance after 1,2,4,… insertions. ✅ |
+| **Sample Sort** | Frazer–McKellar style ([Wikipedia](https://en.wikipedia.org/wiki/Samplesort)): sample ≤ 12 → 3 quartile splitters → 4 buckets by binary search, linear-insertion cutoff 16, explicit frame stack. Documented parameters in code. ✅ |
+| **Funnel Sort** | ⚠️ **Documented skeleton.** Recursive cube-root splitting (k = max(2, round(len^⅓)), insertion ≤ 8) with a winner-tree k-way merge faithfully models the splitting structure and merge comparison sequence of Frigo et al. 1999, but the cache-oblivious k-merger buffer layout is elided (stated in the class comment). |
+| **Quadsort** | Structural port of [scandum/quadsort](https://github.com/scandum/quadsort): 8-element quad-swap analyzer (4 pair comps + 3 bridge comps), whole-reverse early exit, bottom-up 4-block parity-merge passes with ordered-boundary skips. **Elisions (documented):** branchless cross merge and the parity-vs-cross chooser (parity merges throughout); tail blocks generalize the analyzer. ✅ (variant) |
+| **Piposort** | Structural port of [scandum/piposort](https://github.com/scandum/piposort): top-down 4-way partition to < 8, odd-even leaves, parity-merge passes with in-order skip and reverse-order rotation. **Micro-difference (documented):** leaves run to two consecutive clean phases (best 6 / worst 24 on 7 elements) instead of the reference's ≤ 7 phases (best 6 / worst 21). ✅ (variant) |
+| **Replacement Selection** | Knuth TAOCP 5.4.1: heap-ordered buffer (B = 8) with current/next run bits, refill stamped by one comparison against last-written, pairwise run merge. ✅ |
+| **Polyphase Merge** | Knuth TAOCP 5.4.2, 3 tapes: initial runs from genuine replacement selection (a `ReplacementSelectionSortProvider` sub-instance driven to completion — the same sub-provider pattern as the repo's Bucket sort), Fibonacci distribution with dummy pass-through, tape rotation. ✅ |
+| **BFPRT Quicksort** | Quicksort with Blum et al. 1973 median-of-medians pivots ([Wikipedia](https://en.wikipedia.org/wiki/Median_of_medians)): groups of 5, medians to front, recursive MoM, Lomuto partition, insertion ≤ 16. Worst-case O(n log n). ✅ |
+| **Shear Sort** | Schnorr & Shamir 1986 ([Wikipedia](https://en.wikipedia.org/wiki/Shear_sort)): alternating snake-order row phases and column phases of odd-even transposition sort on a ⌈√n⌉ grid with +∞ sentinels, snake-order readout. ✅ |
+| **PESort** | Proportion Extend Sort, symmetric variant (Chen 2001, [Wikipedia](https://en.wikipedia.org/wiki/Proportion_extend_sort)): sorted part S adjacent to bounded unsorted part U (p = 16, extension chunks (p+1)\|S\|), median-split LUR partition with pivot exclusion, insertion ≤ 16, longest-monotonic-run seeding. Note: the first draft implemented a different adaptive algorithm under this name; it was replaced with the real Chen 2001 algorithm after a source check. ✅ |
+| **Permutation Sort** | Systematic lexicographic enumeration (next_permutation from identity, free moves) with a fail-fast DESC check per permutation. Deterministic; Θ(n·n!) worst case. ✅ |
+| **Less Bogo** | Selection sort via shuffles ([Sorting Wiki](https://sortingalgos.miraheze.org/wiki/Bogosort)): shuffle suffix until position k holds its maximum, fix, continue. ✅ |
+| **Exchange Bogo** | Bozo-style check, but a botched round compares two random positions and swaps only if inverted ([Sorting Wiki](https://sortingalgos.miraheze.org/wiki/Bogosort)). Every swap strictly decreases the inversion count → converges a.s. ✅ |
+| **Bubble Bogo** | Exchange Bogo restricted to one random adjacent pair per botched round ([Sorting Wiki](https://sortingalgos.miraheze.org/wiki/Bogosort)). ✅ |
+| **Odd-Even Bogo** | Bubble Bogo alternating odd/even random indices per botched round ([Sorting Wiki](https://sortingalgos.miraheze.org/wiki/Bogosort)). ✅ |
+| **Bovo Sort** | Check DESC; if botched, pull a random item to the head ([definition](https://neo-sorting-algorithms.fandom.com/wiki/Bogo_Sort)). Random-to-top moves generate the full symmetric group → hits sorted order a.s. ✅ |
+| **Bozo Sort** | Pre-existing provider, newly registered: swap two random elements until sorted ([Sorting Wiki](https://sortingalgos.miraheze.org/wiki/Bogosort)). ✅ |
+
+## Batch-2 bug log (all found by differential smoke tests, fixed, re-verified)
+
+| # | Provider | Bug | Fix |
+|---|---|---|---|
+| B1 | Quadsort | Block-assembly guard `runs.length <= 1` fired mid-merge (after shifts emptied the list) → empty blocks and downstream `null.length` throws | Guard assembly completion with `!this.pm && runs.length <= 1` |
+| B2 | Quadsort | Whole-reverse path reversed the concatenated items instead of the block order after per-block reversals | Concatenate `blocks.slice().reverse()` |
+| B3 | Smoothsort | Grow-phase stepson check used `< n` with a 0-based cursor (the C++ reference's `q` is a 1-based count) → skipped trinkles, wrong extractions at n = 7, 17, 32, 63 | Threshold `q + L[k-1] < n - 1` |
+| B4 | Peeksort | Unbounded initial right-run scan/reversal overlapped and clobbered a sorted left-run tail (failed at n = 4, 5) | Bound the scan below by L0+1; skip when L0 ≥ n−1 |
+| B5 | Sample/Funnel Sort | Multi-child frames delivered results to the stack top instead of the child's parent slot | Indexed `{_parent, _slot}` delivery for all multi-child frames |
+| B6 | Replacement Selection | The refill-stamp state re-read the input on resume, double-incrementing `inputIdx` → `undefined` ids in pairs for n > 8 | Split capture (`stamp`) from wait (`stampwait`) |
+| B7 | BFPRT Quicksort | Small-case selection mutated into an insertion frame that overwrote the wanted index `k` with its own cursor | Preserve `k0` across the mutation |
+| B8 | Library Sort | Occupied-slot placement put the element on the wrong side of the blocking element | Ask `[E′, x]` and shift directionally with verified neighbors |
+
+Final verification: `node research/audit_correctness.js` → 118/118 providers correct (74 ASC + 31 DESC + 1 enumerator + 3 lossy + 8 non-sorting + Slowsort inherent-timeout).

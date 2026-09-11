@@ -2328,6 +2328,2363 @@ class MergeSort3WayProvider extends KWayMergeSortProvider { constructor(n) { sup
 
 class MergeSort4WayProvider extends KWayMergeSortProvider { constructor(n) { super(n, 4); } }
 
+/**
+ * Batcher's odd-even mergesort as a sorting network (Batcher 1968, ASC).
+ * The comparator network is generated for the next power of two >= n and
+ * the array is padded with +infinity sentinels (-1 ids, stripped at the
+ * end), exactly like the repo's BitonicSortProvider. Phantom comparators
+ * touching sentinels resolve without asking the oracle. Non-adaptive:
+ * Theta(S log^2 S) positional comparators for S = next pow2 (1792 at
+ * n = 100).
+ * Source: https://en.wikipedia.org/wiki/Batcher_odd%E2%80%93even_mergesort
+ */
+class BatcherOddEvenSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.size = 1; while (this.size < n) this.size *= 2;
+        for (let i = n; i < this.size; i++) this.items.push(-1);
+        this.comps = [];
+        const gen = (lo, len) => {
+            if (len <= 1) return;
+            const half = len >> 1;
+            gen(lo, half); gen(lo + half, half);
+            this._batcherMerge(lo, len, 1);
+        };
+        gen(0, this.size);
+        this.idx = 0;
+    }
+    _batcherMerge(lo, len, r) {
+        const m = r * 2;
+        if (m < len) {
+            this._batcherMerge(lo, len, m);
+            this._batcherMerge(lo + r, len, m);
+            for (let i = lo + r; i + r < lo + len; i += m) this.comps.push([i, i + r]);
+        } else this.comps.push([lo, lo + r]);
+    }
+    next(result) {
+        while (this.idx < this.comps.length) {
+            const [i, j] = this.comps[this.idx++];
+            const a = this.items[i], b = this.items[j];
+            if (a === -1 && b === -1) continue;
+            if (b === -1) continue;             // a <= +inf already
+            if (a === -1) { this.items[i] = b; this.items[j] = a; continue; }
+            if (result !== undefined) { if (result === 1) { this.items[i] = b; this.items[j] = a; } result = undefined; continue; }
+            // Ask below: rewind so the comparison is served on this call.
+            this.idx--; return [a, b];
+        }
+        this.items = this.items.filter(x => x !== -1);
+        return null;
+    }
+}
+
+/**
+ * Bose-Nelson sorting network (Bose & Nelson 1962, ASC). Recursive
+ * construction: sort each half (Pstar), then merge the halves with the
+ * Pbracket comparator cascade. Works for any n (no padding needed).
+ * Ported to 0-based indices from the classic C generator's recurrences:
+ * Pstar splits at m/2; Pbracket handles the (1,1), (1,2), (2,1) bases and
+ * otherwise splits x at x/2 and y at y/2 or (y+1)/2 depending on x parity.
+ * Source: https://github.com/atinm/bose-nelson (bose-nelson.c)
+ */
+class BoseNelsonSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.comps = [];
+        const bracket = (i, x, j, y) => {
+            if (x === 1 && y === 1) this.comps.push([i, j]);
+            else if (x === 1 && y === 2) { this.comps.push([i, j + 1]); this.comps.push([i, j]); }
+            else if (x === 2 && y === 1) { this.comps.push([i, j]); this.comps.push([i + 1, j]); }
+            else {
+                const a = x >> 1, b = (x & 1) ? (y >> 1) : ((y + 1) >> 1);
+                bracket(i, a, j, b);
+                bracket(i + a, x - a, j + b, y - b);
+                bracket(i + a, x - a, j, b);
+            }
+        };
+        const star = (i, m) => {
+            if (m <= 1) return;
+            const a = m >> 1;
+            star(i, a); star(i + a, m - a);
+            bracket(i, a, i + a, m - a);
+        };
+        star(0, n);
+        this.idx = 0; this.pending = null;
+    }
+    next(result) {
+        if (this.pending) {
+            const [i, j] = this.pending; this.pending = null;
+            if (result === 1) { const t = this.items[i]; this.items[i] = this.items[j]; this.items[j] = t; }
+        }
+        while (this.idx < this.comps.length) {
+            const [i, j] = this.comps[this.idx++];
+            this.pending = [i, j];
+            return [this.items[i], this.items[j]];
+        }
+        return null;
+    }
+}
+
+/**
+ * Exchange sort (DESC, to match the repo's Selection sort): for each i,
+ * compare A[i] against every later A[j] and swap immediately when inverted.
+ * Same n(n-1)/2 positional pairs as selection sort, but eager swaps make
+ * the element-pair stream (and duplicate profile) quite different.
+ * Source: https://en.wikipedia.org/wiki/Exchange_sort
+ */
+class ExchangeSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.j = 1; }
+    next(result) {
+        while (this.i < this.n - 1) {
+            if (this.j >= this.n) { this.i++; this.j = this.i + 1; continue; }
+            if (result !== undefined) {
+                if (result === 0) { const t = this.items[this.i]; this.items[this.i] = this.items[this.j]; this.items[this.j] = t; }
+                this.j++; result = undefined; continue;
+            }
+            return [this.items[this.i], this.items[this.j]];
+        }
+        return null;
+    }
+}
+
+/**
+ * Bingo sort, a.k.a. maximal selection sort (DESC variant of the Wikipedia
+ * pseudocode: repeatedly finds the current minimum and pulls all copies to
+ * the end, so output is strongest-first like the repo's other selection
+ * sorts). The "equals current max/min" tests are id comparisons (strengths
+ * are distinct), so only the scan comparisons are asked.
+ * Source: https://en.wikipedia.org/wiki/Bingo_sort
+ */
+class BingoSortProvider extends Provider {
+    constructor(n) { super(n); this.last = n - 1; this.i = n - 2; this.state = this.n > 1 ? 'init_scan' : 'done'; this.nextMin = n > 0 ? this.items[n - 1] : -1; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'init_scan') {
+                // Find min of A[0..last]: compare [A[i], nextMin], result 0 => new min.
+                if (result !== undefined) { if (result === 0) this.nextMin = this.scanItem; this.i--; result = undefined; }
+                if (this.i >= 0) { this.scanItem = this.items[this.i]; return [this.scanItem, this.nextMin]; }
+                this.state = 'strip';
+            }
+            if (this.state === 'strip') {
+                while (this.last > 0 && this.items[this.last] === this.nextMin) this.last--;
+                this.state = this.last > 0 ? 'loop_start' : 'done';
+            }
+            if (this.state === 'loop_start') {
+                this.prevMin = this.nextMin; this.nextMin = this.items[this.last]; this.i = this.last - 1;
+                this.state = 'loop_scan';
+            }
+            if (this.state === 'loop_scan') {
+                if (result !== undefined) {
+                    if (result === 0) {
+                        if (this.scanItem !== this.prevMin) this.nextMin = this.scanItem;
+                        else { const t = this.items[this.i]; this.items[this.i] = this.items[this.last]; this.items[this.last] = t; this.last--; }
+                    }
+                    this.i--; result = undefined;
+                }
+                if (this.i >= 0) { this.scanItem = this.items[this.i]; return [this.scanItem, this.nextMin]; }
+                this.state = 'strip';
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Cocktail shaker sort with shifting bounds (DESC, matching the repo's
+ * CocktailShakerProvider): each forward/backward pass remembers the last
+ * swap position and shrinks the active window to it, so sorted prefix /
+ * suffix regions are never rescanned.
+ * Source: https://rosettacode.org/wiki/Sorting_algorithms/Cocktail_sort
+ */
+class CocktailBoundsSortProvider extends Provider {
+    constructor(n) { super(n); this.lo = 0; this.hi = n - 1; this.i = 0; this.state = 'fwd'; this.lastSwap = 0; }
+    next(result) {
+        while (true) {
+            if (this.state === 'fwd') {
+                if (result !== undefined) { if (result === 0) { const t = this.items[this.i]; this.items[this.i] = this.items[this.i + 1]; this.items[this.i + 1] = t; this.lastSwap = this.i; } this.i++; result = undefined; }
+                else { this.i = this.lo; this.lastSwap = this.lo; }
+                if (this.i < this.hi) return [this.items[this.i], this.items[this.i + 1]];
+                this.hi = this.lastSwap; this.state = 'bwd'; continue;
+            }
+            if (this.state === 'bwd') {
+                if (result !== undefined) { if (result === 0) { const t = this.items[this.i]; this.items[this.i] = this.items[this.i + 1]; this.items[this.i + 1] = t; this.lastSwap = this.i + 1; } this.i--; result = undefined; }
+                else { if (this.hi <= this.lo) return null; this.i = this.hi - 1; this.lastSwap = this.hi; }
+                if (this.i >= this.lo) return [this.items[this.i], this.items[this.i + 1]];
+                this.lo = this.lastSwap; this.state = 'fwd'; continue;
+            }
+        }
+    }
+}
+
+/**
+ * Bottom-up heapsort (Wegener 1993 variant; ASC max-heap). Sift-down goes to
+ * a leaf comparing only children (1 comparison per level, no
+ * parent-vs-child test), then the displaced root value sifts back up to its
+ * correct position. ~n log n + O(n) comparisons.
+ * Source: https://en.wikipedia.org/wiki/Heapsort#Bottom-up_heapsort
+ */
+class BottomUpHeapSortProvider extends Provider {
+    constructor(n) { super(n); this.phase = 'build'; this.i = (n >> 1) - 1; this.end = n - 1; this.state = 'next'; }
+    _advance() { if (this.phase === 'build') { this.i--; if (this.i < 0) this.phase = 'sort'; } this.state = 'next'; }
+    next(result) {
+        while (true) {
+            if (this.state === 'next') {
+                if (this.phase === 'build') {
+                    if (this.i < 0) { this.phase = 'sort'; continue; }
+                    this.x = this.items[this.i]; this.root = this.i; this.j = this.i; this.size = this.n;
+                } else {
+                    if (this.end < 1) return null;
+                    const t = this.items[0]; this.items[0] = this.items[this.end]; this.items[this.end] = t;
+                    this.x = this.items[0]; this.root = 0; this.j = 0; this.size = this.end;
+                    this.end--;
+                }
+                this.state = 'down'; continue;
+            }
+            if (this.state === 'down') {
+                // Sink the hole to a leaf along larger children (1 comparison
+                // per level), shifting each larger child up.
+                if (result !== undefined) {
+                    const c = (result === 1) ? this.lc : this.rc;
+                    this.items[this.j] = this.items[c]; this.j = c; result = undefined;
+                }
+                this.lc = this.j * 2 + 1; this.rc = this.lc + 1;
+                if (this.lc >= this.size) { this.state = 'up'; continue; }
+                if (this.rc >= this.size) { this.items[this.j] = this.items[this.lc]; this.j = this.lc; this.state = 'up'; continue; }
+                return [this.items[this.lc], this.items[this.rc]];
+            }
+            if (this.state === 'up') {
+                // Back up while the parent is smaller than x.
+                if (this.j === this.root) { this.items[this.j] = this.x; this._advance(); continue; }
+                const p = (this.j - 1) >> 1;
+                if (result !== undefined) {
+                    if (result === 0) { this.items[this.j] = this.items[p]; this.j = p; }
+                    else { this.items[this.j] = this.x; this._advance(); }
+                    result = undefined; continue;
+                }
+                return [this.items[p], this.x];
+            }
+        }
+    }
+}
+
+/**
+ * Weak-heap sort (Dutton 1993; ASC max-heap). Array-implicit weak heap with
+ * one reverse bit per node: node k (0-based = array index; node 0 is the
+ * real root) has binary parent floor(k/2), children 2k+r[k] (left /
+ * next-sibling) and 2k+1-r[k] (right / first-child). Build joins each node
+ * with its distinguished ancestor (n-1 comparisons); each extraction swaps
+ * the root with the last element and "merges up" from the root's last
+ * child through previous siblings (~log n comparisons per extraction).
+ * Source: https://en.wikipedia.org/wiki/Weak_heap
+ */
+class WeakHeapSortProvider extends Provider {
+    constructor(n) { super(n); this.r = new Array(n).fill(0); this.i = n - 1; this.m = n - 1; this.state = 'build'; this.x = 0; }
+    _right(p) { return 2 * p + 1 - this.r[p]; }
+    _left(p) { return 2 * p + this.r[p]; }
+    _distAncestor(j) { let p = j >> 1; if (j === this._right(p)) return p; return this._distAncestor(p); }
+    next(result) {
+        while (true) {
+            if (this.state === 'build') {
+                if (this.i < 1) { this.state = 'sortloop'; continue; }
+                if (result !== undefined) {
+                    if (result === 0) { const t = this.items[this.d]; this.items[this.d] = this.items[this.i]; this.items[this.i] = t; this.r[this.i] ^= 1; }
+                    this.i--; result = undefined; continue;
+                }
+                this.d = this._distAncestor(this.i);
+                return [this.items[this.d], this.items[this.i]];
+            }
+            if (this.state === 'sortloop') {
+                if (this.m < 1) return null;
+                const t = this.items[0]; this.items[0] = this.items[this.m]; this.items[this.m] = t;
+                // Last (multi-way) child of the root: down the next-sibling links.
+                this.x = this._right(0);
+                if (this.x >= this.m) { this.m--; continue; }
+                while (this._left(this.x) < this.m) this.x = this._left(this.x);
+                this.state = 'mergeup'; continue;
+            }
+            if (this.state === 'mergeup') {
+                if (this.x === 0) { this.m--; this.state = 'sortloop'; continue; }
+                if (result !== undefined) {
+                    if (result === 0) { const t = this.items[this.d]; this.items[this.d] = this.items[this.x]; this.items[this.x] = t; this.r[this.x] ^= 1; }
+                    this.x = this.x >> 1; result = undefined; continue;
+                }
+                this.d = this._distAncestor(this.x);
+                return [this.items[this.d], this.items[this.x]];
+            }
+        }
+    }
+}
+
+/**
+ * Genuine Smoothsort (Dijkstra 1981; ASC max-Leonardo-heap). This replaces
+ * the comparison behavior of the old 'Smoothsort*' binary-heap proxy (kept
+ * for continuity) with the real algorithm: Leonardo heap with ordered
+ * roots, sift/trinkle/semitrinkle, the grow-phase sift-vs-trinkle
+ * optimization, and grow/shrink phases. Implemented with an explicit
+ * stretch-order list (identical comparison behavior to the classic p-bit
+ * concatenation machine, which only encodes the same decomposition).
+ * Growth rule (verified: single stretches at n = 1,3,5,9,15,...): appending
+ * absorbs into a combined stretch iff the last two orders are (k+1,k), else
+ * pushes singleton order (last==1 ? 0 : 1).
+ * Sources: https://en.wikipedia.org/wiki/Smoothsort
+ *          https://en.wikibooks.org/wiki/Algorithm_Implementation/Sorting/Smoothsort
+ */
+class SmoothSortRealProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.L = [1, 1]; while (this.L.length < 24) { const k = this.L.length; this.L.push(this.L[k-1] + this.L[k-2] + 1); }
+        this.st = [];       // stretch orders covering heap [0, m)
+        this.pos = [];      // root position of each stretch
+        this.tasks = n > 0 ? [{ op: 'grow', q: 0, stage: 'enter' }] : [];
+    }
+    _recompute() {
+        this.pos = []; let off = 0;
+        for (const k of this.st) { off += this.L[k]; this.pos.push(off - 1); }
+    }
+    _children(root, k) { // [leftRoot(order k-1), rightRoot(order k-2)]
+        return [root - 1 - this.L[k-2], root - 1];
+    }
+    next(result) {
+        while (this.tasks.length > 0) {
+            const t = this.tasks[this.tasks.length - 1];
+            if (t.op === 'grow') {
+                if (t.stage === 'enter') {
+                    const s = this.st;
+                    if (s.length >= 2 && s[s.length-2] === s[s.length-1] + 1) { const k = s.pop() + 2; s.pop(); s.push(k); }
+                    else s.push(s.length > 0 && s[s.length-1] === 1 ? 0 : 1);
+                    this._recompute();
+                    const k = s[s.length-1], idx = s.length - 1;
+                    t.stage = 'next';
+                    if (k === 0) this.tasks.push({ op: 'trin', root: t.q, k, idx, stage: 'step' });
+                    else if (t.q + this.L[k-1] < this.n - 1) this.tasks.push({ op: 'sift', root: t.q, k });
+                    else this.tasks.push({ op: 'trin', root: t.q, k, idx, stage: 'step' });
+                    continue;
+                }
+                // stage 'next': sift/trinkle below us finished.
+                t.q++;
+                if (t.q < this.n) t.stage = 'enter';
+                else { this.tasks.pop(); this.tasks.push({ op: 'shrink', m: this.n, stage: 'loop' }); }
+                continue;
+            }
+            if (t.op === 'sift') {
+                if (t.k < 2) { this.tasks.pop(); continue; }
+                const [lc, rc] = this._children(t.root, t.k);
+                if (t.stage === 'vsroot') {
+                    // Outstanding pair was [A[root], A[m]]: 1 => root wins, done.
+                    if (result !== undefined) {
+                        if (result === 1) { this.tasks.pop(); result = undefined; continue; }
+                        const tmp = this.items[t.root]; this.items[t.root] = this.items[t.m]; this.items[t.m] = tmp;
+                        t.root = t.m; t.k = t.mk; t.stage = undefined; result = undefined; continue;
+                    }
+                    return [this.items[t.root], this.items[t.m]];
+                }
+                if (result !== undefined) {
+                    // Outstanding pair was [A[lc], A[rc]]: 1 => left wins.
+                    if (result === 1) { t.m = lc; t.mk = t.k - 1; } else { t.m = rc; t.mk = t.k - 2; }
+                    result = undefined; t.stage = 'vsroot'; continue;
+                }
+                return [this.items[lc], this.items[rc]];
+            }
+            if (t.op === 'trin') {
+                if (t.stage === 'step') {
+                    if (t.idx === 0) { t.op = 'sift'; t.stage = undefined; continue; }
+                    t.stage = 'ss'; continue;
+                }
+                if (t.stage === 'ss') {
+                    const stepson = this.pos[t.idx - 1];
+                    if (result !== undefined) {
+                        // Outstanding pair was [A[root], A[stepson]].
+                        if (result === 1) { t.op = 'sift'; t.stage = undefined; result = undefined; continue; }
+                        result = undefined;
+                        if (t.k <= 1) {
+                            const tmp = this.items[t.root]; this.items[t.root] = this.items[stepson]; this.items[stepson] = tmp;
+                            t.root = stepson; t.k = this.st[t.idx - 1]; t.idx--; t.stage = 'step'; continue;
+                        }
+                        t.stage = 'pick'; continue;
+                    }
+                    return [this.items[t.root], this.items[stepson]];
+                }
+                if (t.stage === 'pick') {
+                    const [lc, rc] = this._children(t.root, t.k);
+                    if (result !== undefined) {
+                        if (result === 1) { t.m = lc; t.mk = t.k - 1; } else { t.m = rc; t.mk = t.k - 2; }
+                        result = undefined; t.stage = 'fourway'; continue;
+                    }
+                    return [this.items[lc], this.items[rc]];
+                }
+                if (t.stage === 'fourway') {
+                    const stepson = this.pos[t.idx - 1];
+                    if (result !== undefined) {
+                        // Outstanding pair was [A[m], A[stepson]]: 1 => child wins.
+                        const childWon = (result === 1), m = t.m, mk = t.mk;
+                        result = undefined;
+                        if (childWon) {
+                            const tmp = this.items[t.root]; this.items[t.root] = this.items[m]; this.items[m] = tmp;
+                            t.root = m; t.k = mk; t.op = 'sift'; t.stage = undefined; continue;
+                        }
+                        const tmp = this.items[t.root]; this.items[t.root] = this.items[stepson]; this.items[stepson] = tmp;
+                        t.root = stepson; t.k = this.st[t.idx - 1]; t.idx--; t.stage = 'step'; continue;
+                    }
+                    return [this.items[t.m], this.items[stepson]];
+                }
+            }
+            if (t.op === 'semi') {
+                if (t.idx === 0) { this.tasks.pop(); continue; }
+                const stepson = this.pos[t.idx - 1];
+                if (result !== undefined) {
+                    // pair was [A[stepson], A[root]]: 1 => stepson wins.
+                    if (result === 1) {
+                        const tmp = this.items[t.root]; this.items[t.root] = this.items[stepson]; this.items[stepson] = tmp;
+                        this.tasks.pop();
+                        this.tasks.push({ op: 'trin', root: stepson, k: this.st[t.idx - 1], idx: t.idx - 1, stage: 'step' });
+                    } else this.tasks.pop();
+                    result = undefined; continue;
+                }
+                return [this.items[stepson], this.items[t.root]];
+            }
+            if (t.op === 'shrink') {
+                if (t.m <= 1) { this.tasks.pop(); continue; }
+                if (t.stage === 'loop') {
+                    const k = this.st.pop();
+                    if (k <= 1) { t.m--; continue; }
+                    t.m--; t.splitK = k;
+                    this.st.push(k - 1); this._recompute();
+                    t.stage = 'pushright';
+                    this.tasks.push({ op: 'semi', root: this.pos[this.pos.length-1], k: k - 1, idx: this.st.length - 1 });
+                    continue;
+                }
+                if (t.stage === 'pushright') {
+                    const k = t.splitK;
+                    this.st.push(k - 2); this._recompute();
+                    t.stage = 'loop';
+                    this.tasks.push({ op: 'semi', root: this.pos[this.pos.length-1], k: k - 2, idx: this.st.length - 1 });
+                    continue;
+                }
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Splay sort (Movahedi et al. 2014; ASC): insert every element into a splay
+ * tree (BST insert by strength, then splay the node to the root with
+ * zig / zig-zig / zig-zag rotations), finally inorder traversal. Only the
+ * insertion descents ask the oracle; rotations and the traversal are free.
+ * Source: https://en.wikipedia.org/wiki/Splay_tree
+ */
+class SplaySortProvider extends Provider {
+    constructor(n) { super(n); this.root = null; this.idx = 0; this.node = null; this.state = n > 0 ? 'insert' : 'done'; }
+    _rotRight(x) { const y = x.l; x.l = y.r; if (y.r) y.r.p = x; y.p = x.p; if (!x.p) this.root = y; else if (x === x.p.l) x.p.l = y; else x.p.r = y; y.r = x; x.p = y; }
+    _rotLeft(x) { const y = x.r; x.r = y.l; if (y.l) y.l.p = x; y.p = x.p; if (!x.p) this.root = y; else if (x === x.p.l) x.p.l = y; else x.p.r = y; y.l = x; x.p = y; }
+    _splay(x) {
+        while (x.p) {
+            const p = x.p, g = p.p;
+            if (!g) { if (x === p.l) this._rotRight(p); else this._rotLeft(p); }
+            else if (x === p.l && p === g.l) { this._rotRight(g); this._rotRight(p); }
+            else if (x === p.r && p === g.r) { this._rotLeft(g); this._rotLeft(p); }
+            else if (x === p.l) { this._rotRight(p); this._rotLeft(g); }
+            else { this._rotLeft(p); this._rotRight(g); }
+        }
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'insert') {
+                if (this.idx >= this.n) { this.state = 'traverse'; continue; }
+                this.node = { v: this.items[this.idx], l: null, r: null, p: null };
+                this.cur = this.root; this.parent = null;
+                this.state = 'descend'; continue;
+            }
+            if (this.state === 'descend') {
+                if (result !== undefined) {
+                    // Pair was [node.v, cur.v]: 0 => node weaker => go left.
+                    if (result === 0) { this.parent = this.cur; this.cur = this.cur.l; this._goLeft = true; }
+                    else { this.parent = this.cur; this.cur = this.cur.r; this._goLeft = false; }
+                    result = undefined;
+                }
+                if (this.cur) return [this.node.v, this.cur.v];
+                if (!this.parent) this.root = this.node;
+                else { this.node.p = this.parent; if (this._goLeft) this.parent.l = this.node; else this.parent.r = this.node; }
+                this._splay(this.node); this.idx++; this.state = 'insert'; continue;
+            }
+            if (this.state === 'traverse') {
+                const out = []; const stack = []; let c = this.root;
+                while (c || stack.length) { while (c) { stack.push(c); c = c.l; } c = stack.pop(); out.push(c.v); c = c.r; }
+                this.items = out; this.state = 'done';
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Cartesian tree sort (ASC): build the min-Cartesian tree of the input
+ * sequence with the classic stack algorithm (each element pushed/popped
+ * once, <= 2n-2 comparisons), then repeatedly extract the minimum with a
+ * binary-heap priority queue seeded with the root (children enqueued on
+ * extraction). Output order is ascending.
+ * Source: https://en.wikipedia.org/wiki/Cartesian_tree
+ */
+class CartesianTreeSortProvider extends Provider {
+    constructor(n) { super(n); this.stack2 = []; this.idx = 0; this.root = null; this.state = n > 0 ? 'build' : 'done'; this.heap = []; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'build') {
+                if (this.idx >= this.n) { this.root = this.stack2.length ? this.stack2[0] : null; this.state = 'seed'; continue; }
+                this.node = { v: this.items[this.idx], l: null, r: null }; this.last = null;
+                this.state = 'popwhile'; continue;
+            }
+            if (this.state === 'popwhile') {
+                if (result !== undefined) {
+                    // Pair was [stackTop.v, node.v]: 1 => top stronger => pop.
+                    if (result === 1) { this.last = this.stack2.pop(); }
+                    else { this.state = 'link'; result = undefined; continue; }
+                    result = undefined;
+                }
+                if (this.stack2.length > 0) return [this.stack2[this.stack2.length - 1].v, this.node.v];
+                this.state = 'link'; continue;
+            }
+            if (this.state === 'link') {
+                this.node.l = this.last;
+                if (this.stack2.length > 0) this.stack2[this.stack2.length - 1].r = this.node;
+                this.stack2.push(this.node);
+                this.idx++; this.state = 'build'; continue;
+            }
+            if (this.state === 'seed') {
+                if (this.root) this.heap.push(this.root);
+                this.out = []; this.state = 'extract'; continue;
+            }
+            if (this.state === 'extract') {
+                if (this.heap.length === 0) { this.items = this.out; this.state = 'done'; continue; }
+                const top = this.heap[0], last = this.heap.pop();
+                if (this.heap.length > 0) { this.heap[0] = last; this.hi = 0; this.state = 'hdown'; }
+                else this.state = 'emit';
+                this.emitNode = top; continue;
+            }
+            if (this.state === 'emit') {
+                this.out.push(this.emitNode.v);
+                this.pendingKids = [];
+                if (this.emitNode.l) this.pendingKids.push(this.emitNode.l);
+                if (this.emitNode.r) this.pendingKids.push(this.emitNode.r);
+                this.emitNode = null; this.state = 'enqueue'; continue;
+            }
+            if (this.state === 'enqueue') {
+                if (this.pendingKids.length === 0) { this.state = 'extract'; continue; }
+                this.heap.push(this.pendingKids.pop()); this.hi = this.heap.length - 1;
+                this.state = 'hup'; continue;
+            }
+            if (this.state === 'hup') {
+                // Bubble heap[hi] up (min-heap). Pair [child, parent]: 0 => child wins.
+                if (this.hi === 0) { this.state = 'enqueue'; continue; }
+                const p = (this.hi - 1) >> 1;
+                if (result !== undefined) {
+                    if (result === 0) { const t = this.heap[this.hi]; this.heap[this.hi] = this.heap[p]; this.heap[p] = t; this.hi = p; }
+                    else this.state = 'enqueue';
+                    result = undefined; continue;
+                }
+                return [this.heap[this.hi].v, this.heap[p].v];
+            }
+            if (this.state === 'hdown') {
+                const l = this.hi * 2 + 1, r = l + 1;
+                if (l >= this.heap.length) { this.state = 'emit'; continue; }
+                if (this.pickChild === true) {
+                    // result of [left, right]: 0 => left wins.
+                    this.c = (result === 0) ? l : r; result = undefined; this.pickChild = false;
+                    this.state = 'hdowncmp'; continue;
+                }
+                if (r >= this.heap.length) { this.c = l; this.state = 'hdowncmp'; continue; }
+                this.pickChild = true;
+                return [this.heap[l].v, this.heap[r].v];
+            }
+            if (this.state === 'hdowncmp') {
+                // Pair [child, x]: 0 => child wins => swap down.
+                if (result !== undefined) {
+                    if (result === 0) { const t = this.heap[this.hi]; this.heap[this.hi] = this.heap[this.c]; this.heap[this.c] = t; this.hi = this.c; this.state = 'hdown'; }
+                    else this.state = 'emit';
+                    result = undefined; continue;
+                }
+                return [this.heap[this.c].v, this.heap[this.hi].v];
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Treap sort (ASC): insert every element into a treap keyed by strength
+ * with random priorities (priorities drawn from Math.random, never
+ * compared via oracle), rotating up on priority, then inorder traversal.
+ * Expected O(n log n) comparisons.
+ * Source: https://en.wikipedia.org/wiki/Treap
+ */
+class TreapSortProvider extends Provider {
+    constructor(n) { super(n); this.root = null; this.idx = 0; this.state = n > 0 ? 'insert' : 'done'; }
+    _rotRight(x) { const y = x.l; x.l = y.r; y.r = x; return y; }
+    _rotLeft(x) { const y = x.r; x.r = y.l; y.l = x; return y; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'insert') {
+                if (this.idx >= this.n) { this.state = 'traverse'; continue; }
+                this.node = { v: this.items[this.idx], pr: Math.random(), l: null, r: null };
+                this.cur = this.root; this.path = [];
+                this.state = 'descend'; continue;
+            }
+            if (this.state === 'descend') {
+                if (result !== undefined) {
+                    // Pair was [node.v, cur.v]: 0 => go left.
+                    if (result === 0) { this.path.push([this.cur, 'l']); this.cur = this.cur.l; }
+                    else { this.path.push([this.cur, 'r']); this.cur = this.cur.r; }
+                    result = undefined;
+                }
+                if (this.cur) return [this.node.v, this.cur.v];
+                // Link under last parent, then rotate up on priority (free).
+                if (this.path.length === 0) this.root = this.node;
+                else { const [p, d] = this.path[this.path.length - 1]; p[d] = this.node; }
+                let child = this.node;
+                while (this.path.length > 0) {
+                    const [p, d] = this.path[this.path.length - 1];
+                    if (p.pr <= child.pr) break;
+                    this.path.pop();
+                    let nn;
+                    if (d === 'l') nn = this._rotRight(p); else nn = this._rotLeft(p);
+                    if (this.path.length === 0) this.root = nn;
+                    else { const [gp, gd] = this.path[this.path.length - 1]; gp[gd] = nn; }
+                    child = nn;
+                }
+                this.idx++; this.state = 'insert'; continue;
+            }
+            if (this.state === 'traverse') {
+                const out = []; const stack = []; let c = this.root;
+                while (c || stack.length) { while (c) { stack.push(c); c = c.l; } c = stack.pop(); out.push(c.v); c = c.r; }
+                this.items = out; this.state = 'done';
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Skiplist sort (ASC): insert every element into a skiplist (levels by fair
+ * coin flips capped at ceil(log2(n+1)), search-and-splice per level), then
+ * traverse level 0. Only search steps ask the oracle.
+ * Source: https://en.wikipedia.org/wiki/Skip_list
+ */
+class SkiplistSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.maxLvl = Math.max(1, Math.ceil(Math.log2(n + 1)));
+        this.head = { v: -1, fwd: new Array(this.maxLvl).fill(null) };
+        this.idx = 0; this.state = n > 0 ? 'insert' : 'done';
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'insert') {
+                if (this.idx >= this.n) { this.state = 'traverse'; continue; }
+                let lvl = 0;
+                while (lvl + 1 < this.maxLvl && Math.random() < 0.5) lvl++;
+                this.node = { v: this.items[this.idx], fwd: new Array(lvl + 1).fill(null) };
+                this.update = new Array(this.maxLvl).fill(null);
+                this.cur = this.head; this.li = this.maxLvl - 1;
+                this.state = 'search'; continue;
+            }
+            if (this.state === 'search') {
+                if (result !== undefined) {
+                    // Pair was [node.v, next.v]: 0 => node weaker => drop a level.
+                    if (result === 0) { this.update[this.li] = this.cur; this.li--; }
+                    else this.cur = this.nxt;
+                    result = undefined;
+                }
+                while (this.li >= 0 && this.cur.fwd[this.li] === null && this.li > this.node.fwd.length - 1) this.li--;
+                if (this.li < 0) { this.state = 'splice'; continue; }
+                this.nxt = this.cur.fwd[this.li];
+                if (this.nxt === null) { this.update[this.li] = this.cur; this.li--; continue; }
+                return [this.node.v, this.nxt.v];
+            }
+            if (this.state === 'splice') {
+                for (let l = 0; l < this.node.fwd.length; l++) {
+                    const u = this.update[l] || this.head;
+                    this.node.fwd[l] = u.fwd[l]; u.fwd[l] = this.node;
+                }
+                this.idx++; this.state = 'insert'; continue;
+            }
+            if (this.state === 'traverse') {
+                const out = []; let c = this.head.fwd[0];
+                while (c) { out.push(c.v); c = c.fwd[0]; }
+                this.items = out; this.state = 'done';
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Shared machinery for the Shivers-family adaptive mergesorts (ASC):
+ * natural run detection (descending runs reversed in place, no minrun),
+ * a run stack, and standard stable merges. Subclasses differ only in the
+ * merge policy _pickMerge(). Run decomposition and merging follow the
+ * Timsort structure of Auger et al.; only components (ii) (the policy)
+ * vary. At the end (no runs left) the stack collapses by merging the top
+ * two runs, as in the papers.
+ * Source: https://ar5iv.labs.arxiv.org/html/1809.08411 (Auger et al. 2018)
+ */
+class ShiversBaseProvider extends Provider {
+    constructor(n) { super(n); this.idx = 0; this.runStack = []; this.state = 'decide'; }
+    _pickMerge() { return null; }
+    next(result) {
+        while (true) {
+            if (this.state === 'decide') {
+                const m = this._pickMerge();
+                if (m !== null) { this.mergeIdx = m; this.state = 'merging_init'; continue; }
+                if (this.idx < this.n) {
+                    if (this.idx + 1 >= this.n) { this.runStack.push({ start: this.idx, len: 1 }); this.idx = this.n; continue; }
+                    this.runStart = this.idx; this.i = this.idx + 1; this.state = 'decide_direction'; continue;
+                }
+                if (this.runStack.length >= 2) { this.mergeIdx = this.runStack.length - 2; this.state = 'merging_init'; continue; }
+                return null;
+            }
+            if (this.state === 'decide_direction' || this.state === 'extend_ascending' || this.state === 'extend_descending') {
+                if (result !== undefined) {
+                    if (this.state === 'decide_direction') { this.isDescending = (result === 0); this.i++; this.state = this.isDescending ? 'extend_descending' : 'extend_ascending'; }
+                    else if (this.state === 'extend_ascending') { if (result === 1) this.i++; else this.state = 'push_run'; }
+                    else { if (result === 0) this.i++; else this.state = 'push_run'; }
+                    result = undefined; if (this.state === 'push_run') continue;
+                }
+                if (this.i < this.n) return [this.items[this.i], this.items[this.i - 1]];
+                this.state = 'push_run'; continue;
+            }
+            if (this.state === 'push_run') {
+                if (this.isDescending) { let l = this.runStart, r = this.i - 1; while (l < r) { const t = this.items[l]; this.items[l] = this.items[r]; this.items[r] = t; l++; r--; } }
+                this.runStack.push({ start: this.runStart, len: this.i - this.runStart });
+                this.idx = this.i; this.state = 'decide'; continue;
+            }
+            if (this.state === 'merging_init') {
+                const r1 = this.runStack[this.mergeIdx], r2 = this.runStack[this.mergeIdx + 1];
+                this.A = this.items.slice(r1.start, r1.start + r1.len);
+                this.B = this.items.slice(r2.start, r2.start + r2.len);
+                this.ai = 0; this.bi = 0; this.k = r1.start; this.state = 'merging_loop'; continue;
+            }
+            if (this.state === 'merging_loop') {
+                if (result !== undefined) { if (result === 0) this.items[this.k++] = this.A[this.ai++]; else this.items[this.k++] = this.B[this.bi++]; result = undefined; }
+                if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]];
+                while (this.ai < this.A.length) this.items[this.k++] = this.A[this.ai++];
+                while (this.bi < this.B.length) this.items[this.k++] = this.B[this.bi++];
+                const m = { start: this.runStack[this.mergeIdx].start, len: this.runStack[this.mergeIdx].len + this.runStack[this.mergeIdx + 1].len };
+                this.runStack.splice(this.mergeIdx, 2, m); this.state = 'decide'; continue;
+            }
+        }
+    }
+}
+
+/**
+ * Adaptive Shivers Sort (ASC): merge R_{h-2},R_{h-1} when h>=3 and
+ * floor(log2|r_{h-2}|) <= max(floor(log2|r_{h-1}|), floor(log2|r_h|)).
+ */
+class AdaptiveShiversSortProvider extends ShiversBaseProvider {
+    _pickMerge() {
+        const s = this.runStack, h = s.length;
+        if (h < 3) return null;
+        const l1 = Math.floor(Math.log2(s[h-3].len)), l2 = Math.floor(Math.log2(s[h-2].len)), l3 = Math.floor(Math.log2(s[h-1].len));
+        return (l1 <= Math.max(l2, l3)) ? h - 3 : null;
+    }
+}
+
+/**
+ * Shivers Sort (ASC): merge the top two runs when the top run's
+ * log-length is >= the run below it (original 1999 policy).
+ */
+class ShiversSortProvider extends ShiversBaseProvider {
+    _pickMerge() {
+        const s = this.runStack, h = s.length;
+        if (h < 2) return null;
+        return (Math.floor(Math.log2(s[h-1].len)) >= Math.floor(Math.log2(s[h-2].len))) ? h - 2 : null;
+    }
+}
+
+/**
+ * Augmented Shivers Sort (ASC): merge R_{h-2},R_{h-1} when h>=3,
+ * |R_h| >= |R_{h-2}| and log|R_h| >= log|R_{h-1}|, else merge the top two
+ * when log|R_h| >= log|R_{h-1}|.
+ */
+class AugmentedShiversSortProvider extends ShiversBaseProvider {
+    _pickMerge() {
+        const s = this.runStack, h = s.length;
+        if (h >= 3 && s[h-1].len >= s[h-3].len &&
+            Math.floor(Math.log2(s[h-1].len)) >= Math.floor(Math.log2(s[h-2].len))) return h - 3;
+        if (h >= 2 && Math.floor(Math.log2(s[h-1].len)) >= Math.floor(Math.log2(s[h-2].len))) return h - 2;
+        return null;
+    }
+}
+
+/**
+ * Peeksort (Munro & Wild 2018; ASC): adaptive mergesort that peeks at the
+ * middle to find existing runs. Initial left/right runs are detected with
+ * Timsort-style direction detection (descending reversed); each frame
+ * splits at the known run boundary nearest mid, or finds the middle run
+ * (reversing if descending) and recurses on the smaller side first;
+ * subarrays of <= 24 elements use insertion sort with the sorted prefix
+ * skipped. Explicit stack with merge tasks.
+ * Source: https://github.com/sebawild/peeksort (paper + Java reference)
+ */
+class PeeksortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.frames = [];
+        if (n <= 1) { this.state = 'run'; return; }
+        this.state = 'init_left';
+        this.i = 1; this.j = n - 1;
+    }
+    next(result) {
+        while (true) {
+            if (this.state === 'init_left') {
+                // Extend run rightward from 0 with direction detection.
+                if (result !== undefined) {
+                    if (this.dir === undefined) { this.dir = (result === 0) ? 'desc' : 'asc'; this.i++; }
+                    else if (this.dir === 'asc') { if (result === 1) this.i++; else this.state = 'init_left_done'; }
+                    else { if (result === 0) this.i++; else this.state = 'init_left_done'; }
+                    result = undefined; if (this.state === 'init_left_done') continue;
+                }
+                if (this.i < this.n) return [this.items[this.i], this.items[this.i - 1]];
+                this.state = 'init_left_done'; continue;
+            }
+            if (this.state === 'init_left_done') {
+                if (this.dir === 'desc') { let l = 0, r = this.i - 1; while (l < r) { const t = this.items[l]; this.items[l] = this.items[r]; this.items[r] = t; l++; r--; } }
+                this.L0 = this.i - 1;
+                if (this.L0 >= this.n - 1) { this.frames.push({ t: 'frame', l: 0, r: this.n - 1, L: this.L0, R: this.n - 1 }); this.state = 'run'; continue; }
+                this.state = 'init_right'; this.dir2 = undefined; continue;
+            }
+            if (this.state === 'init_right') {
+                // Extend run leftward from n-1 with direction detection.
+                if (result !== undefined) {
+                    if (this.dir2 === undefined) { this.dir2 = (result === 1) ? 'asc' : 'desc'; this.j--; }
+                    else if (this.dir2 === 'asc') { if (result === 1) this.j--; else this.state = 'init_right_done'; }
+                    else { if (result === 0) this.j--; else this.state = 'init_right_done'; }
+                    result = undefined; if (this.state === 'init_right_done') continue;
+                }
+                // Bounded below by L0+1 so the runs can't overlap (an overlap
+                // would let this run's reversal clobber the sorted left run).
+                if (this.j > this.L0 + 1) return [this.items[this.j], this.items[this.j - 1]];
+                this.state = 'init_right_done'; continue;
+            }
+            if (this.state === 'init_right_done') {
+                if (this.dir2 === 'desc') { let l = this.j, r = this.n - 1; while (l < r) { const t = this.items[l]; this.items[l] = this.items[r]; this.items[r] = t; l++; r--; } }
+                this.frames.push({ t: 'frame', l: 0, r: this.n - 1, L: this.L0, R: this.j });
+                this.state = 'run'; continue;
+            }
+            if (this.state === 'run') {
+                if (this.frames.length === 0) return null;
+                const f = this.frames[this.frames.length - 1];
+                if (f.t === 'merge') {
+                    if (f.stage === 'init') {
+                        this.A = this.items.slice(f.l, f.m); this.B = this.items.slice(f.m, f.r + 1);
+                        this.ai = 0; this.bi = 0; this.k = f.l; f.stage = 'loop'; continue;
+                    }
+                    if (result !== undefined) { if (result === 0) this.items[this.k++] = this.A[this.ai++]; else this.items[this.k++] = this.B[this.bi++]; result = undefined; }
+                    if (this.ai < this.A.length && this.bi < this.B.length) return [this.A[this.ai], this.B[this.bi]];
+                    while (this.ai < this.A.length) this.items[this.k++] = this.A[this.ai++];
+                    while (this.bi < this.B.length) this.items[this.k++] = this.B[this.bi++];
+                    this.frames.pop(); continue;
+                }
+                // frame {l, r, L, R}
+                if (f.stage === 'midrun') {
+                    // result of [A[mid], A[mid+1]]: 0 => ascending.
+                    const asc = (result === 0); result = undefined;
+                    let i = f.mid, j = f.mid + 1;
+                    f.stage = 'scanleft'; f.i = i; f.j = j; f.asc = asc; continue;
+                }
+                if (f.stage === 'scanleft') {
+                    if (result !== undefined) {
+                        const good = f.asc ? (result === 1) : (result === 0);
+                        // Pair was [A[i], A[i-1]]: asc continues on 1, desc on 0.
+                        if (good) f.i--;
+                        else f.stage = 'scanright';
+                        result = undefined; if (f.stage === 'scanright') continue;
+                    }
+                    if (f.i > f.L + 1) return [this.items[f.i], this.items[f.i - 1]];
+                    f.stage = 'scanright'; continue;
+                }
+                if (f.stage === 'scanright') {
+                    if (result !== undefined) {
+                        const good = f.asc ? (result === 1) : (result === 0);
+                        // Pair was [A[j+1], A[j]].
+                        if (good) f.j++;
+                        else f.stage = 'split';
+                        result = undefined; if (f.stage === 'split') continue;
+                    }
+                    if (f.j < f.R - 1) return [this.items[f.j + 1], this.items[f.j]];
+                    f.stage = 'split'; continue;
+                }
+                if (f.stage === 'split') {
+                    const i = f.i, j = f.j, l = f.l, r = f.r, L = f.L, R = f.R, mid = f.mid;
+                    this.frames.pop();
+                    if (!f.asc) { let a = i, b = j; while (a < b) { const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t; a++; b--; } }
+                    if (i === l && j === r) continue; // whole range one run
+                    if (mid - i < j - mid) {
+                        this.frames.push({ t: 'merge', l, m: i, r, stage: 'init' });
+                        this.frames.push({ t: 'frame', l: i, r, L: j, R });
+                        this.frames.push({ t: 'frame', l, r: i - 1, L, R: i - 1 });
+                    } else {
+                        this.frames.push({ t: 'merge', l, m: j + 1, r, stage: 'init' });
+                        this.frames.push({ t: 'frame', l: j + 1, r, L: j + 1, R });
+                        this.frames.push({ t: 'frame', l, r: j, L, R: i });
+                    }
+                    continue;
+                }
+                if (f.stage === 'insert') {
+                    // Insertion over [l..r] skipping sorted prefix [l..L].
+                    if (f.k === undefined) f.k = Math.max(f.l + 1, f.L + 1);
+                    if (result !== undefined) {
+                        // Pair was [A[jj], x]: 1 => A[jj] wins => shift.
+                        if (result === 1) { this.items[f.jj + 1] = this.items[f.jj]; f.jj--; }
+                        else { this.items[f.jj + 1] = f.x; f.k++; f.jj = undefined; }
+                        result = undefined;
+                    }
+                    if (f.jj === undefined) {
+                        if (f.k > f.r) { this.frames.pop(); continue; }
+                        f.x = this.items[f.k]; f.jj = f.k - 1;
+                    }
+                    if (f.jj >= f.l) return [this.items[f.jj], f.x];
+                    this.items[f.jj + 1] = f.x; f.k++; f.jj = undefined; continue;
+                }
+                // fresh frame: dispatch.
+                if (f.L >= f.r || f.R <= f.l) { this.frames.pop(); continue; }
+                if (f.r - f.l + 1 <= 24) { f.stage = 'insert'; continue; }
+                const mid = f.l + ((f.r - f.l) >> 1);
+                if (mid <= f.L) {
+                    this.frames.pop();
+                    this.frames.push({ t: 'merge', l: f.l, m: f.L + 1, r: f.r, stage: 'init' });
+                    this.frames.push({ t: 'frame', l: f.L + 1, r: f.r, L: f.L + 1, R: Math.max(f.R, f.L + 1) });
+                    continue;
+                }
+                if (mid >= f.R) {
+                    this.frames.pop();
+                    this.frames.push({ t: 'merge', l: f.l, m: f.R, r: f.r, stage: 'init' });
+                    this.frames.push({ t: 'frame', l: f.l, r: f.R - 1, L: Math.min(f.L, f.R - 1), R: f.R - 1 });
+                    continue;
+                }
+                f.mid = mid; f.stage = 'midrun';
+                return [this.items[mid], this.items[mid + 1]];
+            }
+        }
+    }
+}
+
+/**
+ * Library sort (Bender et al. 2005; ASC): gapped insertion sort. Elements
+ * (in random order) are inserted into an array of size 2n with gaps; the
+ * insertion point is found by binary search over the gapped array (landing
+ * on gaps resolves to a nearby element, free index scans) plus a short
+ * comparison-based linear adjustment that guarantees correct placement;
+ * elements shift to the nearest gap (free moves). After 1,2,4,... insertions
+ * the array is rebalanced (evenly respread, free). Comparisons ~ binary
+ * insertion; the MeteredMove savings are invisible to this harness.
+ * Source: https://en.wikipedia.org/wiki/Library_sort
+ */
+class LibrarySortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.S = 2 * n;
+        this.slots = new Array(this.S).fill(-1);
+        this.shuffled = this.items.slice();
+        for (let i = this.shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = this.shuffled[i]; this.shuffled[i] = this.shuffled[j]; this.shuffled[j] = t; }
+        this.inserted = 0; this.goal = 1; this.roundDone = 0;
+        this.state = n > 0 ? 'round' : 'done';
+    }
+    _nearestIn(lo, hi, mid) { // nearest non-gap slot in [lo,hi) to mid (free scan)
+        for (let d = 0; d < hi - lo; d++) {
+            if (mid - d >= lo && this.slots[mid - d] !== -1) return mid - d;
+            if (mid + d < hi && this.slots[mid + d] !== -1) return mid + d;
+        }
+        return -1;
+    }
+    _leftElem(p) { for (let s = p - 1; s >= 0; s--) if (this.slots[s] !== -1) return s; return -1; }
+    _rightElem(p) { for (let s = p + 1; s < this.S; s++) if (this.slots[s] !== -1) return s; return -1; }
+    _nearestGap(p) {
+        for (let d = 0; d < this.S; d++) {
+            if (p - d >= 0 && this.slots[p - d] === -1) return p - d;
+            if (p + d < this.S && this.slots[p + d] === -1) return p + d;
+        }
+        return p;
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'round') {
+                if (this.inserted >= this.n) { this.items = this.slots.filter(x => x !== -1); this.state = 'done'; continue; }
+                this.roundDone = 0; this.state = 'insert_next'; continue;
+            }
+            if (this.state === 'insert_next') {
+                if (this.roundDone >= this.goal || this.inserted >= this.n) {
+                    // Rebalance: respread evenly (free).
+                    const elems = this.slots.filter(x => x !== -1);
+                    this.slots = new Array(this.S).fill(-1);
+                    const m = elems.length;
+                    for (let i = 0; i < m; i++) this.slots[Math.floor((i + 0.5) * this.S / m)] = elems[i];
+                    this.goal *= 2; this.state = 'round'; continue;
+                }
+                this.x = this.shuffled[this.inserted]; this.lo = 0; this.hi = this.S;
+                this.state = 'bs'; continue;
+            }
+            if (this.state === 'bs') {
+                if (result !== undefined) {
+                    // Pair was [x, e]: 0 => x weaker => hi = slot.
+                    if (result === 0) this.hi = this.eSlot; else this.lo = this.eSlot + 1;
+                    result = undefined;
+                }
+                if (this.lo >= this.hi) { this.p = this.lo; this.state = 'adjleft'; continue; }
+                const mid = (this.lo + this.hi) >> 1;
+                const s = this._nearestIn(this.lo, this.hi, mid);
+                if (s === -1) { this.p = this.lo; this.state = 'adjleft'; continue; }
+                this.eSlot = s; this.e = this.slots[s];
+                return [this.x, this.e];
+            }
+            if (this.state === 'adjleft') {
+                const s = this._leftElem(this.p);
+                if (s === -1) { this.state = 'adjright'; continue; }
+                if (result !== undefined) {
+                    // Pair was [L, x]: 1 => L wins => move left past L.
+                    if (result === 1) this.p = s; else this.state = 'adjright';
+                    result = undefined; continue;
+                }
+                return [this.slots[s], this.x];
+            }
+            if (this.state === 'adjright') {
+                const s = this._rightElem(this.p);
+                if (s === -1) { this.state = 'place'; continue; }
+                if (result !== undefined) {
+                    // Pair was [x, R]: 1 => x wins => move right past R.
+                    if (result === 1) this.p = s + 1; else this.state = 'place';
+                    result = undefined; continue;
+                }
+                return [this.x, this.slots[s]];
+            }
+            if (this.state === 'place') {
+                this.p = Math.max(0, Math.min(this.S - 1, this.p));
+                if (this.slots[this.p] === -1) {
+                    this.slots[this.p] = this.x;
+                    this.inserted++; this.roundDone++; this.state = 'insert_next'; continue;
+                }
+                // Occupied by E': ask [E', x], then shift E' to its correct side.
+                if (result !== undefined) {
+                    const eFirst = this.slots[this.p];
+                    if (result === 0) {
+                        // E' <= x: E' stays left of x.
+                        let g = -1;
+                        for (let s = this.p + 1; s < this.S; s++) if (this.slots[s] === -1) { g = s; break; }
+                        if (g !== -1) {
+                            // Right gap: e1 = slots[p+1] is the verified R >= x; shift (p..g) right.
+                            for (let s = g; s > this.p + 1; s--) this.slots[s] = this.slots[s - 1];
+                            this.slots[this.p + 1] = this.x;
+                        } else {
+                            // All gaps left: shift [g2..p] left so E' lands left of x.
+                            let g2 = this.p - 1;
+                            while (g2 >= 0 && this.slots[g2] !== -1) g2--;
+                            for (let s = g2; s < this.p; s++) this.slots[s] = this.slots[s + 1];
+                            this.slots[this.p] = this.x;
+                        }
+                    } else {
+                        // E' > x: E' stays right of x.
+                        let g = -1;
+                        for (let s = this.p - 1; s >= 0; s--) if (this.slots[s] === -1) { g = s; break; }
+                        if (g !== -1) {
+                            for (let s = g; s < this.p - 1; s++) this.slots[s] = this.slots[s + 1];
+                            this.slots[this.p - 1] = this.x;
+                        } else {
+                            let g2 = this.p + 1;
+                            while (g2 < this.S && this.slots[g2] !== -1) g2++;
+                            for (let s = g2; s > this.p; s--) this.slots[s] = this.slots[s - 1];
+                            this.slots[this.p] = this.x;
+                        }
+                    }
+                    result = undefined;
+                    this.inserted++; this.roundDone++; this.state = 'insert_next'; continue;
+                }
+                return [this.slots[this.p], this.x];
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Sample sort, Frazer-McKellar style (ASC): for arrays over 16 elements,
+ * sort a sample of up to 12 elements (linear insertion) to pick 3
+ * splitters, distribute all elements into 4 buckets by binary search over
+ * the splitters, and recurse (explicit stack). Small arrays use linear
+ * insertion sort. Documented parameters: 4 buckets, sample 12, cutoff 16.
+ * Source: https://en.wikipedia.org/wiki/Samplesort
+ */
+class SampleSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.frames = n > 0 ? [{ arr: this.items.slice(), stage: 'enter', kidsDone: [] }] : [];
+    }
+    next(result) {
+        while (this.frames.length > 0) {
+            const f = this.frames[this.frames.length - 1];
+            if (f.stage === 'enter') {
+                if (f.arr.length <= 16) { f.k = 1; f.stage = 'ins'; continue; }
+                const s = Math.min(f.arr.length, 12);
+                f.sample = f.arr.slice(0, s); f.sk = 1; f.stage = 'sampleins'; continue;
+            }
+            if (f.stage === 'ins' || f.stage === 'sampleins') {
+                const a = (f.stage === 'ins') ? f.arr : f.sample;
+                const kk = (f.stage === 'ins') ? 'k' : 'sk';
+                if (f[kk] === undefined) f[kk] = 1;
+                if (result !== undefined) {
+                    // Pair was [a[jj], x]: 1 => shift.
+                    if (result === 1) { a[f.jj + 1] = a[f.jj]; f.jj--; }
+                    else { a[f.jj + 1] = f.x; f[kk]++; f.jj = undefined; }
+                    result = undefined;
+                }
+                if (f.jj === undefined) {
+                    const doneAt = a.length;
+                    if (f[kk] >= doneAt) {
+                        if (f.stage === 'ins') { const done = f.arr; this.frames.pop(); this._deliver(f, done); continue; }
+                        // Sample sorted: splitters at quarters.
+                        const q = f.sample.length;
+                        f.splitters = [f.sample[q >> 2], f.sample[q >> 1], f.sample[(3 * q) >> 2]];
+                        f.buckets = [[], [], [], []]; f.di = 0; f.stage = 'distribute'; continue;
+                    }
+                    f.x = a[f[kk]]; f.jj = f[kk] - 1;
+                }
+                if (f.jj >= 0) return [a[f.jj], f.x];
+                a[f.jj + 1] = f.x; f[kk]++; f.jj = undefined; continue;
+            }
+            if (f.stage === 'distribute') {
+                if (f.di >= f.arr.length) {
+                    f.kids = f.buckets.filter(b => b.length > 0);
+                    f.kidsDone = new Array(f.kids.length).fill(null);
+                    // Splitter elements themselves land in buckets 0 and 2, so
+                    // there are always >= 2 nonempty buckets; anything else is a bug.
+                    if (f.kids.length <= 1) throw new Error('samplesort single bucket');
+                    f.stage = 'collect';
+                    for (let i = f.kids.length - 1; i >= 0; i--) this.frames.push({ arr: f.kids[i], stage: 'enter', _parent: f, _slot: i });
+                    continue;
+                }
+                if (f.blo === undefined) { f.blo = 0; f.bhi = f.splitters.length; }
+                if (result !== undefined) {
+                    // Pair was [x, splitter]: 0 => x weaker => hi = mid.
+                    if (result === 0) f.bhi = f.mid; else f.blo = f.mid + 1;
+                    result = undefined;
+                }
+                if (f.blo < f.bhi) { f.mid = (f.blo + f.bhi) >> 1; return [f.arr[f.di], f.splitters[f.mid]]; }
+                f.buckets[f.blo].push(f.arr[f.di]); f.di++; f.blo = undefined; continue;
+            }
+            if (f.stage === 'collect') {
+                if (f.kidsDone.some(x => x === null)) throw new Error('sample collect incomplete');
+                const done = [].concat(...f.kidsDone);
+                this.frames.pop(); this._deliver(f, done); continue;
+            }
+        }
+        return null;
+    }
+    _deliver(frame, done) {
+        if (!frame._parent) this.items = done;
+        else frame._parent.kidsDone[frame._slot] = done;
+    }
+}
+
+/**
+ * Funnel sort comparison skeleton, lazy variant (ASC): recursively split
+ * into k = max(2, round(len^(1/3))) contiguous segments (insertion sort
+ * for length <= 8 leaves), then merge with a k-way winner (tournament)
+ * tree. DOCUMENTED SKELETON: the cache-oblivious k-merger buffer layout
+ * (funnel heap / binary-merger tree with edge buffers) is elided; only the
+ * recursive splitting structure and the comparison sequence of a winner-tree
+ * k-way merge are modeled.
+ * Source: Frigo et al. 1999 (FOCS), "Cache-Oblivious Algorithms".
+ */
+class FunnelSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.frames = n > 0 ? [{ arr: this.items.slice(), stage: 'enter', kidsDone: [] }] : [];
+    }
+    next(result) {
+        while (this.frames.length > 0) {
+            const f = this.frames[this.frames.length - 1];
+            if (f.stage === 'enter') {
+                if (f.arr.length <= 8) { f.k = 1; f.stage = 'ins'; continue; }
+                const k = Math.max(2, Math.round(Math.pow(f.arr.length, 1 / 3)));
+                const len = f.arr.length, base = Math.floor(len / k), rem = len - base * k;
+                f.kids = []; let off = 0;
+                for (let i = 0; i < k; i++) { const sz = base + (i < rem ? 1 : 0); f.kids.push(f.arr.slice(off, off + sz)); off += sz; }
+                f.kidsDone = new Array(f.kids.length).fill(null); f.stage = 'collect';
+                for (let i = f.kids.length - 1; i >= 0; i--) this.frames.push({ arr: f.kids[i], stage: 'enter', _parent: f, _slot: i });
+                continue;
+            }
+            if (f.stage === 'ins') {
+                const a = f.arr;
+                if (f.k === undefined) f.k = 1;
+                if (result !== undefined) {
+                    if (result === 1) { a[f.jj + 1] = a[f.jj]; f.jj--; }
+                    else { a[f.jj + 1] = f.x; f.k++; f.jj = undefined; }
+                    result = undefined;
+                }
+                if (f.jj === undefined) {
+                    if (f.k >= a.length) { const done = f.arr; this.frames.pop(); this._deliver(f, done); continue; }
+                    f.x = a[f.k]; f.jj = f.k - 1;
+                }
+                if (f.jj >= 0) return [a[f.jj], f.x];
+                a[f.jj + 1] = f.x; f.k++; f.jj = undefined; continue;
+            }
+            if (f.stage === 'collect') {
+                // Winner-tree k-way merge of kidsDone (staged).
+                if (f.wt === undefined) {
+                    const runs = f.kidsDone;
+                    f.wt = { runs, pos: runs.map(() => 0), k: runs.length, tree: [], out: [], bp: 0 };
+                    const kk = runs.length, tree = new Array(2 * kk).fill(-1);
+                    for (let i = 0; i < kk; i++) tree[kk + i] = runs[i].length > 0 ? i : -1;
+                    f.wt.tree = tree; f.wt.bp = kk - 1;
+                }
+                const wt = f.wt, tree = wt.tree, kk = wt.k;
+                if (f.wstage === 'emit' || (f.wstage === undefined && wt.bp < 1)) f.wstage = 'emit';
+                else if (f.wstage === undefined) f.wstage = 'build';
+                if (f.wstage === 'build') {
+                    if (result !== undefined) {
+                        // Pair was [headA, headB]: 0 => A wins.
+                        tree[wt.bp] = (result === 0) ? wt.cA : wt.cB;
+                        result = undefined; wt.bp--; 
+                        if (wt.bp >= 1) { /* next internal node below */ } else { f.wstage = 'emit'; continue; }
+                    }
+                    if (wt.bp >= 1) {
+                        const a = tree[wt.bp * 2], b = tree[wt.bp * 2 + 1];
+                        if (a === -1) { tree[wt.bp] = b; wt.bp--; continue; }
+                        if (b === -1) { tree[wt.bp] = a; wt.bp--; continue; }
+                        wt.cA = a; wt.cB = b;
+                        return [wt.runs[a][wt.pos[a]], wt.runs[b][wt.pos[b]]];
+                    }
+                    f.wstage = 'emit'; continue;
+                }
+                // emit stage
+                if (tree[1] === -1) { const done = wt.out; this.frames.pop(); this._deliver(f, done); continue; }
+                if (f.replay === undefined) {
+                    const w = tree[1];
+                    wt.out.push(wt.runs[w][wt.pos[w]++]);
+                    f.replay = (wt.k + w) >> 1; // parent of leaf, walk to root
+                    if (wt.pos[w] >= wt.runs[w].length) tree[wt.k + w] = -1;
+                }
+                if (result !== undefined) {
+                    tree[f.replay] = (result === 0) ? wt.cA : wt.cB;
+                    result = undefined; f.replay >>= 1;
+                }
+                while (f.replay >= 1) {
+                    const a = tree[f.replay * 2], b = tree[f.replay * 2 + 1];
+                    if (a === -1) { tree[f.replay] = b; f.replay >>= 1; continue; }
+                    if (b === -1) { tree[f.replay] = a; f.replay >>= 1; continue; }
+                    wt.cA = a; wt.cB = b;
+                    return [wt.runs[a][wt.pos[a]], wt.runs[b][wt.pos[b]]];
+                }
+                f.replay = undefined; continue;
+            }
+        }
+        return null;
+    }
+    _deliver(frame, done) {
+        if (!frame._parent) this.items = done;
+        else frame._parent.kidsDone[frame._slot] = done;
+    }
+}
+
+/**
+ * Bidirectional ("parity") merge of two sorted arrays (unregistered helper
+ * for Quadsort/Piposort): m = min(len) head-min emissions to the front,
+ * then m tail-max emissions to the back, then a traditional merge of the
+ * remaining middles. Exactly 2m comparisons for equal lengths.
+ * Source: https://github.com/scandum/quadsort (README: parity merge)
+ */
+class ParityMerger {
+    constructor(A, B) {
+        this.A = A; this.B = B;
+        this.out = new Array(A.length + B.length);
+        this.f = 0; this.b = A.length + B.length - 1;
+        this.i = 0; this.j = 0; this.k = A.length - 1; this.l = B.length - 1;
+        this.phase = 'front'; this.count = Math.min(A.length, B.length);
+        this.done = false;
+        if (A.length === 0 || B.length === 0) {
+            for (const x of A) this.out[this.f++] = x;
+            for (const x of B) this.out[this.f++] = x;
+            this.done = true;
+        }
+    }
+    step(result) {
+        if (this.done) return null;
+        if (this.phase === 'front') {
+            if (this.count <= 0) { this.phase = 'back'; this.count = Math.min(this.A.length, this.B.length); return null; }
+            if (result !== undefined) {
+                if (result === 0) this.out[this.f++] = this.A[this.i++]; else this.out[this.f++] = this.B[this.j++];
+                if (--this.count <= 0) { this.phase = 'back'; this.count = Math.min(this.A.length, this.B.length); }
+                return null;
+            }
+            return [this.A[this.i], this.B[this.j]];
+        }
+        if (this.phase === 'back') {
+            if (this.count <= 0) { this.phase = 'mid'; return null; }
+            if (result !== undefined) {
+                if (result === 1) this.out[this.b--] = this.A[this.k--]; else this.out[this.b--] = this.B[this.l--];
+                if (--this.count <= 0) this.phase = 'mid';
+                return null;
+            }
+            return [this.A[this.k], this.B[this.l]];
+        }
+        if (this.i > this.k || this.j > this.l) {
+            while (this.i <= this.k) this.out[this.f++] = this.A[this.i++];
+            while (this.j <= this.l) this.out[this.f++] = this.B[this.j++];
+            this.done = true; return null;
+        }
+        if (result !== undefined) {
+            if (result === 0) this.out[this.f++] = this.A[this.i++]; else this.out[this.f++] = this.B[this.j++];
+            return null;
+        }
+        return [this.A[this.i], this.B[this.j]];
+    }
+}
+
+/**
+ * Quadsort, structural port (ASC): 8-element quad-swap analyzer (4 pair
+ * comparisons; if all in order / all reversed, 3 bridge comparisons, else 4
+ * swaps from the stored results plus parity-merge assembly), whole-array
+ * reverse early exit, then bottom-up ping-pong merging of 4 blocks at a
+ * time with ordered-boundary skip checks. DOCUMENTED ELISIONS: the branchless
+ * cross merge and the parity-vs-cross chooser are not modeled (parity merges
+ * used throughout); tail blocks (< 8) generalize the analyzer; merge groups
+ * of 2-3 blocks fold with parity merges.
+ * Source: https://github.com/scandum/quadsort (README)
+ */
+class QuadsortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.pos = 0; this.allRev = true; this.blocks = [];
+        this.state = n > 0 ? 'analyze' : 'done';
+    }
+    _bridgePositions(bstart, m) {
+        // (a, b) index pairs for bridge checks: between consecutive pairs + odd tail.
+        const out = [], p = m >> 1;
+        for (let i = 0; i < p - 1; i++) out.push([bstart + 2 * i + 1, bstart + 2 * i + 2]);
+        if (m % 2 === 1) out.push([bstart + m - 2, bstart + m - 1]);
+        return out;
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'analyze') {
+                if (this.pos >= this.n) {
+                    // Whole-array reverse early exit: every block was internally
+                    // reversed; verify the block boundaries are reversed too
+                    // (genuine asks) before reversing the whole array.
+                    if (this.allRev && this.n > 1) { this.rbi = 0; this.state = 'revcheck'; continue; }
+                    this.state = 'mergepass'; this.newBlocks = []; this.gi = 0; continue;
+                }
+                this.bstart = this.pos; this.m = Math.min(8, this.n - this.pos);
+                this.p = this.m >> 1; this.pi = 0; this.mask = 0;
+                this.state = this.p > 0 ? 'pairs' : 'blockdone_sorted';
+                continue;
+            }
+            if (this.state === 'pairs') {
+                if (result !== undefined) {
+                    // Pair was [A[2i], A[2i+1]]: 1 => reversed => set bit.
+                    if (result === 1) this.mask |= (1 << this.pi);
+                    this.pi++; result = undefined;
+                }
+                if (this.pi < this.p) return [this.items[this.bstart + 2 * this.pi], this.items[this.bstart + 2 * this.pi + 1]];
+                this.bridges = this._bridgePositions(this.bstart, this.m); this.bi = 0;
+                this.state = (this.mask === 0 || this.mask === (1 << this.p) - 1) ? 'bridges' : 'fixblock';
+                continue;
+            }
+            if (this.state === 'bridges') {
+                if (result !== undefined) {
+                    const want = (this.mask === 0) ? 0 : 1;
+                    if (result !== want) { result = undefined; this.state = 'fixblock'; continue; }
+                    this.bi++; result = undefined;
+                }
+                if (this.bi < this.bridges.length) { const [a, b] = this.bridges[this.bi]; return [this.items[a], this.items[b]]; }
+                // All bridges pass: sorted (mask 0) or reversed (mask all-1).
+                if (this.mask !== 0) {
+                    let l = this.bstart, r = this.bstart + this.m - 1;
+                    while (l < r) { const t = this.items[l]; this.items[l] = this.items[r]; this.items[r] = t; l++; r--; }
+                } else this.allRev = false;
+                this.blocks.push(this.items.slice(this.bstart, this.bstart + this.m));
+                this.pos += this.m; this.state = 'analyze'; continue;
+            }
+            if (this.state === 'blockdone_sorted') {
+                // Single-element block (m < 2): vacuously sorted and reversed.
+                this.blocks.push(this.items.slice(this.bstart, this.bstart + this.m));
+                this.pos += this.m; this.state = 'analyze'; continue;
+            }
+            if (this.state === 'revcheck') {
+                // Boundary i: blocks (ascending after per-block reversal) are in
+                // reverse block order iff first[i] > last[i+1].
+                if (result !== undefined) {
+                    if (result !== 1) { result = undefined; this.state = 'mergepass'; continue; }
+                    this.rbi++; result = undefined;
+                }
+                if (this.rbi >= this.blocks.length - 1) { this.items = [].concat(...this.blocks.slice().reverse()); this.state = 'done'; continue; }
+                let off = 0;
+                for (let i = 0; i < this.rbi; i++) off += this.blocks[i].length;
+                const A = this.blocks[this.rbi], B = this.blocks[this.rbi + 1];
+                return [this.items[off], this.items[off + A.length + B.length - 1]];
+            }
+            if (this.state === 'fixblock') {
+                // Swap reversed pairs (free), then parity-assemble.
+                for (let i = 0; i < this.p; i++) {
+                    if (this.mask & (1 << i)) {
+                        const a = this.bstart + 2 * i, b = a + 1;
+                        const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t;
+                    }
+                }
+                this.runs = [];
+                for (let i = 0; i < this.p; i++) this.runs.push(this.items.slice(this.bstart + 2 * i, this.bstart + 2 * i + 2));
+                if (this.m % 2 === 1) this.runs.push([this.items[this.bstart + this.m - 1]]);
+                this.state = 'assemble'; continue;
+            }
+            if (this.state === 'assemble') {
+                if (!this.pm && this.runs.length <= 1) {
+                    const blk = this.runs.length ? this.runs[0] : [];
+                    for (let i = 0; i < blk.length; i++) this.items[this.bstart + i] = blk[i];
+                    this.allRev = false;
+                    this.blocks.push(blk.slice());
+                    this.pos += this.m; this.state = 'analyze'; continue;
+                }
+                if (!this.pm) {
+                    const A = this.runs.shift(), B = this.runs.shift();
+                    this.pm = new ParityMerger(A, B);
+                    if (this.pm.done) { this.runs.push(this.pm.out); this.pm = null; continue; }
+                }
+                const q = this.pm.step(result); result = undefined;
+                if (q) return q;
+                if (!this.pm.done) continue;
+                this.runs.push(this.pm.out); this.pm = null; continue;
+            }
+            if (this.state === 'mergepass') {
+                if (this.blocks.length <= 1) { this.items = this.blocks.length ? this.blocks[0] : []; this.state = 'done'; continue; }
+                this.newBlocks = []; this.gi = 0; this.state = 'group'; continue;
+            }
+            if (this.state === 'group') {
+                if (this.gi * 4 >= this.blocks.length) { this.blocks = this.newBlocks; this.state = 'mergepass'; continue; }
+                this.grp = this.blocks.slice(this.gi * 4, this.gi * 4 + 4);
+                this.gi++; this.oks = []; this.ci = 1; this.state = 'gchecks'; continue;
+            }
+            if (this.state === 'gchecks') {
+                if (result !== undefined) {
+                    // Pair was [prev.last, cur.first]: 0 => ordered.
+                    this.oks.push(result === 0); this.ci++; result = undefined;
+                }
+                if (this.ci < this.grp.length) {
+                    const A = this.grp[this.ci - 1], B = this.grp[this.ci];
+                    return [A[A.length - 1], B[0]];
+                }
+                if (this.grp.length === 1) { this.newBlocks.push(this.grp[0]); this.state = 'group'; continue; }
+                if (this.oks.every(x => x)) { this.newBlocks.push([].concat(...this.grp)); this.state = 'group'; continue; }
+                this.t1 = null; this.t2 = null; this.state = 'gt1'; continue;
+            }
+            if (this.state === 'gt1' || this.state === 'gt2' || this.state === 'gfinal') {
+                const st = this.state;
+                if (!this.pm) {
+                    let A, B, slot;
+                    if (st === 'gt1') {
+                        if (this.oks[0]) { this.t1 = this.grp[0].concat(this.grp[1]); this.state = this.grp.length >= 3 ? 'gt2' : 'gpush'; continue; }
+                        A = this.grp[0]; B = this.grp[1]; slot = 't1';
+                    } else if (st === 'gt2') {
+                        if (this.grp.length === 3) { this.t2 = this.grp[2]; this.state = 'gfinal'; continue; }
+                        if (this.oks[2]) { this.t2 = this.grp[2].concat(this.grp[3]); this.state = 'gfinal'; continue; }
+                        A = this.grp[2]; B = this.grp[3]; slot = 't2';
+                    } else {
+                        // gfinal: skip-check t1/t2 boundary (1 comp), else merge.
+                        if (this._gfinalChecked === true) { A = this.t1; B = this.t2; slot = 'tf'; }
+                        else {
+                            if (result !== undefined) {
+                                if (result === 0) { this.newBlocks.push(this.t1.concat(this.t2)); this._gfinalChecked = false; this.state = 'group'; }
+                                else this._gfinalChecked = true;
+                                result = undefined; continue;
+                            }
+                            return [this.t1[this.t1.length - 1], this.t2[0]];
+                        }
+                    }
+                    this.pm = new ParityMerger(A, B); this.pmSlot = slot;
+                    if (this.pm.done) { this[this.pmSlot] = this.pm.out; this.pm = null; this._gtAdvance(); continue; }
+                }
+                const q = this.pm.step(result); result = undefined;
+                if (q) return q;
+                if (!this.pm.done) continue;
+                this[this.pmSlot] = this.pm.out; this.pm = null; this._gtAdvance(); continue;
+            }
+            if (this.state === 'gpush') {
+                this.newBlocks.push(this.grp.length === 2 ? this.t1 : this.tf);
+                this.state = 'group'; continue;
+            }
+        }
+        return null;
+    }
+    _gtAdvance() {
+        if (this.state === 'gt1') this.state = this.grp.length >= 3 ? 'gt2' : 'gpush';
+        else if (this.state === 'gt2') this.state = 'gfinal';
+        else { this.state = 'gpush'; this._gfinalChecked = false; }
+    }
+}
+
+/**
+ * Piposort, structural port (ASC): top-down 4-way partitioning to segments
+ * under 8 elements; leaves sorted with odd-even transposition sort (early
+ * exit on two consecutive clean phases: best 6 comparisons for 7 elements);
+ * bottom-up ping-pong merging 4 segments at a time with branchless parity
+ * merges. Between merges, 4-segment groups are checked for order (concat)
+ * or reverse order (block rotation). DOCUMENTED MICRO-DIFFERENCE: the
+ * reference stops odd-even after at most 7 phases (21 comparisons); this
+ * port requires two consecutive clean phases (best 6, worst 24 for 7).
+ * Source: https://github.com/scandum/piposort (README)
+ */
+class PiposortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.state = n > 0 ? 'partition' : 'done';
+        this.spans = n > 0 ? [[0, n]] : [];
+        this.leaves = [];
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'partition') {
+                if (this.spans.length === 0) {
+                    this.leaves.sort((a, b) => a[0] - b[0]);
+                    this.li = 0; this.state = 'leaf'; continue;
+                }
+                const [l, r] = this.spans.pop();
+                if (r - l < 8) { this.leaves.push([l, r]); continue; }
+                const len = r - l, base = len >> 2, rem = len - base * 4;
+                let off = l;
+                const qs = [];
+                for (let i = 0; i < 4; i++) { const sz = base + (i < rem ? 1 : 0); qs.push([off, off + sz]); off += sz; }
+                for (let i = 3; i >= 0; i--) this.spans.push(qs[i]);
+                continue;
+            }
+            if (this.state === 'leaf') {
+                if (this.li >= this.leaves.length) {
+                    this.blocks = this.leaves.map(([l, r]) => this.items.slice(l, r));
+                    this.state = 'mergepass'; continue;
+                }
+                const [l, r] = this.leaves[this.li];
+                this.lo = l; this.ln = r - l; this.phase = 0; this.streak = 0; this.oi = 0; this.swapped = false;
+                this.state = this.ln >= 2 ? 'oddeven' : 'leafnext';
+                continue;
+            }
+            if (this.state === 'leafnext') { this.li++; this.state = 'leaf'; continue; }
+            if (this.state === 'oddeven') {
+                if (result !== undefined) {
+                    // Pair was [A[i], A[i+1]]: 1 => inverted => swap.
+                    if (result === 1) {
+                        const a = this.lo + this.oi, b = a + 1;
+                        const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t;
+                        this.swapped = true;
+                    }
+                    this.oi += 2; result = undefined;
+                }
+                if (this.oi > this.ln - 2) {
+                    if (this.swapped) this.streak = 0; else this.streak++;
+                    if (this.streak >= 2) { this.state = 'leafnext'; continue; }
+                    this.phase ^= 1; this.oi = this.phase; this.swapped = false; continue;
+                }
+                if (this.oi > this.ln - 2) { this.oi = this.phase; continue; }
+                return [this.items[this.lo + this.oi], this.items[this.lo + this.oi + 1]];
+            }
+            if (this.state === 'mergepass') {
+                if (this.blocks.length <= 1) { this.items = this.blocks.length ? this.blocks[0] : []; this.state = 'done'; continue; }
+                this.newBlocks = []; this.gi = 0; this.state = 'group'; continue;
+            }
+            if (this.state === 'group') {
+                if (this.gi * 4 >= this.blocks.length) { this.blocks = this.newBlocks; this.state = 'mergepass'; continue; }
+                this.grp = this.blocks.slice(this.gi * 4, this.gi * 4 + 4);
+                this.gi++; this.oks = []; this.ci = 1; this.state = 'gchecks'; continue;
+            }
+            if (this.state === 'gchecks') {
+                if (result !== undefined) { this.oks.push(result === 0); this.ci++; result = undefined; }
+                if (this.ci < this.grp.length) {
+                    const A = this.grp[this.ci - 1], B = this.grp[this.ci];
+                    return [A[A.length - 1], B[0]];
+                }
+                if (this.grp.length === 1) { this.newBlocks.push(this.grp[0]); this.state = 'group'; continue; }
+                if (this.oks.every(x => x)) { this.newBlocks.push([].concat(...this.grp)); this.state = 'group'; continue; }
+                this.revs = []; this.ci = 1; this.state = 'rchecks'; continue;
+            }
+            if (this.state === 'rchecks') {
+                if (result !== undefined) { this.revs.push(result === 1); this.ci++; result = undefined; }
+                if (this.ci < this.grp.length) {
+                    const A = this.grp[this.ci - 1], B = this.grp[this.ci];
+                    return [A[0], B[B.length - 1]];
+                }
+                if (this.revs.every(x => x)) {
+                    this.newBlocks.push([].concat(...this.grp.slice().reverse()));
+                    this.state = 'group'; continue;
+                }
+                this.t1 = null; this.t2 = null; this.state = 'gt1'; continue;
+            }
+            if (this.state === 'gt1' || this.state === 'gt2' || this.state === 'gfinal') {
+                const st = this.state;
+                if (!this.pm) {
+                    let A, B, slot;
+                    if (st === 'gt1') {
+                        if (this.oks[0]) { this.t1 = this.grp[0].concat(this.grp[1]); this.state = this.grp.length >= 3 ? 'gt2' : 'gpush'; continue; }
+                        A = this.grp[0]; B = this.grp[1]; slot = 't1';
+                    } else if (st === 'gt2') {
+                        if (this.grp.length === 3) { this.t2 = this.grp[2]; this.state = 'gfinal'; continue; }
+                        if (this.oks[2]) { this.t2 = this.grp[2].concat(this.grp[3]); this.state = 'gfinal'; continue; }
+                        A = this.grp[2]; B = this.grp[3]; slot = 't2';
+                    } else {
+                        if (this._gfinalChecked === true) { A = this.t1; B = this.t2; slot = 'tf'; }
+                        else {
+                            if (result !== undefined) {
+                                if (result === 0) { this.newBlocks.push(this.t1.concat(this.t2)); this._gfinalChecked = false; this.state = 'group'; }
+                                else this._gfinalChecked = true;
+                                result = undefined; continue;
+                            }
+                            return [this.t1[this.t1.length - 1], this.t2[0]];
+                        }
+                    }
+                    this.pm = new ParityMerger(A, B); this.pmSlot = slot;
+                    if (this.pm.done) { this[this.pmSlot] = this.pm.out; this.pm = null; this._gtAdvance(); continue; }
+                }
+                const q = this.pm.step(result); result = undefined;
+                if (q) return q;
+                if (!this.pm.done) continue;
+                this[this.pmSlot] = this.pm.out; this.pm = null; this._gtAdvance(); continue;
+            }
+            if (this.state === 'gpush') {
+                this.newBlocks.push(this.grp.length === 2 ? this.t1 : this.tf);
+                this.state = 'group'; continue;
+            }
+        }
+        return null;
+    }
+    _gtAdvance() {
+        if (this.state === 'gt1') this.state = this.grp.length >= 3 ? 'gt2' : 'gpush';
+        else if (this.state === 'gt2') this.state = 'gfinal';
+        else { this.state = 'gpush'; this._gfinalChecked = false; }
+    }
+}
+
+/**
+ * Replacement selection (ASC): the classic external-sort run generator with
+ * a heap-ordered buffer of B = 8 records. Each buffer slot carries the
+ * current/next run bit; repeatedly pop the minimum (runs then strength),
+ * append to the current run (starting a new run when the bit flips), and
+ * refill from the input, stamping current-run if >= last written else
+ * next-run (1 comparison). Runs (avg length ~2B) are finally merged
+ * pairwise. Snowplow minimizes run count, not comparisons.
+ * Source: D. E. Knuth, TAOCP vol. 3, section 5.4.1.
+ */
+class ReplacementSelectionSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.B = 8;
+        this.heap = [];      // {v, run}, min-heap by (run, strength)
+        this.inputIdx = 0; this.current = 0; this.lastWritten = -1;
+        this.runs = [[]];
+        this.state = n > 0 ? 'fill' : 'done';
+    }
+    _less(a, b) { // -1 a wins, 1 b wins, 0 need oracle [a.v, b.v]
+        if (a.run !== b.run) return a.run < b.run ? -1 : 1;
+        return 0;
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'fill') {
+                if (this.inputIdx >= this.n || this.heap.length >= this.B) { this.state = 'gen'; continue; }
+                this.heap.push({ v: this.items[this.inputIdx++], run: 0 });
+                this.hi = this.heap.length - 1; this.afterUp = 'fill'; this.state = 'hup'; continue;
+            }
+            if (this.state === 'hup') {
+                if (this.hi === 0) { this.state = this.afterUp; continue; }
+                const p = (this.hi - 1) >> 1;
+                const c = this._less(this.heap[this.hi], this.heap[p]);
+                if (c !== 0) {
+                    if (c < 0) { const t = this.heap[this.hi]; this.heap[this.hi] = this.heap[p]; this.heap[p] = t; this.hi = p; continue; }
+                    this.state = this.afterUp; continue;
+                }
+                if (result !== undefined) {
+                    // Pair was [child, parent]: 0 => child wins.
+                    if (result === 0) { const t = this.heap[this.hi]; this.heap[this.hi] = this.heap[p]; this.heap[p] = t; this.hi = p; }
+                    else this.state = this.afterUp;
+                    result = undefined; continue;
+                }
+                return [this.heap[this.hi].v, this.heap[p].v];
+            }
+            if (this.state === 'gen') {
+                if (this.heap.length === 0) { this.state = 'merge'; this.mi = 1; this.acc = this.runs[0]; continue; }
+                // Pop min -> emit -> refill -> push.
+                const top = this.heap[0], last = this.heap.pop();
+                if (this.heap.length > 0) { this.heap[0] = last; this.hi = 0; this.state = 'hdown'; }
+                else this.state = 'emit';
+                this.emitE = top; continue;
+            }
+            if (this.state === 'hdown') {
+                const l = this.hi * 2 + 1, r = l + 1;
+                if (l >= this.heap.length) { this.state = 'emit'; continue; }
+                if (r >= this.heap.length) this.c = l;
+                else {
+                    const c = this._less(this.heap[l], this.heap[r]);
+                    if (c !== 0) this.c = (c < 0) ? l : r;
+                    else {
+                        if (result !== undefined) { this.c = (result === 0) ? l : r; result = undefined; this.state = 'hdowncmp'; continue; }
+                        return [this.heap[l].v, this.heap[r].v];
+                    }
+                }
+                this.state = 'hdowncmp'; continue;
+            }
+            if (this.state === 'hdowncmp') {
+                const c = this._less(this.heap[this.c], this.heap[this.hi]);
+                if (c !== 0) {
+                    if (c < 0) { const t = this.heap[this.hi]; this.heap[this.hi] = this.heap[this.c]; this.heap[this.c] = t; this.hi = this.c; this.state = 'hdown'; }
+                    else this.state = 'emit';
+                    continue;
+                }
+                if (result !== undefined) {
+                    // Pair was [child, x]: 0 => child wins.
+                    if (result === 0) { const t = this.heap[this.hi]; this.heap[this.hi] = this.heap[this.c]; this.heap[this.c] = t; this.hi = this.c; this.state = 'hdown'; }
+                    else this.state = 'emit';
+                    result = undefined; continue;
+                }
+                return [this.heap[this.c].v, this.heap[this.hi].v];
+            }
+            if (this.state === 'emit') {
+                const e = this.emitE;
+                if (e.run !== this.current) { this.current = e.run; this.runs.push([]); }
+                this.runs[this.runs.length - 1].push(e.v);
+                this.lastWritten = e.v;
+                if (this.inputIdx < this.n) { this.state = 'stamp'; continue; }
+                this.state = 'gen'; continue;
+            }
+            if (this.state === 'stamp') {
+                this.x = this.items[this.inputIdx++];
+                this.state = 'stampwait';
+            }
+            if (this.state === 'stampwait') {
+                if (result !== undefined) {
+                    // Pair was [x, lastWritten]: 1 => x >= last => current run.
+                    this.heap.push({ v: this.x, run: (result === 1) ? this.current : this.current + 1 });
+                    this.hi = this.heap.length - 1; this.afterUp = 'gen'; this.state = 'hup';
+                    result = undefined; continue;
+                }
+                return [this.x, this.lastWritten];
+            }
+            if (this.state === 'merge') {
+                // Left-fold pairwise standard merges of the runs.
+                if (this.mi >= this.runs.length) { this.items = this.acc; this.state = 'done'; continue; }
+                if (this.mA === undefined) { this.mA = this.acc; this.mB = this.runs[this.mi]; this.mOut = []; this.mai = 0; this.mbi = 0; }
+                if (result !== undefined) {
+                    if (result === 0) this.mOut.push(this.mA[this.mai++]); else this.mOut.push(this.mB[this.mbi++]);
+                    result = undefined;
+                }
+                if (this.mai < this.mA.length && this.mbi < this.mB.length) return [this.mA[this.mai], this.mB[this.mbi]];
+                while (this.mai < this.mA.length) this.mOut.push(this.mA[this.mai++]);
+                while (this.mbi < this.mB.length) this.mOut.push(this.mB[this.mbi++]);
+                this.acc = this.mOut; this.mA = undefined; this.mi++; continue;
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Polyphase merge sort (ASC, 3 tapes): initial runs come from genuine
+ * replacement selection (a ReplacementSelectionSortProvider sub-instance is
+ * driven to completion and its runs reused -- the same sub-provider pattern
+ * as the repo's BucketSortProvider), distributed across two tapes with
+ * Fibonacci numbers (padded with dummy runs), then merged in polyphase
+ * passes with tape rotation until one run remains. Dummy runs pass through
+ * without comparisons.
+ * Source: D. E. Knuth, TAOCP vol. 3, section 5.4.2.
+ */
+class PolyphaseMergeSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.state = n > 0 ? 'genruns' : 'done';
+        this.gen = n > 0 ? new ReplacementSelectionSortProvider(n) : null;
+    }
+    _fibDist(runs) {
+        const fib = [1, 1];
+        while (fib[fib.length - 1] < runs.length) fib.push(fib[fib.length - 1] + fib[fib.length - 2]);
+        const k = fib.length - 1, s1 = fib[k - 1] || 0, s2 = fib[k - 2] || 0;
+        // s1 + s2 == fib[k] >= R; pad T1 with dummies.
+        const T1 = [], T2 = [];
+        let i = 0;
+        for (; i < s1 && i < runs.length; i++) T1.push(runs[i]);
+        while (T1.length < s1) T1.unshift(null);
+        for (let j = 0; j < s2 && i < runs.length; j++, i++) T2.push(runs[i]);
+        while (T2.length < s2) T2.unshift(null);
+        return [T1, T2, []];
+    }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'genruns') {
+                const q = this.gen.next(result); result = undefined;
+                if (q) return q;
+                const runs = this.gen.runs.filter(r => r.length > 0);
+                if (runs.length <= 1) { this.items = runs.length ? runs[0].slice() : []; this.state = 'done'; continue; }
+                [this.T1, this.T2, this.T3] = this._fibDist(runs);
+                this.state = 'pass'; continue;
+            }
+            if (this.state === 'pass') {
+                if (this.T1.length === 0 || this.T2.length === 0) {
+                    // Rotate: output + leftover become inputs; or finish.
+                    const leftover = this.T1.length > 0 ? this.T1 : this.T2;
+                    if (leftover.length === 0) {
+                        if (this.T3.length === 1) { this.items = this.T3[0]; this.state = 'done'; continue; }
+                        [this.T1, this.T2, this.T3] = this._fibDist(this.T3);
+                        continue;
+                    }
+                    this.T1 = this.T3; this.T2 = leftover; this.T3 = [];
+                    continue;
+                }
+                const r1 = this.T1.shift(), r2 = this.T2.shift();
+                if (r1 === null) { this.T3.push(r2); continue; }
+                if (r2 === null) { this.T3.push(r1); continue; }
+                this.mA = r1; this.mB = r2; this.mOut = []; this.mai = 0; this.mbi = 0;
+                this.state = 'merge'; continue;
+            }
+            if (this.state === 'merge') {
+                if (result !== undefined) {
+                    if (result === 0) this.mOut.push(this.mA[this.mai++]); else this.mOut.push(this.mB[this.mbi++]);
+                    result = undefined;
+                }
+                if (this.mai < this.mA.length && this.mbi < this.mB.length) return [this.mA[this.mai], this.mB[this.mbi]];
+                while (this.mai < this.mA.length) this.mOut.push(this.mA[this.mai++]);
+                while (this.mbi < this.mB.length) this.mOut.push(this.mB[this.mbi++]);
+                this.T3.push(this.mOut); this.state = 'pass'; continue;
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Quicksort with BFPRT (median-of-medians) pivot selection (ASC):
+ * quicksort with Lomuto partitioning and linear-insertion base cases
+ * (<= 16); pivots are the exact median via BFPRT -- groups of 5,
+ * insertion-sorted, medians to the front, recursive median-of-medians,
+ * partition, recurse into the side containing the kth. Worst-case O(n log n)
+ * comparisons at the cost of heavy constant factors. Explicit frame stack.
+ * Source: Blum et al. 1973; https://en.wikipedia.org/wiki/Median_of_medians
+ */
+class BFPRTQuicksortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.frames = n > 0 ? [{ t: 'qs', l: 0, r: n - 1 }] : [];
+        this.selResult = -1;
+    }
+    next(result) {
+        while (this.frames.length > 0) {
+            const f = this.frames[this.frames.length - 1];
+            if (f.t === 'qs') {
+                if (f.r - f.l + 1 <= 16) { f.t = 'ins'; continue; }
+                f.t = 'qspart'; f.stage = 'wait';
+                this.frames.push({ t: 'sel', l: f.l, r: f.r, k: (f.l + f.r) >> 1, stage: 'enter' });
+                continue;
+            }
+            if (f.t === 'qspart') {
+                if (f.stage === 'wait') {
+                    // Inner SEL below...above us finished: selResult = pivot id.
+                    let ppos = f.l;
+                    while (this.items[ppos] !== this.selResult) ppos++;
+                    f.stage = 'split';
+                    this.frames.push({ t: 'part', l: f.l, r: f.r, ppos, _parent: f });
+                    continue;
+                }
+                // stage 'split': part finished, f.p set.
+                const p = f.p;
+                this.frames.pop();
+                if (p + 1 <= f.r) this.frames.push({ t: 'qs', l: p + 1, r: f.r });
+                if (f.l <= p - 1) this.frames.push({ t: 'qs', l: f.l, r: p - 1 });
+                continue;
+            }
+            if (f.t === 'sel') {
+                if (f.stage === 'enter') {
+                    if (f.r - f.l + 1 <= 5) { f.k0 = f.k; f.k = undefined; f.jj = undefined; f.t = 'ins'; f.onDone = 'sel'; continue; }
+                    f.g = Math.ceil((f.r - f.l + 1) / 5); f.gi = 0; f.stage = 'med'; continue;
+                }
+                if (f.stage === 'med') {
+                    if (f.gi >= f.g) {
+                        // Medians to front (free), then median-of-medians.
+                        for (let i = 0; i < f.g; i++) {
+                            const gl = f.l + 5 * i, gr = Math.min(gl + 4, f.r);
+                            const mp = gl + ((gr - gl) >> 1);
+                            const t = this.items[f.l + i]; this.items[f.l + i] = this.items[mp]; this.items[mp] = t;
+                        }
+                        f.t = 'selret'; f.stage = 'wait';
+                        const ml = f.l, mr = f.l + f.g - 1;
+                        this.frames.push({ t: 'sel', l: ml, r: mr, k: (ml + mr) >> 1, stage: 'enter' });
+                        continue;
+                    }
+                    const gl = f.l + 5 * f.gi, gr = Math.min(gl + 4, f.r);
+                    f.stage = 'medwait';
+                    this.frames.push({ t: 'ins', l: gl, r: gr });
+                    continue;
+                }
+                if (f.stage === 'medwait') { f.gi++; f.stage = 'med'; continue; }
+            }
+            if (f.t === 'selret') {
+                if (f.stage === 'wait') {
+                    let ppos = f.l;
+                    while (this.items[ppos] !== this.selResult) ppos++;
+                    f.stage = 'decide';
+                    this.frames.push({ t: 'part', l: f.l, r: f.r, ppos, _parent: f });
+                    continue;
+                }
+                // stage 'decide': part finished, f.p set.
+                const p = f.p;
+                if (f.k === p) { this.selResult = this.items[p]; this.frames.pop(); continue; }
+                if (f.k < p) { f.t = 'sel'; f.r = p - 1; f.stage = 'enter'; continue; }
+                f.t = 'sel'; f.l = p + 1; f.stage = 'enter'; continue;
+            }
+            if (f.t === 'ins') {
+                if (f.k === undefined) { f.k = f.l + 1; f.jj = undefined; }
+                if (result !== undefined) {
+                    // Pair was [A[jj], x]: 1 => shift.
+                    if (result === 1) { this.items[f.jj + 1] = this.items[f.jj]; f.jj--; }
+                    else { this.items[f.jj + 1] = f.x; f.k++; f.jj = undefined; }
+                    result = undefined;
+                }
+                if (f.jj === undefined) {
+                    if (f.k > f.r) {
+                        if (f.onDone === 'sel') this.selResult = this.items[f.k0 !== undefined ? f.k0 : f.k];
+                        // NOTE: sel small-case kth index stored below (f.k0).
+                        this.frames.pop(); continue;
+                    }
+                    f.x = this.items[f.k]; f.jj = f.k - 1;
+                }
+                if (f.jj >= f.l) return [this.items[f.jj], f.x];
+                this.items[f.jj + 1] = f.x; f.k++; f.jj = undefined; continue;
+            }
+            if (f.t === 'part') {
+                if (f.stage === undefined) {
+                    const t = this.items[f.ppos]; this.items[f.ppos] = this.items[f.r]; this.items[f.r] = t;
+                    f.pivot = this.items[f.r]; f.i = f.l; f.j = f.l; f.stage = 'loop';
+                }
+                if (result !== undefined) {
+                    // Pair was [A[j], pivot]: 0 => A[j] weaker => swap into <= region.
+                    if (result === 0) { const t = this.items[f.i]; this.items[f.i] = this.items[f.j]; this.items[f.j] = t; f.i++; }
+                    f.j++; result = undefined;
+                }
+                if (f.j > f.r - 1) {
+                    const t = this.items[f.i]; this.items[f.i] = this.items[f.r]; this.items[f.r] = t;
+                    f._parent.p = f.i; this.frames.pop(); continue;
+                }
+                return [this.items[f.j], f.pivot];
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Shear Sort (ASC): mesh sorting on a ceil(sqrt(n)) x ceil(n/rows) grid
+ * (row-major, last row padded with +infinity sentinels that resolve without
+ * asking). Alternating row phases (snake order: even rows ascending
+ * leftward, odd rows descending) and column phases (ascending downward),
+ * each line sorted with early-exit odd-even transposition sort, for
+ * 2*ceil(log2(n+1))+2 phases. Final output linearized in snake order
+ * (sentinels stripped), which is the algorithm's sorted order.
+ * Source: https://en.wikipedia.org/wiki/Shear_sort (Schnorr & Shamir 1986)
+ */
+class ShearSortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.R = Math.ceil(Math.sqrt(n));
+        this.C = Math.ceil(n / this.R);
+        this.cells = [];
+        for (let r = 0; r < this.R; r++) {
+            const row = [];
+            for (let c = 0; c < this.C; c++) { const i = r * this.C + c; row.push(i < n ? this.items[i] : -1); }
+            this.cells.push(row);
+        }
+        this.phases = 2 * Math.ceil(Math.log2(n + 1)) + 2;
+        this.ph = 0; this.li = 0;
+        this.state = n > 0 ? 'phase' : 'done';
+    }
+    _lineCells(rowPhase, idx) {
+        // Ordered cell coordinates of row idx (L->R) or column idx (top->bottom).
+        const out = [];
+        if (rowPhase) for (let c = 0; c < this.C; c++) out.push([idx, c]);
+        else for (let r = 0; r < this.R; r++) out.push([r, idx]);
+        return out;
+    }
+    _get(rc) { return this.cells[rc[0]][rc[1]]; }
+    _set(rc, v) { this.cells[rc[0]][rc[1]] = v; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'phase') {
+                if (this.ph >= this.phases) { this.state = 'readout'; continue; }
+                this.rowPhase = (this.ph % 2 === 0);
+                this.li = 0; this.state = 'line'; continue;
+            }
+            if (this.state === 'line') {
+                const count = this.rowPhase ? this.R : this.C;
+                if (this.li >= count) { this.ph++; this.state = 'phase'; continue; }
+                this.line = this._lineCells(this.rowPhase, this.li);
+                // Row phases snake: odd rows descending; columns always ascending.
+                this.desc = this.rowPhase && (this.li % 2 === 1);
+                this.ophase = 0; this.streak = 0; this.oi = 0; this.swapped = false;
+                this.state = 'oddeven'; continue;
+            }
+            if (this.state === 'oddeven') {
+                const L = this.line.length;
+                if (result !== undefined) {
+                    // Pair was [A[i], A[i+1]] along the line.
+                    const bad = this.desc ? (result === 0) : (result === 1);
+                    if (bad) {
+                        const a = this.line[this.oi], b = this.line[this.oi + 1];
+                        const t = this._get(a); this._set(a, this._get(b)); this._set(b, t);
+                        this.swapped = true;
+                    }
+                    this.oi += 2; result = undefined;
+                }
+                if (this.oi > L - 2) {
+                    if (this.swapped) this.streak = 0; else this.streak++;
+                    if (this.streak >= 2) { this.li++; this.state = 'line'; continue; }
+                    this.ophase ^= 1; this.oi = this.ophase; this.swapped = false; continue;
+                }
+                const a = this.line[this.oi], b = this.line[this.oi + 1];
+                const va = this._get(a), vb = this._get(b);
+                if (va === -1 && vb === -1) { this.oi += 2; continue; }
+                if (va === -1 || vb === -1) {
+                    // Sentinel (+inf): ASC lines sink it right/down; DESC lines float it left/up.
+                    const needSwap = this.desc ? (vb === -1) : (va === -1);
+                    if (needSwap) { this._set(a, vb); this._set(b, va); this.swapped = true; }
+                    this.oi += 2; continue;
+                }
+                return [va, vb];
+            }
+            if (this.state === 'readout') {
+                const out = [];
+                for (let r = 0; r < this.R; r++) {
+                    const order = (r % 2 === 0) ? [...Array(this.C).keys()] : [...Array(this.C).keys()].reverse();
+                    for (const c of order) { const v = this.cells[r][c]; if (v !== -1) out.push(v); }
+                }
+                this.items = out; this.state = 'done'; continue;
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Proportion Extend Sort, symmetric variant (Chen 2001; ASC). Maintains a
+ * sorted part S adjacent to an unsorted part U (either order): U is bounded
+ * to p^2|S| (p = 16 per the papers; oversized U is absorbed in recursive
+ * (p+1)|S| extension chunks), then S is split at its median into L/R, blocks
+ * rotate to LUR form, and U is Lomuto-partitioned around the median (the
+ * pivot lands in its final slot and is excluded from both recursive
+ * subproblems). Sub-spans of <= 16 use linear insertion sort. Seeded with
+ * the longest ascending-or-descending initial run (descending reversed).
+ * DOCUMENTED MICRO-DIFFERENCE: Lomuto partitioning instead of the C
+ * code's sentinel Hoare loops (same pivot/extension structure, simpler
+ * staging; sentinels only elide bound tests).
+ * Source: https://en.wikipedia.org/wiki/Proportion_extend_sort
+ */
+class PESortProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.P = 16;
+        this.frames = n > 0 ? [{ t: 'pe', stage: 'initrun', L: 1, desc: false }] : [];
+    }
+    next(result) {
+        while (this.frames.length > 0) {
+            const f = this.frames[this.frames.length - 1];
+            if (f.t === 'ins') {
+                if (f.k === undefined) { f.k = f.l + 1; f.jj = undefined; }
+                if (result !== undefined) {
+                    // Pair was [x, A[jj]]: 0 => shift.
+                    if (result === 0) { this.items[f.jj + 1] = this.items[f.jj]; f.jj--; }
+                    else { this.items[f.jj + 1] = f.x; f.k++; f.jj = undefined; }
+                    result = undefined;
+                }
+                if (f.jj === undefined) {
+                    if (f.k > f.r) { this.frames.pop(); continue; }
+                    f.x = this.items[f.k]; f.jj = f.k - 1;
+                }
+                if (f.jj >= f.l) return [f.x, this.items[f.jj]];
+                this.items[f.jj + 1] = f.x; f.k++; f.jj = undefined; continue;
+            }
+            // pe frame
+            if (f.stage === 'initrun') {
+                if (result !== undefined) {
+                    // Pair was [A[L-1], A[L]]: first pair decides direction.
+                    if (f.L === 1) { f.desc = (result === 1); f.L = 2; }
+                    else { const good = f.desc ? (result === 1) : (result === 0); if (good) f.L++; else f.stage = 'initdone'; }
+                    result = undefined; if (f.stage === 'initdone') continue;
+                }
+                if (f.L >= this.n) f.stage = 'initdone';
+                else return [this.items[f.L - 1], this.items[f.L]];
+                continue;
+            }
+            if (f.stage === 'initdone') {
+                if (f.desc) { let l = 0, r = f.L - 1; while (l < r) { const t = this.items[l]; this.items[l] = this.items[r]; this.items[r] = t; l++; r--; } }
+                f.s0 = 0; f.s1 = f.L - 1; f.u0 = f.L; f.u1 = this.n - 1; f.sBefore = true;
+                f.stage = 'enter'; continue;
+            }
+            if (f.stage === 'enter') {
+                const sLen = f.s1 - f.s0 + 1, uLen = f.u1 - f.u0 + 1;
+                if (uLen <= 0) { this.frames.pop(); continue; }
+                if (sLen <= 0) { f.s0 = f.u0; f.s1 = f.u0; f.u0 = f.u0 + 1; f.sBefore = true; continue; }
+                const lo = Math.min(f.s0, f.u0), hi = Math.max(f.s1, f.u1);
+                if (hi - lo + 1 <= 16) {
+                    f.stage = 'afterins';
+                    this.frames.push({ t: 'ins', l: lo, r: hi });
+                    continue;
+                }
+                if (uLen > this.P * this.P * sLen) {
+                    // Extension: recursively sort S + adjacent P|S| chunk of U.
+                    f.stage = 'extended';
+                    if (f.sBefore) {
+                        f.cEnd = f.u0 + this.P * sLen - 1;
+                        this.frames.push({ t: 'pe', s0: f.s0, s1: f.s1, u0: f.u0, u1: f.cEnd, sBefore: true, stage: 'enter' });
+                    } else {
+                        f.cStart = f.u1 - this.P * sLen + 1;
+                        this.frames.push({ t: 'pe', s0: f.s0, s1: f.s1, u0: f.cStart, u1: f.u1, sBefore: false, stage: 'enter' });
+                    }
+                    continue;
+                }
+                // Bounded: split S at median, rotate blocks to LUR form.
+                const mid = f.s0 + ((sLen - 1) >> 1);
+                const seg = this.items.slice(f.s0, mid + 1)
+                    .concat(this.items.slice(f.u0, f.u1 + 1))
+                    .concat(this.items.slice(mid + 1, f.s1 + 1));
+                for (let k = 0; k < seg.length; k++) this.items[lo + k] = seg[k];
+                const lLen = mid - f.s0 + 1, rLen = f.s1 - mid;
+                f.l0 = lo; f.l1 = lo + lLen - 1;
+                f.u0 = f.l1 + 1; f.u1 = f.u0 + uLen - 1;
+                f.r0 = f.u1 + 1; f.r1 = f.r0 + rLen - 1;
+                f.pivot = this.items[f.l1];
+                f.w = f.u0; f.i = f.u0; f.stage = 'partloop'; continue;
+            }
+            if (f.stage === 'extended') {
+                if (f.sBefore) { f.s1 = f.cEnd; f.u0 = f.cEnd + 1; }
+                else { f.s0 = f.cStart; f.u1 = f.cStart - 1; }
+                f.stage = 'enter'; continue;
+            }
+            if (f.stage === 'afterins') { this.frames.pop(); continue; }
+            if (f.stage === 'partloop') {
+                if (result !== undefined) {
+                    // Pair was [A[i], pivot]: 0 => into <= region.
+                    if (result === 0) { const t = this.items[f.w]; this.items[f.w] = this.items[f.i]; this.items[f.i] = t; f.w++; }
+                    f.i++; result = undefined;
+                }
+                if (f.i > f.u1) {
+                    // Pivot excluded: L' + U_L + [pivot] + U_R + R.
+                    const seg = this.items.slice(f.l0, f.l1)
+                        .concat(this.items.slice(f.u0, f.w))
+                        .concat([f.pivot])
+                        .concat(this.items.slice(f.w, f.u1 + 1))
+                        .concat(this.items.slice(f.r0, f.r1 + 1));
+                    for (let k = 0; k < seg.length; k++) this.items[f.l0 + k] = seg[k];
+                    const lLen = f.l1 - f.l0, ulLen = f.w - f.u0, urLen = f.u1 - f.w + 1;
+                    const ls0 = f.l0, ls1 = ls0 + lLen - 1, lu0 = ls1 + 1, lu1 = lu0 + ulLen - 1;
+                    const pp = lu1 + 1, ru0 = pp + 1, ru1 = ru0 + urLen - 1, rs0 = ru1 + 1, rs1 = f.r1;
+                    this.frames.pop();
+                    this.frames.push({ t: 'pe', s0: rs0, s1: rs1, u0: ru0, u1: ru1, sBefore: false, stage: 'enter' });
+                    this.frames.push({ t: 'pe', s0: ls0, s1: ls1, u0: lu0, u1: lu1, sBefore: true, stage: 'enter' });
+                    continue;
+                }
+                return [this.items[f.i], f.pivot];
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Permutation sort (DESC): systematically enumerates permutations in
+ * lexicographic order (next_permutation from the identity, free index
+ * moves) and fail-fast checks each for strongest-first order. Deterministic
+ * unlike Bogosort, but still Theta(n * n!) comparisons in the worst case.
+ */
+class PermutationSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.state = n > 1 ? 'verify' : 'done'; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'verify') {
+                if (result !== undefined) {
+                    // Pair was [A[i], A[i+1]]: 1 => ordered (DESC).
+                    if (result === 1) this.i++; else this.state = 'nextperm';
+                    result = undefined; continue;
+                }
+                if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+                this.state = 'done'; continue;
+            }
+            if (this.state === 'nextperm') {
+                // Lexicographic next permutation (free); identity wrap is a
+                // safety net only (a DESC permutation is always found first).
+                let i = this.n - 2;
+                while (i >= 0 && this.items[i] > this.items[i + 1]) i--;
+                if (i < 0) { this.items.reverse(); this.state = 'done'; continue; }
+                let j = this.n - 1;
+                while (this.items[j] < this.items[i]) j--;
+                const t = this.items[i]; this.items[i] = this.items[j]; this.items[j] = t;
+                let l = i + 1, r = this.n - 1;
+                while (l < r) { const u = this.items[l]; this.items[l] = this.items[r]; this.items[r] = u; l++; r--; }
+                this.i = 0; this.state = 'verify'; continue;
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Less Bogo sort (DESC): selection sort via shuffles. For each position k,
+ * Fisher-Yates shuffle the suffix A[k..n-1] until A[k] is its maximum
+ * (fail-fast scan), fix it, and continue with k+1.
+ * Source: https://sortingalgos.miraheze.org/wiki/Bogosort
+ */
+class LessBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.k = 0; this.state = n > 1 ? 'shuffle' : 'done'; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'shuffle') {
+                for (let i = this.n - 1; i > this.k; i--) {
+                    const j = this.k + Math.floor(Math.random() * (i - this.k + 1));
+                    const t = this.items[i]; this.items[i] = this.items[j]; this.items[j] = t;
+                }
+                this.j = this.k + 1; this.state = 'scan'; continue;
+            }
+            if (this.state === 'scan') {
+                if (result !== undefined) {
+                    // Pair was [A[k], A[j]]: 1 => still candidate max.
+                    if (result === 1) this.j++; else this.state = 'shuffle';
+                    result = undefined; continue;
+                }
+                if (this.j < this.n) return [this.items[this.k], this.items[this.j]];
+                this.k++;
+                if (this.k >= this.n - 1) this.state = 'done'; else this.state = 'shuffle';
+                continue;
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Exchange Bogo sort (DESC): Bozosort's fail-fast check, but the botched
+ * round picks two random positions, compares them, and swaps only if out
+ * of order. Every swap strictly decreases the inversion count, so it
+ * converges almost surely (unlike blind Bozosort's symmetric walk).
+ * Source: https://sortingalgos.miraheze.org/wiki/Bogosort
+ */
+class ExchangeBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.state = n > 1 ? 'verify' : 'done'; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'verify') {
+                if (result !== undefined) {
+                    if (result === 1) this.i++; else this.state = 'perturb';
+                    result = undefined; continue;
+                }
+                if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+                this.state = 'done'; continue;
+            }
+            if (this.state === 'perturb') {
+                if (result !== undefined) {
+                    // Pair was [A[i], A[j]] (i < j): 0 => inverted => swap.
+                    if (result === 0) { const t = this.items[this.pi]; this.items[this.pi] = this.items[this.pj]; this.items[this.pj] = t; }
+                    result = undefined; this.i = 0; this.state = 'verify'; continue;
+                }
+                const a = Math.floor(Math.random() * this.n);
+                let b = Math.floor(Math.random() * (this.n - 1));
+                if (b >= a) b++;
+                this.pi = Math.min(a, b); this.pj = Math.max(a, b);
+                return [this.items[this.pi], this.items[this.pj]];
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Bubble Bogo sort (DESC): Exchange Bogo restricted to a random adjacent
+ * pair per botched round. Each swap fixes exactly one inversion.
+ * Source: https://sortingalgos.miraheze.org/wiki/Bogosort
+ */
+class BubbleBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.state = n > 1 ? 'verify' : 'done'; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'verify') {
+                if (result !== undefined) {
+                    if (result === 1) this.i++; else this.state = 'perturb';
+                    result = undefined; continue;
+                }
+                if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+                this.state = 'done'; continue;
+            }
+            if (this.state === 'perturb') {
+                if (result !== undefined) {
+                    if (result === 0) { const t = this.items[this.pi]; this.items[this.pi] = this.items[this.pi + 1]; this.items[this.pi + 1] = t; }
+                    result = undefined; this.i = 0; this.state = 'verify'; continue;
+                }
+                this.pi = Math.floor(Math.random() * (this.n - 1));
+                return [this.items[this.pi], this.items[this.pi + 1]];
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Odd-Even Bogo sort (DESC): Bubble Bogo alternating between a random odd
+ * index and a random even index (pairs (i, i+1)) on successive botched
+ * rounds.
+ * Source: https://sortingalgos.miraheze.org/wiki/Bogosort
+ */
+class OddEvenBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.parity = 0; this.state = n > 1 ? 'verify' : 'done'; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'verify') {
+                if (result !== undefined) {
+                    if (result === 1) this.i++; else this.state = 'perturb';
+                    result = undefined; continue;
+                }
+                if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+                this.state = 'done'; continue;
+            }
+            if (this.state === 'perturb') {
+                if (result !== undefined) {
+                    if (result === 0) { const t = this.items[this.pi]; this.items[this.pi] = this.items[this.pi + 1]; this.items[this.pi + 1] = t; }
+                    result = undefined; this.i = 0; this.state = 'verify'; continue;
+                }
+                let cands = [];
+                for (let i = this.parity; i + 1 < this.n; i += 2) cands.push(i);
+                if (cands.length === 0) { this.parity ^= 1; continue; }
+                this.pi = cands[Math.floor(Math.random() * cands.length)];
+                this.parity ^= 1;
+                return [this.items[this.pi], this.items[this.pi + 1]];
+            }
+        }
+        return null;
+    }
+}
+
+/**
+ * Bovo sort (DESC): check strongest-first order; if botched, pull a random
+ * item to the head (free rotation) and repeat. Random-to-top moves generate
+ * the full symmetric group, so it hits the sorted order almost surely.
+ * Source: https://neo-sorting-algorithms.fandom.com/wiki/Bogo_Sort
+ */
+class BovoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.state = n > 1 ? 'verify' : 'done'; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'verify') {
+                if (result !== undefined) {
+                    if (result === 1) this.i++;
+                    else {
+                        const r = Math.floor(Math.random() * this.n);
+                        const x = this.items.splice(r, 1)[0];
+                        this.items.unshift(x);
+                        this.i = 0;
+                    }
+                    result = undefined; continue;
+                }
+                if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+                this.state = 'done'; continue;
+            }
+        }
+        return null;
+    }
+}
+
 // ORIENTATION CONVENTION (see research/PROVIDER_AUDIT.md, Finding 3):
 // providers do not agree on which end of `items` holds the strongest item.
 // ASC providers (merge/quicksort/insertion families and most others — the
@@ -2423,7 +4780,40 @@ const algos = [
     { name: 'Exit Sort', class: ExitSortProvider },
     { name: 'Random Sort', class: RandomSortProvider },
     { name: 'Silly Sort', class: SillySortProvider },
-    { name: 'Sleep Sort', class: SleepSortProvider }
+    { name: 'Sleep Sort', class: SleepSortProvider },
+    { name: 'Batcher Odd-Even', class: BatcherOddEvenSortProvider },
+    { name: 'Bose-Nelson', class: BoseNelsonSortProvider },
+    { name: 'Exchange Sort', class: ExchangeSortProvider },
+    { name: 'Bingo Sort', class: BingoSortProvider },
+    { name: 'Cocktail Bounds', class: CocktailBoundsSortProvider },
+    { name: 'Bottom-up Heap', class: BottomUpHeapSortProvider },
+    { name: 'Weak Heap', class: WeakHeapSortProvider },
+    { name: 'Smoothsort', class: SmoothSortRealProvider },
+    { name: 'Splay Sort', class: SplaySortProvider },
+    { name: 'Cartesian Tree', class: CartesianTreeSortProvider },
+    { name: 'Treap Sort', class: TreapSortProvider },
+    { name: 'Skiplist Sort', class: SkiplistSortProvider },
+    { name: 'Adaptive Shivers', class: AdaptiveShiversSortProvider },
+    { name: 'Shivers Sort', class: ShiversSortProvider },
+    { name: 'Augmented Shivers', class: AugmentedShiversSortProvider },
+    { name: 'Peeksort', class: PeeksortProvider },
+    { name: 'Library Sort', class: LibrarySortProvider },
+    { name: 'Sample Sort', class: SampleSortProvider },
+    { name: 'Funnel Sort', class: FunnelSortProvider },
+    { name: 'Quadsort', class: QuadsortProvider },
+    { name: 'Piposort', class: PiposortProvider },
+    { name: 'Replacement Selection', class: ReplacementSelectionSortProvider },
+    { name: 'Polyphase Merge', class: PolyphaseMergeSortProvider },
+    { name: 'BFPRT Quicksort', class: BFPRTQuicksortProvider },
+    { name: 'Shear Sort', class: ShearSortProvider },
+    { name: 'PESort', class: PESortProvider },
+    { name: 'Permutation Sort', class: PermutationSortProvider },
+    { name: 'Less Bogo', class: LessBogoSortProvider },
+    { name: 'Exchange Bogo', class: ExchangeBogoSortProvider },
+    { name: 'Bubble Bogo', class: BubbleBogoSortProvider },
+    { name: 'Odd-Even Bogo', class: OddEvenBogoSortProvider },
+    { name: 'Bovo Sort', class: BovoSortProvider },
+    { name: 'Bozo Sort', class: BozosortProvider }
 ];
 
 
