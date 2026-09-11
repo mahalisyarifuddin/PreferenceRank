@@ -1,7 +1,7 @@
 # Correctness Audit of the State-Machine Sorting Providers
 
-**Date:** 2026-09-03 (batch-2 addendum 2026-09-11 below)
-**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to all 118 providers.
+**Date:** 2026-09-03 (batch-2 and batch-3 addenda 2026-09-11; VQSort addendum 2026-09-12)
+**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to 118 providers; the [batch-3 addendum](#batch-3-addendum-2026-09-11-25-new-providers) covers the 143-provider suite; and the [VQSort addendum](#vqsort-addendum-2026-09-12-1-new-provider) covers the live **144-provider** registry.
 
 **Method.** Every provider was audited two ways:
 
@@ -181,7 +181,7 @@ node research/audit_correctness.js   # 85/85 correct: 51 ASC + 21 DESC + 1 enume
 
 ```bash
 node research/audit_correctness.js     # ~10 s; writes research/audit_results.txt
-node research/sort_analysis.js 100 250 # full 118-algorithm benchmark
+node research/sort_analysis.js 100 250 # full live benchmark (144 providers after VQSort)
 ```
 
 ---
@@ -244,3 +244,93 @@ node research/sort_analysis.js 100 250 # full 118-algorithm benchmark
 | B8 | Library Sort | Occupied-slot placement put the element on the wrong side of the blocking element | Ask `[E′, x]` and shift directionally with verified neighbors |
 
 Final verification: `node research/audit_correctness.js` → 118/118 providers correct (74 ASC + 31 DESC + 1 enumerator + 3 lossy + 8 non-sorting + Slowsort inherent-timeout).
+
+---
+
+# Batch-3 addendum (2026-09-11): 25 new providers
+
+**Scope delta:** the third web sweep adds 25 implemented and registered
+comparison providers, growing the suite from 118 to **143**. All 25 use
+`CoroutineSortProvider`, a generator adapter that pauses published-style
+pseudocode at each item comparison and resumes it with the human/oracle result.
+This is the same interactive contract as every hand-written state machine.
+
+**Automated result:** `node research/audit_correctness.js` exercised all 143
+providers over N ∈ {2, 3, 4, 5, 7, 8, 9, 15, 16, 17, 31, 32, 33, 50, 63,
+64, 65, 100, 127, 128}. Every new provider completed **489/489** runs against
+deterministic non-monotonic comparison oracles, requested only valid indices,
+retained every input item exactly once, and finished `SORTED_ASC`. The only timeout in the full suite is
+the already-documented inherent Slowsort timeout at N ≥ 127. Raw per-provider
+counts are in [`audit_results.txt`](audit_results.txt).
+
+**Orientation delta:** +25 weakest-first providers. Post-batch-3 totals were 99 normally
+completing ASC providers + Slowsort (ASC with inherent large-N timeout), 31 DESC,
+1 pair enumerator, 3 sorted-lossy jokes, and 8 intentionally non-sorting jokes.
+
+## Batch-3 fidelity classification
+
+| Classification | Providers | Audit note |
+|---|---|---|
+| ✅ Faithful / faithful variant | Stable Selection, Double Insertion, 3-Smooth Comb, Pratt/Tokuda/Sedgewick Shellsort, Ternary/Quaternary Heap, Out-of-place Heap, Min-Max Heap, Poplar Sort, MEL Sort, Twinsort, Weave Merge, Loser-Tree Merge | The comparison decisions and defining data-structure/control flow follow the cited algorithms. Constants and selected variants are documented beside each class. |
+| ✅ Comparison port | Spin Sort, QuickMergesort, 4-way Powersort, Fluxsort, Crumsort, Blitsort, Optimized Pancake | Branchless instructions, buffer swaps, rotations, prefix-flip decompositions, and cache layout do not create battles. The providers preserve comparison-visible pivots, cutoffs, run policy, partition/merge decisions, and resulting item order while eliding those moves. |
+| ⚠️ Structural / configuration-specific | GrailSort, WikiSort, Glidesort | Grail models key collection and merge phases but elides block rolling/tag movement; Wiki models the fixed-cache path selected at N=100 rather than its O(1)-memory fallback; Glide models logical runs, deferred stable quicksort, and Powersort collapse but not its interleaved physical merge kernels. Results must be read as comparison-level skeleton/configuration measurements, not cycle-accurate claims about the production libraries. |
+
+The implementation/source matrix, links, benchmark values, and per-provider
+elisions are recorded in [`CANDIDATE_ALGORITHMS.md`](CANDIDATE_ALGORITHMS.md).
+In-code JSDoc repeats the consequential caveats so registry rows cannot silently
+outgrow their provenance.
+
+## Batch-3 duplicate and benchmark cross-check
+
+In the fresh 2026-09-12 N=100 run, GrailSort, Spin Sort, and
+Loser-Tree Merge are the only batch-3 providers that did not repeat an unordered
+pair in any of 250 benchmark trials; WikiSort now reports duplicates in at least
+one trial. All 25 produce τ=1.0000. Their no-duplicate results are 585.11,
+875.36, and 600.69 battles respectively, all dominated by Ford-Johnson at
+526.94. Optimized Pancake is the lowest-battle batch-3 row overall at 562.74,
+but has repeated pairs. Thus the meaningful no-duplicate Pareto frontier and the
+production Ford-Johnson decision are unchanged.
+
+# VQSort addendum (2026-09-12): 1 new provider
+
+**Scope delta:** `VQSort (u64/AVX2 model)` raises the registry from 143 to
+**144 unique providers**. It is explicitly a comparison-level model fixed to
+ascending 64-bit keys on AVX2 (four lanes), not a claim about native VQSort
+runtime.
+
+**Source/fidelity audit:** the provider is pinned to Google Highway commit
+[`c415565`](https://github.com/google/highway/tree/c415565a31ba7d532559edf67bc2171f4fe50c4f/hwy/contrib/sort).
+It ports the current six-chunk sampler and lane-wise median-of-three reduction,
+16-sample pivot network/rank selection, the architecture-selected 64-key base
+case and exact 4/8/16-row comparator networks, lane-to-pivot partition choices,
+recursion, and heap fallback. The paper's min/max degenerate safeguard replaces
+the current C++ source's primitive-key equality, `PrevValue`, and two-value
+fast paths, which opaque binary human battles cannot express. Its fixed SFC64
+state replaces Highway's entropy seed for repeatability.
+
+The model necessarily omits SIMD concurrency, `CompressStore`, cache/prefetch
+behavior, branch/instruction cost, and native in-place lane packing. Stable
+partition arrays represent those moves, so later sample locations can differ
+from native VQSort. Padding and item self-comparisons are free because neither
+requires a human decision. The result is therefore classified **⚠️ fixed-profile
+comparison model**, not a faithful performance port or exact native trace.
+
+**Automated result:** VQSort passed **489/489** hardened oracle runs over the same
+N and seed matrix as the complete suite: zero bad pairs, zero invalid outputs,
+zero timeouts, every item retained once, and `SORTED_ASC`. It adds one normally
+completing ASC provider, making the live orientation count 100 normal ASC plus
+Slowsort's inherent large-N timeout; all other categories are unchanged.
+
+**Benchmark result:** the fresh complete N=100/250-trial run reports **656.02
+unique battles, τ=1.0000, duplicates YES**. This is dominated by Ford-Johnson at
+**526.94, τ=1.0000, duplicates NO**. The no-duplicate production frontier and
+`PreferenceRank.html` remain unchanged.
+
+Final verification:
+
+```bash
+node --check research/sort_analysis.js
+node research/audit_correctness.js     # 144 rows; only inherent Slowsort timeout
+node research/sort_analysis.js 100 250 # fresh full run in results.txt
+node research/pareto_analysis.js        # meaningful frontier unchanged
+```

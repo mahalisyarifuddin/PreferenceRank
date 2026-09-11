@@ -17,13 +17,13 @@ PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 - **Peringkat Cepat:** Menggunakan **Ford-Johnson** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **kemenangan transitif bayangan** untuk akurasi yang unggul.
 
 ### Analisis Algoritma
-Berdasarkan analisis perbandingan terhadap 118 algoritma pengurutan yang berbeda (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Ford-Johnson** tetap menjadi **titik lutut produksi** yang praktis untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan. Run terbaru menambahkan 32 provider yang baru diimplementasikan (sorting network, heap dan tree sort, adaptive mergesort, distribution dan mesh sort, serta keluarga bogo) ditambah registrasi Bozo Sort.
+Berdasarkan analisis perbandingan terhadap **144 provider pengurutan yang terdaftar** (lihat [ANALYSIS-id.md](ANALYSIS-id.md)), **Ford-Johnson** tetap menjadi **titik lutut produksi** yang praktis untuk pemeringkatan preferensi manusia dengan akurasi tinggi tanpa perbandingan yang redundan. Suite ini kini mencakup provider profil tetap **VQSort (model u64/AVX2)** di samping ekspansi web 25-provider. VQSort lolos audit ketepatan independen, tetapi barisnya mengukur perbandingan manusia yang diserialkan—bukan throughput SIMD; sumber dan batasan fidelitas didokumentasikan dalam catatan riset.
 
 **Perbandingan (N=100):**
 | Algoritme | Rata-rata Pertempuran | Rata-rata Kendall Tau |
 |-----------|-------------|-----------------|
-| Budgeted Merge Sort | 520.00 | 0.9666 |
-| **Ford-Johnson (Quick)** | 526.83 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9631 |
+| **Ford-Johnson (Quick)** | 526.94 | 1.0000 |
 *Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.*
 
 ### Analisis Pencarian

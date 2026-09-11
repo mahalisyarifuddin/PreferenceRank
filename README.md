@@ -17,13 +17,13 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Ford-Johnson** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
 
 ### Algorithm Analysis
-Based on a comparative analysis of 118 distinct sorting algorithms (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** remains the practical **production knee point** for high-accuracy human preference ranking without redundant comparisons. The latest run adds 32 newly implemented providers (sorting networks, heap and tree sorts, adaptive mergesorts, distribution and mesh sorts, and the bogo family) plus the Bozo Sort registration.
+Based on a comparative analysis of **144 registered sorting providers** (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** remains the practical **production knee point** for high-accuracy human preference ranking without redundant comparisons. The suite now includes a fixed-profile **VQSort (u64/AVX2 model)** provider alongside the 25-provider web expansion. VQSort passed the independent correctness audit, but its row measures scalarized human comparisons—not SIMD throughput; source and fidelity caveats are documented in the research notes.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau |
 |-----------|-------------|-----------------|
-| Budgeted Merge Sort | 520.00 | 0.9666 |
-| **Ford-Johnson (Quick)** | 526.83 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9631 |
+| **Ford-Johnson (Quick)** | 526.94 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
 
 ### Search Analysis
