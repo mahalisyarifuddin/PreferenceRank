@@ -6,7 +6,11 @@ batch-2 suite described later in this file. A third sweep on the same date
 searched the wider Sorting Wiki taxonomy, current research papers, and reference
 implementations from cpp-sort, scandum, Glidesort, GrailSort, and WikiSort. It
 added **25 more providers**, bringing that suite to **143**. The 2026-09-12
-VQSort addendum below brings the live registry to **144**.
+VQSort addendum below brings the live registry to **144**. A fourth sweep on
+2026-09-12 (Shell/insertion/network variants, adaptive sorts from emilk and
+cpp-sort, JSort, QuickHeapsort, tree and meldable-heap sorts, and merge-insertion
+generalizations) added **24 more providers**, bringing the live registry to
+**168** (see the Batch-4 section).
 
 Only comparison-based algorithms can become PreferenceRank `Provider`s. Sorts
 that inspect numeric keys (counting, radix, bead/gravity, flash, proxmap,
@@ -142,6 +146,74 @@ Primary references:
   <https://github.com/google/highway/blob/c415565a31ba7d532559edf67bc2171f4fe50c4f/hwy/contrib/sort/sorting_networks-inl.h>
 - Pinned vector-width/base-case constants:
   <https://github.com/google/highway/blob/c415565a31ba7d532559edf67bc2171f4fe50c4f/hwy/contrib/sort/shared-inl.h>
+
+## Batch 4 — implemented and benchmarked (2026-09-12, 24 providers)
+
+Fresh protocol: `node research/sort_analysis.js 100 250`, N=100, 250 trials;
+`node research/audit_correctness.js` over 489 runs per provider. All 24 pass the
+audit and finish with a correctly sorted `items` permutation. `Duplicates` means
+the provider repeats an unordered pair in at least one benchmark trial.
+
+| Algorithm | Family / source idea | Fidelity in this benchmark | Battles | Duplicates |
+|---|---|---|---:|---:|
+| Binary Cocktail | Bidirectional binary-insertion sort | Forward + reverse passes, both binary-searched | 530.62 | YES |
+| AVL Tree Sort | Height-balanced BST insert + inorder | Faithful AVL rotations (comparison-free) | 538.12 | YES |
+| Red-Black Tree Sort | LLRB insert + inorder | Sedgewick left-leaning red-black rules | 544.32 | YES |
+| 8-way Merge Sort | k-way tournament mergesort, k=8 | Extends the repo's existing k-way base | 547.73 | NO |
+| Vergesort | Adaptive big-run sort | Runs > n/log n kept; sub-threshold runs quicksorted; balanced pairwise k-way merge | 579.73 | YES |
+| 3-way Powersort | Run-adaptive multiway merge | Base-3 node powers, 3-run groups | 584.67 | YES |
+| Triplet Merge-Insertion | Ford-Johnson with sorted triples | Maxima recursed; mids/mins binary-inserted | 592.18 | YES |
+| Binomial Heap Sort | Binomial-heap insert + delete-min | Faithful link/carry forest | 593.74 | YES |
+| QuickHeapsort | Quicksort switching to heapsort ≤16 | Median-of-3 partition + in-place heapsort base | 595.52 | YES |
+| Ciura Shellsort | Empirically best Shell increments | Ciura 2001 sequence (1,4,10,23,57,…) | 630.29 | YES |
+| Gonnet Shellsort | Shell increments ×5/11 | Gonnet–Baeza-Yates recurrence | 630.53 | YES |
+| Hibbard Shellsort | Shell increments 2^k−1 | Faithful Hibbard sequence | 639.28 | YES |
+| Comparison Counting Sort | Count smaller elements, place by count | Knuth 5.2; each pair probed twice | 648.02 | YES |
+| Original Shell Sort | Shell's 1959 halving gaps | n/2, n/4, … 1 | 649.23 | YES |
+| Cocktail Bogo | Bogo family + cocktail shuffle | Random adjacent-swap shuffle, DESC verify | 695.88 | YES |
+| Pairwise Sorting Network | Parberry 1992 comparator network | Paper's layer order + j<n guards | 711.54 | YES |
+| Neatsort | Adjacent scan → cap-log-n sorted part | Sorted section ≤ floor(log2 n), rest quicksorted | 732.82 | YES |
+| Drop-Merge Sort | Adaptive LNS + drop + merge | emilk rollback/backtracking port; EARLY_OUT omitted | 758.84 | YES |
+| Split Sort | Isolate LNS, sort rest, merge | split_adapter single-scan port | 764.63 | YES |
+| 5-ary Heap Sort | d-ary heapsort, d=5 | Extends the repo's d-ary base | 774.25 | YES |
+| JSort | Two heap passes + insertion | Morrison's min-heap front / max-heap back | 780.07 | YES |
+| Leftist Heap Sort | Leftist-heap insert + delete-min | Null-path-length meld | 788.74 | NO |
+| Skew Heap Sort | Self-adjusting heap insert + delete-min | Sleator-Tarjan meld | 808.02 | NO |
+| Shuffle Sort | Bubble-shuffle passes + insertion | n/2 shuffle passes then insertion cleanup | 2566.38 | YES |
+
+The strongest new no-duplicate result is 8-way Merge Sort at **547.73**, still
+behind Ford-Johnson's 527.02, so the production knee is unchanged. Candidates
+that were found in the sweep but *not* implemented (already present or
+unportable as comparison battles): Wegener bottom-up heapsort and Cartesian-tree
+sort (= the existing Bottom-up Heap / Cartesian Tree rows), rotation merge
+(= Rotation Merge Sort), scandum's cubesort/gridsort and binary-cube family
+(their bucketing is numeric-key lookup, invisible to an opaque human
+comparator), walksort and Katajainen's Ultimate Heapsort (no implementable
+published structure surfaced), and key-inspecting sorts (radix/counting/bead/
+flash/proxmap/spreadsort/burstsort/…), which stay excluded by the
+comparison-only rule.
+
+## Batch 4 sources
+
+- Drop-Merge sort (emilk), incl. rollback/backtracking reference:
+  <https://github.com/emilk/drop-merge-sort>
+- cpp-sort split_adapter / vergesort semantics:
+  <https://github.com/Morwenn/cpp-sort/wiki/Sorter-adapters>
+- Vergesort standalone: <https://github.com/Morwenn/vergesort>
+- Neatsort: <https://en.wikipedia.org/wiki/Neatsort>
+- Pairwise sorting network (Parberry 1992) + pseudocode:
+  <https://handwiki.org/wiki/Pairwise_sorting_network>
+  and <https://ianparberry.com/pubs/pairwise.pdf>
+- 3-way/multiway Powersort: <https://arxiv.org/abs/2209.06909>
+- JSort (Jason Morrison):
+  <https://en.wikipedia.org/wiki/JSort>
+- QuickHeapsort (Cantone & Cincotti): *QuickHeapsort, an efficient mix of
+  classical sorting algorithms*, 2000
+- Shellsort gap sequences (Original/Hibbard/Ciura/Gonnet): Sorting Wiki and
+  standard references
+- Skew heap (Sleator-Tarjan), leftist heap (Crane), binomial heap (Vuillemin):
+  standard data-structure references
+- Comparison counting sort: Knuth, TAOCP vol. 3, §5.2
 
 ## Batch 2 planning record
 
