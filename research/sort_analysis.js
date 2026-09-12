@@ -5516,6 +5516,551 @@ class OptimizedPancakeSortProvider extends CoroutineSortProvider {
     *sort(){yield* this._pancake(this.items,0,this.n);}
 }
 
+// ---------------------------------------------------------------------------
+// Web expansion 4 (2026-09-12): comparison sorts from a fresh wild-web sweep.
+// All new names were cross-checked against the 144-provider registry.  Every
+// provider below is comparison-based (no key/digit inspection), returns valid
+// item ids, and finishes with a correctly sorted `items` permutation.
+// ---------------------------------------------------------------------------
+
+/** Bogo family variant: verify strongest-first (DESC) order; on the first
+ * violation perform one randomized "cocktail" shuffle (a forward then a
+ * backward pass of coin-flip adjacent swaps, which generate the symmetric
+ * group) and restart. Source idea: the Bogo-sort family at
+ * https://sortingalgos.miraheze.org/wiki/Bogosort . */
+class CocktailBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; this.state = n > 1 ? 'verify' : 'done'; }
+    next(result) {
+        while (this.state !== 'done') {
+            if (this.state === 'verify') {
+                if (result !== undefined) {
+                    if (result === 1) this.i++;
+                    else {
+                        for (let k = 0; k < this.n - 1; k++) if (Math.random() < 0.5) { const t = this.items[k]; this.items[k] = this.items[k + 1]; this.items[k + 1] = t; }
+                        for (let k = this.n - 2; k >= 0; k--) if (Math.random() < 0.5) { const t = this.items[k]; this.items[k] = this.items[k + 1]; this.items[k + 1] = t; }
+                        this.i = 0;
+                    }
+                    result = undefined; continue;
+                }
+                if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+                this.state = 'done'; continue;
+            }
+        }
+        return null;
+    }
+}
+
+/** Comparison counting sort (Knuth, TAOCP 5.2): count[i] = number of elements
+ * strictly less than a[i], then place a[i] at position count[i].  O(n^2)
+ * comparisons, each unordered pair probed twice (once per orientation). */
+class ComparisonCountingSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const a = this.items.slice(), n = a.length;
+        const count = new Array(n).fill(0);
+        for (let i = 0; i < n; i++)
+            for (let j = 0; j < n; j++) {
+                if (i === j) continue;
+                if (yield* this._less(a[j], a[i])) count[i]++;
+            }
+        const out = new Array(n);
+        for (let i = 0; i < n; i++) out[count[i]] = a[i];
+        this.items = out;
+    }
+}
+
+/** Shellsort with Shell's original 1959 halving gap sequence (n/2, n/4, ...). */
+class OriginalShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g = []; for (let x = this.n >> 1; x >= 1; x >>= 1) g.push(x); return g; }
+}
+
+/** Hibbard's 2^k - 1 Shellsort increment sequence. */
+class HibbardShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g = []; for (let x = 1; x < this.n; x = x * 2 + 1) g.push(x); return g; }
+}
+
+/** Ciura's empirically best-known Shellsort increments (1, 4, 10, 23, 57,
+ * 132, 301, 701, 1750). Source: M. Ciura 2001. */
+class CiuraShellSortProvider extends GapInsertionSortProvider {
+    gaps() { return [1, 4, 10, 23, 57, 132, 301, 701, 1750]; }
+}
+
+/** Gonnet & Baeza-Yates' Shellsort increments h_{k+1} = floor(5 h_k / 11). */
+class GonnetShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g = []; for (let x = this.n; x >= 1; x = Math.floor(5 * x / 11)) g.push(x); return g; }
+}
+
+/** d-ary heapsort with arity 5 (extends the repo's incremental-build d-ary
+ * heap; the 3- and 4-ary forms are already registered). */
+class FiveAryHeapSortProvider extends DAryHeapSortProvider { constructor(n) { super(n, 5); } }
+
+/** k-way (tournament) mergesort with k = 8 (extends the existing k-way base;
+ * the 3- and 4-way forms are already registered). */
+class MergeSort8WayProvider extends KWayMergeSortProvider { constructor(n) { super(n, 8); } }
+
+/** QuickHeapsort (Cantone & Cincotti 2000): median-of-three quicksort that
+ * switches to an in-place heapsort on every sub-array of size <= 16 instead
+ * of plain insertion. A distinct hybrid of quicksort + heapsort. */
+class QuickHeapsortProvider extends CoroutineSortProvider {
+    *_siftD(a, i, size) {
+        while (true) {
+            let l = 2 * i + 1, r = l + 1;
+            if (l >= size) return;
+            let c = l;
+            if (r < size && (yield* this._less(a[c], a[r]))) c = r;
+            if (!(yield* this._less(a[i], a[c]))) return;
+            [a[i], a[c]] = [a[c], a[i]]; i = c;
+        }
+    }
+    *_heapSort(a) {
+        for (let i = (a.length >> 1) - 1; i >= 0; i--) yield* this._siftD(a, i, a.length);
+        for (let size = a.length; size > 1; size--) { [a[0], a[size - 1]] = [a[size - 1], a[0]]; yield* this._siftD(a, 0, size - 1); }
+    }
+    *_median3(a, i, j, k) {
+        if (yield* this._less(a[j], a[i])) [a[i], a[j]] = [a[j], a[i]];
+        if (yield* this._less(a[k], a[i])) [a[i], a[k]] = [a[k], a[i]];
+        if (yield* this._less(a[k], a[j])) [a[j], a[k]] = [a[k], a[j]];
+        return j;
+    }
+    *_qs(a, lo, hi) {
+        if (hi - lo + 1 <= 16) {
+            const seg = a.slice(lo, hi + 1);
+            yield* this._heapSort(seg);
+            for (let i = lo; i <= hi; i++) a[i] = seg[i - lo];
+            return;
+        }
+        const m = yield* this._median3(a, lo, (lo + hi) >> 1, hi);
+        [a[m], a[hi]] = [a[hi], a[m]];
+        const pivot = a[hi];
+        let i = lo;
+        for (let j = lo; j < hi; j++) if (yield* this._less(a[j], pivot)) { [a[i], a[j]] = [a[j], a[i]]; i++; }
+        [a[i], a[hi]] = [a[hi], a[i]];
+        yield* this._qs(a, lo, i - 1);
+        yield* this._qs(a, i + 1, hi);
+    }
+    *sort() { yield* this._qs(this.items, 0, this.n - 1); }
+}
+
+/** JSort (Jason Morrison): two in-place heap passes roughly order the array
+ * (a min-heap pass front-to-back, then a max-heap pass back-to-front), and a
+ * final insertion sort finishes. O(n^2) worst case. Source:
+ * https://en.wikipedia.org/wiki/JSort */
+class JSortProvider extends CoroutineSortProvider {
+    *_minHeapifyFront(a) {
+        for (let k = 1; k < a.length; k++) {
+            let j = k;
+            while (j > 0) {
+                const p = (j - 1) >> 1;
+                if (!(yield* this._less(a[j], a[p]))) break;
+                [a[j], a[p]] = [a[p], a[j]]; j = p;
+            }
+        }
+    }
+    *_maxHeapifyBack(a) {
+        const n = a.length, b = a.slice().reverse();
+        for (let k = 1; k < n; k++) {
+            let j = k;
+            while (j > 0) {
+                const p = (j - 1) >> 1;
+                if (!(yield* this._greater(b[j], b[p]))) break;
+                [b[j], b[p]] = [b[p], b[j]]; j = p;
+            }
+        }
+        for (let k = 0; k < n; k++) a[n - 1 - k] = b[k];
+    }
+    *sort() {
+        const a = this.items;
+        yield* this._minHeapifyFront(a);
+        yield* this._maxHeapifyBack(a);
+        yield* this._insertion(a);
+    }
+}
+
+/** Drop-Merge sort (Emil Ernerfeldt): keep a nondecreasing subsequence with
+ * recency-based rollback and fast backtracking (Jackson et al.'s dropsort
+ * improvement), sort the dropped outliers with a fallback sorter, merge back.
+ * O(N + K log K). Comparison port of
+ * https://github.com/emilk/drop-merge-sort (EARLY_OUT abort omitted; it never
+ * triggers on the benchmark's random data). */
+class DropMergeSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const a = this.items, n = a.length;
+        if (n < 2) return;
+        const RECENCY = 8;
+        const dropped = [];
+        let num_dropped_in_row = 0, write = 0, read = 0;
+        while (read < n) {
+            if (write === 0 || !(yield* this._less(a[read], a[write - 1]))) {
+                a[write] = a[read]; write++; read++; num_dropped_in_row = 0;
+            } else if (num_dropped_in_row === 0 && write >= 2 && !(yield* this._less(a[read], a[write - 2]))) {
+                // Double-comparison quick undo: drop the previously accepted
+                // element and overwrite it with the new one.
+                dropped.push(a[write - 1]);
+                a[write - 1] = a[read]; read++;
+            } else if (num_dropped_in_row < RECENCY) {
+                dropped.push(a[read]); read++; num_dropped_in_row++;
+            } else {
+                // Rollback: accepting RECENCY elements ago was a mistake.
+                dropped.length = dropped.length - num_dropped_in_row;
+                read -= num_dropped_in_row;
+                let num_backtracked = 1;
+                write -= 1;
+                // Fast backtracking: rewind until at least one of the recently
+                // dropped elements can be re-accepted.
+                let maxIdx = read;
+                for (let k = 1; k <= num_dropped_in_row; k++)
+                    if (yield* this._less(a[maxIdx], a[read + k])) maxIdx = read + k;
+                while (write >= 1 && (yield* this._less(a[maxIdx], a[write - 1]))) { num_backtracked++; write--; }
+                for (let k = 0; k < num_backtracked; k++) dropped.push(a[write + k]);
+                num_dropped_in_row = 0;
+            }
+        }
+        const sd = yield* this._stableQuick(dropped, 16, 3);
+        this.items = yield* this._merge(a.slice(0, write), sd);
+    }
+}
+
+/** Split sort (Levcopoulos-Petersson / cpp-sort split_adapter): one O(n) pass
+ * isolates a longest ascending subsequence; the removed tail is sorted with a
+ * fallback sorter and the two parts are merged. Inv-adaptive. */
+class SplitSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const kept = [], removed = [];
+        for (const x of this.items) {
+            if (kept.length === 0 || !(yield* this._less(x, kept[kept.length - 1]))) kept.push(x);
+            else removed.push(x);
+        }
+        const sr = yield* this._stableQuick(removed, 16, 3);
+        this.items = yield* this._merge(kept, sr);
+    }
+}
+
+/** Vergesort (Morwenn): detects ascending/descending runs and keeps the ones
+ * longer than n / log n, sorts each non-big-enough section with a fallback
+ * quicksort, then pairwise-merges every run. Mono-adaptive.
+ * Source: https://github.com/Morwenn/vergesort */
+class VergesortProvider extends CoroutineSortProvider {
+    *sort() {
+        const a = this.items, n = a.length;
+        const threshold = Math.max(2, n / Math.log(n));
+        const runs = [];
+        let i = 0;
+        while (i < n) {
+            let j = i + 1, down = false;
+            if (j < n) down = yield* this._greater(a[i], a[j]);
+            while (j < n) {
+                const gt = yield* this._greater(a[j - 1], a[j]);
+                if (gt !== down) break;
+                j++;
+            }
+            const run = a.slice(i, j);
+            if (down) run.reverse();
+            runs.push(run);
+            i = j;
+        }
+        // Sort every run below the big-run threshold with the fallback sorter,
+        // keep the big runs, then finish with a balanced pairwise (k-way) merge
+        // of all runs, as in Morwenn's vergesort.
+        let list = [];
+        for (const r of runs) list.push(r.length >= threshold ? r : (yield* this._stableQuick(r, 16, 3)));
+        while (list.length > 1) {
+            const nr = [];
+            for (let k = 0; k < list.length; k += 2) nr.push(k + 1 < list.length ? (yield* this._merge(list[k], list[k + 1])) : list[k]);
+            list = nr;
+        }
+        this.items = list[0] || [];
+    }
+}
+
+/** Neatsort (Yang & Huang): an n-1 comparison adjacent scan feeds a sorted
+ * section capped at floor(log2 n); everything else is quicksorted, then the
+ * two parts are merged. O(n log n) comparisons.
+ * Source: https://en.wikipedia.org/wiki/Neatsort */
+class NeatsortProvider extends CoroutineSortProvider {
+    *sort() {
+        const a = this.items, n = a.length;
+        if (n < 2) return;
+        const limit = Math.max(1, Math.floor(Math.log2(n)));
+        const sorted = [a[0]], unsorted = [];
+        for (let i = 1; i < n; i++) {
+            if (sorted.length >= limit || (yield* this._less(a[i], sorted[sorted.length - 1]))) unsorted.push(a[i]);
+            else sorted.push(a[i]);
+        }
+        const su = yield* this._stableQuick(unsorted, 16, 3);
+        this.items = yield* this._merge(sorted, su);
+    }
+}
+
+/** 3-way Powersort (Munro-Wild): the run-adaptive multiway mergesort with
+ * base-3 node powers and 3-run groups; the 4-way form is already registered.
+ * Source: https://arxiv.org/abs/2209.06909 */
+class ThreeWayPowersortProvider extends CoroutineSortProvider {
+    _power(a, b) { let x = (a.start + a.arr.length / 2) / this.n, y = (b.start + b.arr.length / 2) / this.n, p = 0; while (true) { const xd = Math.floor(x * 3), yd = Math.floor(y * 3); p++; if (xd !== yd) return p; x = x * 3 - xd; y = y * 3 - yd; } }
+    *_runs() { const runs = []; let s = 0; while (s < this.n) { if (s + 1 >= this.n) { runs.push({ start: s, arr: [this.items[s]] }); break; } let i = s + 1; const down = yield* this._greater(this.items[s], this.items[i]); i++; while (i < this.n) { const gt = yield* this._greater(this.items[i - 1], this.items[i]); if (gt !== down) break; i++; } let a = this.items.slice(s, i); if (down) a.reverse(); runs.push({ start: s, arr: a }); s = i; } return runs; }
+    *_group(group) { return yield* this._tournamentMerge(group.map(x => x.arr)); }
+    *sort() {
+        const runs = yield* this._runs(); if (!runs.length) { this.items = []; return; }
+        const stack = []; let cur = runs[0];
+        for (let i = 1; i < runs.length; i++) {
+            const next = runs[i], p = this._power(cur, next);
+            while (stack.length && stack[stack.length - 1].power > p) {
+                const q = stack[stack.length - 1].power, g = [cur];
+                while (stack.length && stack[stack.length - 1].power === q) g.unshift(stack.pop());
+                cur = { start: g[0].start, arr: yield* this._group(g) };
+            }
+            stack.push({ start: cur.start, arr: cur.arr, power: p }); cur = next;
+        }
+        while (stack.length) {
+            const g = [cur];
+            for (let k = 0; k < 2 && stack.length; k++) g.unshift(stack.pop());
+            cur = { start: g[0].start, arr: yield* this._group(g) };
+        }
+        this.items = cur.arr;
+    }
+}
+
+/** Parberry's pairwise sorting network (1992): a fixed comparator network
+ * with the same size/depth as Batcher's odd-even mergesort but a different
+ * interconnection. Comparators are emitted in the paper's layer order with
+ * the j < n bound guards for non-power-of-two sizes. Source:
+ * https://handwiki.org/wiki/Pairwise_sorting_network */
+class PairwiseSortingNetworkProvider extends Provider {
+    constructor(n) {
+        super(n);
+        this.k = 1; while (this.k < n) this.k <<= 1;
+        this.comps = [];
+        for (let p = this.k >> 1; p >= 1; p >>= 1) {
+            for (let a = 0; a < n; a += 2 * p)
+                for (let b = 0; b < p; b++) {
+                    const j = a + b + p;
+                    if (j < n) this.comps.push([a + b, j]);
+                }
+            for (let q = this.k >> 1; q >= 2 * p; q >>= 1)
+                for (let c = 0; c < n; c += 2 * p)
+                    for (let d = 0; d < p; d++) {
+                        const j = c + d + q;
+                        if (j < n) this.comps.push([c + d + p, j]);
+                    }
+        }
+        this.idx = 0; this.pending = false;
+    }
+    next(result) {
+        if (result !== undefined && this.pending) {
+            if (result === 1) { const t = this.items[this.pi]; this.items[this.pi] = this.items[this.pj]; this.items[this.pj] = t; }
+            this.pending = false; result = undefined;
+        }
+        while (this.idx < this.comps.length) {
+            const [i, j] = this.comps[this.idx++];
+            this.pi = i; this.pj = j; this.pending = true;
+            return [this.items[i], this.items[j]];
+        }
+        return null;
+    }
+}
+
+/** Shuffle sort: floor(n/2) bubble-shuffle passes push the largest values to
+ * the end, then a final insertion sort finishes the remaining inversions.
+ * Source: Sorting Wiki, Shuffle sort. */
+class ShuffleSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const a = this.items, n = a.length;
+        const passes = Math.max(1, n >> 1);
+        for (let p = 0; p < passes; p++)
+            for (let i = 0; i + 1 < n; i++)
+                if (yield* this._greater(a[i], a[i + 1])) [a[i], a[i + 1]] = [a[i + 1], a[i]];
+        yield* this._insertion(a);
+    }
+}
+
+/** Binary cocktail sort: a bidirectional insertion sort whose forward pass
+ * and reverse pass both locate the insertion point by binary search. */
+class BinaryCocktailSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const a = this.items, n = a.length;
+        for (let i = 1; i < n; i++) {
+            const key = a[i]; let lo = 0, hi = i;
+            while (lo < hi) { const m = (lo + hi) >> 1; if (yield* this._less(key, a[m])) hi = m; else lo = m + 1; }
+            for (let j = i; j > lo; j--) a[j] = a[j - 1];
+            a[lo] = key;
+        }
+        for (let i = n - 2; i >= 0; i--) {
+            const key = a[i]; let lo = i + 1, hi = n;
+            while (lo < hi) { const m = (lo + hi) >> 1; if (yield* this._less(key, a[m])) hi = m; else lo = m + 1; }
+            for (let j = i; j < lo - 1; j++) a[j] = a[j + 1];
+            a[lo - 1] = key;
+        }
+    }
+}
+
+/** Skew heap sort: insert everything into a self-adjusting skew heap
+ * (Sleator-Tarjan), then repeated delete-min. ASC. */
+class SkewHeapSortProvider extends CoroutineSortProvider {
+    *_meld(a, b) {
+        if (!a) return b; if (!b) return a;
+        if (yield* this._less(b.val, a.val)) { const t = a; a = b; b = t; }
+        a.right = yield* this._meld(a.right, b);
+        const t = a.left; a.left = a.right; a.right = t;
+        return a;
+    }
+    *sort() {
+        let root = null;
+        for (const x of this.items) root = yield* this._meld({ val: x, left: null, right: null }, root);
+        const out = [];
+        while (root) { out.push(root.val); root = yield* this._meld(root.left, root.right); }
+        this.items = out;
+    }
+}
+
+/** Leftist heap sort: insert into a rank-maintained leftist heap, then
+ * repeated delete-min. Distinct from the skew heap (null-path-length upkeep
+ * instead of unconditional child swaps). */
+class LeftistHeapSortProvider extends CoroutineSortProvider {
+    *_meld(a, b) {
+        if (!a) return b; if (!b) return a;
+        if (yield* this._less(b.val, a.val)) { const t = a; a = b; b = t; }
+        a.right = yield* this._meld(a.right, b);
+        const nl = a.left ? a.left.npl : -1, nr = a.right ? a.right.npl : -1;
+        if (nr > nl) { const t = a.left; a.left = a.right; a.right = t; }
+        a.npl = Math.min(nl, nr) + 1;
+        return a;
+    }
+    *sort() {
+        let root = null;
+        for (const x of this.items) root = yield* this._meld({ val: x, left: null, right: null, npl: 0 }, root);
+        const out = [];
+        while (root) { out.push(root.val); root = yield* this._meld(root.left, root.right); }
+        this.items = out;
+    }
+}
+
+/** Binomial heap sort: link-based binomial heap insert (amortized O(1)) plus
+ * repeated find-min/delete-min over the root forest. */
+class BinomialHeapSortProvider extends CoroutineSortProvider {
+    constructor(n) { super(n); this._trees = []; }
+    *_link(a, b) {
+        if (yield* this._less(b.val, a.val)) { const t = a; a = b; b = t; }
+        b.sibling = a.child; a.child = b; a.deg++;
+        return a;
+    }
+    *_insert(root) {
+        let deg = root.deg, t = root;
+        while (this._trees[deg]) {
+            t = yield* this._link(t, this._trees[deg]);
+            this._trees[deg] = undefined; deg++;
+        }
+        this._trees[deg] = t;
+    }
+    *sort() {
+        for (const x of this.items) yield* this._insert({ val: x, deg: 0, child: null, sibling: null });
+        const out = [];
+        while (true) {
+            let minDeg = -1;
+            for (let d = 0; d < this._trees.length; d++) {
+                if (!this._trees[d]) continue;
+                if (minDeg < 0) minDeg = d;
+                else if (yield* this._less(this._trees[d].val, this._trees[minDeg].val)) minDeg = d;
+            }
+            if (minDeg < 0) break;
+            const root = this._trees[minDeg];
+            this._trees[minDeg] = undefined;
+            out.push(root.val);
+            let c = root.child;
+            while (c) { const nxt = c.sibling; c.sibling = null; yield* this._insert(c); c = nxt; }
+        }
+        this.items = out;
+    }
+}
+
+/** AVL tree sort: insert into a height-balanced AVL tree (rotations are
+ * comparison-free), then in-order traversal. ASC. */
+class AVLTreeSortProvider extends CoroutineSortProvider {
+    _h(n) { return n ? n.h : 0; }
+    _rr(y) { const x = y.l; y.l = x.r; x.r = y; y.h = 1 + Math.max(this._h(y.l), this._h(y.r)); x.h = 1 + Math.max(this._h(x.l), this._h(x.r)); return x; }
+    _rl(x) { const y = x.r; x.r = y.l; y.l = x; x.h = 1 + Math.max(this._h(x.l), this._h(x.r)); y.h = 1 + Math.max(this._h(y.l), this._h(y.r)); return y; }
+    *_ins(node, key) {
+        if (!node) return { val: key, h: 1, l: null, r: null };
+        if (yield* this._less(key, node.val)) node.l = yield* this._ins(node.l, key);
+        else if (yield* this._less(node.val, key)) node.r = yield* this._ins(node.r, key);
+        else return node;
+        node.h = 1 + Math.max(this._h(node.l), this._h(node.r));
+        const bal = this._h(node.l) - this._h(node.r);
+        if (bal > 1) {
+            if (yield* this._less(key, node.l.val)) return this._rr(node);
+            node.l = this._rl(node.l); return this._rr(node);
+        }
+        if (bal < -1) {
+            if (yield* this._less(node.r.val, key)) return this._rl(node);
+            node.r = this._rr(node.r); return this._rl(node);
+        }
+        return node;
+    }
+    *_inorder(node, out) { if (!node) return; yield* this._inorder(node.l, out); out.push(node.val); yield* this._inorder(node.r, out); }
+    *sort() {
+        let root = null;
+        for (const x of this.items) root = yield* this._ins(root, x);
+        const out = []; yield* this._inorder(root, out);
+        this.items = out;
+    }
+}
+
+/** Red-black tree sort: insert into a left-leaning red-black tree (Sedgewick),
+ * then in-order traversal. ASC. */
+class RedBlackTreeSortProvider extends CoroutineSortProvider {
+    _isRed(n) { return !!n && n.red; }
+    _rotL(h) { const x = h.r; h.r = x.l; x.l = h; x.red = h.red; h.red = true; return x; }
+    _rotR(h) { const x = h.l; h.l = x.r; x.r = h; x.red = h.red; h.red = true; return x; }
+    _flip(h) { h.red = !h.red; if (h.l) h.l.red = !h.l.red; if (h.r) h.r.red = !h.r.red; }
+    *_ins(node, key) {
+        if (!node) return { val: key, red: true, l: null, r: null };
+        if (yield* this._less(key, node.val)) node.l = yield* this._ins(node.l, key);
+        else if (yield* this._less(node.val, key)) node.r = yield* this._ins(node.r, key);
+        else return node;
+        if (this._isRed(node.r) && !this._isRed(node.l)) node = this._rotL(node);
+        if (this._isRed(node.l) && this._isRed(node.l.l)) node = this._rotR(node);
+        if (this._isRed(node.l) && this._isRed(node.r)) this._flip(node);
+        return node;
+    }
+    *_inorder(node, out) { if (!node) return; yield* this._inorder(node.l, out); out.push(node.val); yield* this._inorder(node.r, out); }
+    *sort() {
+        let root = null;
+        for (const x of this.items) root = yield* this._ins(root, x);
+        if (root) root.red = false;
+        const out = []; yield* this._inorder(root, out);
+        this.items = out;
+    }
+}
+
+/** Triplet merge-insertion: Ford-Johnson generalized to sorted triples. Each
+ * triple is internally sorted, the maxima form the main chain (recursed), and
+ * the middle/minimum elements are binary-inserted back. ASC. */
+class TripletMergeInsertionProvider extends CoroutineSortProvider {
+    *_triSort(t) {
+        if (t.length < 2) return t;
+        if (t.length === 2) { if (yield* this._greater(t[0], t[1])) [t[0], t[1]] = [t[1], t[0]]; return t; }
+        if (yield* this._greater(t[0], t[1])) [t[0], t[1]] = [t[1], t[0]];
+        if (yield* this._greater(t[1], t[2])) [t[1], t[2]] = [t[2], t[1]];
+        if (yield* this._greater(t[0], t[1])) [t[0], t[1]] = [t[1], t[0]];
+        return t;
+    }
+    *_mi(a) {
+        if (a.length <= 1) return a.slice();
+        if (a.length <= 3) return yield* this._triSort(a.slice());
+        const M = [], R = [];
+        for (let i = 0; i < a.length; i += 3) {
+            const t = yield* this._triSort(a.slice(i, Math.min(i + 3, a.length)));
+            M.push(t[t.length - 1]);
+            for (let k = 0; k < t.length - 1; k++) R.push(t[k]);
+        }
+        const out = yield* this._mi(M);
+        for (const x of R) {
+            let lo = 0, hi = out.length;
+            while (lo < hi) { const m = (lo + hi) >> 1; if (yield* this._less(x, out[m])) hi = m; else lo = m + 1; }
+            out.splice(lo, 0, x);
+        }
+        return out;
+    }
+    *sort() { this.items = yield* this._mi(this.items); }
+}
+
 // ORIENTATION CONVENTION (see research/PROVIDER_AUDIT.md, Finding 3):
 // providers do not agree on which end of `items` holds the strongest item.
 // ASC providers (merge/quicksort/insertion families and most others — the
@@ -5672,6 +6217,31 @@ const algos = [
     { name: 'Glidesort', class: GlidesortProvider },
     { name: 'Blitsort', class: BlitsortProvider },
     { name: 'Optimized Pancake', class: OptimizedPancakeSortProvider },
+    // Web expansion 4 (2026-09-12): fresh wild-web sweep of comparison sorts.
+    { name: 'Cocktail Bogo', class: CocktailBogoSortProvider },
+    { name: 'Comparison Counting Sort', class: ComparisonCountingSortProvider },
+    { name: 'Original Shell Sort', class: OriginalShellSortProvider },
+    { name: 'Hibbard Shellsort', class: HibbardShellSortProvider },
+    { name: 'Ciura Shellsort', class: CiuraShellSortProvider },
+    { name: 'Gonnet Shellsort', class: GonnetShellSortProvider },
+    { name: '5-ary Heap Sort', class: FiveAryHeapSortProvider },
+    { name: '8-way Merge Sort', class: MergeSort8WayProvider },
+    { name: 'QuickHeapsort', class: QuickHeapsortProvider },
+    { name: 'JSort', class: JSortProvider },
+    { name: 'Drop-Merge Sort', class: DropMergeSortProvider },
+    { name: 'Split Sort', class: SplitSortProvider },
+    { name: 'Vergesort', class: VergesortProvider },
+    { name: 'Neatsort', class: NeatsortProvider },
+    { name: '3-way Powersort', class: ThreeWayPowersortProvider },
+    { name: 'Pairwise Sorting Network', class: PairwiseSortingNetworkProvider },
+    { name: 'Shuffle Sort', class: ShuffleSortProvider },
+    { name: 'Binary Cocktail', class: BinaryCocktailSortProvider },
+    { name: 'Skew Heap Sort', class: SkewHeapSortProvider },
+    { name: 'Leftist Heap Sort', class: LeftistHeapSortProvider },
+    { name: 'Binomial Heap Sort', class: BinomialHeapSortProvider },
+    { name: 'AVL Tree Sort', class: AVLTreeSortProvider },
+    { name: 'Red-Black Tree Sort', class: RedBlackTreeSortProvider },
+    { name: 'Triplet Merge-Insertion', class: TripletMergeInsertionProvider },
     // Fixed-profile comparison model; this is not a SIMD throughput result.
     { name: 'VQSort (u64/AVX2 model)', class: VQSortAVX2Provider }
 ];

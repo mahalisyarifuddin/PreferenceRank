@@ -17,13 +17,13 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Ford-Johnson** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
 
 ### Algorithm Analysis
-Based on a comparative analysis of **144 registered sorting providers** (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** remains the practical **production knee point** for high-accuracy human preference ranking without redundant comparisons. The suite now includes a fixed-profile **VQSort (u64/AVX2 model)** provider alongside the 25-provider web expansion. VQSort passed the independent correctness audit, but its row measures scalarized human comparisons—not SIMD throughput; source and fidelity caveats are documented in the research notes.
+Based on a comparative analysis of **168 registered sorting providers** (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** remains the practical **production knee point** for high-accuracy human preference ranking without redundant comparisons. The suite includes a fixed-profile **VQSort (u64/AVX2 model)** provider alongside three web expansions (25 + 1 + 24 providers), the latest adding 24 comparison sorts — from Shell gap sequences and meldable-heap sorts to Drop-Merge, Vergesort, Neatsort, 3-way Powersort, and the Pairwise Sorting Network. VQSort passed the independent correctness audit, but its row measures scalarized human comparisons—not SIMD throughput; source and fidelity caveats are documented in the research notes.
 
 **Comparison (N=100):**
 | Algorithm | Avg Battles | Avg Kendall Tau |
 |-----------|-------------|-----------------|
-| Budgeted Merge Sort | 520.00 | 0.9631 |
-| **Ford-Johnson (Quick)** | 526.94 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9619 |
+| **Ford-Johnson (Quick)** | 527.02 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
 
 ### Search Analysis

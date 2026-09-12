@@ -1,7 +1,7 @@
 # Correctness Audit of the State-Machine Sorting Providers
 
-**Date:** 2026-09-03 (batch-2 and batch-3 addenda 2026-09-11; VQSort addendum 2026-09-12)
-**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to 118 providers; the [batch-3 addendum](#batch-3-addendum-2026-09-11-25-new-providers) covers the 143-provider suite; and the [VQSort addendum](#vqsort-addendum-2026-09-12-1-new-provider) covers the live **144-provider** registry.
+**Date:** 2026-09-03 (batch-2 and batch-3 addenda 2026-09-11; VQSort addendum 2026-09-12; batch-4 addendum 2026-09-12)
+**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to 118 providers; the [batch-3 addendum](#batch-3-addendum-2026-09-11-25-new-providers) covers the 143-provider suite; the [VQSort addendum](#vqsort-addendum-2026-09-12-1-new-provider) covers the 144-provider registry; and the [batch-4 addendum](#batch-4-addendum-2026-09-12-24-new-providers) covers the live **168-provider** registry.
 
 **Method.** Every provider was audited two ways:
 
@@ -181,7 +181,7 @@ node research/audit_correctness.js   # 85/85 correct: 51 ASC + 21 DESC + 1 enume
 
 ```bash
 node research/audit_correctness.js     # ~10 s; writes research/audit_results.txt
-node research/sort_analysis.js 100 250 # full live benchmark (144 providers after VQSort)
+node research/sort_analysis.js 100 250 # full live benchmark (168 providers after batch 4)
 ```
 
 ---
@@ -334,3 +334,63 @@ node research/audit_correctness.js     # 144 rows; only inherent Slowsort timeou
 node research/sort_analysis.js 100 250 # fresh full run in results.txt
 node research/pareto_analysis.js        # meaningful frontier unchanged
 ```
+
+# Batch-4 addendum (2026-09-12): 24 new providers
+
+**Scope delta:** another wild-web sweep added **24** comparison-sort providers,
+raising the registry from 144 to **168 unique providers**. Every name was
+cross-checked against the 144-entry registry before implementation so none
+duplicates an existing provider (e.g. Wegener bottom-up heapsort, Cartesian-tree
+sort, and rotation merge were already present and were skipped).
+
+## Batch-4 fidelity classification
+
+| Classification | Providers | Audit note |
+|---|---|---|
+| ✅ Faithful / faithful variant | Cocktail Bogo, Comparison Counting Sort, Original/Hibbard/Ciura/Gonnet Shellsort, 5-ary Heap, 8-way Merge, QuickHeapsort, JSort, Split Sort, 3-way Powersort, Pairwise Sorting Network, Shuffle Sort, Binary Cocktail, Skew/Leftist/Binomial Heap, AVL/Red-Black Tree, Triplet Merge-Insertion | The comparison decisions, cutoffs, gap/increment sequences, tree/heap link rules, and pivot policies follow the cited algorithms. |
+| ✅ Comparison port | Drop-Merge Sort, Vergesort, Neatsort | Drop-Merge ports the emilk rollback/backtracking LNS pass but omits the `EARLY_OUT` abort (never triggered by the benchmark's random data) and substitutes a stable quicksort for Rust's `sort_unstable` fallback; Vergesort sorts sub-threshold runs and balanced-pairwise-merges the big runs; Neatsort caps the sorted section at `floor(log2 n)` and quicksorts the remainder. These are comparison-level ports, not byte-for-byte rewrites. |
+
+## Batch-4 differential results
+
+All 24 providers pass the hardened oracle audit: **489/489** runs each (Cocktail
+Bogo, a bogo-family variant, is capped at N ≤ 5 like the other bogo rows and
+sorts `SORTED_DESC`; every other provider sorts `SORTED_ASC`). Zero bad pairs,
+zero invalid outputs, zero timeouts. No existing provider's verdict changed;
+Slowsort's inherent N ≥ 127 timeout is unchanged.
+
+## Batch-4 benchmark cross-check
+
+Fresh complete N=100/250-trial run (all 168 rows, see `results.txt`):
+
+| New provider | Battles | τ | Duplicates |
+|---|---:|---:|:---:|
+| Binary Cocktail | 530.62 | 1.0000 | YES |
+| AVL Tree Sort | 538.12 | 1.0000 | YES |
+| Red-Black Tree Sort | 544.32 | 1.0000 | YES |
+| **8-way Merge Sort** | **547.73** | 1.0000 | **NO** |
+| Vergesort | 579.73 | 1.0000 | YES |
+| 3-way Powersort | 584.67 | 1.0000 | YES |
+| Triplet Merge-Insertion | 592.18 | 1.0000 | YES |
+| Binomial Heap Sort | 593.74 | 1.0000 | YES |
+| QuickHeapsort | 595.52 | 1.0000 | YES |
+| Ciura Shellsort | 630.29 | 1.0000 | YES |
+| Gonnet Shellsort | 630.53 | 1.0000 | YES |
+| Hibbard Shellsort | 639.28 | 1.0000 | YES |
+| Comparison Counting Sort | 648.02 | 1.0000 | YES |
+| Original Shell Sort | 649.23 | 1.0000 | YES |
+| Cocktail Bogo | 695.88 | 1.0000 | YES |
+| Pairwise Sorting Network | 711.54 | 1.0000 | YES |
+| Neatsort | 732.82 | 1.0000 | YES |
+| Drop-Merge Sort | 758.84 | 1.0000 | YES |
+| Split Sort | 764.63 | 1.0000 | YES |
+| 5-ary Heap Sort | 774.25 | 1.0000 | YES |
+| JSort | 780.07 | 1.0000 | YES |
+| Leftist Heap Sort | 788.74 | 1.0000 | NO |
+| Skew Heap Sort | 808.02 | 1.0000 | NO |
+| Shuffle Sort | 2566.38 | 1.0000 | YES |
+
+The batch-4 no-duplicate leaders are **8-way Merge Sort (547.73)**, **Leftist
+Heap Sort (788.74)**, and **Skew Heap Sort (808.02)** — all dominated by
+Ford-Johnson at **527.02, τ=1.0000, duplicates NO**. No batch-4 provider dents
+the no-duplicate Pareto frontier, so the production Ford-Johnson decision is
+unchanged.
