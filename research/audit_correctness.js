@@ -53,7 +53,8 @@ const NONSORTING = new Set([
 const ENUMERATOR = new Set(['Full Rank']);
 // Probabilistic/exponential sorts: only feasible for tiny n.
 const BOGOLIKE = { 'Bogosort': 5, 'BogoBogoSort': 5, 'Bozo Sort': 7, 'Silly Sort': 14,
-    'Permutation Sort': 8, 'Bovo Sort': 5, 'Cocktail Bogo': 5, 'Exchange Bogo': 17, 'Bubble Bogo': 17, 'Odd-Even Bogo': 17 };
+    'Permutation Sort': 8, 'Bovo Sort': 5, 'Cocktail Bogo': 5, 'Exchange Bogo': 17, 'Bubble Bogo': 17, 'Odd-Even Bogo': 17,
+    'Baka Sort': 8, 'Nibi Sort': 8, 'Slice Bogo Sort': 8, 'Boto Sort': 8, 'True Pancake Bogo Sort': 8, 'Bowo Sort': 8, 'Pancake Bogosort': 6 };
 
 const NS = [2, 3, 4, 5, 7, 8, 9, 15, 16, 17, 31, 32, 33, 50, 63, 64, 65, 100, 127, 128];
 const seedsFor = (n) => (n <= 17 ? 40 : n <= 33 ? 15 : n <= 65 ? 8 : 4);
