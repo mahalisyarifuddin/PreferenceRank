@@ -1,7 +1,7 @@
 # Correctness Audit of the State-Machine Sorting Providers
 
-**Date:** 2026-09-03 (batch-2 and batch-3 addenda 2026-09-11; VQSort addendum 2026-09-12; batch-4 addendum 2026-09-12; batch-5 addendum 2026-09-13)
-**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to 118 providers; the [batch-3 addendum](#batch-3-addendum-2026-09-11-25-new-providers) covers the 143-provider suite; the [VQSort addendum](#vqsort-addendum-2026-09-12-1-new-provider) covers the 144-provider registry; and the [batch-4 addendum](#batch-4-addendum-2026-09-12-24-new-providers) covers the 168-provider registry; and the [batch-5 addendum](#batch-5-addendum-2026-09-13-20-new-providers) covers the live **188-provider** registry.
+**Date:** 2026-09-03 (batch-2 and batch-3 addenda 2026-09-11; VQSort addendum 2026-09-12; batch-4 addendum 2026-09-12; batch-5 and batch-6 addenda 2026-09-13)
+**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to 118 providers; the [batch-3 addendum](#batch-3-addendum-2026-09-11-25-new-providers) covers the 143-provider suite; the [VQSort addendum](#vqsort-addendum-2026-09-12-1-new-provider) covers the 144-provider registry; and the [batch-4 addendum](#batch-4-addendum-2026-09-12-24-new-providers) covers the 168-provider registry; and the [batch-5 addendum](#batch-5-addendum-2026-09-13-20-new-providers) covers the 188-provider registry; and the [batch-6 addendum](#batch-6-addendum-2026-09-13-17-new-providers) covers the live **205-provider** registry.
 
 **Method.** Every provider was audited two ways:
 
@@ -438,3 +438,47 @@ Fresh complete N=100/250-trial run (all 188 rows, see `results.txt`):
 | 6-ary Heap Sort | 821.64 | 1.0000 | YES |
 
 The batch-5 no-duplicate leaders are **Oscillating Merge Sort (600.28)**, **Pairing Heap Sort (745.90)** and **SqrtSort (793.64)** — all dominated by the existing no-duplicate frontier (Ford-Johnson 527.02, 8-way Merge 547.73, Loser-Tree 601.10, etc.). No batch-5 provider changes the meaningful no-duplicate Pareto frontier, so the production Ford-Johnson knee remains unchanged.
+
+# Batch-6 addendum (2026-09-13): 17 new providers
+
+**Scope delta:** a sixth wild-web sweep (arXiv 2025–2026 sorting papers — W-Sort and co-ranking mergesort; the Bentley–McIlroy/musl reference quicksort; the c-adaptive Shivers parameter; the Sorting Wiki Shellsort/Combsort tables) added **17** comparison-sort providers, raising the registry from 188 to **205 unique providers**. Every name was cross-checked against the 188-entry registry before implementation.
+
+## Batch-6 fidelity classification
+
+| Classification | Providers | Audit note |
+|---|---|---|
+| ✅ Faithful (reference port) | Wave Sort, Bentley-McIlroy Quicksort, Co-ranking In-place Mergesort, Shivers Sort (length-adaptive) | Wave Sort is a 1:1 port of the arXiv 2505.13552v3 "basic" listing (partition scans, block-swap re-layout, up/down-wave recursion as an explicit task stack); all moves are battle-free. Bentley–McIlroy mirrors musl's qsort.c line-for-line: n<7 adjacent-compare insertion (`cmp(pl-es, pl) > 0` direction verified against the source), med3-of-med3 sampling with n/8 spread for n>40, the fat three-way partition (equal-branches inert for distinct keys), both-end vecswap, recurse-smaller/iterate-larger, and the reference's swap_cnt==0 → insertion fallback. Co-ranking implements the paper's Co_rank loop exactly (one comparison per loop iteration; c1 no-violation skips straight to c2; juggling rotation). Length-adaptive Shivers reuses the audited Shivers base with ℓ = floor(log2(len/c)), c = n+1, per arXiv 1809.08411. |
+| ✅ Faithful | Rouge Sort, Adaptive Binary Insertion | Rouge runs one compare-exchange pass per gap n-1…1 (O(n²) as catalogued). Adaptive binary insertion adds the single predecessor check before the binary search — the standard adaptive fast path. |
+| ✅ Faithful / faithful variant | ORLP25, Sedgewick 1982, Pardons 2009, C16/3+1, Lee Improved Tokuda, Tokuda Good Gaps, Extended Ciura, Pratt 5x8, Incerpi-Sedgewick, Frank-Lazarus, Split Ratio Shellsort | Gap recurrences/formulas transcribed from the Sorting Wiki Shellsort tables and verified by recomputation (first terms match the published sequences). Incerpi–Sedgewick uses the literature prefix (1,3,7,21,48,112,336,861,…) because the wiki's closed-form generation rule could not be fully reconciled — immaterial at N=100, where only the first five gaps are used. Extended Ciura's published list beyond 1504 is unverified in this port; again only gaps < n affect a run. All eleven ride the audited gapped-insertion base. |
+
+## Batch-6 differential results
+
+All 17 providers pass the hardened oracle audit: **489/489** runs each, `SORTED_ASC`, zero bad pairs, zero invalid outputs, zero timeouts. No existing provider's verdict changed. Raw counts are in `research/audit_results.txt` (avg steps: Wave 64.1, B-M 75.0, Co-ranking 115.7, length-adaptive Shivers 70.1, Rouge 375.2, Adaptive Binary Insertion 73.3, gap families 79.9–90.6 — all well inside the 5M cap).
+
+**Bug log (all found by differential smoke tests, fixed, re-verified):** (1) all three hand-rolled state machines initially returned array *positions* as pair elements; the harness oracle (like `this.items`) operates on *item ids* — pairs now go through `this.items[·]` like every other provider. (2) Wave Sort: a down-wave task that finished its partition was dropped before its block-swap ran, so the outer down-wave saw the pre-swap layout — resolution is now inlined at partition end. (3) Co-ranking: the merge task was not re-pushed after applying a comparison result (lost frame), and a c2 no-violation re-issued the same comparison forever instead of terminating the Co_rank loop — the reference's "one comparison per loop iteration" structure is now mirrored with an explicit `iter` state; the juggling rotation also had a cycle write-back that read an already-overwritten slot. (4) Bentley–McIlroy: the med phase kept `phase='start'` while outstanding (state updates were no-ops and the same comparison re-issued), the final med3 completion returned out of the frame loop instead of continuing into the partition, the n<7 insertion compared in the reverse direction (`cmp(pm, pm-es) > 0` vs the reference's `cmp(pl-es, pl) > 0`), and the swap_cnt==0 case re-quick-sorted the region (reference: switch to insertion).
+
+## Batch-6 benchmark cross-check
+
+Fresh complete N=100/250-trial run (all 205 rows):
+
+| New provider | Battles | τ | Duplicates |
+|---|---:|---:|:---:|
+| Wave Sort | 553.42 | 1.0000 | NO |
+| Co-ranking In-place Mergesort | 720.78 | 1.0000 | YES |
+| Bentley-McIlroy Quicksort | 573.22 | 1.0000 | YES |
+| Shivers Sort (length-adaptive) | 570.34 | 1.0000 | YES |
+| Rouge Sort | 2474.23 | 1.0000 | YES |
+| Adaptive Binary Insertion | 610.25 | 1.0000 | YES |
+| ORLP25 Shellsort | 629.81 | 1.0000 | YES |
+| Sedgewick 1982 Shellsort | 721.74 | 1.0000 | YES |
+| Pardons 2009 Shellsort | 787.98 | 1.0000 | YES |
+| C16/3+1 Shellsort | 768.42 | 1.0000 | YES |
+| Lee Improved Tokuda Shellsort | 630.81 | 1.0000 | YES |
+| Tokuda Good Gaps Shellsort | 631.88 | 1.0000 | YES |
+| Extended Ciura Shellsort | 630.04 | 1.0000 | YES |
+| Pratt 5x8 Shellsort | 651.98 | 1.0000 | YES |
+| Incerpi-Sedgewick Shellsort | 633.06 | 1.0000 | YES |
+| Frank-Lazarus Shellsort | 633.25 | 1.0000 | YES |
+| Split Ratio Shellsort | 632.18 | 1.0000 | YES |
+
+The batch-6 no-duplicate leader is **Wave Sort (553.42)** — the best new row of the batch and the only new no-duplicate provider — but it is still dominated by Ford-Johnson (Quick) at 526.84 and 8-way Merge at 546.97, so the production no-duplicate Pareto frontier is unchanged. ORLP25 (629.81) is the best new shell row, sitting between Gonnet (628.83) and Extended Ciura (630.04); the remaining new gap families cluster in 630.04–651.98.

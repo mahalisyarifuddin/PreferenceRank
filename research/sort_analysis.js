@@ -6780,6 +6780,506 @@ class SixAryHeapSortProvider extends DAryHeapSortProvider { constructor(n){ supe
 // comparison results, never provider.items), so this only matters to code
 // that consumes a provider's final array. The per-provider orientation is
 // recorded in research/audit_results.txt from research/audit_correctness.js.
+/** ====================================================================
+ * Web expansion 6 (2026-09-13)
+ *  - Wave Sort (W-Sort): arXiv 2505.13552v3 (basic reference, App. A)
+ *  - Co-ranking in-place mergesort: arXiv 2509.24540 (Siebert 2025)
+ *  - Bentley-McIlroy quicksort: "Engineering a Sort Function" (1993),
+ *    as shipped in musl's qsort.c (median-of-3-of-med3 pivot, fat
+ *    partition with vecswap on both sides, recurse-smaller-side)
+ *  - Length-adaptive Shivers Sort: arXiv 1809.08411 with c = n+1
+ *  - Rouge Sort: every-gap comb passes (Sorting Wiki Combsort page)
+ *  - Adaptive Binary Insertion: neighbor check then binary insertion
+ *  - 11 new Shellsort gap families (Sorting Wiki Shellsort tables,
+ *    all first terms verified by recomputation)
+ * ==================================================================== */
+
+/** Wave Sort (W-Sort), basic version: an up-wave grows a sorted suffix
+ * by repeatedly running down-waves, each of which partitions the
+ * unsorted part against the median of the sorted region and re-lays the
+ * array with a comparison-free block swap (left rotation). Explicit task
+ * stack replacing the reference's up/downwave mutual recursion.
+ * Partition scans: i-scan stops at A[i] > pivot, j-scan at A[j] < pivot. */
+class WaveSortProvider extends Provider {
+    constructor(n) { super(n); this.stack = n >= 2 ? [{ t: 'up', s: 0, e: n - 1 }] : []; this.cur = null; }
+    _swap(i, j) { const s = this.items; const t = s[i]; s[i] = s[j]; s[j] = t; }
+    // Rotates items[m..p] left by (r - m); move-only, 0 comparisons.
+    _blockSwap(m, r, p) {
+        const s = this.items, ll = r - m, lr = p - r + 1;
+        if (ll === 0) return;
+        if (lr === 1) { this._swap(m, p); return; }
+        if (lr <= ll) { // blockSwap_sr: three-way juggling
+            let i = m, tmp = s[i], j = r;
+            while (j < p) { s[i] = s[j]; i++; s[j] = s[i]; j++; }
+            s[i] = s[j]; s[j] = tmp;
+            return;
+        }
+        this._blockSwapSl(m, p, ll);
+    }
+    _blockSwapSl(m, p, ll) {
+        const s = this.items;
+        let tmp = s[m], init = m, j = m;
+        const nm = p - ll + 1;
+        for (let cnt = 0; cnt < p - m + 1; cnt++) {
+            let k;
+            if (j >= nm) {
+                k = j - nm + m;
+                if (k === init) { init++; s[j] = tmp; j = init; tmp = s[j]; continue; }
+            } else k = j + ll;
+            s[j] = s[k]; j = k;
+        }
+    }
+    next(result) {
+        if (this.cur) { this._apply(this.cur, result); this.stack.push(this.cur); this.cur = null; }
+        for (;;) {
+            while (this.stack.length > 0) {
+                const task = this.stack.pop();
+                const need = this._advance(task);
+                if (need) { this.cur = task; return need; }
+            }
+            return null;
+        }
+    }
+    _apply(task, result) {
+        if (task.scan === 'i') { if (result === 1) task.scan = 'j'; return; }
+        // j-scan: result 1 = A[j] > pivot (keep scanning); 0 = A[j] < pivot
+        if (result === 0) { this._swap(task.i, task.j); task.scan = 'i'; }
+    }
+    _advance(task) {
+        if (task.t === 'up') {
+            if (task.s === task.e) return;
+            // Expand the up-wave loop: the leftBound arithmetic is data-
+            // independent, so emit the whole down-wave call sequence now.
+            const calls = [];
+            let ss = task.e, sl = 1, lb = task.e - 1;
+            const length = task.e - task.s + 1;
+            while (lb > task.s) {
+                calls.push([lb, ss, task.e]);
+                ss = lb; sl = task.e - ss + 1;
+                if (length < sl << 2) break;
+                lb = task.e - (sl << 1) + 1;
+            }
+            calls.push([task.s, ss, task.e]);
+            for (let i = calls.length - 1; i >= 0; i--)
+                this.stack.push({ t: 'down', s: calls[i][0], ss: calls[i][1], e: calls[i][2] });
+            return;
+        }
+        if (task.ss - task.s === 0) return;
+        if (task.scan === undefined) {
+            task.p = task.ss + ((task.e - task.ss) >> 1);
+            task.i = task.s - 1; task.j = task.ss; task.scan = 'i';
+        }
+        if (task.scan === 'i') {
+            task.i++;
+            if (task.i === task.j) { this._resolve(task, task.i); return; }
+            return [this.items[task.i], this.items[task.p]]; // stop when A[i] > pivot
+        }
+        task.j--;
+        if (task.j === task.i) { this._resolve(task, task.i); return; }
+        return [this.items[task.j], this.items[task.p]]; // stop when A[j] < pivot
+    }
+    _resolve(task, m) {
+        const s = task.s, ss = task.ss, e = task.e;
+        let p = task.p;
+        if (m === ss) {
+            if (p === ss) this.stack.push({ t: 'up', s, e: ss - 1 });
+            else this.stack.push({ t: 'down', s, ss, e: p - 1 });
+            return;
+        }
+        this._blockSwap(m, ss, p);
+        if (m === s) {
+            if (p === ss) this.stack.push({ t: 'up', s: m + 1, e });
+            else { p++; this.stack.push({ t: 'down', s: m + p - ss, ss: p, e }); }
+            return;
+        }
+        if (p === ss) {
+            this.stack.push({ t: 'up', s: m + 1, e });
+            this.stack.push({ t: 'up', s, e: m - 1 });
+            return;
+        }
+        this.stack.push({ t: 'down', s: m + p - ss + 1, ss: p + 1, e });
+        this.stack.push({ t: 'down', s, ss: m, e: m + p - ss - 1 });
+    }
+}
+
+/** Co-ranking in-place mergesort (arXiv 2509.24540, Siebert 2025).
+ * Top-down mergesort where each merge of two sorted halves [l,mid) and
+ * [mid,r) uses: (1) Co_rank - a binary-search-like descent with O(log n)
+ * comparisons locating the rank boundary i = mid - l; (2) an optimal
+ * juggling rotation (moves only); (3) two recursive merges. The paper
+ * reports ~2.5x the comparisons of classic mergesort at O(log n) space. */
+class CoRankMergesortProvider extends Provider {
+    constructor(n) { super(n); this.stack = [{ t: 'ms', l: 0, r: n }]; this.cur = null; }
+    _gcd(a, b) { while (b) { const t = a % b; a = b; b = t; } return a; }
+    _rotateLeft(lo, hi, k) {
+        const arr = this.items, len = hi - lo;
+        if (k <= 0 || k >= len) return;
+        const cycles = this._gcd(len, k);
+        for (let c = 0; c < cycles; c++) {
+            const start = lo + c;
+            let idx = start;
+            const tmp = arr[idx];
+            for (;;) {
+                const next = idx + k >= hi ? idx + k - len : idx + k;
+                if (next === start) { arr[idx] = tmp; break; }
+                arr[idx] = arr[next];
+                idx = next;
+            }
+        }
+    }
+    next(result) {
+        if (this.cur) { this._apply(this.cur, result); this.stack.push(this.cur); this.cur = null; }
+        for (;;) {
+            while (this.stack.length > 0) {
+                const task = this.stack.pop();
+                const need = this._advance(task);
+                if (need) { this.cur = task; return need; }
+            }
+            return null;
+        }
+    }
+    _apply(f, result) {
+        if (f.iter === 'c1') {
+            if (result === 1) { // A1[j-1] > A2[k]: condition 1 violated
+                const d = Math.ceil((f.j - f.jlow) / 2);
+                f.klow = f.k; f.j -= d; f.k += d;
+                f.iter = null; // state changed: full re-check
+            } else f.iter = 'c1_done'; // c1 known false this iteration
+        } else if (f.iter === 'c2') {
+            if (result === 1) { // A2[k-1] > A1[j]: condition 2 violated
+                const d = Math.ceil((f.k - f.klow) / 2);
+                f.jlow = f.j; f.j += d; f.k -= d;
+                f.iter = null;
+            } else f.found = true; // both conditions false
+        }
+    }
+    _advance(task) {
+        if (task.t === 'ms') {
+            const len = task.r - task.l;
+            if (len <= 1) return;
+            const mid = task.l + (len >> 1);
+            this.stack.push({ t: 'merge', l: task.l, mid, r: task.r });
+            this.stack.push({ t: 'ms', l: mid, r: task.r });
+            this.stack.push({ t: 'ms', l: task.l, r: mid });
+            return;
+        }
+        if (task.n1 === undefined) {
+            task.n1 = task.mid - task.l;
+            task.n2 = task.r - task.mid;
+            if (task.n1 === 0 || task.n2 === 0) return;
+            const i = task.n1;
+            task.j = Math.min(i, task.n1);
+            task.k = i - task.j;
+            task.jlow = Math.max(0, i - task.n2);
+            task.klow = 0;
+            task.iter = null;
+        }
+        if (task.found) {
+            this._rotateLeft(task.l + task.j, task.mid + task.k, task.k);
+            this.stack.push({ t: 'merge', l: task.mid, mid: task.mid + task.k, r: task.r });
+            this.stack.push({ t: 'merge', l: task.l, mid: task.l + task.j, r: task.mid });
+            return;
+        }
+        // One loop iteration = at most one comparison; after a c1
+        // no-violation, c2 is checked directly (c1 already known false).
+        if (task.iter !== 'c1_done' && task.j > 0 && task.k < task.n2) {
+            task.iter = 'c1';
+            return [this.items[task.l + task.j - 1], this.items[task.mid + task.k]];
+        }
+        if (task.k > 0 && task.j < task.n1) {
+            task.iter = 'c2';
+            return [this.items[task.mid + task.k - 1], this.items[task.l + task.j]];
+        }
+        task.found = true;
+        this._rotateLeft(task.l + task.j, task.mid + task.k, task.k);
+        this.stack.push({ t: 'merge', l: task.mid, mid: task.mid + task.k, r: task.r });
+        this.stack.push({ t: 'merge', l: task.l, mid: task.l + task.j, r: task.mid });
+        return;
+    }
+}
+
+/** Bentley-McIlroy quicksort, the "Engineering a Sort Function" sort as
+ * maintained in musl's qsort.c: n<7 adjacent-compare insertion; for
+ * n>7 med3(pl,pm,pn) after sampling each of pl/pm/pn with a med3 of
+ * three points n/8 apart (n>40); fat partition with three-way equal
+ * bookkeeping (inactive for distinct keys); vecswap of the swapped
+ * blocks on both ends; recurse into the smaller side, iterate on the
+ * larger. Explicit stack mirroring the reference control flow. */
+class BentleyMcIlroyQuicksortProvider extends Provider {
+    constructor(n) { super(n); this.stack = n >= 2 ? [{ l: 0, n, phase: 'start' }] : []; this.cur = null; }
+    _swap(i, j) { const s = this.items; const t = s[i]; s[i] = s[j]; s[j] = t; }
+    _vecswap(a, b, len) {
+        const s = this.items;
+        for (let i = 0; i < len; i++) { const t = s[a + i]; s[a + i] = s[b + i]; s[b + i] = t; }
+    }
+    next(result) {
+        if (this.cur) { this._apply(this.cur, result); this.stack.push(this.cur); this.cur = null; }
+        for (;;) {
+            while (this.stack.length > 0) {
+                const f = this.stack.pop();
+                const need = this._advance(f);
+                if (need) { this.cur = f; return need; }
+            }
+            return null;
+        }
+    }
+    _apply(f, result) {
+        if (f.phase === 'med') {
+            const m = f.med;
+            if (m.stage === 0) { m.ab = result; m.stage = 1; }
+            else if (m.stage === 1) { m.bc = result; }
+            else { m.ac = result; }
+            return;
+        }
+        if (f.phase === 'part') {
+            if (f.scan === 'i') { if (result === 0) f.pb++; else f.scan = 'j'; }
+            else if (result === 1) { f.pc--; }
+            else { this._swap(f.pb, f.pc); f.swapCnt = 1; f.pb++; f.pc--; f.scan = 'i'; }
+            return;
+        }
+        if (f.phase === 'ins') {
+            if (result === 1) { this._swap(f.j, f.j - 1); f.j--; }
+            else { f.i++; f.j = f.i; }
+        }
+    }
+    _advance(f) {
+        for (;;) {
+            if (f.phase === 'start') {
+                if (f.n < 7) { f.phase = 'ins'; f.i = f.l + 1; f.j = f.l + 1; continue; }
+                f.pm0 = f.l + (f.n >> 1);
+                f.pl = f.l; f.pm = f.pm0; f.pn = f.l + f.n - 1;
+                f.medIdx = f.n > 40 ? 0 : 3;
+                if (f.n > 40) f.d = f.n >> 3;
+                f.phase = 'med';
+                return this._nextMed(f);
+            }
+            if (f.phase === 'med') {
+                const m = f.med;
+                if (m.stage === 1) {
+                    if (m.bc === undefined) return [this.items[m.b], this.items[m.c]];
+                    if (m.ab === 0 ? m.bc === 0 : m.bc === 1) {
+                        const d = this._medDone(f, m.b);
+                        if (d) return d;
+                        continue; // finalized into partition: keep advancing
+                    }
+                    m.stage = 2;
+                    return [this.items[m.a], this.items[m.c]];
+                }
+                if (m.stage === 2) {
+                    const median = m.ab === 0 ? (m.ac === 0 ? m.c : m.a) : (m.ac === 0 ? m.a : m.c);
+                    const d = this._medDone(f, median);
+                    if (d) return d;
+                    continue;
+                }
+                return [this.items[m.a], this.items[m.b]];
+            }
+            if (f.phase === 'part') {
+                if (f.pb > f.pc) { f.phase = 'post'; continue; }
+                return f.scan === 'i' ? [this.items[f.pb], this.items[f.l]] : [this.items[f.pc], this.items[f.l]];
+            }
+            if (f.phase === 'post') {
+                // Reference: "if (swap_cnt == 0) { /* Switch to insertion
+                // sort */ ...; return; }" - a full insertion pass, not a
+                // re-quick of the same region.
+                if (f.swapCnt === 0) { f.phase = 'ins'; f.i = f.l + 1; f.j = f.l + 1; continue; }
+                const r1 = Math.min(f.pa - f.l, f.pb - f.pa);
+                if (r1 > 0) this._vecswap(f.l, f.pb - r1, r1);
+                const r2 = Math.min(f.pd - f.pc, (f.l + f.n) - f.pd - 1);
+                if (r2 > 0) this._vecswap(f.pb, f.l + f.n - r2, r2);
+                const less = f.pb - f.pa, greater = f.pd - f.pc;
+                if (greater > 1) this.stack.push({ l: f.l + f.n - greater, n: greater, phase: 'start' });
+                if (less > 1) this.stack.push({ l: f.l, n: less, phase: 'start' });
+                return;
+            }
+            if (f.phase === 'ins') {
+                if (f.i >= f.l + f.n) return;
+                if (f.j <= f.l) { f.i++; f.j = f.i; continue; }
+                // Reference compares cmp(pl-es, pl) > 0: swap when the LEFT
+                // neighbor is greater (ascending insertion).
+                return [this.items[f.j - 1], this.items[f.j]];
+            }
+        }
+    }
+    _nextMed(f) {
+        let med = null;
+        if (f.medIdx === 0) med = { a: f.pl, b: f.pl + f.d, c: f.pl + 2 * f.d, tgt: 'pl' };
+        else if (f.medIdx === 1) med = { a: f.pm - f.d, b: f.pm, c: f.pm + f.d, tgt: 'pm' };
+        else if (f.medIdx === 2) med = { a: f.pn - 2 * f.d, b: f.pn - f.d, c: f.pn, tgt: 'pn' };
+        else if (f.medIdx === 3) med = { a: f.pl, b: f.pm, c: f.pn, tgt: 'pm' };
+        else { f.med = null; this._startPartition(f); return; }
+        f.med = { ...med, stage: 0 };
+        return [this.items[med.a], this.items[med.b]];
+    }
+    _medDone(f, median) {
+        f[f.med.tgt] = median;
+        f.medIdx++;
+        return this._nextMed(f);
+    }
+    _startPartition(f) {
+        this._swap(f.l, f.pm);
+        f.phase = 'part';
+        f.pa = f.pb = f.l + 1; f.pd = f.pc = f.l + f.n - 1;
+        f.swapCnt = 0; f.scan = 'i';
+    }
+}
+
+/** Shivers Sort with the length-adaptive c-parameter of Jugé et al.
+ * (arXiv 1809.08411): merge R_{h-2},R_{h-1} when
+ * floor(log2(|R_{h-2}|/c)) <= max(floor(log2(|R_{h-1}|/c)),
+ * floor(log2(|R_h|/c))), with c = n+1 (adaptive c=1 is already
+ * registered as "Adaptive Shivers"). */
+class LengthAdaptiveShiversSortProvider extends ShiversBaseProvider {
+    _pickMerge() {
+        const s = this.runStack, h = s.length, c = this.n + 1;
+        if (h < 3) return null;
+        const l1 = Math.floor(Math.log2(s[h - 3].len / c));
+        const l2 = Math.floor(Math.log2(s[h - 2].len / c));
+        const l3 = Math.floor(Math.log2(s[h - 1].len / c));
+        return (l1 <= Math.max(l2, l3)) ? h - 3 : null;
+    }
+}
+
+/** Rouge Sort (Sorting Wiki, Combsort page): like Combsort but the gap
+ * shrinks by 1 every pass (n-1, n-2, ..., 1), i.e. one full comb pass
+ * per gap - an O(n^2) compare-exchange sort that is nonetheless its own
+ * catalog entry there. */
+class RougeSortProvider extends CoroutineSortProvider {
+    *sort() {
+        const A = this.items;
+        for (let gap = A.length - 1; gap >= 1; gap--)
+            for (let i = 0; i + gap < A.length; i++)
+                if (yield* this._greater(A[i], A[i + gap])) {
+                    const t = A[i]; A[i] = A[i + gap]; A[i + gap] = t;
+                }
+    }
+}
+
+/** Adaptive Binary Insertion: before binary-searching each key into the
+ * sorted prefix, check it against the immediate predecessor - already
+ * in place costs one comparison instead of O(log i). */
+class AdaptiveBinaryInsertionProvider extends CoroutineSortProvider {
+    *sort() {
+        const A = this.items;
+        for (let i = 1; i < A.length; i++) {
+            const x = A[i];
+            if (!(yield* this._greater(A[i - 1], x))) continue;
+            let lo = 0, hi = i;
+            while (lo < hi) {
+                const mid = (lo + hi) >> 1;
+                if (yield* this._greater(x, A[mid])) lo = mid + 1;
+                else hi = mid;
+            }
+            for (let k = i; k > lo; k--) A[k] = A[k - 1];
+            A[lo] = x;
+        }
+    }
+}
+
+/** ORLP25 Shellsort: A_1=A_2=1, A_3=2, A_k=2*A_{k-2}+1, gaps h_k=
+ * A_k*A_{k+1} = 1,2,6,15,35,77,165,345,713,... (Sorting Wiki Shellsort
+ * table, "best comparisons"). */
+class Orlp25ShellSortProvider extends GapInsertionSortProvider {
+    gaps() {
+        const g = [], A = [1, 1, 2];
+        for (let k = 0; ; k++) {
+            const h = A[k] * A[k + 1];
+            if (h >= this.n) break;
+            g.push(h);
+            if (k + 2 >= A.length) A.push(2 * A[k] + 1);
+        }
+        return g;
+    }
+}
+/** Sedgewick 1982 Shellsort: h_k = 4^k + 3*2^{k-1} + 1 (k>=1), prefixed
+ * by 1: 1,8,23,77,281,1073,... (distinct from the registered 1986
+ * alternating sequence). */
+class Sedgewick1982ShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g = [1]; for (let k = 1; ; k++) { const x = Math.pow(4, k) + 3 * Math.pow(2, k - 1) + 1; if (x >= this.n) break; g.push(x); } return g; }
+}
+/** Pardons 2009 Shellsort: F_1=1, F_2=2, F_k=F_{k-1}+F_{k-2}, gaps
+ * floor(F_k^(1+sqrt(5))) = 1,9,34,182,836,... */
+class Pardons2009ShellSortProvider extends GapInsertionSortProvider {
+    gaps() {
+        const g = [], exp = 1 + Math.sqrt(5);
+        let a = 1, b = 2;
+        for (;;) {
+            const x = Math.floor(Math.pow(a, exp));
+            if (x >= this.n) break;
+            g.push(x);
+            const t = b; b = a + b; a = t;
+        }
+        return g;
+    }
+}
+/** C16/3+1 Shellsort (aphitorite's "16/3" family): h_1=1,
+ * h_k = ceil(16/3 * h_{k-1}) + 1: 1,7,39,209,1116,5953,... */
+class C163Plus1ShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g = [1]; let h = 1; for (;;) { h = Math.ceil((16 * h) / 3) + 1; if (h >= this.n) break; g.push(h); } return g; }
+}
+/** Lee improved Tokuda Shellsort: gamma = 2.243609061420001,
+ * h_k = ceil((gamma^k - 1)/(gamma - 1)) = 1,4,9,20,45,102,230,516,... */
+class LeeImprovedTokudaShellSortProvider extends GapInsertionSortProvider {
+    gaps() {
+        const g = [], gamma = 2.243609061420001;
+        for (let k = 1; ; k++) {
+            const x = Math.ceil((Math.pow(gamma, k) - 1) / (gamma - 1));
+            if (x >= this.n) break;
+            g.push(x);
+        }
+        return g;
+    }
+}
+/** "Tokuda's good gaps" (Sorting Wiki; OEIS A108870): a sequence the
+ * wiki calls better than Tokuda's original, h_k = ceil(0.8*(2.25^k - 1))
+ * = 1,4,9,20,46,103,233,525,... (distinct from the registered Tokuda). */
+class TokudaGoodGapsShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g = []; for (let k = 1; ; k++) { const x = Math.ceil(0.8 * (Math.pow(2.25, k) - 1)); if (x >= this.n) break; g.push(x); } return g; }
+}
+/** Extended Ciura Shellsort (machoota's 2025 extension of Ciura's
+ * empirical sequence): 1,4,10,23,57,132,301,701,1504, then
+ * floor(2.22 * h) each step. The published list beyond 1504 is
+ * unverified in this port; only gaps < n affect a run of size n. */
+class ExtendedCiuraShellSortProvider extends GapInsertionSortProvider {
+    gaps() {
+        const g = [1, 4, 10, 23, 57, 132, 301, 701, 1504].filter(x => x < this.n);
+        let h = 1504;
+        for (;;) { h = Math.floor(2.22 * h); if (h >= this.n) break; g.push(h); }
+        return g;
+    }
+}
+/** Pratt 5x8 Shellsort (machoota's "Pratt 5x8" family, 2026): all
+ * increments 5^p * 8^q < n: 1,5,8,25,40,64,... (the registered "Pratt
+ * Shellsort" is the 2^a*3^b family). */
+class Pratt5x8ShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const s = new Set([1]); for (let a = 1; a < this.n; a *= 5) for (let g = a; g < this.n; g *= 8) s.add(g); return [...s]; }
+}
+/** Incerpi-Sedgewick (1985) Shellsort gaps, literature prefix
+ * 1,3,7,21,48,112,336,861,2289,5860 (the wiki's closed-form generation
+ * rule was not fully reconciled; only the first few gaps matter for the
+ * benchmark sizes). */
+class IncerpiSedgewickShellSortProvider extends GapInsertionSortProvider {
+    gaps() { return [1, 3, 7, 21, 48, 112, 336, 861, 2289, 5860].filter(x => x < this.n); }
+}
+/** Frank & Lazarus (1960) Shellsort: gaps 2*floor(n/2^{j+1}) + 1,
+ * j = 1,2,..., i.e. 51,25,13,7,3 for n=100, finishing with 1. */
+class FrankLazarusShellSortProvider extends GapInsertionSortProvider {
+    gaps() { const g = []; for (let d = 4; d <= this.n; d <<= 1) g.push(2 * Math.floor(this.n / d) + 1); return g; }
+}
+/** Split-ratio Shellsort (aphitorite): h_1=1, h_k = ceil(2.4*(h+1)) - 1
+ * while h < 167, then ceil(2.22972*(h-1)): 1,4,11,28,69,167,371,825,... */
+class SplitRatioShellSortProvider extends GapInsertionSortProvider {
+    gaps() {
+        const g = [1]; let h = 1;
+        for (;;) {
+            h = h < 167 ? Math.ceil(2.4 * (h + 1)) - 1 : Math.ceil(2.22972 * (h - 1));
+            if (h >= this.n) break;
+            g.push(h);
+        }
+        return g;
+    }
+}
+
+
 const algos = [
     { name: 'Recursive Bubble', class: RecursiveBubbleSortProvider },
     { name: 'Recursive Insertion', class: RecursiveInsertionSortProvider },
@@ -6973,7 +7473,25 @@ const algos = [
     { name: 'Oscillating Merge Sort', class: OscillatingMergeSortProvider },
     { name: '6-ary Heap Sort', class: SixAryHeapSortProvider },
     // Fixed-profile comparison model; this is not a SIMD throughput result.
-    { name: 'VQSort (u64/AVX2 model)', class: VQSortAVX2Provider }
+    { name: 'VQSort (u64/AVX2 model)', class: VQSortAVX2Provider },
+    // Web expansion 6 (2026-09-13): wild-web sweep, batch 6
+    { name: 'Wave Sort', class: WaveSortProvider },
+    { name: 'Co-ranking In-place Mergesort', class: CoRankMergesortProvider },
+    { name: 'Bentley-McIlroy Quicksort', class: BentleyMcIlroyQuicksortProvider },
+    { name: 'Shivers Sort (length-adaptive)', class: LengthAdaptiveShiversSortProvider },
+    { name: 'Rouge Sort', class: RougeSortProvider },
+    { name: 'Adaptive Binary Insertion', class: AdaptiveBinaryInsertionProvider },
+    { name: 'ORLP25 Shellsort', class: Orlp25ShellSortProvider },
+    { name: 'Sedgewick 1982 Shellsort', class: Sedgewick1982ShellSortProvider },
+    { name: 'Pardons 2009 Shellsort', class: Pardons2009ShellSortProvider },
+    { name: 'C16/3+1 Shellsort', class: C163Plus1ShellSortProvider },
+    { name: 'Lee Improved Tokuda Shellsort', class: LeeImprovedTokudaShellSortProvider },
+    { name: 'Tokuda Good Gaps Shellsort', class: TokudaGoodGapsShellSortProvider },
+    { name: 'Extended Ciura Shellsort', class: ExtendedCiuraShellSortProvider },
+    { name: 'Pratt 5x8 Shellsort', class: Pratt5x8ShellSortProvider },
+    { name: 'Incerpi-Sedgewick Shellsort', class: IncerpiSedgewickShellSortProvider },
+    { name: 'Frank-Lazarus Shellsort', class: FrankLazarusShellSortProvider },
+    { name: 'Split Ratio Shellsort', class: SplitRatioShellSortProvider }
 ];
 
 
