@@ -1880,6 +1880,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					return step + ' / ' + QuickPairProvider.estimate(this.count);
 				}
 				next(_, result) {
+					if (this.isTransitiveDiscovery) {
+						result = this._lastTransitiveResult;
+						this.isTransitiveDiscovery = false;
+					}
 					while (this.stack.length > 0) {
 						const frame = this.stack[this.stack.length - 1];
 						if (frame.state === 0) {
@@ -1892,7 +1896,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 								result >= 0.5 ? (frame.winners.push(a), frame.losers.push(b)) : (frame.winners.push(b), frame.losers.push(a));
 								result = undefined;
 							}
-							if (this.isTransitiveDiscovery) { result = this._lastTransitiveResult; this.isTransitiveDiscovery = false; continue; }
 							if (frame.pairIdx < frame.half) {
 								const a = frame.items[2 * frame.pairIdx], b = frame.items[2 * frame.pairIdx + 1];
 								frame.pairIdx++; return [a, b];
@@ -1933,7 +1936,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 								result >= 0.5 ? frame.lo = frame.mid + 1 : frame.hi = frame.mid;
 								result = undefined;
 							}
-							if (this.isTransitiveDiscovery) { result = this._lastTransitiveResult; this.isTransitiveDiscovery = false; continue; }
 							if (frame.lo < frame.hi) {
 								frame.mid = (frame.lo + frame.hi) >> 1;
 								return [frame.bk, frame.chain[frame.mid]];
