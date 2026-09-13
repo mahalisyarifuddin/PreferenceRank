@@ -482,3 +482,14 @@ Fresh complete N=100/250-trial run (all 205 rows):
 | Split Ratio Shellsort | 632.18 | 1.0000 | YES |
 
 The batch-6 no-duplicate leader is **Wave Sort (553.42)** — the best new row of the batch and the only new no-duplicate provider — but it is still dominated by Ford-Johnson (Quick) at 526.84 and 8-way Merge at 546.97, so the production no-duplicate Pareto frontier is unchanged. ORLP25 (629.81) is the best new shell row, sitting between Gonnet (628.83) and Extended Ciura (630.04); the remaining new gap families cluster in 630.04–651.98.
+
+## Batch-7 addendum (2026-09-13, 4 new providers)
+
+The live registry is now **209 providers**. A fresh complete audit over 489
+runs per provider (`node research/audit_correctness.js`) covered the four new
+wild-web entries: Modified Bitonic Sort, Multizip Sort, Link Sort, and Stable
+Cyclesort. All four retained every item, requested valid pairs, and completed
+all 489 runs without timeouts or bad pairs. Modified Bitonic and Stable
+Cyclesort were `SORTED_ASC`; Multizip and Link Sort were `SORTED_DESC` under
+the audit's comparator orientation (the same valid orientation reported for
+their base providers).
