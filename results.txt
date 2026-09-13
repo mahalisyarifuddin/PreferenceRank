@@ -1,170 +1,190 @@
 Simulating N=100, trials=250 with 2 workers
 Algorithm	Avg Battles	Avg Kendall Tau	Duplicates
-Sleep Sort	0.00	-0.0036	NO
-Batcher Odd-Even	623.74	1.0000	YES
-Recursive Bubble	2597.45	1.0000	YES
-Bose-Nelson	689.12	1.0000	YES
-Recursive Insertion	2570.79	1.0000	NO
-Exchange Sort	2569.05	1.0000	YES
-Bingo Sort	2221.52	1.0000	YES
-Recursive Selection	2223.11	1.0000	YES
-Cocktail Bounds	2586.23	1.0000	YES
-Recursive Cocktail	2583.15	1.0000	YES
-Bottom-up Heap	599.16	1.0000	YES
-Weak Heap	580.16	1.0000	YES
-Smoothsort	771.33	1.0000	YES
-Recursive Gnome	2586.05	1.0000	YES
-Splay Sort	667.70	1.0000	NO
-Recursive Binary Insertion	530.99	1.0000	NO
-Cartesian Tree	645.66	1.0000	YES
-Treap Sort	650.80	1.0000	NO
-Skiplist Sort	679.20	1.0000	YES
-Recursive Double Selection	2345.88	1.0000	YES
-Adaptive Shivers	573.83	1.0000	YES
-Shivers Sort	574.37	1.0000	YES
-Recursive Shellsort	631.26	1.0000	YES
-Augmented Shivers	574.58	1.0000	YES
-Recursive Comb Sort	722.58	1.0000	YES
-Peeksort	717.64	1.0000	YES
-Library Sort	538.16	1.0000	YES
-Recursive Odd-Even Sort	2602.19	1.0000	YES
-Sample Sort	637.66	1.0000	YES
-Binary Gnome	530.60	1.0000	NO
-Funnel Sort	581.09	1.0000	NO
-Binary Shell	671.32	1.0000	YES
-Quadsort	570.18	1.0000	YES
-Binary Patience	612.56	1.0000	YES
-Binary Merge	788.84	1.0000	NO
-Piposort	600.13	1.0000	YES
-Binary Bottom-up Merge	839.92	1.0000	NO
-Replacement Selection	682.98	1.0000	YES
-Budgeted Merge Sort	520.00	0.9619	NO
-Polyphase Merge	681.93	1.0000	YES
-Ford-Johnson (Quick)	527.02	1.0000	NO
-Merge Sort	541.98	1.0000	NO
-BFPRT Quicksort	673.24	1.0000	YES
-Bottom-up Merge Sort	557.99	1.0000	NO
-Natural Merge Sort	574.39	1.0000	YES
-Ping-pong Merge Sort	558.40	1.0000	NO
-Shear Sort	803.64	1.0000	YES
-3-way Merge Sort	567.52	1.0000	NO
-PESort	699.49	1.0000	YES
-4-way Merge Sort	543.06	1.0000	NO
-In-place Merge Sort	541.60	1.0000	NO
-Rotation Merge Sort	717.39	1.0000	NO
-Timsort	532.45	1.0000	YES
-Powersort	557.31	1.0000	YES
-Parallel Merge Sort	557.53	1.0000	NO
-Hayate-Shiki	1027.34	1.0000	YES
-Shellsort	630.01	1.0000	YES
-Quicksort (RTL)	643.11	1.0000	NO
-Binary Quicksort	651.96	1.0000	NO
-Quicksort (LTR)	640.79	1.0000	NO
-Quicksort (Random)	648.86	1.0000	NO
-Quicksort (Middle)	648.96	1.0000	NO
-Quicksort (Mo3)	671.85	1.0000	YES
-Quicksort (Ninther)	563.65	1.0000	YES
-Quicksort (Hoare)	646.10	1.0000	YES
-3-Way Quicksort	649.78	1.0000	NO
-Dual-Pivot Quicksort	647.08	1.0000	NO
-Triple-Pivot Quicksort	602.54	1.0000	YES
-Stable Quicksort	642.34	1.0000	NO
-BlockQuicksort	725.74	1.0000	NO
-PDQSort	734.01	1.0000	YES
-Parallel Quicksort	651.88	1.0000	NO
-Bubble Sort	2567.90	1.0000	YES
-Bucket Sort	776.21	1.0000	NO
-Selection Sort	2205.78	1.0000	YES
-Insertion Sort	2558.62	1.0000	NO
-I Can't Believe It Can Sort	2553.69	1.0000	YES
-Binary Insertion	530.51	1.0000	NO
-Gnome Sort	2561.13	1.0000	YES
-Stooge Sort	688.93	1.0000	YES
-Permutation Sort	1.82	-0.0013	YES
-Less Bogo	880.29	1.0000	YES
-Exchange Bogo	811.83	1.0000	YES
-Bubble Bogo	2623.92	1.0000	YES
-Odd-Even Bogo	2622.77	1.0000	YES
-Bovo Sort	802.00	1.0000	YES
-Bozo Sort	790.44	1.0000	YES
-Stable Selection	2565.34	1.0000	YES
-Double Insertion	1782.82	1.0000	YES
-3-Smooth Comb	829.10	1.0000	YES
-Pratt Shellsort	829.47	1.0000	YES
-Tokuda Shellsort	632.63	1.0000	YES
-Sedgewick Shellsort	659.48	1.0000	YES
-Ternary Heap	695.30	1.0000	YES
-Quaternary Heap	712.30	1.0000	YES
-Out-of-place Heap	686.61	1.0000	YES
-Min-Max Heap	739.54	1.0000	YES
-Poplar Sort	762.45	1.0000	YES
-MEL Sort	1175.63	1.0000	YES
-Twinsort	594.60	1.0000	YES
-Spin Sort	877.79	1.0000	NO
-Weave Merge	701.24	1.0000	YES
-QuickMergesort	576.22	1.0000	YES
-4-way Powersort	570.57	1.0000	YES
-Loser-Tree Merge	601.10	1.0000	NO
-GrailSort	584.61	1.0000	NO
-WikiSort	613.49	1.0000	NO
-Fluxsort	600.40	1.0000	YES
-Crumsort	740.36	1.0000	YES
-Glidesort	638.55	1.0000	YES
-Blitsort	715.16	1.0000	YES
-Optimized Pancake	563.38	1.0000	YES
-Bogosort	808.42	1.0000	YES
-Full Rank	811.78	1.0000	NO
-Cycle Sort	656.43	1.0000	YES
-Bitonic Sort	763.48	1.0000	YES
-Heap Sort	716.02	1.0000	YES
-Comb Sort	717.83	1.0000	YES
-Tournament Sort	558.89	1.0000	NO
-Odd-Even Sort	2617.22	1.0000	YES
-Slowsort	583.10	0.9450	YES
-Pancake Sort	1250.24	1.0000	YES
-Cocktail Shaker	2570.14	1.0000	YES
-Tree Sort	645.64	1.0000	NO
-BogoBogoSort	26.49	0.0067	YES
-Stalin Sort	99.00	0.0291	NO
-Thanos Sort	99.00	0.5044	YES
-Miracle Sort	99.00	0.5033	NO
-Intelligent Design	0.00	0.0055	NO
-Quantum Bogo	1.68	-0.0045	NO
-Intro Sort	714.68	1.0000	NO
-Strand Sort	1122.68	1.0000	YES
-Patience Sort	1012.12	1.0000	YES
-Heap Sort (Smooth Proxy)	715.13	1.0000	YES
-Circle Sort	678.84	1.0000	YES
-Double Selection	2345.37	1.0000	YES
-Cocktail Selection	2119.18	1.0000	YES
-Socialist Sort	0.00	0.0026	NO
-Genghis Khan Sort	99.00	0.3418	NO
-Hater Sort	188.10	0.5618	YES
-Exit Sort	0.00	0.0060	NO
-Random Sort	210.76	0.5532	YES
-Silly Sort	200.97	0.1223	YES
-Cocktail Bogo	695.88	1.0000	YES
-Comparison Counting Sort	648.02	1.0000	YES
-Original Shell Sort	649.23	1.0000	YES
-Hibbard Shellsort	639.28	1.0000	YES
-Ciura Shellsort	630.29	1.0000	YES
-Gonnet Shellsort	630.53	1.0000	YES
-5-ary Heap Sort	774.25	1.0000	YES
-8-way Merge Sort	547.73	1.0000	NO
-QuickHeapsort	595.52	1.0000	YES
-JSort	780.07	1.0000	YES
-Drop-Merge Sort	758.84	1.0000	YES
-Split Sort	764.63	1.0000	YES
-Vergesort	579.73	1.0000	YES
-Neatsort	732.82	1.0000	YES
-3-way Powersort	584.67	1.0000	YES
-Pairwise Sorting Network	711.54	1.0000	YES
-Shuffle Sort	2566.38	1.0000	YES
-Binary Cocktail	530.62	1.0000	YES
-Skew Heap Sort	808.02	1.0000	NO
-Leftist Heap Sort	788.74	1.0000	NO
-Binomial Heap Sort	593.74	1.0000	YES
-AVL Tree Sort	538.12	1.0000	YES
-Red-Black Tree Sort	544.32	1.0000	YES
-Triplet Merge-Insertion	592.18	1.0000	YES
-VQSort (u64/AVX2 model)	655.74	1.0000	YES
+Cartesian Tree	647.13	1.0000	YES
+Treap Sort	648.12	1.0000	NO
+Recursive Bubble	2557.69	1.0000	YES
+Skiplist Sort	677.23	1.0000	YES
+Adaptive Shivers	572.98	1.0000	YES
+Shivers Sort	574.33	1.0000	YES
+Augmented Shivers	575.26	1.0000	YES
+Recursive Insertion	2574.42	1.0000	NO
+Peeksort	713.81	1.0000	YES
+Library Sort	538.10	1.0000	YES
+Sample Sort	638.12	1.0000	YES
+Recursive Selection	2218.23	1.0000	YES
+Funnel Sort	581.73	1.0000	NO
+Quadsort	570.91	1.0000	YES
+Recursive Cocktail	2578.28	1.0000	YES
+Piposort	600.08	1.0000	YES
+Replacement Selection	681.46	1.0000	YES
+Polyphase Merge	678.07	1.0000	YES
+Recursive Gnome	2578.24	1.0000	YES
+Recursive Binary Insertion	530.64	1.0000	NO
+BFPRT Quicksort	675.22	1.0000	YES
+Shear Sort	801.50	1.0000	YES
+PESort	707.10	1.0000	YES
+Recursive Double Selection	2347.14	1.0000	YES
+Recursive Shellsort	630.74	1.0000	YES
+Recursive Comb Sort	722.31	1.0000	YES
+Recursive Odd-Even Sort	2592.68	1.0000	YES
+Binary Gnome	530.17	1.0000	NO
+Binary Shell	674.07	1.0000	YES
+Binary Patience	611.32	1.0000	YES
+Binary Merge	786.18	1.0000	NO
+Binary Bottom-up Merge	835.28	1.0000	NO
+Budgeted Merge Sort	520.00	0.9632	NO
+Ford-Johnson (Quick)	526.60	1.0000	NO
+Merge Sort	542.68	1.0000	NO
+Bottom-up Merge Sort	558.68	1.0000	NO
+Natural Merge Sort	572.77	1.0000	YES
+Ping-pong Merge Sort	558.88	1.0000	NO
+3-way Merge Sort	567.44	1.0000	NO
+4-way Merge Sort	542.59	1.0000	NO
+In-place Merge Sort	542.08	1.0000	NO
+Rotation Merge Sort	716.90	1.0000	NO
+Timsort	532.62	1.0000	YES
+Powersort	557.74	1.0000	YES
+Parallel Merge Sort	558.26	1.0000	NO
+Hayate-Shiki	1022.14	1.0000	YES
+Shellsort	632.80	1.0000	YES
+Quicksort (RTL)	651.09	1.0000	NO
+Binary Quicksort	644.37	1.0000	NO
+Quicksort (LTR)	650.28	1.0000	NO
+Quicksort (Random)	651.88	1.0000	NO
+Quicksort (Middle)	644.14	1.0000	NO
+Quicksort (Mo3)	671.76	1.0000	YES
+Quicksort (Ninther)	564.03	1.0000	YES
+Quicksort (Hoare)	642.59	1.0000	YES
+3-Way Quicksort	650.05	1.0000	NO
+Dual-Pivot Quicksort	648.61	1.0000	NO
+Triple-Pivot Quicksort	602.12	1.0000	YES
+Stable Quicksort	642.47	1.0000	NO
+BlockQuicksort	719.94	1.0000	NO
+PDQSort	733.18	1.0000	YES
+Parallel Quicksort	644.96	1.0000	NO
+Bubble Sort	2562.03	1.0000	YES
+Bucket Sort	765.67	1.0000	NO
+Selection Sort	2207.80	1.0000	YES
+Insertion Sort	2573.58	1.0000	NO
+I Can't Believe It Can Sort	2571.97	1.0000	YES
+Binary Insertion	530.35	1.0000	NO
+Gnome Sort	2573.12	1.0000	YES
+Stooge Sort	686.11	1.0000	YES
+Permutation Sort	1.86	0.0032	YES
+Less Bogo	877.29	1.0000	YES
+Exchange Bogo	807.75	1.0000	YES
+Bubble Bogo	2617.98	1.0000	YES
+Odd-Even Bogo	2623.15	1.0000	YES
+Bovo Sort	798.98	1.0000	YES
+Bozo Sort	783.33	1.0000	YES
+Stable Selection	2585.24	1.0000	YES
+Double Insertion	1787.08	1.0000	YES
+3-Smooth Comb	828.52	1.0000	YES
+Pratt Shellsort	830.84	1.0000	YES
+Tokuda Shellsort	632.86	1.0000	YES
+Sedgewick Shellsort	659.28	1.0000	YES
+Ternary Heap	696.94	1.0000	YES
+Quaternary Heap	714.82	1.0000	YES
+Out-of-place Heap	687.52	1.0000	YES
+Min-Max Heap	742.55	1.0000	YES
+Poplar Sort	759.70	1.0000	YES
+MEL Sort	1172.50	1.0000	YES
+Twinsort	594.19	1.0000	YES
+Spin Sort	878.05	1.0000	NO
+Weave Merge	691.79	1.0000	YES
+QuickMergesort	577.54	1.0000	YES
+4-way Powersort	569.15	1.0000	YES
+Loser-Tree Merge	601.02	1.0000	NO
+GrailSort	584.93	1.0000	NO
+WikiSort	613.00	1.0000	NO
+Fluxsort	598.96	1.0000	YES
+Crumsort	735.13	1.0000	YES
+Glidesort	637.51	1.0000	YES
+Blitsort	722.11	1.0000	YES
+Optimized Pancake	563.47	1.0000	YES
+Bogosort	807.78	1.0000	YES
+Full Rank	811.60	1.0000	NO
+Cycle Sort	646.80	1.0000	YES
+Bitonic Sort	760.42	1.0000	YES
+Heap Sort	717.04	1.0000	YES
+Comb Sort	721.34	1.0000	YES
+Tournament Sort	558.37	1.0000	NO
+Odd-Even Sort	2630.44	1.0000	YES
+Slowsort	589.91	0.9453	YES
+Pancake Sort	1260.81	1.0000	YES
+Cocktail Shaker	2585.20	1.0000	YES
+Tree Sort	643.88	1.0000	NO
+BogoBogoSort	26.39	0.0196	YES
+Stalin Sort	99.00	0.0403	NO
+Thanos Sort	99.00	0.5013	YES
+Miracle Sort	99.00	0.5025	NO
+Intelligent Design	0.00	0.0021	NO
+Quantum Bogo	1.59	0.0017	NO
+Intro Sort	721.04	1.0000	NO
+Strand Sort	1134.68	1.0000	YES
+Patience Sort	1005.37	1.0000	YES
+Heap Sort (Smooth Proxy)	715.72	1.0000	YES
+Circle Sort	676.64	1.0000	YES
+Double Selection	2351.09	1.0000	YES
+Cocktail Selection	2095.79	1.0000	YES
+Socialist Sort	0.00	0.0001	NO
+Genghis Khan Sort	99.00	0.3242	NO
+Hater Sort	187.64	0.5619	YES
+Exit Sort	0.00	-0.0033	NO
+Random Sort	217.42	0.5636	YES
+Silly Sort	201.26	0.1208	YES
+Sleep Sort	0.00	0.0002	NO
+Batcher Odd-Even	627.30	1.0000	YES
+Bose-Nelson	692.55	1.0000	YES
+Exchange Sort	2578.00	1.0000	YES
+Bingo Sort	2207.01	1.0000	YES
+Cocktail Bounds	2574.44	1.0000	YES
+Bottom-up Heap	599.95	1.0000	YES
+Weak Heap	580.31	1.0000	YES
+Smoothsort	774.76	1.0000	YES
+Splay Sort	667.18	1.0000	NO
+Cocktail Bogo	696.83	1.0000	YES
+Comparison Counting Sort	652.08	1.0000	YES
+Original Shell Sort	649.03	1.0000	YES
+Hibbard Shellsort	640.05	1.0000	YES
+Ciura Shellsort	631.40	1.0000	YES
+Gonnet Shellsort	628.49	1.0000	YES
+5-ary Heap Sort	774.65	1.0000	YES
+8-way Merge Sort	547.97	1.0000	NO
+QuickHeapsort	597.56	1.0000	YES
+JSort	781.69	1.0000	YES
+Drop-Merge Sort	759.93	1.0000	YES
+Split Sort	758.44	1.0000	YES
+Vergesort	580.35	1.0000	YES
+Neatsort	742.78	1.0000	YES
+3-way Powersort	583.37	1.0000	YES
+Pairwise Sorting Network	714.07	1.0000	YES
+Shuffle Sort	2560.74	1.0000	YES
+Binary Cocktail	530.14	1.0000	YES
+Skew Heap Sort	807.38	1.0000	NO
+Leftist Heap Sort	788.49	1.0000	NO
+Binomial Heap Sort	593.27	1.0000	YES
+AVL Tree Sort	538.37	1.0000	YES
+Red-Black Tree Sort	543.72	1.0000	YES
+Triplet Merge-Insertion	591.92	1.0000	YES
+Knuth Shellsort	638.69	1.0000	YES
+Papernov-Stasevich Shellsort	658.44	1.0000	YES
+Fibonacci Shellsort	632.23	1.0000	YES
+Pairing Heap Sort	745.90	1.0000	NO
+Fibonacci Heap Sort	676.14	1.0000	YES
+B-Tree Sort	544.06	1.0000	YES
+AA Tree Sort	543.66	1.0000	YES
+Scapegoat Tree Sort	618.75	1.0000	YES
+Brick Sorting Network	2611.54	1.0000	YES
+Super Scalar Sample Sort	1006.21	1.0000	YES
+IPS⁴o Sort	1370.36	1.0000	YES
+SqrtSort	793.64	1.0000	NO
+Octosort	1023.36	1.0000	NO
+Cubesort	609.85	1.0000	YES
+Gridsort	701.02	1.0000	YES
+Slab Sort	1117.81	1.0000	YES
+Adaptive Heap Sort	1091.88	1.0000	YES
+Cascade Merge Sort	681.00	1.0000	YES
+Oscillating Merge Sort	600.28	1.0000	NO
+6-ary Heap Sort	821.64	1.0000	YES
+VQSort (u64/AVX2 model)	657.79	1.0000	YES
