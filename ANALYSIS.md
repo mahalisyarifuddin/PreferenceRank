@@ -4,7 +4,7 @@ This document summarizes the benchmarking and analysis used to optimize the pair
 
 ## 1. Sorting Algorithm Comparison (N=100)
 
-We compared **188 registered sorting providers**. The suite includes the 25-algorithm third web expansion, a fixed-profile **VQSort (u64/AVX2 model)** provider, a 24-algorithm fourth web expansion, and a 20-algorithm fifth web expansion. VQSort is deliberately measured only at the comparison level; this is not a SIMD-throughput benchmark. The source and fidelity matrix is in [research/CANDIDATE_ALGORITHMS.md](research/CANDIDATE_ALGORITHMS.md), with correctness details in [research/PROVIDER_AUDIT.md](research/PROVIDER_AUDIT.md). Algorithms that request duplicate pairs are identified and excluded from the Pareto-optimal analysis so that the production choice reflects unique human decisions.
+We compared **209 registered sorting providers**. The suite includes the 25-algorithm third web expansion, a fixed-profile **VQSort (u64/AVX2 model)** provider, a 24-algorithm fourth web expansion, and a 20-algorithm fifth web expansion. VQSort is deliberately measured only at the comparison level; this is not a SIMD-throughput benchmark. The source and fidelity matrix is in [research/CANDIDATE_ALGORITHMS.md](research/CANDIDATE_ALGORITHMS.md), with correctness details in [research/PROVIDER_AUDIT.md](research/PROVIDER_AUDIT.md). Algorithms that request duplicate pairs are identified and excluded from the Pareto-optimal analysis so that the production choice reflects unique human decisions.
 
 ### Benchmarking Methodology
 - **N Value:** 100
@@ -328,3 +328,13 @@ Trials	Vanilla_Tau	Vanilla_SEM	InPlace_Tau	InPlace_SEM	Mean_Diff	SEM_Diff	Total_
 950	0.90324	0.00038	0.90324	0.00038	0.000000	0.000000	0.000760
 1000	0.90410	0.00038	0.90410	0.00038	0.000000	0.000000	0.000766
 ```
+
+## Batch 7 rerun (2026-09-13)
+
+The live registry now contains **209 providers**. The four additions from the
+wild-web sweep were benchmarked together with all prior rows using
+`node research/sort_analysis.js 100 250` (250 trials per provider): Multizip
+559.43 battles (no duplicates), Modified Bitonic 761.55, Stable Cyclesort
+648.09, and Link Sort 2555.86. All four had Kendall tau 1.0000. The complete
+provider-by-provider append-only log is in `results.txt`; source and fidelity
+notes are in `research/CANDIDATE_ALGORITHMS.md`.

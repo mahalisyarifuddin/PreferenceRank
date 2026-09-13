@@ -188,3 +188,9 @@ Cascade Merge Sort	681.00	1.0000	YES
 Oscillating Merge Sort	600.28	1.0000	NO
 6-ary Heap Sort	821.64	1.0000	YES
 VQSort (u64/AVX2 model)	657.79	1.0000	YES
+
+Batch 7 benchmark (N=100, trials=250, all 209 providers)
+Multizip Sort	559.43	1.0000	NO
+Modified Bitonic Sort	761.55	1.0000	YES
+Stable Cyclesort	648.09	1.0000	YES
+Link Sort	2555.86	1.0000	YES

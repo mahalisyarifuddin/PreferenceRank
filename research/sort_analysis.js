@@ -7280,6 +7280,39 @@ class SplitRatioShellSortProvider extends GapInsertionSortProvider {
 }
 
 
+
+/*
+ * Web expansion 7 (2026-09-13).
+ * These are comparison-observable variants found in the Sorting Wiki and the
+ * IJCAI 2024 anytime-sorting paper.  They are deliberately kept as separate
+ * providers even where the comparison schedule coincides with a classic: the
+ * benchmark is a catalogue of published algorithm families, not a claim that
+ * scheduling-only variants save human battles.
+ */
+class ModifiedBitonicSortProvider extends BitonicSortProvider {
+    // The modified bitonic merge removes the ascending/descending reversal in
+    // the merge network.  For opaque comparisons its non-padded trace is the
+    // same as the registered bitonic network at this profile.
+    constructor(n) { super(n); }
+}
+class MultizipSortProvider extends BottomUpMergeSortProvider {
+    // Multizip schedules all merges at one depth before advancing to the next;
+    // the existing bottom-up coroutine already has precisely that schedule.
+    constructor(n) { super(n); }
+}
+class LinkSortProvider extends BubbleSortProvider {
+    // Sorting Wiki's Link Sort is the adjacent compare-exchange pass with a
+    // sorted flag; this is its faithful state-machine form.
+    constructor(n) { super(n); }
+}
+class StableCyclesortProvider extends CycleSortProvider {
+    // With distinct preference items, stable cycle sort has the same rank
+    // queries as cycle sort. Stable tie handling is intentionally not inferred
+    // from a human comparator, so duplicates remain a separate documented
+    // limitation rather than a fabricated comparison trace.
+    constructor(n) { super(n); }
+}
+
 const algos = [
     { name: 'Recursive Bubble', class: RecursiveBubbleSortProvider },
     { name: 'Recursive Insertion', class: RecursiveInsertionSortProvider },
@@ -7491,7 +7524,12 @@ const algos = [
     { name: 'Pratt 5x8 Shellsort', class: Pratt5x8ShellSortProvider },
     { name: 'Incerpi-Sedgewick Shellsort', class: IncerpiSedgewickShellSortProvider },
     { name: 'Frank-Lazarus Shellsort', class: FrankLazarusShellSortProvider },
-    { name: 'Split Ratio Shellsort', class: SplitRatioShellSortProvider }
+    { name: 'Split Ratio Shellsort', class: SplitRatioShellSortProvider },
+    // Web expansion 7 (2026-09-13): Sorting Wiki + IJCAI anytime-sorting sweep.
+    { name: 'Modified Bitonic Sort', class: ModifiedBitonicSortProvider },
+    { name: 'Multizip Sort', class: MultizipSortProvider },
+    { name: 'Link Sort', class: LinkSortProvider },
+    { name: 'Stable Cyclesort', class: StableCyclesortProvider }
 ];
 
 

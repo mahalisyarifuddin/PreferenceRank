@@ -347,6 +347,44 @@ flat_stable_sort (a spinsort derivative already covered by Spinsort).
 - morwenn/cpp-sort develop tree re-checked (2026-09-13): sorter list identical to the 1.17.3 set already covered
 - Rosetta Code comparison-sorts category re-checked (2026-09-13): all 47 pages already covered by the 188-row registry
 
+
+## Batch 7 — implemented and benchmarked (2026-09-13, 4 providers)
+
+Fresh protocol: `node research/sort_analysis.js 100 250`, **N=100, 250
+trials, all 209 registered providers**. The independent audit was then run with
+`node research/audit_correctness.js` over 489 deterministic runs per provider.
+All four additions requested valid item ids and retained every item; the audit
+reported no bad pairs, timeouts, or unsorted outputs. As elsewhere in this
+file, `Duplicates` means that an unordered pair was requested more than once in
+at least one trial.
+
+| Algorithm | Family / source idea | Fidelity in this benchmark | Battles | Duplicates |
+|---|---|---|---:|:---:|
+| Multizip Sort | IJCAI 2024 anytime bottom-up multi-merge schedule | Comparison-level multizip schedule; same observable merge trace as the registered bottom-up merge at this profile | 559.43 | NO |
+| Modified Bitonic Sort | Sorting Wiki modified bitonic merge network | Comparison-network provider with arbitrary-N sentinel padding | 761.55 | YES |
+| Stable Cyclesort | Sorting Wiki stable cycle-sort variant | Distinct-item comparison port; stable equal-key bookkeeping is not observable with opaque human preferences | 648.09 | YES |
+| Link Sort | Sorting Wiki adjacent compare-exchange sort | Faithful sorted-flag adjacent-pass state machine | 2555.86 | YES |
+
+Multizip is the strongest new no-duplicate row, but it is not a new
+comparison frontier: its comparison-level trace is the same as bottom-up merge
+in this N=100 model and Ford-Johnson remains the production choice. Modified
+Bitonic, Stable Cyclesort, and Link Sort all sort correctly but add no
+production advantage. Stable Cyclesort's stability claim is intentionally
+qualified because PreferenceRank items are opaque and normally distinct; tie
+identity/order cannot be inferred from the human comparator.
+
+### Batch-7 sources
+
+- Caizergues, Durand & Mathieu, *Anytime Sorting Algorithms*, IJCAI 2024:
+  <https://www.ijcai.org/proceedings/2024/0785> (multizip and Corsort)
+- Sorting Wiki, modified bitonic sort and comparison-sort taxonomy:
+  <https://sortingalgos.miraheze.org/wiki/Sorting_algorithm>
+- Sorting Wiki, Link Sort:
+  <https://sortingalgos.miraheze.org/wiki/Link_Sort>
+- Sorting Wiki, Stable Cyclesort:
+  <https://sortingalgos.miraheze.org/wiki/Stable_Cyclesort>
+
+
 ## Batch 2 planning record
 
 The sections below are retained as the planning record for algorithms that were
