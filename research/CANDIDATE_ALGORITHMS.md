@@ -15,7 +15,12 @@ generalizations) added **24 more providers**, bringing the live registry to
 B-tree/AA/scapegoat trees, brick network, Super Scalar & IPS⁴o sample sorts,
 Sqrt/Octosort, cubesort/gridsort, slab & adaptive-heap sorts, cascade &
 oscillating external merges, and 6-ary heap) added **20 more providers**,
-bringing the live registry to **188** (see the Batch-5 section).
+bringing the live registry to **188**. A sixth sweep on 2026-09-13
+(Wave Sort, co-ranking in-place mergesort, the Bentley–McIlroy
+"Engineering a Sort Function" quicksort, length-adaptive Shivers, Rouge Sort,
+adaptive binary insertion, and eleven further Shellsort gap families) added
+**17 more providers**, bringing the live registry to **205** (see the
+Batch-6 section).
 
 Only comparison-based algorithms can become PreferenceRank `Provider`s. Sorts
 that inspect numeric keys (counting, radix, bead/gravity, flash, proxmap,
@@ -270,6 +275,77 @@ The strongest new no-duplicate result is **Oscillating Merge Sort at 600.28**, f
 - Adaptive Heap Sort (Levcopoulos & Petersson 1989 WADS / 1992 J.Algorithms): <https://en.wikipedia.org/wiki/Adaptive_heap_sort> and <https://link.springer.com/content/pdf/10.1007/3-540-51542-9_41.pdf>
 - Cascade & Oscillating Merge (Knuth vol.3 §§5.4.2–5.4.3): <https://en.wikipedia.org/wiki/Polyphase_merge_sort>
 - 6-ary heap as d-ary generalization: standard heap literature (cpp-sort d-ary base)
+
+## Batch 6 — implemented and benchmarked (2026-09-13, 17 providers)
+
+Fresh protocol: `node research/sort_analysis.js 100 250`, N=100, 250 trials;
+`node research/audit_correctness.js` over 489 runs per provider. All 17 pass the
+audit and finish with a correctly sorted `items` permutation. `Duplicates` means
+the provider repeats an unordered pair in at least one benchmark trial.
+
+| Algorithm | Family / source idea | Fidelity in this benchmark | Battles | Duplicates |
+|---|---|---|---:|---:|
+| Wave Sort (W-Sort) | Dynamic-pivot in-place D&C (arXiv 2505.13552, 2025) | Faithful port of the v3 basic reference: up-wave growth, down-wave partition vs. sorted-region median, comparison-free block-swap re-layout; explicit task stack for the up/downwave recursion | 553.42 | NO |
+| Co-ranking In-place Mergesort | In-place merging via co-ranking (arXiv 2509.24540, Siebert 2025) | Faithful: Co_rank binary-search-like descent (O(log n) comparisons), optimal juggling rotation, two recursive merges; top-down | 720.78 | YES |
+| Bentley-McIlroy Quicksort | "Engineering a Sort Function" (Bentley & McIlroy 1993; musl qsort.c) | Faithful: n<7 adjacent-compare insertion, med3-of-med3 sampling (n/8 spread for n>40), fat three-way partition, vecswap on both ends, recurse-smaller/iterate-larger; swap_cnt==0 falls back to insertion as in the reference | 573.22 | YES |
+| Shivers Sort (length-adaptive) | c-adaptive Shivers (Jugé et al., arXiv 1809.08411) | Same run-detection/merge base as the registered Shivers variants, with ℓ = floor(log2(len/c)) and c = n+1 | 570.34 | YES |
+| Rouge Sort | Every-gap comb (Sorting Wiki Combsort page) | Faithful: one compare-exchange pass per gap n-1, n-2, …, 1 — O(n²) by design | 2474.23 | YES |
+| Adaptive Binary Insertion | Neighbor-check fast path over binary insertion | One predecessor comparison before binary-searching each key into the sorted prefix | 610.25 | YES |
+| ORLP25 Shellsort | Shell gaps A_k·A_{k+1}, A: 1,1,2, A_k=2A_{k-2}+1 | Faithful gap recurrence; gapped insertion base | 629.81 | YES |
+| Sedgewick 1982 Shellsort | Shell gaps 4^k + 3·2^(k-1) + 1 (1982 paper) | Faithful 1982 sequence (distinct from the registered 1986 provider) | 721.74 | YES |
+| Pardons 2009 Shellsort | Shell gaps floor(F_k^(1+√5)), F: 1,2,3,5,8,… | Faithful gap formula | 787.98 | YES |
+| C16/3+1 Shellsort | aphitorite "16/3" family | h_k = ceil(16/3·h_{k-1}) + 1 | 768.42 | YES |
+| Lee Improved Tokuda Shellsort | Lee's refinement of Tokuda (γ = 2.243609061420001) | h_k = ceil((γ^k−1)/(γ−1)) | 630.81 | YES |
+| Tokuda Good Gaps Shellsort | "Tokuda's good gaps" (Sorting Wiki; OEIS A108870) | h_k = ceil(0.8·(2.25^k−1)); distinct from the registered Tokuda sequence | 631.88 | YES |
+| Extended Ciura Shellsort | machoota's 2025 extension of Ciura's empirical gaps | 1,4,10,23,57,132,301,701,1504 then floor(2.22·h); only gaps < n affect a run of size n | 630.04 | YES |
+| Pratt 5x8 Shellsort | machoota's 2026 "Pratt 5x8" family | All increments 5^p·8^q < n (the registered "Pratt Shellsort" is the 2^a·3^b family) | 651.98 | YES |
+| Incerpi-Sedgewick Shellsort | Incerpi & Sedgewick (1985) gap sequence | Literature prefix 1,3,7,21,48,112,336,861,2289,5860 (only the first few gaps matter at N=100; the wiki's closed form was not fully reconciled) | 633.06 | YES |
+| Frank-Lazarus Shellsort | Frank & Lazarus (1960) | Gaps 2·⌊n/2^(j+1)⌋ + 1, j = 1,2,… (51,25,13,7,3,1 at n=100) | 633.25 | YES |
+| Split Ratio Shellsort | aphitorite split-ratio family | h_k = ceil(2.4(h+1))−1 while h < 167, then ceil(2.22972(h−1)) | 632.18 | YES |
+
+The strongest new no-duplicate result is **Wave Sort at 553.42** — the best
+new row overall and the only new no-duplicate provider — but it stays behind
+Ford-Johnson (Quick) at 526.84 and the existing 8-way Merge at 546.97, so the
+production knee is unchanged. Bentley-McIlroy (573.22) and length-adaptive
+Shivers (570.34) land mid-pack among the established quick/merge rows
+(Binary Cocktail 530.96, 8-way Merge 546.97, Vergesort 581.12, 3-way Powersort
+584.35). Co-ranking In-place Mergesort (720.78) confirms the paper's
+comparison overhead relative to the classic merge rows (~542) at N=100. The
+eleven new gap families cluster tightly in 629–788: ORLP25 (629.81) is the
+best new shell row, sitting between Gonnet (628.83) and Extended Ciura
+(630.04), with Lee (630.81), Tokuda-good (631.88), Split Ratio (632.18),
+Incerpi-Sedgewick (633.06) and Frank-Lazarus (633.25) all within ~3.5 battles
+of that cluster, while Pratt 5x8 (651.98), Sedgewick 1982 (721.74), C16/3+1
+(768.42) and Pardons 2009 (787.98) are the slower families. Rouge Sort
+(2474.23) is, as expected, an O(n²) curiosity that costs ~4.7× Ford-Johnson.
+Candidates found in this sweep but *not* implemented: C2.36, C2.36010 and
+C2.14399+1 (three near-duplicate aphitorite C-family gap sequences that would
+only re-shuffle the 700–780 cluster), Xu & Chick's "ordered set" sort
+(arXiv 2607.27040 — randomized theoretical structure whose comparison pattern
+is indistinguishable from the registered Binary Insertion in this model),
+Leapfrog Sort and Odd-Even Comb (Sorting Wiki headers with no published
+specification), Duality Sort (no source found in any catalog), Towersort
+(an Android game), Spider Sort (zero web hits), Double Gnome (no results),
+Cleaner Sort (does not sort), Block Tim/Pache/Kita/Kota/Log Merge (named
+without implementations), Lazy-Heap/Hyper-Stooge (page titles without
+content), α-merge/α-stack (not in arXiv 1809.08411), Boost spreadsort
+(key-inspecting, excluded by the comparison-only rule), and Boost
+flat_stable_sort (a spinsort derivative already covered by Spinsort).
+
+## Batch 6 sources
+
+- Wave Sort (W-Sort): <https://arxiv.org/abs/2505.13552> (v3, 2026-01-04; basic reference listing, Appendix A)
+- Co-ranking in-place merging (Siebert 2025): <https://arxiv.org/abs/2509.24540>
+- Bentley & McIlroy, "Engineering a Sort Function" (Software: Practice & Experience 23(11), 1993) — reference source as maintained in musl: <https://www.cs.cmu.edu/~410-f08/update/proj3/410kern/stdlib/qsort.c>
+- c-adaptive Shivers Sort (Jugé et al. 2018, c = n+1): <https://arxiv.org/abs/1809.08411>
+- Rouge Sort (every-gap comb): <https://sortingalgos.miraheze.org/wiki/Combsort>
+- Adaptive Binary Insertion (predecessor check before binary insertion): <https://sortingalgos.miraheze.org/wiki/Binary_Insertion_Sort>
+- Shellsort gap families (ORLP25, Sedgewick 1982, Pardons 2009, C16/3+1, Lee improved Tokuda, Tokuda good gaps, Extended Ciura, Pratt 5x8, Incerpi-Sedgewick 1985, Frank & Lazarus 1960, split ratio): <https://sortingalgos.miraheze.org/wiki/Shellsort>
+- Frank & Lazarus (1960) "Shellsort: A sorting algorithm using generalized binary search": as listed on the Sorting Wiki Shellsort page above
+- Tokuda good gaps: OEIS A108870 (via the Sorting Wiki Shellsort page)
+- Xu & Chick (found, not implemented): <https://arxiv.org/abs/2607.27040>
+- morwenn/cpp-sort develop tree re-checked (2026-09-13): sorter list identical to the 1.17.3 set already covered
+- Rosetta Code comparison-sorts category re-checked (2026-09-13): all 47 pages already covered by the 188-row registry
 
 ## Batch 2 planning record
 
