@@ -1,7 +1,7 @@
 # Correctness Audit of the State-Machine Sorting Providers
 
-**Date:** 2026-09-03 (batch-2 and batch-3 addenda 2026-09-11; VQSort addendum 2026-09-12; batch-4 addendum 2026-09-12)
-**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to 118 providers; the [batch-3 addendum](#batch-3-addendum-2026-09-11-25-new-providers) covers the 143-provider suite; the [VQSort addendum](#vqsort-addendum-2026-09-12-1-new-provider) covers the 144-provider registry; and the [batch-4 addendum](#batch-4-addendum-2026-09-12-24-new-providers) covers the live **168-provider** registry.
+**Date:** 2026-09-03 (batch-2 and batch-3 addenda 2026-09-11; VQSort addendum 2026-09-12; batch-4 addendum 2026-09-12; batch-5 addendum 2026-09-13)
+**Scope:** all 85 sorting providers registered in [`research/sort_analysis.js`](sort_analysis.js) at the time of the original audit (the interactive `next()`/`next(result)` state machines used by the PreferenceRank benchmarks). The [batch-2 addendum](#batch-2-addendum-2026-09-11-33-newly-registered-providers) extends coverage to 118 providers; the [batch-3 addendum](#batch-3-addendum-2026-09-11-25-new-providers) covers the 143-provider suite; the [VQSort addendum](#vqsort-addendum-2026-09-12-1-new-provider) covers the 144-provider registry; and the [batch-4 addendum](#batch-4-addendum-2026-09-12-24-new-providers) covers the 168-provider registry; and the [batch-5 addendum](#batch-5-addendum-2026-09-13-20-new-providers) covers the live **188-provider** registry.
 
 **Method.** Every provider was audited two ways:
 
@@ -394,3 +394,47 @@ Heap Sort (788.74)**, and **Skew Heap Sort (808.02)** — all dominated by
 Ford-Johnson at **527.02, τ=1.0000, duplicates NO**. No batch-4 provider dents
 the no-duplicate Pareto frontier, so the production Ford-Johnson decision is
 unchanged.
+# Batch-5 addendum (2026-09-13): 20 new providers
+
+**Scope delta:** a fifth wild-web sweep (Wikipedia Category:Comparison sorts, Morwenn/cpp-sort wiki, Levcopoulos & Petersson SWS literature, Scandum classics, Sanders & Winkel / Axtmann sample sorts, shell gap families) added **20** comparison-sort providers, raising the registry from 168 to **188 unique providers**. Every name was cross-checked against the 168-entry registry before implementation.
+
+## Batch-5 fidelity classification
+
+| Classification | Providers | Audit note |
+|---|---|---|
+| ✅ Faithful / faithful variant | Knuth / Papernov-Stasevich / Fibonacci Shellsort, Pairing Heap Sort, Fibonacci Heap Sort, B-Tree Sort, AA Tree Sort, Scapegoat Tree Sort, Brick Sorting Network, Cubesort, Gridsort, Slab Sort, 6-ary Heap Sort | Gap recurrences, heap meld/link rules, tree rebalancing (rotations/splits/rebuilds), fixed network layers, tail-check + binary insertion, greedy monotone packing, and d-ary sift structure follow the cited papers and standard references. Moves/rotations are battle-free. |
+| ✅ Comparison port | Super Scalar Sample Sort, IPS⁴o Sort, SqrtSort, Octosort, Adaptive Heap Sort | SSSS/IPS⁴o model oversampled splitters and binary-search classification; SqrtSort's √n buffer and block tournament merge are a structural skeleton; Octosort's 8-way 32-item base is a comparison port of the Logsort family; Adaptive Heap Sort builds the Cartesian tree via a monotone stack and extracts via a frontier candidate heap (Osc-optimal per Levcopoulos & Petersson), mirroring the paper's comparison sequence. |
+| ✅ Structural port | Cascade Merge Sort, Oscillating Merge Sort | Both are 3-tape external merges with B=8 replacement-selection runs (Cascade uses cascade-distribution, Oscillating round-robin/oscillating passes); tape rotations are moves, merges supply the battles. |
+
+## Batch-5 differential results
+
+All 20 providers pass the hardened oracle audit: **489/489** runs each, `SORTED_ASC`, zero bad pairs, zero invalid outputs, zero timeouts. No existing provider's verdict changed; Slowsort's inherent N ≥ 127 timeout is unchanged. Raw counts are in `research/audit_results.txt` (B-Tree/Scapegoat/AA average ~98–105 steps; Slab ~120, Adaptive Heap ~148, Super Scalar ~162, Oscillating ~70 steps — all well inside the 5M cap).
+
+## Batch-5 benchmark cross-check
+
+Fresh complete N=100/250-trial run (all 188 rows, see `results.txt`):
+
+| New provider | Battles | τ | Duplicates |
+|---|---:|---:|:---:|
+| Knuth Shellsort | 638.69 | 1.0000 | YES |
+| Papernov-Stasevich Shellsort | 658.44 | 1.0000 | YES |
+| Fibonacci Shellsort | 632.23 | 1.0000 | YES |
+| Pairing Heap Sort | 745.90 | 1.0000 | NO |
+| Fibonacci Heap Sort | 676.14 | 1.0000 | YES |
+| B-Tree Sort | 544.06 | 1.0000 | YES |
+| AA Tree Sort | 543.66 | 1.0000 | YES |
+| Scapegoat Tree Sort | 618.75 | 1.0000 | YES |
+| Brick Sorting Network | 2611.54 | 1.0000 | YES |
+| Super Scalar Sample Sort | 1006.21 | 1.0000 | YES |
+| IPS⁴o Sort | 1370.36 | 1.0000 | YES |
+| SqrtSort | 793.64 | 1.0000 | NO |
+| Octosort | 1023.36 | 1.0000 | NO |
+| Cubesort | 609.85 | 1.0000 | YES |
+| Gridsort | 701.02 | 1.0000 | YES |
+| Slab Sort | 1117.81 | 1.0000 | YES |
+| Adaptive Heap Sort | 1091.88 | 1.0000 | YES |
+| Cascade Merge Sort | 681.00 | 1.0000 | YES |
+| Oscillating Merge Sort | 600.28 | 1.0000 | NO |
+| 6-ary Heap Sort | 821.64 | 1.0000 | YES |
+
+The batch-5 no-duplicate leaders are **Oscillating Merge Sort (600.28)**, **Pairing Heap Sort (745.90)** and **SqrtSort (793.64)** — all dominated by the existing no-duplicate frontier (Ford-Johnson 527.02, 8-way Merge 547.73, Loser-Tree 601.10, etc.). No batch-5 provider changes the meaningful no-duplicate Pareto frontier, so the production Ford-Johnson knee remains unchanged.

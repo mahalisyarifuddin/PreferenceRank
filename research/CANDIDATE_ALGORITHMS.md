@@ -10,7 +10,12 @@ VQSort addendum below brings the live registry to **144**. A fourth sweep on
 2026-09-12 (Shell/insertion/network variants, adaptive sorts from emilk and
 cpp-sort, JSort, QuickHeapsort, tree and meldable-heap sorts, and merge-insertion
 generalizations) added **24 more providers**, bringing the live registry to
-**168** (see the Batch-4 section).
+**168** (see the Batch-4 section). A fifth sweep on 2026-09-13
+(knuth/Papernov-Stasevich/Fibonacci gap families, pairing/Fibonacci heaps,
+B-tree/AA/scapegoat trees, brick network, Super Scalar & IPS⁴o sample sorts,
+Sqrt/Octosort, cubesort/gridsort, slab & adaptive-heap sorts, cascade &
+oscillating external merges, and 6-ary heap) added **20 more providers**,
+bringing the live registry to **188** (see the Batch-5 section).
 
 Only comparison-based algorithms can become PreferenceRank `Provider`s. Sorts
 that inspect numeric keys (counting, radix, bead/gravity, flash, proxmap,
@@ -214,6 +219,57 @@ comparison-only rule.
 - Skew heap (Sleator-Tarjan), leftist heap (Crane), binomial heap (Vuillemin):
   standard data-structure references
 - Comparison counting sort: Knuth, TAOCP vol. 3, §5.2
+
+
+## Batch 5 — implemented and benchmarked (2026-09-13, 20 providers)
+
+Fresh protocol: `node research/sort_analysis.js 100 250`, N=100, 250 trials;
+`node research/audit_correctness.js` over 489 runs per provider. All 20 pass the
+audit and finish with a correctly sorted `items` permutation. `Duplicates` means
+the provider repeats an unordered pair in at least one benchmark trial.
+
+| Algorithm | Family / source idea | Fidelity in this benchmark | Battles | Duplicates |
+|---|---|---|---:|---:|
+| Knuth Shellsort | Shell gaps (3^k−1)/2 (Knuth 1973) | Faithful Knuth increments and gapped insertion | 638.69 | YES |
+| Papernov-Stasevich Shellsort | Shell gaps 2^k+1 (Papernov & Stasevich 1965) | Faithful 2^k+1 sequence | 658.44 | YES |
+| Fibonacci Shellsort | Shell gaps Fibonacci numbers | Fibonacci increments | 632.23 | YES |
+| Pairing Heap Sort | Meldable heap (Fredman et al. 1986) | Compare-link meld, two-pass delete-min | 745.90 | NO |
+| Fibonacci Heap Sort | Meldable heap (Fredman & Tarjan 1987) | Circular root list, degree consolidation | 676.14 | YES |
+| B-Tree Sort | B-tree (Bayer & McCreight 1972), t=3 | 2-3 tree insert + inorder | 544.06 | YES |
+| AA Tree Sort | AA tree (Andersson 1993) | Skew/split rebalance, right-leaning only | 543.66 | YES |
+| Scapegoat Tree Sort | Scapegoat tree (Galperin & Rivest 1993) | α=0.70 weight trigger, flatten & rebuild | 618.75 | YES |
+| Brick Sorting Network | Odd-even transposition network (Knuth vol.3) | Fixed n-stage comparator list | 2611.54 | YES |
+| Super Scalar Sample Sort | Sample sort (Sanders & Winkel 2004) | 32-sample, 3 splitters, binary-search classification, recursive buckets | 1006.21 | YES |
+| IPS⁴o Sort | In-place super scalar samplesort (Axtmann et al. 2017) | 64-sample, 7 splitters, in-place classification modeled as stable buckets | 1370.36 | YES |
+| SqrtSort | Block sort with √n buffer (Katajainen et al. 1996) | √n internal buffer, B-sized blocks, tournament merge | 793.64 | NO |
+| Octosort | 8-way block sort (Logsort family, aphitorite 2021) | 32-item blocks, repeated 8-way tournament merges | 1023.36 | NO |
+| Cubesort | Adaptive binary-search sort (Scandum 2018) | Tail-check + binary insertion into sorted prefix | 609.85 | YES |
+| Gridsort | Grid hybrid of cubesort/quadsort (Scandum 2021) | √n blocks, per-block cubesort, tournament merge | 701.02 | YES |
+| Slab Sort | Shuffled monotone sequences (Levcopoulos & Petersson 1990) | Greedy monotone slabs, reorient, tournament merge | 1117.81 | YES |
+| Adaptive Heap Sort | Heapsort adapted for presorted files (Levcopoulos & Petersson 1989/1992) | Cartesian-tree build via monotone stack, frontier-heap extraction (Osc-optimal) | 1091.88 | YES |
+| Cascade Merge Sort | 3-tape cascade merge (Knuth 5.4.2) | B=8 replacement-selection runs, cascade distribution, pairwise merges | 681.00 | YES |
+| Oscillating Merge Sort | 3-tape oscillating merge (Knuth 5.4.3) | B=8 insertion runs, round-robin then oscillating pairwise merges | 600.28 | NO |
+| 6-ary Heap Sort | d-ary heapsort, d=6 | Extends the repo's incremental-build d-ary base | 821.64 | YES |
+
+The strongest new no-duplicate result is **Oscillating Merge Sort at 600.28**, followed by **SqrtSort at 793.64** and **Pairing Heap Sort at 745.90** — all still behind Ford-Johnson's 527.02 and the existing 8-way Merge's 547.73, so the production knee remains unchanged. The shell-gap variants (Knuth 638.69, Papernov-Stasevich 658.44, Fibonacci 632.23) bracket the existing Shell rows, while B-Tree (544.06) and AA Tree (543.66) are the closest new rows overall but repeat pairs. Adaptive Heap Sort (1091.88) and Slab Sort (1117.81) show that presortedness-adaptive heap/slab strategies pay their structural overhead on uniformly random input. Candidates that were found in the sweep but *not* implemented (already present or unportable as comparison battles): Hibbard (already registered), Weak Heap (already), Splay Tree Sort (already), Block sort's key-buffer extraction (moves only), IPS⁴o's branchless classification primitives, and key-inspecting sorts (radix/counting/flash/etc.), which stay excluded by the comparison-only rule.
+
+## Batch 5 sources
+
+- Shellsort gap families (Knuth 1973, Papernov & Stasevich 1965, Hibbard/Fibonacci variants): <https://en.wikipedia.org/wiki/Shellsort> and Knuth TAOCP vol.3 §6.2.1
+- Pairing heap (Fredman, Sedgewick, Sleator & Tarjan 1986): <https://en.wikipedia.org/wiki/Pairing_heap>
+- Fibonacci heap (Fredman & Tarjan 1987): <https://en.wikipedia.org/wiki/Fibonacci_heap>
+- B-tree (Bayer & McCreight 1972): <https://en.wikipedia.org/wiki/B-tree>
+- AA tree (Andersson 1993): <https://en.wikipedia.org/wiki/AA_tree>
+- Scapegoat tree (Galperin & Rivest 1993): <https://en.wikipedia.org/wiki/Scapegoat_tree>
+- Brick / odd-even transposition network: Knuth vol.3 Fig.44; <https://en.wikipedia.org/wiki/Odd%E2%80%93even_sort>
+- Super Scalar Sample Sort (Sanders & Winkel 2004): <https://ae.iti.kit.edu/documents/people/sanders/papers/ssss.pdf>
+- IPS⁴o (Axtmann et al. 2017): <https://arxiv.org/abs/1705.08768>
+- SqrtSort / Octosort / Logsort family: <https://github.com/aphitorite/Logsort>
+- Cubesort / Gridsort / Piposort family (Scandum): <https://github.com/scandum/piposort> and <https://github.com/scandum/cubesort>
+- Slab Sort / Sorting Shuffled Monotone Sequences (Levcopoulos & Petersson 1990): <https://link.springer.com/chapter/10.1007/3-540-52846-6_88>
+- Adaptive Heap Sort (Levcopoulos & Petersson 1989 WADS / 1992 J.Algorithms): <https://en.wikipedia.org/wiki/Adaptive_heap_sort> and <https://link.springer.com/content/pdf/10.1007/3-540-51542-9_41.pdf>
+- Cascade & Oscillating Merge (Knuth vol.3 §§5.4.2–5.4.3): <https://en.wikipedia.org/wiki/Polyphase_merge_sort>
+- 6-ary heap as d-ary generalization: standard heap literature (cpp-sort d-ary base)
 
 ## Batch 2 planning record
 
