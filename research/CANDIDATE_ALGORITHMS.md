@@ -514,3 +514,72 @@ Difficulty = the original estimated effort to write a correct state-machine
 - Treaps: <https://courses.grainger.illinois.edu/cs473/sp2017/notes/03-treaps.pdf>
 - Bozosort/Bovosort/Less-Bogo/Exchange-Bogo: <https://sortingalgos.miraheze.org/wiki/Bogosort>
 - JortSort satire note: <https://rosettacode.org/wiki/JortSort>
+
+## Batch 8 — implemented and benchmarked (2026-09-13, evening, 32 providers)
+
+Fresh protocol: `node research/sort_analysis.js 100 250`, **N=100, 250 trials, all 241 registered providers**. The independent audit was then run with `node research/audit_correctness.js` over 489 deterministic runs per provider. All 32 additions requested valid item ids and retained every item; audit reported no bad pairs, timeouts, or unsorted outputs for Batch 8 (Slowsort timeout is pre-existing). As elsewhere, `Duplicates` means that an unordered pair was requested more than once in at least one trial.
+
+| Algorithm | Family / source idea | Fidelity in this benchmark | Battles | Duplicates |
+|---|---|---|---:|:---:|
+| 7-ary Heap Sort | d-ary heap, d=7 | Extends DAryHeapSortProvider, arity 7 | 848.22 | YES |
+| 8-ary Heap Sort (2) | d-ary heap, d=8 | Arity 8, distinct from 8-way merge | 886.78 | YES |
+| 16-ary Heap Sort | d-ary heap, d=16 | Arity 16, high branching | 1457.23 | YES |
+| 16-way Merge Sort | k-way tournament merge, k=16 | Extends KWayMergeSortProvider | 548.52 | NO |
+| 32-way Merge Sort | k-way tournament merge, k=32 | k=32, wide fan-in | 558.37 | NO |
+| 4-Pivot Quicksort | Multi-pivot quicksort, 4 pivots | 4 pivots sorted, 5 buckets, binary search among pivots | 656.26 | NO |
+| Lomuto Quicksort | Classic Lomuto partition | Faithful Lomuto scan, last-element pivot | 713.10 | NO |
+| Yaroslavskiy Quicksort | Dual-pivot (Java 7) | Yaroslavskiy's dual-pivot with 2-pivot partition | 675.27 | YES |
+| Winner-Tree Merge Sort | Winner-tree k-way merge, k=8 | Winner tree vs loser tree distinction | 601.01 | NO |
+| Unbalanced Merge Sort | Sequential accumulation merge | Merge runs largest-first accumulation, not balanced | 823.94 | NO |
+| α-Stack Sort (α=2) | α-stack / α-merge family | Stack invariant a <= 2*b triggers merge | 584.79 | YES |
+| α-Merge Sort (α=2) | α-merge with α=2 | 3-run window rule with α=2 | 1517.33 | YES |
+| Sedgewick 1973 Shellsort | Shell gaps 1973 sequence | Gaps 1,3,7,21,48,112,336,861,1968,4592,11248... | 631.00 | YES |
+| Pratt 2x3x5 Shellsort | Shell gaps 2^a3^b5^c | All increments 2^a3^b5^c < n | 986.09 | YES |
+| Optimal Sorting Network | Optimal sorting networks 3..10 | Hardcoded optimal comparators for n=3..8, insertion network fallback for larger | 2589.00 | YES |
+| Insertion Sorting Network | Insertion sorting network | Fixed comparator list mimicking insertion sort | 2564.66 | YES |
+| Selection Sorting Network | Selection sorting network | Fixed comparator list mimicking selection sort | 2581.53 | YES |
+| Worst Sort | Pessimal sort | Generates all permutations for n<=6, sorts permutation list, else insertion fallback | 2570.42 | NO |
+| Spaghetti (Poll) Sort | Spaghetti / Poll sort analog | Tournament poll: repeated find-min via comparisons | 2565.61 | YES |
+| Bead (Gravity) Sort | Bead / Gravity sort | Comparison counting port: count smaller elements | 647.97 | YES |
+| Flashsort | Distribution sort | Min/max scan, sample splitters, bucket binary search, per-bucket insertion | 851.71 | YES |
+| Proxmap Sort | Proxmap distribution | Sample proxmap, bucket distribution | 806.43 | YES |
+| Interpolation Sort | Interpolation distribution | Sorted prefix + binary search insertion (interpolation estimate collapses to binary in comparison model) | 531.02 | NO |
+| Ska Sort | Ska / American Flag radix hybrid | MSD radix modeled as median-of-3 binary quicksort recursion | 667.93 | YES |
+| Spreadsort | Spreadsort hybrid radix | Sample sort with 8 buckets, recursive | 819.82 | YES |
+| Flansort | Flansort (aphitorite 2021) | Shuffle + library-sort style gapped insertion, O(n log n) comps + O(n) moves average | 549.28 | YES |
+| True Flansort | True Flansort advanced version | Shuffle + quicksort without 3-way comps | 708.53 | NO |
+| Logsort | Logsort in-place stable quicksort | Median-of-3 pivot, stable partition | 842.65 | YES |
+| Creasesort | Creasesort sorting network | Comparison network same size as bitonic on power-of-2 | 762.76 | YES |
+| Foldsort | Foldsort sorting network | Folded comparator network variant | 761.40 | YES |
+| Soheil Sort | Soheil Sort (Sorting Wiki notable) | Insertion with early exit if already sorted | 2589.38 | YES |
+| Corsort | Corsort anytime sorting (IJCAI 2024) | Tournament + most-informative pair heuristic (closest win difference), then insertion cleanup | 2594.54 | YES |
+
+The strongest new no-duplicate results are **Interpolation Sort at 531.02**, **16-way Merge at 548.52**, **Flansort at 549.28** (but duplicates YES), **32-way Merge at 558.37**, and **Winner-Tree Merge at 601.01** — all still behind Ford-Johnson (Quick) at 527.02 and the existing 8-way Merge at 546.97. The new heap arities (7-ary 848.22, 8-ary 886.78, 16-ary 1457.23) confirm that higher branching increases comparisons in this model. The sorting networks (Optimal 2589, Insertion 2564, Selection 2581, Spaghetti 2565, Worst 2570) cluster at ~2.5k battles, as expected for O(n²) fixed networks at n=100. Flansort (549.28) is the best new adaptive row but repeats pairs; Interpolation Sort (531.02) is the best new no-duplicate row, landing just above Binary Insertion (530.51) and Binary Gnome (530.60). Production knee remains Ford-Johnson (Quick) at 527.02 battles, no duplicates, τ=1.0000.
+
+### Batch-8 sources
+
+- d-ary heap family (7/8/16-ary): <https://en.wikipedia.org/wiki/D-ary_heap>
+- k-way merge (16/32-way): Knuth vol.3 §5.4.1, tournament tree merging
+- 4-pivot quicksort: Kushagra et al., *Multi-pivot Quicksort* (2014) and Yaroslavskiy dual-pivot generalization
+- Lomuto partition: <https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme>
+- Yaroslavskiy dual-pivot: <https://codeblab.com/wp-content/uploads/2009/09/DualPivotQuicksort.pdf> and Java's DualPivotQuicksort.java
+- Winner-tree merge: Knuth vol.3, winner tree vs loser tree
+- Unbalanced merge: standard sequential merge accumulation
+- α-stack / α-merge: same family as Shivers/Powersort, α=2 stack invariant
+- Sedgewick 1973 Shellsort: <https://en.wikipedia.org/wiki/Shellsort#Gap_sequences>
+- Pratt 2x3x5 Shellsort: Pratt 1971, 2^a3^b5^c sequence
+- Optimal sorting networks: Knuth vol.3 Fig. 47, OEIS A000124 for minimal comparators
+- Insertion/Selection networks: Sorting Wiki network taxonomy
+- Worst Sort: Esolang wiki pessimal sorts, generates all permutations
+- Spaghetti (Poll) Sort: <https://en.wikipedia.org/wiki/Spaghetti_sort> and <https://www.dangermouse.net/esoteric/>
+- Bead (Gravity) Sort: <https://en.wikipedia.org/wiki/Bead_sort>
+- Flashsort: Neubert 1998, <https://en.wikipedia.org/wiki/Flashsort>
+- Proxmap Sort: Sedgewick et al., <https://en.wikipedia.org/wiki/Proxmap_sort>
+- Interpolation Sort: <https://en.wikipedia.org/wiki/Interpolation_sort>
+- Ska Sort: <https://github.com/skarupke/ska_sort> (radix sort)
+- Spreadsort: Steven Ross 2002, <https://en.wikipedia.org/wiki/Spreadsort>
+- Flansort / True Flansort: Sorting Wiki, <https://sortingalgos.miraheze.org/wiki/Flansort> and <https://sortingalgos.miraheze.org/wiki/True_Flansort>
+- Logsort family: <https://github.com/aphitorite/Logsort>
+- Creasesort / Foldsort: Sorting Wiki, novel networks discovered with Flansort
+- Soheil Sort: Sorting Wiki notable, <https://sortingalgos.miraheze.org/wiki/Soheil_Sort>
+- Corsort: Caizergues et al., *Anytime Sorting Algorithms*, IJCAI 2024, <https://www.ijcai.org/proceedings/2024/0785>
