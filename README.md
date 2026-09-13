@@ -17,16 +17,16 @@ PreferenceRank offers two distinct modes to sort your items:
 - **Quick Rank:** Uses **Ford-Johnson** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
 
 ### Algorithm Analysis
-Based on a comparative analysis of **241 registered sorting providers** (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** remains the practical **production knee point** for high-accuracy human preference ranking without redundant comparisons. The suite now includes eight web expansions: batch 3 (25), VQSort (1), batch 4 (24), batch 5 (20), batch 6 (17), batch 7 (4), and batch 8 (32) adding 7/8/16-ary heaps, 16/32-way merges, 4-pivot/Lomuto/Yaroslavskiy quicksorts, winner-tree/unbalanced merges, α-stack/α-merge, Sedgewick 1973/Pratt 2x3x5 shells, optimal/insertion/selection networks, Worst/Spaghetti/Bead/Flash/Proxmap/Interpolation/Ska/Spreadsort ports, Flansort/True Flansort/Logsort/Creasesort/Foldsort/Soheil/Corsort, plus Wave Sort, co-ranking mergesort, Bentley-McIlroy quicksort, and eleven further Shell gaps. VQSort passed the independent correctness audit, but its row measures scalarized human comparisons—not SIMD throughput; source and fidelity caveats are documented in the research notes. Wall-clock runtime benchmark (N=200) is in research/runtime_results.txt.
+Based on a comparative analysis of **256 registered sorting providers** (see [ANALYSIS.md](ANALYSIS.md)), **Ford-Johnson** remains the practical **production knee point** for high-accuracy human preference ranking without redundant comparisons. The suite now includes nine web expansions: batch 3 (25), VQSort (1), batch 4 (24), batch 5 (20), batch 6 (17), batch 7 (4), batch 8 (32) — 7/8/16-ary heaps, 16/32-way merges, 4-pivot/Lomuto/Yaroslavskiy quicksorts, winner-tree/unbalanced merges, α-stack/α-merge, Sedgewick 1973/Pratt 2x3x5 shells, optimal/insertion/selection networks, Worst/Spaghetti/Bead/Flash/Proxmap/Interpolation/Ska/Spreadsort ports, Flansort/True Flansort/Logsort/Creasesort/Foldsort/Soheil/Corsort, plus Wave Sort, co-ranking mergesort, Bentley-McIlroy quicksort, and eleven further Shell gaps — and a **15-algorithm ninth expansion**: Pythonsort (CPython's galloping timsort), Java TimSort, 9-pivot and recursive-ninther quicksorts, 32-ary heap, 64-way merge, 3/4 enhanced-gap Shellsort, weight-balanced tree sort, and seven neo-sorting-wiki bogo variants (Baka, Nibi, Slice Bogo, Boto, True Pancake Bogo, Bowo, Pancake Bogosort). VQSort passed the independent correctness audit, but its row measures scalarized human comparisons—not SIMD throughput; source and fidelity caveats are documented in the research notes. Wall-clock runtime benchmark (N=200) is in research/runtime_results.txt.
 
 **Comparison (N=100, 250 trials):**
 | Algorithm | Avg Battles | Avg Kendall Tau |
 |-----------|-------------|-----------------|
-| Budgeted Merge Sort | 520.00 | 0.9619 |
-| **Ford-Johnson (Quick)** | 527.02 | 1.0000 |
-| Interpolation Sort | 531.02 | 1.0000 |
-| 16-way Merge Sort | 548.52 | 1.0000 |
-| Flansort | 549.28 | 1.0000 |
+| Budgeted Merge Sort | 520.00 | 0.9643 |
+| **Ford-Johnson (Quick)** | 526.95 | 1.0000 |
+| Interpolation Sort | 530.13 | 1.0000 |
+| Binary Insertion | 530.28 | 1.0000 |
+| Binary Gnome | 530.34 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
 
 ### Search Analysis

@@ -583,3 +583,88 @@ The strongest new no-duplicate results are **Interpolation Sort at 531.02**, **1
 - Creasesort / Foldsort: Sorting Wiki, novel networks discovered with Flansort
 - Soheil Sort: Sorting Wiki notable, <https://sortingalgos.miraheze.org/wiki/Soheil_Sort>
 - Corsort: Caizergues et al., *Anytime Sorting Algorithms*, IJCAI 2024, <https://www.ijcai.org/proceedings/2024/0785>
+
+## Batch 9 — implemented and benchmarked (2026-09-13, 15 providers)
+
+Fresh protocol: `node research/sort_analysis.js 100 250`, **N=100, 250 trials,
+all 256 registered providers**. The independent audit was then run with
+`node research/audit_correctness.js` over 489 deterministic runs per provider
+(the seven new bogo-family rows are capped at tiny N like their registered
+cousins: N ≤ 8, Pancake Bogosort N ≤ 6). All 15 additions requested valid item
+ids and retained every item; the audit reported no bad pairs, timeouts, or
+unsorted outputs for Batch 9 (Slowsort timeout is pre-existing). As elsewhere,
+`Duplicates` means that an unordered pair was requested more than once in at
+least one trial.
+
+| Algorithm | Family / source idea | Fidelity in this benchmark | Battles | Duplicates |
+|---|---|---|---:|:---:|
+| Pythonsort | CPython's list.sort (Peters' Timsort as shipped) | Registered Timsort run detection (minRun threshold 64) + merge-collapse, plus CPython's galloping merge: MIN_GALLOP=7 exponential-then-binary gallopRight/gallopLeft, adaptive minGallop (−1 per gallop round, +2 per plain round, floor 0, shared across merges), ordered-hint early exit. CPython's per-merge tmp-buffer C optimization is memory management, invisible to the comparison stream, so omitted | 537.83 | YES |
+| Java TimSort | java.util.TimSort (JDK 7+) | JDK minRun (threshold 32 → 25 at n=100 vs CPython's 50), same run detection and collapse policy, the JDK's per-merge gallop trims (gallopRight of run2's head skips run1's in-place prefix; gallopLeft of run1's tail trims run2's in-place suffix), directional mergeLo (head-vs-head) / mergeHi (tail-vs-tail, built backwards). Gallop probes use the exponential-then-binary form documented in listsort.txt with the hint window elided (no effect on the comparison count class) | 554.25 | YES |
+| 9-Pivot Quicksort | Multi-pivot quicksort, 9 pivots | Nine evenly-spaced pivot samples, insertion-sorted, binary-search classification into 10 buckets (each pivot anchors its bucket as the maximum and is not re-compared), buckets 0..8 recursed/insertion-sorted with the anchor appended, cutoff 24 | 682.05 | NO |
+| Quicksort (Recursive Ninther) | Recursive-ninther pivot selection (maxgcoding) | Pivot = median of three recursively computed ninthers (below length 9: median of first/middle/last; otherwise median of the three third-subrange ninthers); Lomuto partition; cutoff 16. Distinct from the registered Quicksort (Ninther), whose ninther is one level of med3-of-9 | 645.39 | YES |
+| 32-ary Heap Sort | d-ary heap, d=32 | Extends the audited DAryHeapSortProvider at arity 32 | 2184.15 | YES |
+| 64-way Merge Sort | k-way tournament merge, k=64 | Extends the audited KWayMergeSortProvider at k=64 | 558.02 | NO |
+| 3/4 Enhanced-Gap Shellsort | "Enhanced Gap Sequencing" (IJARCS 2020) | Gaps g0 = ⌊3n/4⌋, gk = ⌊3·g(k−1)/4⌋ down to 1 (93, 69, 51, 38, … for n=125); rides the audited gapped-insertion base. Distinct from every registered gap family | 770.28 | YES |
+| Weight-Balanced Tree Sort | Baer 1973 WBT (Hirai & Yamamoto parameters) | Weight = subtree size + 1 (empty 1, node wL+wR); balanced iff Δ·w(light) ≥ w(heavy) with Δ = 1+√2; single rotation when the heavy child's heavy side is ≥ Γ(=2)· its light side, else double; in-order walk. Repair direction verified on 2/3/4-node cases | 540.78 | YES |
+| Baka Sort | Neo-sorting wiki bogo family ("swaps random items to the first") | Verify DESC; on first failure swap a random item into the head and re-verify. Move set {swap(0,k)} generates S_n (closure-verified at n=5), so terminates with probability 1 | 668.89 | YES |
+| Nibi Sort | Neo-sorting wiki bogo family (tail counterpart) | Same scheme with the swap into the last slot; {swap(n−1,k)} generates S_n | 786.13 | YES |
+| Slice Bogo Sort | Neo-sorting wiki bogo family | Shuffle a uniformly random sub-slice (length 2..n) each round; sub-slice permutations generate S_n | 802.06 | YES |
+| Boto Sort | Neo-sorting wiki bogo family | Reverse a uniformly random sub-slice each round; reversals of length-2 sub-slices are adjacent transpositions → S_n | 806.85 | YES |
+| True Pancake Bogo Sort | Neo-sorting wiki bogo family | Flip a uniformly random prefix (length 2..n) each round; prefix reversals generate S_n | 817.75 | YES |
+| Bowo Sort | Neo-sorting wiki bogo family | Left-rotate a uniformly random prefix by one each round; prefix cycles generate S_n (closure-verified at n=5) | 801.04 | YES |
+| Pancake Bogosort | Flanlaina's deterministic pancake bogo | For k = n..2 verify items[i] against items[k−1] (i = 0..k−2); on first failure flip a random prefix of length 2..k and re-verify from the start. One element anchored per phase → far cheaper than plain bogo (audit avg 12.7 steps) | 657.42 | YES |
+
+The strongest new no-duplicate rows are **64-way Merge Sort at 558.02** and **9-Pivot Quicksort at 682.05** — both still behind Ford-Johnson (Quick) at 526.95, 8-way Merge at 547.04, and 16-way Merge at 548.75, so the production knee is unchanged. The timsort family tells the story of comparison overhead: plain registered Timsort 532.54 < Pythonsort 537.83 (galloping adds gallop-probe comparisons) < Java TimSort 554.25 (gallop trims + directional merges, plus the JDK's shorter minRun of 25 vs CPython's 50 at n=100) — all with duplicates, since adaptive runs repeat pair requests. Weight-Balanced Tree Sort (540.78) is the batch's best adaptive row overall but repeats pairs (tree re-insertion paths). The 32-ary heap (2184.15) continues the arity trend (7-ary 851.75, 8-ary 883.94, 16-ary 1447.08). The seven bogo variants land at 657.42–817.75 with τ≈1.0, matching the registered bogo rows: their random comparisons saturate the transitive closure, so the benchmark credits full knowledge even though the items array is left unsorted.
+
+### Batch-9 rejections (examined, not implemented)
+
+- **Dropsort** (Jackson & McCulloch, MICS 2011; first proposed by Morgan 2006) —
+  single pass dropping every element smaller than its predecessor. The
+  registered **Stalin Sort** provider is Dropsort verbatim (scan; splice any
+  item smaller than the last kept; output the sorted subsequence), and
+  Jackson & McCulloch's improved variant is the registered **Drop-Merge
+  Sort**. No new row.
+- **Go Timsort** — does not exist. Go's `sort.Sort` was Bentley–McIlroy
+  quicksort (registered) through Go 1.18 and pdqsort (registered) from
+  Go 1.19; `sort.Stable` is a plain bottom-up mergesort (no run detection),
+  also registered. Verified against golang/go `src/sort/sort.go` at
+  go1.18.10, go1.19.13, go1.21.13 and master.
+- **Duality Sort** — no implementable algorithm behind the name (searched
+  twice before and this round: only dual-pivot pivot-sampling work and Hinze's
+  "A Duality of Sorts" essay turn up).
+- **Babi Sort** (neo-sorting wiki) — swaps random head/tail items; its move
+  set is equivalent to the registered vovo-style exchange bogo rows and adds no
+  distinct trace.
+- **bopo Sort** (neo-sorting wiki) — wiki entry is a stub without an
+  operation definition; not implementable from the source.
+- **Less Bogo Sort** — already registered (added with the bogo family).
+- **Cheating Bogo Sort** — stops when the first element happens to be the
+  minimum and leaves the rest arbitrary; would audit BROKEN, and its "sorted"
+  output is not sorted. Rejected on principle.
+- **Boko Sort** (neo-sorting wiki) — "swap two adjacent pairs" is ambiguous in
+  the source (overlap? direction?); no unambiguous operation set.
+
+### Batch-9 sources
+
+- CPython timsort internals (galloping, MIN_GALLOP, minGallop adaptation,
+  merge-collapse): CPython `Objects/listsort.c` / `listsort.txt` v18 as
+  documented at <https://vladris.com/blog/2021-12-30/timsort.html> and
+  <https://medium.com/@kangjunong1/python-timsort-77568626563b>
+- Java TimSort: `java.util.TimSort` from openjdk/jdk8u (minRunLength,
+  mergeCollapse/mergeForceCollapse, mergeAt gallop trims, mergeLo/mergeHi)
+- 9-pivot quicksort: <https://github.com/dmcmanam/sort> (multipivotquicksort),
+  <https://github.com/gosteq/MultiPivotQuickSort>, and Kushagra, López-Ortiz,
+  Munro, Qiao & Cheriton, *Multi-Pivot Quicksort: Theory and Experiments*,
+  WAE 2014, DOI 10.1137/1.9781611973198.6
+- Recursive ninther: <https://maxgcoding.com/quicksort-pivot-selection>
+- 3/4 enhanced gap sequence: *Enhanced Gap Sequencing Shell Sort*, IJARCS
+  (article 1934), <https://ijarcs.info>
+- Weight-balanced trees: Baer, *Weight balanced trees*, CACM 1973; Hirai &
+  Yamamoto, *Balancing weight-balanced trees* (<http://yoichihirai.com/bst.pdf>,
+  §3.4: Δ = 1+√2, Γ = 2, single-rotation criterion); parameter generalization
+  cross-checked against arXiv:1910.07849
+- Neo-sorting wiki bogo family (Baka, Nibi, Slice Bogo, Boto, True Pancake
+  Bogo, Bowo, Pancake Bogosort, plus rejected Babi/bopo/Cheating/Boko):
+  <https://neo-sorting-algorithms.fandom.com/wiki/Bogo_Sort>
+- Dropsort: Jackson & McCulloch, MICS 2011 (micsymposium.org) — see rejection
+  note; Stalin Sort registration predates it

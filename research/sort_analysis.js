@@ -7981,6 +7981,496 @@ class CorsortProvider extends CoroutineSortProvider {
 }
 
 
+// ---------------------------------------------------------------------------
+// Batch 9 (2026-09-13): 15 comparison sorts from the ninth wild-web sweep.
+// Every name was cross-checked against the full registry before porting and
+// every port is comparison-based (no key/digit inspection). Sources and
+// fidelity notes: research/CANDIDATE_ALGORITHMS.md ("Batch 9" section).
+// ---------------------------------------------------------------------------
+
+/** Pythonsort: CPython's actual list.sort (Peters' Timsort as shipped in
+ * CPython, listsort.txt v18 + Objects/listobject.c): the registered Timsort
+ * run detection (minRun threshold 64) and merge-collapse policy, plus
+ * CPython's galloping merge — when one side wins MIN_GALLOP (7) consecutive
+ * comparisons the loser's next element is located by an exponential-then-
+ * binary gallop — with the adaptive shared minGallop counter (-1 per gallop
+ * round, +2 per plain round, floor 0) and the ordered-hint early exit.
+ * Distinct from the registered "Timsort", whose merge is a plain two-way
+ * merge. (CPython's per-merge tmp-buffer C optimization is omitted: it is
+ * memory management, invisible to the comparison stream.) */
+class PythonsortProvider extends CoroutineSortProvider {
+    constructor(n) { super(n); this.minGallop = 7; }
+    calcMinRun(n) { let r = 0; while (n >= 64) { r |= n & 1; n >>= 1; } return n + r; }
+    /** first offset k in [0..len] with key < A[start+k] (CPython gallop_right) */
+    *_gallopRight(key, A, start, len) {
+        let lo = start, hi = Math.min(start + 1, start + len), step = 1;
+        while (hi < start + len && (yield* this._less(A[hi], key))) { lo = hi; step = step * 2 + 1; hi = Math.min(start + step, start + len); }
+        while (lo < hi) { const m = lo + ((hi - lo) >> 1); if (yield* this._less(A[m], key)) lo = m + 1; else hi = m; }
+        return lo - start;
+    }
+    /** first offset k in [0..len] with A[start+k] >= key (CPython gallop_left;
+     * with distinct keys in disjoint runs, same search as gallop_right) */
+    *_gallopLeft(key, A, start, len) {
+        let lo = start, hi = Math.min(start + 1, start + len), step = 1;
+        while (hi < start + len && (yield* this._less(A[hi], key))) { lo = hi; step = step * 2 + 1; hi = Math.min(start + step, start + len); }
+        while (lo < hi) { const m = lo + ((hi - lo) >> 1); if (yield* this._less(A[m], key)) lo = m + 1; else hi = m; }
+        return lo - start;
+    }
+    *_mergeGallop(A, B) {
+        if (!A.length || !B.length) return A.concat(B);
+        if (!(yield* this._greater(A[A.length - 1], B[0]))) return A.concat(B); // hint: runs already in order
+        const t = A.slice();
+        let k = 0, j = 0, out = [], minGallop = this.minGallop;
+        while (k < t.length && j < B.length) {
+            let count1 = 0, count2 = 0;
+            while (count1 < minGallop && count2 < minGallop && k < t.length && j < B.length) {
+                if (yield* this._less(t[k], B[j])) { out.push(t[k++]); count1++; count2 = 0; }
+                else { out.push(B[j++]); count2++; count1 = 0; }
+            }
+            if (k === t.length || j === B.length) break;
+            while (count1 >= 7 || count2 >= 7) {
+                const c1 = yield* this._gallopRight(B[j], t, k, t.length - k);
+                out.push(...t.slice(k, k + c1)); k += c1;
+                if (k === t.length) break;
+                out.push(B[j++]);
+                if (j === B.length) break;
+                const c2 = yield* this._gallopLeft(t[k], B, j, B.length - j);
+                out.push(...B.slice(j, j + c2)); j += c2;
+                if (j === B.length) break;
+                out.push(t[k++]);
+                minGallop--;
+            }
+            if (minGallop < 0) minGallop = 0;
+            minGallop += 2;
+        }
+        this.minGallop = minGallop;
+        return out.concat(t.slice(k), B.slice(j));
+    }
+    *sort() {
+        const a = this.items.slice(), n = a.length;
+        if (n < 2) { this.items = a; return; }
+        const minRun = this.calcMinRun(n);
+        const runs = [];
+        const collapse = function* () {
+            while (true) {
+                const i = runs.length;
+                if (i === 1) break;
+                if (i >= 3 && runs[i - 3].length <= runs[i - 2].length + runs[i - 1].length) {
+                    if (runs[i - 3].length < runs[i - 1].length) { runs[i - 3] = yield* this._mergeGallop(runs[i - 3], runs[i - 2]); runs.splice(i - 2, 1); }
+                    else { runs[i - 2] = yield* this._mergeGallop(runs[i - 2], runs[i - 1]); runs.pop(); }
+                } else if (i >= 2 && runs[i - 2].length <= runs[i - 1].length) {
+                    runs[i - 2] = yield* this._mergeGallop(runs[i - 2], runs[i - 1]); runs.pop(); break;
+                } else break;
+            }
+        };
+        const forceCollapse = function* () {
+            while (runs.length > 1) {
+                const i = runs.length;
+                if (i >= 3 && runs[i - 3].length < runs[i - 1].length) { runs[i - 3] = yield* this._mergeGallop(runs[i - 3], runs[i - 2]); runs.splice(i - 2, 1); }
+                else { runs[i - 2] = yield* this._mergeGallop(runs[i - 2], runs[i - 1]); runs.pop(); }
+            }
+        };
+        let idx = 0;
+        while (idx < n) {
+            let i = idx + 1;
+            if (i < n) {
+                const down = yield* this._greater(a[idx], a[i]);
+                i++;
+                while (i < n) { const gt = yield* this._greater(a[i - 1], a[i]); if (gt !== down) break; i++; }
+                let run = a.slice(idx, i);
+                if (down) run.reverse();
+                const target = Math.min(n, idx + minRun);
+                if (i < target) run = yield* this._binaryInsertion(run.concat(a.slice(i, target)));
+                runs.push(run); idx = Math.max(i, target);
+            } else { runs.push([a[idx]]); idx++; }
+            yield* collapse.call(this);
+        }
+        yield* forceCollapse.call(this);
+        this.items = runs[0] || [];
+    }
+}
+
+/** Java TimSort: java.util.TimSort (JDK 7+) — the JDK's stable sort. Timsort
+ * with the JDK's minRun (threshold 32 instead of CPython's 64, so n=100 gives
+ * 25 vs 50), the same merge-collapse policy, plus the JDK's per-merge
+ * gallop trims (gallopRight of run2's head into run1 skips run1's in-place
+ * prefix; gallopLeft of run1's tail into run2 trims run2's in-place suffix)
+ * and the directional merges: mergeLo (len1 <= len2, head-vs-head
+ * comparisons) and mergeHi (tail-vs-tail comparisons, output built backwards).
+ * No galloping inside the merge itself (unlike CPython). */
+class JavaTimSortProvider extends CoroutineSortProvider {
+    /** first offset k in [0..len] with key < A[start+k] (JDK gallopRight) */
+    *_gallopRight(key, A, start, len) {
+        let lo = start, hi = Math.min(start + 1, start + len), step = 1;
+        while (hi < start + len && (yield* this._less(A[hi], key))) { lo = hi; step = step * 2 + 1; hi = Math.min(start + step, start + len); }
+        while (lo < hi) { const m = lo + ((hi - lo) >> 1); if (yield* this._less(A[m], key)) lo = m + 1; else hi = m; }
+        return lo - start;
+    }
+    /** first offset k in [0..len] with A[start+k] >= key (JDK gallopLeft;
+     * with distinct keys in disjoint runs, same search as gallopRight) */
+    *_gallopLeft(key, A, start, len) {
+        let lo = start, hi = Math.min(start + 1, start + len), step = 1;
+        while (hi < start + len && (yield* this._less(A[hi], key))) { lo = hi; step = step * 2 + 1; hi = Math.min(start + step, start + len); }
+        while (lo < hi) { const m = lo + ((hi - lo) >> 1); if (yield* this._less(A[m], key)) lo = m + 1; else hi = m; }
+        return lo - start;
+    }
+    *_mergeJava(A, B) {
+        if (!A.length) return B.slice();
+        if (!B.length) return A.slice();
+        let base1 = 0, len1 = A.length;
+        let len2 = B.length;
+        // run1's prefix already final: everything <= run2's head
+        base1 = yield* this._gallopRight(B[0], A, 0, len1);
+        len1 -= base1;
+        if (len1 === 0) return A.slice();
+        // run2's suffix already final: everything > run1's tail
+        len2 = yield* this._gallopLeft(A[base1 + len1 - 1], B, 0, len2);
+        if (len1 <= len2) {
+            const t = A.slice(base1, base1 + len1);
+            let k = 0, j = 0, out = [];
+            while (k < len1 && j < len2) {
+                if (yield* this._less(B[j], t[k])) out.push(B[j++]);
+                else out.push(t[k++]);
+            }
+            return A.slice(0, base1).concat(out, t.slice(k), B.slice(j));
+        }
+        const t = B.slice(0, len2);
+        let i = base1 + len1 - 1, j = len2 - 1, rev = [];
+        // tail-vs-tail: take the LARGER tail element each step (built backwards)
+        while (i >= base1 && j >= 0) {
+            if (yield* this._less(A[i], t[j])) rev.push(t[j--]);
+            else rev.push(A[i--]);
+        }
+        const front = j >= 0 ? t.slice(0, j + 1) : A.slice(base1, i + 1);
+        return A.slice(0, base1).concat(front, rev.reverse(), B.slice(len2));
+    }
+    *sort() {
+        const a = this.items.slice(), n = a.length;
+        if (n < 2) { this.items = a; return; }
+        let m = n, r = 0;
+        while (m >= 32) { r |= m & 1; m >>= 1; }
+        const minRun = m + r;
+        const runs = [];
+        const collapse = function* () {
+            while (true) {
+                const i = runs.length;
+                if (i === 1) break;
+                if (i >= 3 && runs[i - 3].length <= runs[i - 2].length + runs[i - 1].length) {
+                    if (runs[i - 3].length < runs[i - 1].length) { runs[i - 3] = yield* this._mergeJava(runs[i - 3], runs[i - 2]); runs.splice(i - 2, 1); }
+                    else { runs[i - 2] = yield* this._mergeJava(runs[i - 2], runs[i - 1]); runs.pop(); }
+                } else if (i >= 2 && runs[i - 2].length <= runs[i - 1].length) {
+                    runs[i - 2] = yield* this._mergeJava(runs[i - 2], runs[i - 1]); runs.pop(); break;
+                } else break;
+            }
+        };
+        const forceCollapse = function* () {
+            while (runs.length > 1) {
+                const i = runs.length;
+                if (i >= 3 && runs[i - 3].length < runs[i - 1].length) { runs[i - 3] = yield* this._mergeJava(runs[i - 3], runs[i - 2]); runs.splice(i - 2, 1); }
+                else { runs[i - 2] = yield* this._mergeJava(runs[i - 2], runs[i - 1]); runs.pop(); }
+            }
+        };
+        let idx = 0;
+        while (idx < n) {
+            let i = idx + 1;
+            if (i < n) {
+                const down = yield* this._greater(a[idx], a[i]);
+                i++;
+                while (i < n) { const gt = yield* this._greater(a[i - 1], a[i]); if (gt !== down) break; i++; }
+                let run = a.slice(idx, i);
+                if (down) run.reverse();
+                const target = Math.min(n, idx + minRun);
+                if (i < target) run = yield* this._binaryInsertion(run.concat(a.slice(i, target)));
+                runs.push(run); idx = Math.max(i, target);
+            } else { runs.push([a[idx]]); idx++; }
+            yield* collapse.call(this);
+        }
+        yield* forceCollapse.call(this);
+        this.items = runs[0] || [];
+    }
+}
+
+/** 9-Pivot Quicksort: the 9-pivot variant of the multi-pivot quicksort
+ * family (dmcmanam/sort; gosteq/MultiPivotQuickSort; Kushagra et al.,
+ * "Multi-Pivot Quicksort: Theory and Experiments", WAE 2014). Nine pivots
+ * sampled evenly spaced across the range, sorted by insertion sort, then
+ * every element classified into one of 10 buckets by binary search over the
+ * sorted pivots (skipping one occurrence of each pivot itself), buckets 1..8
+ * recursed with the same scheme, buckets 0 and 9 already in place, and an
+ * insertion-sort cutoff at n <= 24. */
+class NinePivotQuicksortProvider extends CoroutineSortProvider {
+    *sort() { this.items = yield* this._np(this.items.slice(), 0, this.n - 1); }
+    *_np(a, lo, hi) {
+        const len = hi - lo + 1;
+        if (len <= 24) return yield* this._insertion(a.slice(lo, hi + 1));
+        // nine evenly spaced pivot samples, insertion-sorted
+        const piv = [];
+        for (let i = 0; i < 9; i++) piv.push(a[lo + Math.floor(i * (len - 1) / 8)]);
+        const sp = yield* this._insertion(piv.slice());
+        // classify every non-pivot element: bucket b = #pivots < x (binary
+        // search over the sorted pivots); each pivot p[i] anchors bucket i as
+        // its maximum and is not compared during classification.
+        const isPivot = new Set(sp);
+        const B = Array.from({ length: 10 }, () => []);
+        for (let p = lo; p <= hi; p++) {
+            const x = a[p];
+            if (isPivot.has(x)) continue;
+            let lb = 0, hb = 9;
+            while (lb < hb) { const mid = (lb + hb) >> 1; if (yield* this._less(sp[mid], x)) lb = mid + 1; else hb = mid; }
+            B[lb].push(x);
+        }
+        const out = [];
+        for (let i = 0; i < 10; i++) {
+            if (B[i].length > 24) out.push(...(yield* this._np(B[i], 0, B[i].length - 1)));
+            else if (B[i].length) out.push(...(yield* this._insertion(B[i])));
+            if (i < 9) out.push(sp[i]); // p[i] is the largest element of bucket i
+        }
+        return out;
+    }
+}
+
+/** Quicksort (Recursive Ninther): the "recursive ninther" pivot-selection
+ * variant (maxgcoding.com/quicksort-pivot-selection): pick the pivot as the
+ * median of three recursively computed ninthers — below length 9, the median
+ * of first/middle/last; otherwise the median of the nine-pivot medians of the
+ * three third-subranges. Lomuto partition, insertion-sort cutoff 16. */
+class QuicksortRecursiveNintherProvider extends CoroutineSortProvider {
+    *sort() { yield* this._qs(this.items, 0, this.n - 1); }
+    *_qs(a, lo, hi) {
+        if (lo >= hi) return;
+        if (hi - lo + 1 <= 16) { const seg = a.slice(lo, hi + 1); yield* this._insertion(seg); for (let i = lo; i <= hi; i++) a[i] = seg[i - lo]; return; }
+        const pv0 = yield* this._ninther(a, lo, hi);
+        const pvIdx = a.indexOf(pv0);
+        [a[pvIdx], a[hi]] = [a[hi], a[pvIdx]]; // Lomuto requires the pivot at hi
+        const pv = a[hi];
+        // Lomuto partition around pv
+        let i = lo - 1;
+        for (let j = lo; j < hi; j++) {
+            if (yield* this._less(a[j], pv)) { i++; [a[i], a[j]] = [a[j], a[i]]; }
+        }
+        [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+        const p = i + 1;
+        yield* this._qs(a, lo, p - 1);
+        yield* this._qs(a, p + 1, hi);
+    }
+    // recursive ninther: below length 9, median of first/middle/last;
+    // otherwise the median of the three third-subrange ninthers
+    *_ninther(a, l, r) {
+        if (r - l < 9) return yield* this._median3v(a[l], a[Math.floor((l + r) / 2)], a[r]);
+        const w = Math.floor((r - l) / 3);
+        const m1 = yield* this._ninther(a, l, l + w - 1);
+        const m2 = yield* this._ninther(a, l + w, r - w - 1);
+        const m3 = yield* this._ninther(a, r - w, r);
+        return yield* this._median3v(m1, m2, m3);
+    }
+    // median of three distinct values via at most 3 comparisons
+    *_median3v(x, y, z) {
+        let lo = x, mid = y, hi = z;
+        if (yield* this._greater(lo, mid)) { const t = lo; lo = mid; mid = t; }
+        if (yield* this._greater(mid, hi)) { const t = mid; mid = hi; hi = t; }
+        if (yield* this._greater(lo, mid)) { const t = lo; lo = mid; mid = t; }
+        return mid;
+    }
+}
+
+/** 32-ary heap sort: the registered d-ary heap scheme at d = 32 — sift-down
+ * against the max of 32 children, then repeated extract-max. */
+class ThirtyTwoAryHeapSortProvider extends DAryHeapSortProvider {
+    constructor(n) { super(n, 32); }
+}
+
+/** 64-way merge sort: the registered k-way scheme at k = 64 — 64 pre-sorted
+ * parts merged bottom-up with an ascending min-heap selection over the heads. */
+class MergeSort64WayProvider extends KWayMergeSortProvider {
+    constructor(n) { super(n, 64); }
+}
+
+/** 3/4 Enhanced-Gap Shellsort: "Enhanced Gap Sequencing" (IJARCS 2020): the
+ * next gap is always floor(3/4) of the previous, starting at floor(3n/4) —
+ * 93, 69, 51, ... for n = 125. Distinct from every registered gap family. */
+class ThreeQuarterGapShellsortProvider extends GapInsertionSortProvider {
+    gaps() {
+        const g = [];
+        let x = Math.floor(3 * this.n / 4);
+        while (x >= 1) { g.push(x); x = Math.floor(3 * x / 4); }
+        return g;
+    }
+}
+
+/** Weight-Balanced Tree Sort (Baer 1973; Hirai & Yamamoto's parameters):
+ * insert every key into a WBT whose weight is subtree size + 1 (empty = 1,
+ * node w = w(l) + w(r)), keep each node balanced by the total-inequality test
+ * Delta*w(light) >= w(heavy) with Delta = 1 + sqrt(2), repair by a single
+ * rotation when the heavy child's own heavy side is < Gamma (2) times its
+ * light side, else a double rotation; in-order walk at the end. */
+class WeightBalancedTreeSortProvider extends CoroutineSortProvider {
+    DELTA = 1 + Math.SQRT2; GAMMA = 2;
+    _w(x) { return x ? x.w : 1; }
+    _rotL(x) { const y = x.r; x.r = y.l; y.l = x; x.w = this._w(x.l) + this._w(x.r); y.w = this._w(y.l) + this._w(y.r); return y; }
+    _rotR(x) { const y = x.l; x.l = y.r; y.r = x; x.w = this._w(x.l) + this._w(x.r); y.w = this._w(y.l) + this._w(y.r); return y; }
+    _repair(x) {
+        const wl = this._w(x.l), wr = this._w(x.r);
+        if (wl < wr) {
+            if (this.DELTA * wl >= wr) return x;
+            const wlR = this._w(x.r.l), wrR = this._w(x.r.r);
+            if (wrR >= this.GAMMA * wlR) return this._rotL(x); // right-right: single
+            x.r = this._rotR(x.r); // right-left: double
+            return this._rotL(x);
+        }
+        if (this.DELTA * wr >= wl) return x;
+        const wlL = this._w(x.l.l), wrL = this._w(x.l.r);
+        if (wlL >= this.GAMMA * wrL) return this._rotR(x); // left-left: single
+        x.l = this._rotL(x.l); // left-right: double
+        return this._rotR(x);
+    }
+    *_ins(node, key) {
+        if (!node) return { val: key, l: null, r: null, w: 2 };
+        if (yield* this._less(key, node.val)) node.l = yield* this._ins(node.l, key);
+        else if (yield* this._less(node.val, key)) node.r = yield* this._ins(node.r, key);
+        else return node;
+        node.w = this._w(node.l) + this._w(node.r);
+        return this._repair(node);
+    }
+    *_inorder(node, out) { if (!node) return; yield* this._inorder(node.l, out); out.push(node.val); yield* this._inorder(node.r, out); }
+    *sort() {
+        const items = this.items.slice();
+        if (items.length < 2) { this.items = items; return; }
+        let root = null;
+        for (const x of items) root = yield* this._ins(root, x);
+        const out = [];
+        yield* this._inorder(root, out);
+        this.items = out;
+    }
+}
+
+// --- Bogo-family comparison sorts from the neo-sorting-algorithms wiki
+// (batch 9). Each verifies the full DESC order; on the first failed pair it
+// performs its one documented mutation (proven to generate S_n, so they all
+// terminate with probability 1). Verified against the DESC orientation like
+// the registered bogo family. ---
+
+/** Baka Sort ("swaps random items to the first", a.k.a. headswap/selection bogo). */
+class BakaSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; }
+    next(result) {
+        if (result !== undefined) {
+            if (result === 1) this.i++;
+            else { const k = Math.floor(Math.random() * this.n); const t = this.items[0]; this.items[0] = this.items[k]; this.items[k] = t; this.i = 0; }
+        }
+        if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+        return null;
+    }
+}
+
+/** Nibi Sort: the tail counterpart of Baka — swaps a random item into the last slot. */
+class NibiSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; }
+    next(result) {
+        if (result !== undefined) {
+            if (result === 1) this.i++;
+            else { const k = Math.floor(Math.random() * (this.n - 1)); const t = this.items[this.n - 1]; this.items[this.n - 1] = this.items[k]; this.items[k] = t; this.i = 0; }
+        }
+        if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+        return null;
+    }
+}
+
+/** Slice Bogo Sort: each round shuffles a random sub-slice until sorted. */
+class SliceBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; }
+    next(result) {
+        if (result !== undefined) {
+            if (result === 1) this.i++;
+            else {
+                const len = 2 + Math.floor(Math.random() * (this.n - 1));
+                const st = Math.floor(Math.random() * (this.n - len + 1));
+                const seg = this.items.slice(st, st + len);
+                for (let x = seg.length - 1; x > 0; x--) { const y = Math.floor(Math.random() * (x + 1)); const t = seg[x]; seg[x] = seg[y]; seg[y] = t; }
+                for (let x = 0; x < len; x++) this.items[st + x] = seg[x];
+                this.i = 0;
+            }
+        }
+        if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+        return null;
+    }
+}
+
+/** Boto Sort: each round reverses a random sub-slice until sorted. */
+class BotoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; }
+    next(result) {
+        if (result !== undefined) {
+            if (result === 1) this.i++;
+            else {
+                const len = 2 + Math.floor(Math.random() * (this.n - 1));
+                const st = Math.floor(Math.random() * (this.n - len + 1));
+                for (let a = st, b = st + len - 1; a < b; a++, b--) { const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t; }
+                this.i = 0;
+            }
+        }
+        if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+        return null;
+    }
+}
+
+/** True Pancake Bogo Sort: flips a random prefix (length 2..n) until sorted. */
+class TruePancakeBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; }
+    next(result) {
+        if (result !== undefined) {
+            if (result === 1) this.i++;
+            else {
+                const len = 2 + Math.floor(Math.random() * (this.n - 1));
+                for (let a = 0, b = len - 1; a < b; a++, b--) { const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t; }
+                this.i = 0;
+            }
+        }
+        if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+        return null;
+    }
+}
+
+/** Bowo Sort: when unsorted, rotates a random prefix left by one. */
+class BowoSortProvider extends Provider {
+    constructor(n) { super(n); this.i = 0; }
+    next(result) {
+        if (result !== undefined) {
+            if (result === 1) this.i++;
+            else {
+                const len = 2 + Math.floor(Math.random() * (this.n - 1));
+                const head = this.items[0];
+                for (let p = 0; p < len - 1; p++) this.items[p] = this.items[p + 1];
+                this.items[len - 1] = head;
+                this.i = 0;
+            }
+        }
+        if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
+        return null;
+    }
+}
+
+/** Pancake Bogosort (Flanlaina's deterministic pancake bogo): for k = n..2
+ * verify items[i] against items[k-1] for i = 0..k-2; on the first failure flip
+ * a random prefix of length 2..k and re-verify from the start. */
+class PancakeBogoSortProvider extends Provider {
+    constructor(n) { super(n); this.k = n; this.i = 0; }
+    next(result) {
+        while (this.k >= 2) {
+            if (result !== undefined) {
+                if (result === 0) {
+                    const len = 2 + Math.floor(Math.random() * (this.k - 1));
+                    for (let a = 0, b = len - 1; a < b; a++, b--) { const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t; }
+                    this.i = 0;
+                } else this.i++;
+                result = undefined;
+            }
+            if (this.i < this.k - 1) return [this.items[this.i], this.items[this.k - 1]];
+            this.k--; this.i = 0;
+        }
+        return null;
+    }
+}
+
 const algos = [
     { name: 'Recursive Bubble', class: RecursiveBubbleSortProvider },
     { name: 'Recursive Insertion', class: RecursiveInsertionSortProvider },
@@ -8230,7 +8720,23 @@ const algos = [
     { name: 'Creasesort', class: CreasesortProvider },
     { name: 'Foldsort', class: FoldsortProvider },
     { name: 'Soheil Sort', class: SoheilSortProvider },
-    { name: 'Corsort', class: CorsortProvider }
+    { name: 'Corsort', class: CorsortProvider },
+    // Web expansion 9 (2026-09-13): 15 new comparison sorts
+    { name: 'Pythonsort', class: PythonsortProvider },
+    { name: 'Java TimSort', class: JavaTimSortProvider },
+    { name: '9-Pivot Quicksort', class: NinePivotQuicksortProvider },
+    { name: 'Quicksort (Recursive Ninther)', class: QuicksortRecursiveNintherProvider },
+    { name: '32-ary Heap Sort', class: ThirtyTwoAryHeapSortProvider },
+    { name: '64-way Merge Sort', class: MergeSort64WayProvider },
+    { name: '3/4 Enhanced-Gap Shellsort', class: ThreeQuarterGapShellsortProvider },
+    { name: 'Weight-Balanced Tree Sort', class: WeightBalancedTreeSortProvider },
+    { name: 'Baka Sort', class: BakaSortProvider },
+    { name: 'Nibi Sort', class: NibiSortProvider },
+    { name: 'Slice Bogo Sort', class: SliceBogoSortProvider },
+    { name: 'Boto Sort', class: BotoSortProvider },
+    { name: 'True Pancake Bogo Sort', class: TruePancakeBogoSortProvider },
+    { name: 'Bowo Sort', class: BowoSortProvider },
+    { name: 'Pancake Bogosort', class: PancakeBogoSortProvider }
 
 ];
 

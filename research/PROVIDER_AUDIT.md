@@ -493,3 +493,100 @@ all 489 runs without timeouts or bad pairs. Modified Bitonic and Stable
 Cyclesort were `SORTED_ASC`; Multizip and Link Sort were `SORTED_DESC` under
 the audit's comparator orientation (the same valid orientation reported for
 their base providers).
+# Batch-9 addendum (2026-09-13): 15 new providers
+
+**Scope delta:** a ninth wild-web sweep (CPython timsort internals; the JDK
+TimSort source; the multi-pivot quicksort literature; a recursive-ninther
+quicksort variant; d-ary/k-way parameter extensions; the IJARCS 3/4
+enhanced-gap sequence; Baer's weight-balanced trees; the neo-sorting-wiki
+bogo family) added **15** comparison-sort providers, raising the registry
+from 241 to **256 unique providers**. Every name was cross-checked against
+the 241-entry registry before implementation; Dropsort was examined and
+rejected as a duplicate of the registered Stalin Sort (see
+research/CANDIDATE_ALGORITHMS.md, Batch-9 rejections).
+
+## Batch-9 fidelity classification
+
+| Classification | Providers | Audit note |
+|---|---|---|
+| ✅ Faithful (reference port) | Pythonsort, Java TimSort | Pythonsort ports CPython's listsort v18: same run detection (minRun threshold 64) and merge-collapse as the registered Timsort, plus the galloping merge — MIN_GALLOP=7, exponential-then-binary gallopRight/gallopLeft, adaptive minGallop (−1 per gallop round, +2 per plain round, floor 0, carried across merges) and the ordered-hint early exit. CPython's tmp-buffer C optimization is memory management invisible to the comparison stream and is omitted. Java TimSort ports java.util.TimSort: JDK minRun (threshold 32 → 25 at n=100), the same collapse policy, the mergeAt gallop trims (gallopRight of run2's head, gallopLeft of run1's tail), and mergeLo/mergeHi (head-vs-head / tail-vs-tail backwards build); gallop probes use the exponential-then-binary form with the hint window elided. Both are distinct comparison traces from the registered "Timsort" (plain merge) and from each other (minRun 50 vs 25, galloping merge vs gallop trims + directional merges). |
+| ✅ Faithful | 9-Pivot Quicksort, Quicksort (Recursive Ninther) | 9-pivot: nine evenly-spaced samples, insertion-sorted, binary-search bucket classification, each pivot anchoring its bucket as the maximum, cutoff 24 (dmcmanam/gosteq/WAE-2014 scheme). Recursive ninther: pivot = median of three recursively computed ninthers per maxgcoding; Lomuto partition; cutoff 16. Both verified against the registered "Quicksort (Ninther)" (single-level med3-of-9) and "Quicksort" family as distinct traces. |
+| ✅ Faithful (parameter extension of audited bases) | 32-ary Heap Sort, 64-way Merge Sort, 3/4 Enhanced-Gap Shellsort | DAryHeapSortProvider at arity 32; KWayMergeSortProvider at k=64; gapped-insertion base with g0=⌊3n/4⌋, gk=⌊3g(k−1)/4⌋ (IJARCS 2020 sequence: 93, 69, 51, … for n=125). |
+| ✅ Faithful (reference port) | Weight-Balanced Tree Sort | Baer 1973 with Hirai & Yamamoto's parameters: weight = size+1 (empty 1, node wL+wR); balance test Δ·w(light) ≥ w(heavy), Δ=1+√2; single rotation when the heavy child's heavy side is ≥ Γ(=2)× its light side, else double. Repair direction verified on 2-, 3- and 4-node cases (a right-right chain single-rotates; a right-left / left-right shape double-rotates; balanced 2-node and star cases are left untouched). |
+| ✅ Faithful (wiki spec) | Baka, Nibi, Slice Bogo, Boto, True Pancake Bogo, Bowo, Pancake Bogosort | Each performs exactly the wiki's one documented mutation per failed verification pass, verifying the full DESC order like the registered bogo family. Ergodicity (termination with probability 1) was established by group-closure verification: each move set generates S_n (checked by BFS closure at n=5; Baka {swap(0,k)}, Nibi {swap(n−1,k)}, Boto (sub-slice reversals include adjacent transpositions), True Pancake (prefix reversals), Bowo (prefix cycles), Slice (sub-slice permutations) all generate S_n). Pancake Bogosort is deterministic per k-phase (verify items[i] vs items[k−1], flip a random prefix of length 2..k on failure), so it is far cheaper: audit avg 12.7 steps. |
+
+## Batch-9 differential results
+
+All 15 providers pass the hardened oracle audit: 489/489 runs each for the
+deterministic rows, `SORTED_ASC` (Pythonsort, Java TimSort, 9-Pivot Quicksort,
+Quicksort (Recursive Ninther), 32-ary Heap Sort, 64-way Merge Sort, 3/4
+Enhanced-Gap Shellsort, Weight-Balanced Tree Sort) or `SORTED_DESC` (the seven
+bogo-family rows, capped at N ≤ 8 / N ≤ 6 like the registered bogo rows),
+zero bad pairs, zero invalid outputs, zero timeouts (avg steps: Pythonsort
+64.2, Java TimSort 66.6, 9-Pivot 79.5, Recursive Ninther 96.7, 32-ary Heap
+300.4, 64-way Merge 64.2, 3/4 Shellsort 131.0, WBT 93.8, Baka 2353.8, Nibi
+1313.4, Slice Bogo 1438.9, Boto 1433.1, True Pancake Bogo 2001.1, Bowo 1758.9,
+Pancake Bogosort 12.7 — all inside the 5M cap). No existing provider's
+verdict changed.
+
+**Bug log (all found by differential smoke tests, fixed, re-verified):**
+(1) Java TimSort's mergeHi initially compared the two run heads while building
+the output backwards — it must take the LARGER of the two tails each step
+(mirroring the JDK's `if (cmp(tmp[tpos], a[dest]) < 0) take a[dest]`); the
+head-comparison variant produced unsorted output on small seam cases.
+(2) Both timsort ports initially collapsed the run stack only after all runs
+were pushed; the CPython/JDK invariant is maintained after EVERY push
+(mergeCollapse after each pushRun, mergeForceCollapse at the end) — the
+end-only variant dead-ended on an 8×16-run stack (n=128, minRun 16) and
+silently dropped 32 elements.
+(3) The shared gallop helper's exponential phase advanced while
+`key < A[hi]` — the reverse of the required `A[hi] < key` — corrupting the
+binary-search window and the trim lengths.
+(4) Weight-balanced repair had its single/double-rotation test inverted
+(single rotation was taken when the heavy child's heavy side was the SMALLER
+one, and the double rotation used the wrong inner rotation), crashing on a
+left-right 4-node shape.
+(5) 9-Pivot initially emitted a phantom 10th pivot anchor (the bucket loop ran
+i=0..9 while only 9 pivots exist), producing n+1 output elements.
+(6) Quicksort (Recursive Ninther) initially ran Lomuto around a pivot value
+left in the middle of the range; Lomuto requires the pivot at `a[hi]` before
+the scan (swap it there first, as the registered ninther quicksort does).
+
+## Batch-9 benchmark cross-check
+
+Fresh complete N=100/250-trial run (all 256 rows) and fresh N=200/10-trial
+runtime run:
+
+| New provider | Battles | τ | Duplicates | Runtime N=200 ms |
+|---|---:|---:|:---:|---:|
+| Pythonsort | 537.83 | 1.0000 | YES | 0.66 |
+| Java TimSort | 554.25 | 1.0000 | YES | 0.65 |
+| 9-Pivot Quicksort | 682.05 | 1.0000 | NO | 0.59 |
+| Quicksort (Recursive Ninther) | 645.39 | 1.0000 | YES | 1.33 |
+| 32-ary Heap Sort | 2184.15 | 1.0000 | YES | 1.45 |
+| 64-way Merge Sort | 558.02 | 1.0000 | NO | 0.23 |
+| 3/4 Enhanced-Gap Shellsort | 770.28 | 1.0000 | YES | 0.49 |
+| Weight-Balanced Tree Sort | 540.78 | 1.0000 | YES | 1.22 |
+| Baka Sort | 668.89 | 1.0000 | YES | skip (bogo, N>20) |
+| Nibi Sort | 786.13 | 0.9995 | YES | skip (bogo, N>20) |
+| Slice Bogo Sort | 802.06 | 1.0000 | YES | skip (bogo, N>20) |
+| Boto Sort | 806.85 | 1.0000 | YES | skip (bogo, N>20) |
+| True Pancake Bogo Sort | 817.75 | 1.0000 | YES | skip (bogo, N>20) |
+| Bowo Sort | 801.04 | 1.0000 | YES | skip (bogo, N>20) |
+| Pancake Bogosort | 657.42 | 1.0000 | YES | skip (bogo, N>20) |
+
+The batch-9 no-duplicate leaders are **64-way Merge Sort (558.02)** and
+**9-Pivot Quicksort (682.05)** — both dominated by the existing no-duplicate
+frontier (Ford-Johnson 526.95, 8-way Merge 547.04, 16-way Merge 548.75), so
+the production no-duplicate Pareto frontier is unchanged and the
+Ford-Johnson knee stands. 64-way Merge is also the batch's wall-clock leader
+(0.23 ms at N=200). The timsort family ordering (Timsort 532.54 < Pythonsort
+537.83 < Java TimSort 554.25, all with duplicates) confirms that galloping
+and the JDK's gallop trims/directional merges cost comparisons in the
+pure-comparison model, and that Java's shorter minRun (25 vs 50 at n=100)
+adds further merges. The seven bogo rows land at 657.42–817.75 battles with
+τ≈1.0 like the registered bogo family: their random pair requests saturate
+the transitive closure well before the per-trial iteration cap, so the
+benchmark credits them with complete knowledge even though their `items`
+arrays are left unsorted (the audit, which checks the actual array, is the
+correctness authority for these rows).

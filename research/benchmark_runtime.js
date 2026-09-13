@@ -57,7 +57,7 @@ console.log(`Algorithm\tAvg Ms\tAvg Steps\tTimeouts`);
 const results=[];
 for(const {name, class:Cls} of algos){
     // Skip exponential bogo sorts for large n
-    const BOGOLIKE = ['Bogosort','BogoBogoSort','Bozo Sort','Silly Sort','Permutation Sort','Bovo Sort','Cocktail Bogo','Exchange Bogo','Bubble Bogo','Odd-Even Bogo','Less Bogo'];
+    const BOGOLIKE = ['Bogosort','BogoBogoSort','Bozo Sort','Silly Sort','Permutation Sort','Bovo Sort','Cocktail Bogo','Exchange Bogo','Bubble Bogo','Odd-Even Bogo','Less Bogo','Baka Sort','Nibi Sort','Slice Bogo Sort','Boto Sort','True Pancake Bogo Sort','Bowo Sort','Pancake Bogosort'];
     if(n>20 && BOGOLIKE.includes(name)) {
         console.log(`${name}\tSKIP\t-\t-`);
         results.push({name, avgMs: Infinity, avgSteps:0});
