@@ -1535,7 +1535,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					resumeConfirm: 'Continue',
 					resumeNew: 'New Session',
 					estMatches: ' (~{count} comparisons)',
-					labelGrade: 'Show Letter Grades',
+					exactMatches: ' ({count} comparisons)',
+				labelGrade: 'Show Letter Grades',
 					rankSpread: 'Rank Spread',
 					matches: 'Matches',
 					ci: 'CI (±)',
@@ -1587,6 +1588,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					resumeConfirm: 'Lanjutkan',
 					resumeNew: 'Sesi Baru',
 					estMatches: ' (~{count} perbandingan)',
+					exactMatches: ' ({count} perbandingan)',
 					labelGrade: 'Tampilkan Nilai Huruf',
 					rankSpread: 'Rentang Peringkat',
 					matches: 'Pertandingan',
@@ -1877,7 +1879,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					return n <= 1 ? 0 : Math.round(n * Math.log2(n) - 1.408 * n + 3);
 				}
 				getProgress(step) {
-					return step + ' / ' + QuickPairProvider.estimate(this.count);
+					return `${step}/~${QuickPairProvider.estimate(this.count)}`;
 				}
 				next(_, result) {
 					if (this.isTransitiveDiscovery) {
@@ -2156,8 +2158,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 				updateCount(items) {
 					const list = items || this.getItems();
 					const count = list.length;
-					const type = elements.quickRank.checked ? QuickPairProvider : FullPairProvider;
-					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string('estMatches').replace('{count}', type.estimate(count));
+					const quick = elements.quickRank.checked;
+					const type = quick ? QuickPairProvider : FullPairProvider;
+					elements.itemCount.textContent = this.string('itemsCount').replace('{count}', count) + this.string(quick ? 'estMatches' : 'exactMatches').replace('{count}', type.estimate(count));
 				}
 				setTies(enabled) {
 					this.allowTies = enabled;
