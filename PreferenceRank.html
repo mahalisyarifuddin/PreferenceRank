@@ -2202,6 +2202,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					}
 					elements.items.value = unique.join('\n');
 					const n = unique.length;
+					const rowSize = (n + 31) >> 5;
 					Object.assign(this, {
 						items: unique,
 						scores: Array(n).fill(1e3),
@@ -2214,9 +2215,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						busy: false,
 						swaps: {},
 						dirty: true,
-						reach: new Uint8Array(n * n)
+						reach: new Uint32Array(n * rowSize)
 					});
-					for (let i = 0; i < n; i++) this.reach[i * n + i] = 1;
+					for (let i = 0; i < n; i++) this.reach[i * rowSize + (i >> 5)] |= (1 << (i & 31));
 					elements.undo.disabled = true;
 					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
 					elements.tieWrap.classList.toggle('hidden', !this.allowTies);
@@ -2235,9 +2236,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						return;
 					const wins = new Float64Array(n);
 					const adjCounts = new Uint32Array(n * n);
+					const rowSize = (n + 31) >> 5;
 					for (let i = 0; i < n; i++) {
+						const iIdx = i * rowSize;
 						for (let j = 0; j < n; j++) {
-							if (i === j || !this.reach[i * n + j]) continue;
+							if (i === j || !((this.reach[iIdx + (j >> 5)] >> (j & 31)) & 1)) continue;
 							wins[i] += 1;
 							adjCounts[i * n + j] += 1;
 							adjCounts[j * n + i] += 1;
@@ -2350,8 +2353,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 				}
 				_rebuildReach() {
 					const n = this.items.length;
-					this.reach = new Uint8Array(n * n);
-					for (let i = 0; i < n; i++) this.reach[i * n + i] = 1;
+					const rowSize = (n + 31) >> 5;
+					this.reach = new Uint32Array(n * rowSize);
+					for (let i = 0; i < n; i++) this.reach[i * rowSize + (i >> 5)] |= (1 << (i & 31));
 					for (const match of this.matches) {
 						if (match.result === 1 || match.result === 0) {
 							const [w, l] = match.result === 1 ? [match.a, match.b] : [match.b, match.a];
@@ -2360,11 +2364,19 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					}
 				}
 				_applyTransitiveClosure(w, l, n) {
-					if (!this.reach[w * n + l]) {
-						this.reach[w * n + l] = 1;
+					const rowSize = (n + 31) >> 5;
+					const wWord = w >> 5;
+					const wMask = 1 << (w & 31);
+					const lWord = l >> 5;
+					const lMask = 1 << (l & 31);
+					if (!((this.reach[w * rowSize + lWord] >> (l & 31)) & 1)) {
+						this.reach[w * rowSize + lWord] |= lMask;
+						const wIdx = w * rowSize;
+						const lIdx = l * rowSize;
 						for (let i = 0; i < n; i++) {
-							if (this.reach[i * n + w]) {
-								for (let j = 0; j < n; j++) if (this.reach[l * n + j]) this.reach[i * n + j] = 1;
+							if (this.reach[i * rowSize + wWord] & wMask) {
+								const iIdx = i * rowSize;
+								for (let j = 0; j < rowSize; j++) this.reach[iIdx + j] |= this.reach[lIdx + j];
 							}
 						}
 					}
@@ -2404,9 +2416,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					this.clear();
 					const n = this.items.length;
 					let nextPair = this.provider.next(this, result);
-					while (this.provider instanceof QuickPairProvider && nextPair && (this.reach[nextPair[0] * n + nextPair[1]] || this.reach[nextPair[1] * n + nextPair[0]])) {
+					const rowSize = (n + 31) >> 5;
+					while (this.provider instanceof QuickPairProvider && nextPair && (((this.reach[nextPair[0] * rowSize + (nextPair[1] >> 5)] >> (nextPair[1] & 31)) & 1) || ((this.reach[nextPair[1] * rowSize + (nextPair[0] >> 5)] >> (nextPair[0] & 31)) & 1))) {
 						this.provider.isTransitiveDiscovery = true;
-						this.provider._lastTransitiveResult = this.reach[nextPair[0] * n + nextPair[1]] ? 1 : 0;
+						this.provider._lastTransitiveResult = ((this.reach[nextPair[0] * rowSize + (nextPair[1] >> 5)] >> (nextPair[1] & 31)) & 1) ? 1 : 0;
 						nextPair = this.provider.next(this, this.provider._lastTransitiveResult);
 					}
 					if (!nextPair)
