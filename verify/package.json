@@ -1,0 +1,12 @@
+{
+	"name": "preferencerank-verify",
+	"private": true,
+	"type": "module",
+	"description": "No-browser verification harness for PreferenceRank.html (jsdom). Not part of the app itself; the app stays a single dependency-free HTML file.",
+	"scripts": {
+		"verify": "node repro.mjs"
+	},
+	"devDependencies": {
+		"jsdom": "^26.1.0"
+	}
+}
