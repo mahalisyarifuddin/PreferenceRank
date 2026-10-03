@@ -2182,13 +2182,34 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					this.updateHelp();
 				}
 				check(items) {
-					const valid = new Set(items || this.getItems()).size >= 2;
+					const currentItems = items || this.getItems();
+					const valid = new Set(currentItems).size >= 2;
 					elements.start.disabled = !valid;
 					if (valid) {
 						elements.error.classList.add('hidden');
 						elements.items.removeAttribute('aria-invalid');
 					}
-					elements.resume.classList.toggle('hidden', !this.provider);
+
+					// Medic: Only allow resuming if the current input and settings
+					// exactly match the active session, preventing UI disconnect.
+					let canResume = false;
+					if (this.provider && this.items) {
+						if (currentItems.length === this.items.length) {
+							canResume = true;
+							for (let i = 0; i < currentItems.length; i++) {
+								if (currentItems[i] !== this.items[i]) {
+									canResume = false;
+									break;
+								}
+							}
+							if (canResume) {
+								const isQuick = elements.quickRank.checked;
+								const providerIsQuick = this.provider instanceof QuickPairProvider;
+								if (isQuick !== providerIsQuick) canResume = false;
+							}
+						}
+					}
+					elements.resume.classList.toggle('hidden', !canResume);
 				}
 				start() {
 					const raw = this.getItems();
