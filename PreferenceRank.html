@@ -2192,23 +2192,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 					// Medic: Only allow resuming if the current input and settings
 					// exactly match the active session, preventing UI disconnect.
-					let canResume = false;
-					if (this.provider && this.items) {
-						if (currentItems.length === this.items.length) {
-							canResume = true;
-							for (let i = 0; i < currentItems.length; i++) {
-								if (currentItems[i] !== this.items[i]) {
-									canResume = false;
-									break;
-								}
-							}
-							if (canResume) {
-								const isQuick = elements.quickRank.checked;
-								const providerIsQuick = this.provider instanceof QuickPairProvider;
-								if (isQuick !== providerIsQuick) canResume = false;
-							}
-						}
-					}
+					const canResume = Boolean(
+						this.provider &&
+						this.items &&
+						currentItems.length === this.items.length &&
+						currentItems.every((v, i) => v === this.items[i]) &&
+						elements.quickRank.checked === (this.provider instanceof QuickPairProvider)
+					);
 					elements.resume.classList.toggle('hidden', !canResume);
 				}
 				start() {
