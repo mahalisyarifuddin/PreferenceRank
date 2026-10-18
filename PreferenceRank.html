@@ -2080,7 +2080,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 								provider: this.provider,
 								providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full'
 							};
-						})() : null
+						})() : (this.pending || null)
 					}));
 				}
 				load() {
