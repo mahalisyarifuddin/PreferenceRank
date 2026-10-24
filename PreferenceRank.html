@@ -2185,7 +2185,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					const currentItems = items || this.getItems();
 					const valid = new Set(currentItems).size >= 2;
 					elements.start.disabled = !valid;
-					if (valid) {
+					if (valid || currentItems.length === new Set(currentItems).size) {
 						elements.error.classList.add('hidden');
 						elements.items.removeAttribute('aria-invalid');
 					}
