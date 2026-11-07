@@ -1951,8 +1951,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 				}
 				pop(res) {
 					this.stack.pop();
-					if (this.stack.length > 0) { const p = this.stack[this.stack.length - 1]; p.childResult = res; p.state++; }
-					else { this.items = res; }
+					if (this.stack.length > 0) {
+						const p = this.stack[this.stack.length - 1];
+						p.childResult = res;
+						p.state++;
+						return;
+					}
+					this.items = res;
 				}
 				snap() { return JSON.stringify({ stack: this.stack, items: this.items }); }
 				restore(data) { if (data) Object.assign(this, JSON.parse(data)); }
@@ -2086,17 +2091,23 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 				load() {
 					try {
 						const data = JSON.parse(localStorage.getItem('preferenceRankData'));
-						if (data) {
-							data.settings && (this.theme(data.settings.theme),
-							this.lang(data.settings.language),
-							this.showGrade = !!data.settings.showGrade,
-							elements.showGrade.checked = this.showGrade,
-							elements.allowTies.checked = !!data.settings.allowTies,
-							this.setTies(elements.allowTies.checked),
-							elements.quickRank.checked = !!data.settings.quickRank);
-							data.inputValue && (elements.items.value = data.inputValue,
-							this.updateInputState());
-							if (data.battle) return data.battle.pair ? this.prompt(data.battle) : this.restoreBattle(data.battle);
+						if (!data) return this.display('inputSection');
+						if (data.settings) {
+							this.theme(data.settings.theme);
+							this.lang(data.settings.language);
+							this.showGrade = Boolean(data.settings.showGrade);
+							elements.showGrade.checked = this.showGrade;
+							elements.allowTies.checked = Boolean(data.settings.allowTies);
+							this.setTies(elements.allowTies.checked);
+							elements.quickRank.checked = Boolean(data.settings.quickRank);
+						}
+						if (data.inputValue) {
+							elements.items.value = data.inputValue;
+							this.updateInputState();
+						}
+						if (data.battle) {
+							if (data.battle.pair) return this.prompt(data.battle);
+							return this.restoreBattle(data.battle);
 						}
 					} catch {
 						localStorage.removeItem('preferenceRankData');
@@ -2128,7 +2139,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					Object.assign(this, battle);
 					this._rebuildReach();
 					this.dirty = true;
-					this.showGrade = !!battle.showGrade;
+					this.showGrade = Boolean(battle.showGrade);
 					elements.showGrade.checked = this.showGrade;
 					this.scores = Object.values(battle.scores);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
@@ -2136,10 +2147,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					elements.allowTies.checked = this.allowTies;
 					elements.quickRank.checked = battle.providerType === 'quick';
 					this.setTies(this.allowTies);
-					this.pair ? (this.display('battleSection'),
-					this.render(),
-					this.updateProgress(),
-					elements.undo.disabled = !this.history.length) : this.matches.length ? this.results() : this.display('inputSection');
+					if (this.pair) {
+						this.display('battleSection');
+						this.render();
+						this.updateProgress();
+						elements.undo.disabled = !this.history.length;
+						return;
+					}
+					if (this.matches.length) return this.results();
+					this.display('inputSection');
 				}
 				saveInput() {
 					clearTimeout(this.saveTimeout);
@@ -2238,8 +2254,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					this.save();
 				}
 				resume() {
-					this.pair ? (this.display('battleSection'),
-					this.render()) : this.results();
+					if (this.pair) {
+						this.display('battleSection');
+						this.render();
+					} else {
+						this.results();
+					}
 				}
 				recalculateScores() {
 					const n = this.items.length;
@@ -2410,9 +2430,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					this.updateProgress();
 					this.clear();
 					(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
-					setTimeout(()=>(this.busy && (this.busy = false,
-					this.next(result),
-					this.save())), 150);
+					setTimeout(() => {
+						if (!this.busy) return;
+						this.busy = false;
+						this.next(result);
+						this.save();
+					}, 150);
 				}
 				next(result) {
 					this.clear();
@@ -2424,9 +2447,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						this.provider._lastTransitiveResult = ((this.reach[nextPair[0] * rowSize + (nextPair[1] >> 5)] >> (nextPair[1] & 31)) & 1) ? 1 : 0;
 						nextPair = this.provider.next(this, this.provider._lastTransitiveResult);
 					}
-					if (!nextPair)
-						return this.pair = null,
-						this.results();
+					if (!nextPair) {
+						this.pair = null;
+						return this.results();
+					}
 					this.pair = nextPair;
 					const swapKey = nextPair[0] < nextPair[1] ? `${nextPair[0]}-${nextPair[1]}` : `${nextPair[1]}-${nextPair[0]}`;
 					this.swapped = this.swaps[swapKey] ??= Math.random() < .5;
@@ -2646,13 +2670,16 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						elements.cancel.classList.remove('confirming');
 						elements.cancel.textContent = this.string('cancel');
 						this.cancelTimeout = null;
+					};
+					if (this.cancelTimeout) {
+						clearTimeout(this.cancelTimeout);
+						reset();
+						this.display('inputSection');
+					} else {
+						elements.cancel.textContent = this.string('confirmCancel');
+						elements.cancel.classList.add('confirming');
+						this.cancelTimeout = setTimeout(reset, 3000);
 					}
-					;
-					this.cancelTimeout ? (clearTimeout(this.cancelTimeout),
-					reset(),
-					this.display('inputSection')) : (elements.cancel.textContent = this.string('confirmCancel'),
-					elements.cancel.classList.add('confirming'),
-					this.cancelTimeout = setTimeout(reset, 3000));
 				}
 				undo() {
 					if (!this.busy && this.history.length) {
