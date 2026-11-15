@@ -1,0 +1,106 @@
+Algorithm	Distribution	N	Avg ms	Best ms	Reps
+LSD Radix (base 256)	random32	10000	0.168	0.154	25
+MSD Radix (base 256, cutoff 16)	random32	10000	0.384	0.364	25
+Quicksort (3-way, mid pivot)	random32	10000	1.171	1.039	25
+Merge Sort (top-down)	random32	10000	1.719	1.498	25
+Native Array.prototype.sort	random32	10000	2.847	2.712	25
+LSD Radix (base 256)	small-uniform-1e6	10000	0.168	0.154	25
+MSD Radix (base 256, cutoff 16)	small-uniform-1e6	10000	0.300	0.269	25
+Quicksort (3-way, mid pivot)	small-uniform-1e6	10000	1.033	0.983	25
+Merge Sort (top-down)	small-uniform-1e6	10000	1.474	1.431	25
+Native Array.prototype.sort	small-uniform-1e6	10000	3.232	2.689	25
+LSD Radix (base 256)	sorted	10000	0.314	0.294	25
+MSD Radix (base 256, cutoff 16)	sorted	10000	0.496	0.470	25
+Quicksort (3-way, mid pivot)	sorted	10000	0.579	0.433	25
+Merge Sort (top-down)	sorted	10000	0.665	0.626	25
+Native Array.prototype.sort	sorted	10000	0.408	0.348	25
+LSD Radix (base 256)	reversed	10000	0.176	0.161	25
+MSD Radix (base 256, cutoff 16)	reversed	10000	0.323	0.296	25
+Quicksort (3-way, mid pivot)	reversed	10000	0.471	0.429	25
+Merge Sort (top-down)	reversed	10000	0.819	0.691	25
+Native Array.prototype.sort	reversed	10000	0.438	0.360	25
+LSD Radix (base 256)	nearly-sorted	10000	0.174	0.160	25
+MSD Radix (base 256, cutoff 16)	nearly-sorted	10000	0.303	0.277	25
+Quicksort (3-way, mid pivot)	nearly-sorted	10000	0.495	0.466	25
+Merge Sort (top-down)	nearly-sorted	10000	0.740	0.710	25
+Native Array.prototype.sort	nearly-sorted	10000	0.726	0.654	25
+LSD Radix (base 256)	few-unique-8	10000	0.206	0.177	25
+MSD Radix (base 256, cutoff 16)	few-unique-8	10000	0.436	0.282	25
+Quicksort (3-way, mid pivot)	few-unique-8	10000	0.158	0.145	25
+Merge Sort (top-down)	few-unique-8	10000	1.086	0.999	25
+Native Array.prototype.sort	few-unique-8	10000	2.138	1.739	25
+LSD Radix (base 256)	constant	10000	0.201	0.187	25
+MSD Radix (base 256, cutoff 16)	constant	10000	0.318	0.294	25
+Quicksort (3-way, mid pivot)	constant	10000	0.023	0.022	25
+Merge Sort (top-down)	constant	10000	0.684	0.631	25
+Native Array.prototype.sort	constant	10000	0.402	0.347	25
+LSD Radix (base 256)	random32	100000	1.545	1.518	7
+MSD Radix (base 256, cutoff 16)	random32	100000	2.818	2.715	7
+Quicksort (3-way, mid pivot)	random32	100000	12.893	12.785	7
+Merge Sort (top-down)	random32	100000	19.040	18.537	7
+Native Array.prototype.sort	random32	100000	37.871	35.740	7
+LSD Radix (base 256)	small-uniform-1e6	100000	1.853	1.584	7
+MSD Radix (base 256, cutoff 16)	small-uniform-1e6	100000	4.381	3.801	7
+Quicksort (3-way, mid pivot)	small-uniform-1e6	100000	13.295	12.853	7
+Merge Sort (top-down)	small-uniform-1e6	100000	18.953	18.646	7
+Native Array.prototype.sort	small-uniform-1e6	100000	36.156	35.600	7
+LSD Radix (base 256)	sorted	100000	1.678	1.618	7
+MSD Radix (base 256, cutoff 16)	sorted	100000	3.231	3.197	7
+Quicksort (3-way, mid pivot)	sorted	100000	5.748	5.599	7
+Merge Sort (top-down)	sorted	100000	8.160	7.994	7
+Native Array.prototype.sort	sorted	100000	5.381	4.954	7
+LSD Radix (base 256)	reversed	100000	1.731	1.607	7
+MSD Radix (base 256, cutoff 16)	reversed	100000	3.257	3.179	7
+Quicksort (3-way, mid pivot)	reversed	100000	5.828	5.591	7
+Merge Sort (top-down)	reversed	100000	9.030	8.947	7
+Native Array.prototype.sort	reversed	100000	5.458	4.996	7
+LSD Radix (base 256)	nearly-sorted	100000	2.061	1.930	7
+MSD Radix (base 256, cutoff 16)	nearly-sorted	100000	3.090	2.996	7
+Quicksort (3-way, mid pivot)	nearly-sorted	100000	6.225	6.144	7
+Merge Sort (top-down)	nearly-sorted	100000	9.284	9.012	7
+Native Array.prototype.sort	nearly-sorted	100000	9.804	9.236	7
+LSD Radix (base 256)	few-unique-8	100000	1.983	1.816	7
+MSD Radix (base 256, cutoff 16)	few-unique-8	100000	2.937	2.863	7
+Quicksort (3-way, mid pivot)	few-unique-8	100000	2.510	1.870	7
+Merge Sort (top-down)	few-unique-8	100000	13.516	12.245	7
+Native Array.prototype.sort	few-unique-8	100000	22.392	20.114	7
+LSD Radix (base 256)	constant	100000	2.080	1.936	7
+MSD Radix (base 256, cutoff 16)	constant	100000	3.191	3.169	7
+Quicksort (3-way, mid pivot)	constant	100000	0.349	0.321	7
+Merge Sort (top-down)	constant	100000	8.052	7.976	7
+Native Array.prototype.sort	constant	100000	5.792	4.729	7
+LSD Radix (base 256)	random32	1000000	18.100	17.591	3
+MSD Radix (base 256, cutoff 16)	random32	1000000	47.945	46.636	3
+Quicksort (3-way, mid pivot)	random32	1000000	152.992	150.020	3
+Merge Sort (top-down)	random32	1000000	242.029	228.859	3
+Native Array.prototype.sort	random32	1000000	447.999	439.329	3
+LSD Radix (base 256)	small-uniform-1e6	1000000	19.070	18.041	3
+MSD Radix (base 256, cutoff 16)	small-uniform-1e6	1000000	27.007	25.441	3
+Quicksort (3-way, mid pivot)	small-uniform-1e6	1000000	147.989	147.001	3
+Merge Sort (top-down)	small-uniform-1e6	1000000	225.787	223.932	3
+Native Array.prototype.sort	small-uniform-1e6	1000000	440.662	436.091	3
+LSD Radix (base 256)	sorted	1000000	21.574	20.681	3
+MSD Radix (base 256, cutoff 16)	sorted	1000000	32.137	30.378	3
+Quicksort (3-way, mid pivot)	sorted	1000000	71.106	70.302	3
+Merge Sort (top-down)	sorted	1000000	101.960	95.431	3
+Native Array.prototype.sort	sorted	1000000	59.245	56.969	3
+LSD Radix (base 256)	reversed	1000000	20.524	20.354	3
+MSD Radix (base 256, cutoff 16)	reversed	1000000	38.915	37.807	3
+Quicksort (3-way, mid pivot)	reversed	1000000	66.035	64.621	3
+Merge Sort (top-down)	reversed	1000000	108.175	105.150	3
+Native Array.prototype.sort	reversed	1000000	59.945	58.957	3
+LSD Radix (base 256)	nearly-sorted	1000000	22.390	22.301	3
+MSD Radix (base 256, cutoff 16)	nearly-sorted	1000000	30.422	29.042	3
+Quicksort (3-way, mid pivot)	nearly-sorted	1000000	75.328	71.776	3
+Merge Sort (top-down)	nearly-sorted	1000000	113.551	109.989	3
+Native Array.prototype.sort	nearly-sorted	1000000	124.101	117.740	3
+LSD Radix (base 256)	few-unique-8	1000000	21.219	20.753	3
+MSD Radix (base 256, cutoff 16)	few-unique-8	1000000	29.142	27.907	3
+Quicksort (3-way, mid pivot)	few-unique-8	1000000	18.195	17.128	3
+Merge Sort (top-down)	few-unique-8	1000000	145.183	141.777	3
+Native Array.prototype.sort	few-unique-8	1000000	245.105	221.705	3
+LSD Radix (base 256)	constant	1000000	23.457	22.675	3
+MSD Radix (base 256, cutoff 16)	constant	1000000	32.604	31.375	3
+Quicksort (3-way, mid pivot)	constant	1000000	3.760	2.985	3
+Merge Sort (top-down)	constant	1000000	96.736	94.631	3
+Native Array.prototype.sort	constant	1000000	60.068	59.342	3
