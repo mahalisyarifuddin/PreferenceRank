@@ -1,3 +1,15 @@
+/**
+ * PreferenceRank sorting-algorithm benchmark suite.
+ *
+ * PERFORMANCE (2026-11-15): the harness now uses a seeded xorshift32 PRNG
+ * (replaces Math.random, which cannot be seeded) making every benchmark run
+ * bitwise reproducible, and a flat Int8Array duplicate-pair cache replaces the
+ * Map/object matchesMap (numeric keys, zero allocation on the hot path).
+ * Metric semantics are unchanged: same comparison counting, same transitive
+ * reachability, same duplicate detection, same kendallTau, same 1e6 iteration
+ * cap. Default seed 0x2f6e2b1; override with the SEED environment variable
+ * (integer, e.g. SEED=12345 node research/sort_analysis.js 100 250). Workers get decorrelated deterministic streams (BASE_SEED + idx*0x9e3779b9) and rows are printed in registration order, so output is bitwise reproducible.
+ */
 const Math_log10 = Math.log(10);
 const SCALE = 400 / Math_log10;
 
@@ -26,6 +38,20 @@ function runBT(n, wins, adjData, counts, threshold = 1e-7, maxIter = 100) {
     const rawScores = new Float64Array(n); for (let i = 0; i < n; i++) rawScores[i] = 1000 + prevLogS[i] * SCALE; return rawScores;
 }
 
+// Seeded xorshift32 PRNG (see header). Shared by all providers so runs are reproducible.
+const BASE_SEED = (process.env && process.env.SEED !== undefined ? (parseInt(process.env.SEED, 10) >>> 0) : 0x2f6e2b1) >>> 0 || 0x9e3779b9;
+let __seed = BASE_SEED;
+function rand() {
+    let x = __seed >>> 0;
+    x ^= x << 13;
+    x >>>= 0;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    x >>>= 0;
+    __seed = x >>> 0;
+    return __seed / 4294967296;
+}
+
 function kendallTau(arr1, arr2) {
     let n = arr1.length, concordant = 0, discordant = 0;
     for (let i = 0; i < n; i++) {
@@ -41,17 +67,18 @@ function simulate(n, ProviderClass, trials = 250) {
     let totalComps = 0, totalTau = 0, maxUniqueBattles = n * (n - 1) / 2, hasDuplicates = false;
     const trueStrengths = new Float64Array(n), wins = new Float64Array(n), rowSize = (n + 31) >> 5;
     const reach = new Uint32Array(n * rowSize);
+    const pairCache = new Int8Array(n * n); // per-pair outcome: 0 unknown, 1 lo won, 2 hi won
     for (let t = 0; t < trials; t++) {
-        for (let i = 0; i < n; i++) trueStrengths[i] = Math.random() * 2000;
+        for (let i = 0; i < n; i++) trueStrengths[i] = rand() * 2000;
         const provider = new ProviderClass(n); wins.fill(0); reach.fill(0);
         for (let i = 0; i < n; i++) reach[i * rowSize + (i >> 5)] |= (1 << (i & 31));
-        const matchesMap = new Map(); let pair = provider.next(), uniqueBattles = 0, totalIterations = 0;
+        pairCache.fill(0); let pair = provider.next(), uniqueBattles = 0, totalIterations = 0;
         while (pair && totalIterations < 1000000) {
             totalIterations++; const [a, b] = pair;
-            const pairKey = a < b ? (a << 16) | b : (b << 16) | a, matchResult = matchesMap.get(pairKey);
+            const lo = a < b ? a : b, hi = a < b ? b : a, idx = lo * n + hi, cached = pairCache[idx];
             let res;
-            if (matchResult !== undefined) {
-                hasDuplicates = true; res = matchResult.a === a ? matchResult.res : 1 - matchResult.res;
+            if (cached !== 0) {
+                hasDuplicates = true; res = (a === lo) === (cached === 1) ? 1 : 0;
             } else {
                 const aInReachB = (reach[a * rowSize + (b >> 5)] >> (b & 31)) & 1;
                 const bInReachA = (reach[b * rowSize + (a >> 5)] >> (a & 31)) & 1;
@@ -59,7 +86,7 @@ function simulate(n, ProviderClass, trials = 250) {
                     res = aInReachB ? 1 : 0; provider.isTransitiveDiscovery = true;
                 } else {
                     uniqueBattles++; res = trueStrengths[a] > trueStrengths[b] ? 1 : 0;
-                    matchesMap.set(pairKey, { a, res });
+                    pairCache[idx] = (res === 1 ? a === lo : a !== lo) ? 1 : 2;
                     const [w, l] = res === 1 ? [a, b] : [b, a], wIdx = w * rowSize, lIdx = l * rowSize, wWord = w >> 5, wMask = 1 << (w & 31);
                     for (let i = 0; i < n; i++) {
                         if (reach[i * rowSize + wWord] & wMask) {
@@ -86,7 +113,7 @@ function simulate(n, ProviderClass, trials = 250) {
 
 class FullRankProvider {
     constructor(n) { this.n = n; this.pairs = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) this.pairs.push([i, j]);
-        for (let i = this.pairs.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [this.pairs[i], this.pairs[j]] = [this.pairs[j], this.pairs[i]]; }
+        for (let i = this.pairs.length - 1; i > 0; i--) { let j = Math.floor(rand() * (i + 1)); [this.pairs[i], this.pairs[j]] = [this.pairs[j], this.pairs[i]]; }
         this.idx = 0; }
     next() { return this.idx < this.pairs.length ? this.pairs[this.idx++] : null; }
 }
@@ -223,7 +250,7 @@ class BogoBogoSortProvider extends Provider {
         while (this.size <= this.n) {
             if (result !== undefined) { this.totalComps++;
                 if (result === 1) { this.i++; }
-                else { for (let k = this.size - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; }
+                else { for (let k = this.size - 1; k > 0; k--) { const j = Math.floor(rand() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; }
                 result = undefined;
             }
             if (this.i < this.size - 1) return [this.items[this.i], this.items[this.i + 1]];
@@ -237,7 +264,7 @@ class BogosortProvider extends Provider {
     next(result) {
         while (true) {
             if (result !== undefined) { this.totalComps++; if (result === 1) this.i++;
-                else { for (let k = this.n - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; } result = undefined; }
+                else { for (let k = this.n - 1; k > 0; k--) { const j = Math.floor(rand() * (k + 1)); [this.items[k], this.items[j]] = [this.items[j], this.items[k]]; } this.i = 0; } result = undefined; }
             if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]]; break;
         } return null;
     }
@@ -270,7 +297,7 @@ class BozosortProvider extends Provider {
     next(result) {
         while (true) {
             if (result !== undefined) { this.totalComps++; if (result === 1) this.i++;
-                else { const a = Math.floor(Math.random() * this.n), b = Math.floor(Math.random() * this.n); [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.i = 0; } result = undefined; }
+                else { const a = Math.floor(rand() * this.n), b = Math.floor(rand() * this.n); [this.items[a], this.items[b]] = [this.items[b], this.items[a]]; this.i = 0; } result = undefined; }
             if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]]; break;
         } return null;
     }
@@ -954,7 +981,7 @@ class GnomeSortProvider extends Provider {
 class HaterSortProvider extends Provider {
     constructor(n) { super(n); this.i = 0; }
     next(result) {
-        if (this.i < this.n * 2) { this.i++; return [Math.floor(Math.random()*this.n), Math.floor(Math.random()*this.n)]; }
+        if (this.i < this.n * 2) { this.i++; return [Math.floor(rand()*this.n), Math.floor(rand()*this.n)]; }
         return null;
     }
 }
@@ -1938,7 +1965,7 @@ class BinaryQuicksortProvider extends Provider {
                 const seg = this.stack.pop();
                 if (seg[1] - seg[0] < 2) continue;
                 this.lo = seg[0]; this.hi = seg[1];
-                this.pivotIdx = this.lo + Math.floor(Math.random() * (this.hi - this.lo));
+                this.pivotIdx = this.lo + Math.floor(rand() * (this.hi - this.lo));
                 this.pivot = this.items[this.pivotIdx];
                 this.lo_bucket = []; this.hi_bucket = [];
                 this.idx = this.lo; this.state = 'scan'; continue;
@@ -1964,16 +1991,16 @@ class QuicksortRandomProvider extends Provider {
     constructor(n) { super(n); this.stack = [[0, n - 1]]; this.state = 'start'; }
     next(result) {
         while (this.stack.length > 0 || this.state !== 'done') {
-            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { let r = Math.floor(Math.random() * (this.high - this.low + 1)) + this.low; [this.items[r], this.items[this.high]] = [this.items[this.high], this.items[r]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } else continue; }
+            if (this.state === 'start') { if (this.stack.length === 0) { this.state = 'done'; return null; } [this.low, this.high] = this.stack.pop(); if (this.low < this.high) { let r = Math.floor(rand() * (this.high - this.low + 1)) + this.low; [this.items[r], this.items[this.high]] = [this.items[this.high], this.items[r]]; this.pivot = this.items[this.high]; this.i = this.low - 1; this.j = this.low; this.state = 'partition'; } else continue; }
             if (this.state === 'partition') { if (result !== undefined) { if (result === 0) { this.i++; [this.items[this.i], this.items[this.j]] = [this.items[this.j], this.items[this.i]]; } this.j++; result = undefined; } if (this.j < this.high) return [this.items[this.j], this.pivot]; [this.items[this.i + 1], this.items[this.high]] = [this.items[this.high], this.items[this.i + 1]]; let p = this.i + 1; this.stack.push([p + 1, this.high], [this.low, p - 1]); this.state = 'start'; }
         } return null;
     }
 }
 
 class RandomSortProvider extends Provider {
-    constructor(n) { super(n); this.count = 0; this.max = Math.floor(Math.random() * n * 5); }
+    constructor(n) { super(n); this.count = 0; this.max = Math.floor(rand() * n * 5); }
     next() {
-        if (this.count < this.max) { this.count++; return [Math.floor(Math.random()*this.n), Math.floor(Math.random()*this.n)]; }
+        if (this.count < this.max) { this.count++; return [Math.floor(rand()*this.n), Math.floor(rand()*this.n)]; }
         return null;
     }
 }
@@ -2924,7 +2951,7 @@ class TreapSortProvider extends Provider {
         while (this.state !== 'done') {
             if (this.state === 'insert') {
                 if (this.idx >= this.n) { this.state = 'traverse'; continue; }
-                this.node = { v: this.items[this.idx], pr: Math.random(), l: null, r: null };
+                this.node = { v: this.items[this.idx], pr: rand(), l: null, r: null };
                 this.cur = this.root; this.path = [];
                 this.state = 'descend'; continue;
             }
@@ -2980,7 +3007,7 @@ class SkiplistSortProvider extends Provider {
             if (this.state === 'insert') {
                 if (this.idx >= this.n) { this.state = 'traverse'; continue; }
                 let lvl = 0;
-                while (lvl + 1 < this.maxLvl && Math.random() < 0.5) lvl++;
+                while (lvl + 1 < this.maxLvl && rand() < 0.5) lvl++;
                 this.node = { v: this.items[this.idx], fwd: new Array(lvl + 1).fill(null) };
                 this.update = new Array(this.maxLvl).fill(null);
                 this.cur = this.head; this.li = this.maxLvl - 1;
@@ -3284,7 +3311,7 @@ class LibrarySortProvider extends Provider {
         this.S = 2 * n;
         this.slots = new Array(this.S).fill(-1);
         this.shuffled = this.items.slice();
-        for (let i = this.shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = this.shuffled[i]; this.shuffled[i] = this.shuffled[j]; this.shuffled[j] = t; }
+        for (let i = this.shuffled.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); const t = this.shuffled[i]; this.shuffled[i] = this.shuffled[j]; this.shuffled[j] = t; }
         this.inserted = 0; this.goal = 1; this.roundDone = 0;
         this.state = n > 0 ? 'round' : 'done';
     }
@@ -4534,7 +4561,7 @@ class LessBogoSortProvider extends Provider {
         while (this.state !== 'done') {
             if (this.state === 'shuffle') {
                 for (let i = this.n - 1; i > this.k; i--) {
-                    const j = this.k + Math.floor(Math.random() * (i - this.k + 1));
+                    const j = this.k + Math.floor(rand() * (i - this.k + 1));
                     const t = this.items[i]; this.items[i] = this.items[j]; this.items[j] = t;
                 }
                 this.j = this.k + 1; this.state = 'scan'; continue;
@@ -4580,8 +4607,8 @@ class ExchangeBogoSortProvider extends Provider {
                     if (result === 0) { const t = this.items[this.pi]; this.items[this.pi] = this.items[this.pj]; this.items[this.pj] = t; }
                     result = undefined; this.i = 0; this.state = 'verify'; continue;
                 }
-                const a = Math.floor(Math.random() * this.n);
-                let b = Math.floor(Math.random() * (this.n - 1));
+                const a = Math.floor(rand() * this.n);
+                let b = Math.floor(rand() * (this.n - 1));
                 if (b >= a) b++;
                 this.pi = Math.min(a, b); this.pj = Math.max(a, b);
                 return [this.items[this.pi], this.items[this.pj]];
@@ -4613,7 +4640,7 @@ class BubbleBogoSortProvider extends Provider {
                     if (result === 0) { const t = this.items[this.pi]; this.items[this.pi] = this.items[this.pi + 1]; this.items[this.pi + 1] = t; }
                     result = undefined; this.i = 0; this.state = 'verify'; continue;
                 }
-                this.pi = Math.floor(Math.random() * (this.n - 1));
+                this.pi = Math.floor(rand() * (this.n - 1));
                 return [this.items[this.pi], this.items[this.pi + 1]];
             }
         }
@@ -4647,7 +4674,7 @@ class OddEvenBogoSortProvider extends Provider {
                 let cands = [];
                 for (let i = this.parity; i + 1 < this.n; i += 2) cands.push(i);
                 if (cands.length === 0) { this.parity ^= 1; continue; }
-                this.pi = cands[Math.floor(Math.random() * cands.length)];
+                this.pi = cands[Math.floor(rand() * cands.length)];
                 this.parity ^= 1;
                 return [this.items[this.pi], this.items[this.pi + 1]];
             }
@@ -4670,7 +4697,7 @@ class BovoSortProvider extends Provider {
                 if (result !== undefined) {
                     if (result === 1) this.i++;
                     else {
-                        const r = Math.floor(Math.random() * this.n);
+                        const r = Math.floor(rand() * this.n);
                         const x = this.items.splice(r, 1)[0];
                         this.items.unshift(x);
                         this.i = 0;
@@ -5536,8 +5563,8 @@ class CocktailBogoSortProvider extends Provider {
                 if (result !== undefined) {
                     if (result === 1) this.i++;
                     else {
-                        for (let k = 0; k < this.n - 1; k++) if (Math.random() < 0.5) { const t = this.items[k]; this.items[k] = this.items[k + 1]; this.items[k + 1] = t; }
-                        for (let k = this.n - 2; k >= 0; k--) if (Math.random() < 0.5) { const t = this.items[k]; this.items[k] = this.items[k + 1]; this.items[k + 1] = t; }
+                        for (let k = 0; k < this.n - 1; k++) if (rand() < 0.5) { const t = this.items[k]; this.items[k] = this.items[k + 1]; this.items[k + 1] = t; }
+                        for (let k = this.n - 2; k >= 0; k--) if (rand() < 0.5) { const t = this.items[k]; this.items[k] = this.items[k + 1]; this.items[k + 1] = t; }
                         this.i = 0;
                     }
                     result = undefined; continue;
@@ -7837,7 +7864,7 @@ class FlansortProvider extends CoroutineSortProvider {
     *sort(){
         const a=this.items.slice();
         // Shuffle first (no comparisons)
-        for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]]=[a[j], a[i]]; }
+        for(let i=a.length-1;i>0;i--){ const j=Math.floor(rand()*(i+1)); [a[i], a[j]]=[a[j], a[i]]; }
         // Library sort style: gapped insertion with gaps
         const gapped=[]; const GAP=4;
         for(let i=0;i<a.length;i++){
@@ -7879,11 +7906,11 @@ class FlansortProvider extends CoroutineSortProvider {
 class TrueFlansortProvider extends CoroutineSortProvider {
     *sort(){
         const a=this.items.slice();
-        for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]]=[a[j], a[i]]; }
+        for(let i=a.length-1;i>0;i--){ const j=Math.floor(rand()*(i+1)); [a[i], a[j]]=[a[j], a[i]]; }
         // Similar to Flansort but without gaps, just quicksort + insertion
         const rec = function*(self, arr){
             if(arr.length<=16) return yield* self._insertion(arr.slice());
-            const pivot = arr[Math.floor(Math.random()*arr.length)];
+            const pivot = arr[Math.floor(rand()*arr.length)];
             const lo=[], eq=[], hi=[];
             for(const x of arr){
                 if(x===pivot) eq.push(x);
@@ -8355,7 +8382,7 @@ class BakaSortProvider extends Provider {
     next(result) {
         if (result !== undefined) {
             if (result === 1) this.i++;
-            else { const k = Math.floor(Math.random() * this.n); const t = this.items[0]; this.items[0] = this.items[k]; this.items[k] = t; this.i = 0; }
+            else { const k = Math.floor(rand() * this.n); const t = this.items[0]; this.items[0] = this.items[k]; this.items[k] = t; this.i = 0; }
         }
         if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
         return null;
@@ -8368,7 +8395,7 @@ class NibiSortProvider extends Provider {
     next(result) {
         if (result !== undefined) {
             if (result === 1) this.i++;
-            else { const k = Math.floor(Math.random() * (this.n - 1)); const t = this.items[this.n - 1]; this.items[this.n - 1] = this.items[k]; this.items[k] = t; this.i = 0; }
+            else { const k = Math.floor(rand() * (this.n - 1)); const t = this.items[this.n - 1]; this.items[this.n - 1] = this.items[k]; this.items[k] = t; this.i = 0; }
         }
         if (this.i < this.n - 1) return [this.items[this.i], this.items[this.i + 1]];
         return null;
@@ -8382,10 +8409,10 @@ class SliceBogoSortProvider extends Provider {
         if (result !== undefined) {
             if (result === 1) this.i++;
             else {
-                const len = 2 + Math.floor(Math.random() * (this.n - 1));
-                const st = Math.floor(Math.random() * (this.n - len + 1));
+                const len = 2 + Math.floor(rand() * (this.n - 1));
+                const st = Math.floor(rand() * (this.n - len + 1));
                 const seg = this.items.slice(st, st + len);
-                for (let x = seg.length - 1; x > 0; x--) { const y = Math.floor(Math.random() * (x + 1)); const t = seg[x]; seg[x] = seg[y]; seg[y] = t; }
+                for (let x = seg.length - 1; x > 0; x--) { const y = Math.floor(rand() * (x + 1)); const t = seg[x]; seg[x] = seg[y]; seg[y] = t; }
                 for (let x = 0; x < len; x++) this.items[st + x] = seg[x];
                 this.i = 0;
             }
@@ -8402,8 +8429,8 @@ class BotoSortProvider extends Provider {
         if (result !== undefined) {
             if (result === 1) this.i++;
             else {
-                const len = 2 + Math.floor(Math.random() * (this.n - 1));
-                const st = Math.floor(Math.random() * (this.n - len + 1));
+                const len = 2 + Math.floor(rand() * (this.n - 1));
+                const st = Math.floor(rand() * (this.n - len + 1));
                 for (let a = st, b = st + len - 1; a < b; a++, b--) { const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t; }
                 this.i = 0;
             }
@@ -8420,7 +8447,7 @@ class TruePancakeBogoSortProvider extends Provider {
         if (result !== undefined) {
             if (result === 1) this.i++;
             else {
-                const len = 2 + Math.floor(Math.random() * (this.n - 1));
+                const len = 2 + Math.floor(rand() * (this.n - 1));
                 for (let a = 0, b = len - 1; a < b; a++, b--) { const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t; }
                 this.i = 0;
             }
@@ -8437,7 +8464,7 @@ class BowoSortProvider extends Provider {
         if (result !== undefined) {
             if (result === 1) this.i++;
             else {
-                const len = 2 + Math.floor(Math.random() * (this.n - 1));
+                const len = 2 + Math.floor(rand() * (this.n - 1));
                 const head = this.items[0];
                 for (let p = 0; p < len - 1; p++) this.items[p] = this.items[p + 1];
                 this.items[len - 1] = head;
@@ -8458,7 +8485,7 @@ class PancakeBogoSortProvider extends Provider {
         while (this.k >= 2) {
             if (result !== undefined) {
                 if (result === 0) {
-                    const len = 2 + Math.floor(Math.random() * (this.k - 1));
+                    const len = 2 + Math.floor(rand() * (this.k - 1));
                     for (let a = 0, b = len - 1; a < b; a++, b--) { const t = this.items[a]; this.items[a] = this.items[b]; this.items[b] = t; }
                     this.i = 0;
                 } else this.i++;
@@ -8756,25 +8783,33 @@ if (isMainThread && require.main === module) {
     const trials_val = args[1] ? parseInt(args[1]) : 250;
     const numWorkers = require('os').cpus().length || 4;
     const itemsPerWorker = Math.ceil(algos.length / numWorkers);
-    console.log(`Simulating N=${n_val}, trials=${trials_val} with ${numWorkers} workers
-Algorithm\tAvg Battles\tAvg Kendall Tau\tDuplicates`);
+    console.log(`Simulating N=${n_val}, trials=${trials_val} with ${numWorkers} workers`);
+    const order = new Map(algos.map((a, i) => [a.name, i]));
+    const collected = [];
     let completed = 0;
     for (let i = 0; i < numWorkers; i++) {
         const start = i * itemsPerWorker;
         const end = Math.min(start + itemsPerWorker, algos.length);
         if (start >= end) continue;
         const workerAlgos = algos.slice(start, end).map(a => ({ name: a.name, className: a.class.name }));
-        const worker = new Worker(__filename, { workerData: { workerAlgos, n: n_val, trials: trials_val } });
-        worker.on('message', (res) => {
-            console.log(`${res.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}\t${res.hasDuplicates ? "YES" : "NO"}`);
-        });
+        const worker = new Worker(__filename, { workerData: { workerAlgos, n: n_val, trials: trials_val, workerIdx: i } });
+        worker.on('message', (res) => collected.push(res));
         worker.on('exit', () => {
             completed++;
-            if (completed === numWorkers) process.exit(0);
+            if (completed === numWorkers) {
+                console.log('Algorithm\tAvg Battles\tAvg Kendall Tau\tDuplicates');
+                collected.sort((x, y) => order.get(x.name) - order.get(y.name));
+                for (const res of collected) {
+                    console.log(`${res.name}\t${res.avgComps.toFixed(2)}\t${res.avgTau.toFixed(4)}\t${res.hasDuplicates ? "YES" : "NO"}`);
+                }
+                process.exit(0);
+            }
         });
     }
 } else if (workerData) {
-    const { workerAlgos, n, trials } = workerData;
+    const { workerAlgos, n, trials, workerIdx } = workerData;
+    __seed = (BASE_SEED + (workerIdx || 0) * 0x9e3779b9) >>> 0; // deterministic, decorrelated worker streams
+    if (__seed === 0) __seed = 0x9e3779b9;
     for (const algo of workerAlgos) {
         try {
             const Cls = eval(algo.className);

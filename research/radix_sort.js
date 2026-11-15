@@ -4,7 +4,7 @@
  * These are TRUE radix sorts: they inspect key bytes/passes (key-inspecting),
  * never compare two keys, and therefore do not fit PreferenceRank's
  * comparison-battle model (unique human comparisons). See
- * research/RADIX_SORT_ANALYSIS.md for why they are benchmarked wall-clock
+ * ANALYSIS.md §4 for why they are benchmarked wall-clock
  * only and are excluded from the battle-count suite by the comparison-only
  * rule (research/PROVIDER_AUDIT.md, Finding 4).
  *
@@ -16,7 +16,7 @@
  * passes; MSD recurses over bytes most-significant first and falls back to
  * insertion sort for buckets of <= CUTOFF elements (the "MSD with cutoff"
  * strategy Sedgewick reports beating plain MSD by ~58x on long keys, see
- * research/RADIX_SORT_ANALYSIS.md references).
+ * ANALYSIS.md §4 references).
  *
  * Both functions are non-mutating: they return a fresh Int32Array.
  */
