@@ -305,3 +305,13 @@ We compared **256 registered sorting providers**. The suite includes the 25-algo
 - **Result file:** research/runtime_results.txt
 - **Top 10 fastest no-duplicate for N=200 (excluding joke non-sorting, batch-9 rerun):** 64-way Merge Sort 0.23 ms, Insertion Sort 0.26 ms, Binary Gnome 0.29 ms, Binary Insertion 0.31 ms, Tree Sort 0.32 ms, Oscillating Merge 0.34 ms, Interpolation Sort 0.35 ms, Multizip 0.43 ms, Tournament Sort 0.43 ms, Recursive Binary Insertion 0.43 ms. Full list in runtime_results.txt (bogo-family rows skipped for N=200 as in previous batches).
 
+
+## 4. Radix Sort (LSD & MSD) — 2026-11-15
+
+A dedicated web-sourced study with real implementations landed in [research/RADIX_SORT_ANALYSIS.md](research/RADIX_SORT_ANALYSIS.md) (full doc; [research/radix_sort.js](research/radix_sort.js), [research/benchmark_radix.js](research/benchmark_radix.js), [research/radix_results.txt](research/radix_results.txt)).
+
+- **Scope rule (unchanged):** radix sorts are key-inspecting, non-comparison algorithms — they cannot join the battle metric without fabricating comparisons. They remain excluded from `algos[]`; the 2026-09 removal of the fake "Radix Sort" provider (Finding 4) stands.
+- **Implementations:** LSD (4 stable counting passes, base 256, sign-flip top byte) and MSD (recursive byte refinement, insertion-sort cutoff at buckets ≤ 16, per-depth scratch pooling). Both property-tested against a native-sort oracle: 89/89 checks pass, including ±2147483648 edges and input immutability.
+- **Benchmark (wall-clock, 7 distributions × N = 1e4/1e5/1e6, avg of 25/7/3 reps):** LSD is fastest on **every** distribution at N ≥ 1e5 — e.g. 18.10 ms vs 152.99 ms (3-way quicksort) on random 1e6 keys — and essentially input-insensitive (18–23 ms). MSD trails LSD 1.3–2.6× in this harness (LSD/MSD = 0.38–0.74 in all 21 cells), consistent with published C++ measurements and Sedgewick's cutoff guidance. Adaptive 3-way quicksort still wins `constant` (3.76 ms) and narrowly wins `few-unique-8` at 1e6 (18.20 vs 21.22) — exactly the inputs radix cannot exploit.
+- **Full-suite refresh:** wall-clock rerun of all 256 providers (N=200, 10 trials) → research/runtime_results.txt (64-way Merge 0.23 ms remains fastest no-duplicate). Key production battle rows freshly re-confirmed (N=100, 250 trials) → research/results_2026-11.txt; Ford-Johnson confirms at 526.96 / τ 1.0000 / NO duplicates. The committed results.txt snapshot is preserved; production knee unchanged.
+- **Recommendation:** for human preference ranking, Ford-Johnson remains the production knee. If a future "numeric keys" mode is ever added, LSD radix (not MSD) is the correct drop-in — O(4n) stable passes, no comparisons, predictable on adversarial input.

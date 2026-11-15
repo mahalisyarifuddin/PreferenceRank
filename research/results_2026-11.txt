@@ -1,0 +1,13 @@
+Algorithm	Avg Battles	Avg Kendall Tau	Duplicates
+Full Rank	812.58	1.0000	NO
+Budgeted Merge Sort	520.00	0.9605	NO
+Ford-Johnson (Quick)	526.96	1.0000	NO
+Merge Sort	541.44	1.0000	NO
+Binary Insertion	530.32	1.0000	NO
+Binary Gnome	530.60	1.0000	NO
+Interpolation Sort	530.67	1.0000	NO
+Quicksort (Ninther)	560.96	1.0000	YES
+64-way Merge Sort	558.52	1.0000	NO
+Timsort	532.56	1.0000	YES
+Insertion Sort	2559.24	1.0000	NO
+Recursive Binary Insertion	530.93	1.0000	NO

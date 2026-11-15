@@ -324,3 +324,13 @@ Trials	Vanilla_Tau	Vanilla_SEM	InPlace_Tau	InPlace_SEM	Mean_Diff	SEM_Diff	Total_
 950	0.90324	0.00038	0.90324	0.00038	0.000000	0.000000	0.000760
 1000	0.90410	0.00038	0.90410	0.00038	0.000000	0.000000	0.000766
 ```
+
+## 7. Radix Sort (LSD & MSD) — 15-11-2026
+
+Studi berbasis web lengkap dengan implementasi nyata tersedia di [research/RADIX_SORT_ANALYSIS.md](research/RADIX_SORT_ANALYSIS.md) (implementasi: [research/radix_sort.js](research/radix_sort.js); tolok ukur: [research/benchmark_radix.js](research/benchmark_radix.js); hasil: [research/radix_results.txt](research/radix_results.txt)).
+
+- **Aturan cakupan (tidak berubah):** radix sort adalah algoritma key-inspecting, bukan perbandingan — ia tidak dapat masuk metrik "battles" tanpa mengarang perbandingan. Tetap dikecualikan dari `algos[]`; penghapusan provider "Radix Sort" palsu (Finding 4, 2026-09) tetap berlaku.
+- **Implementasi:** LSD (4 pass counting sort stabil, basis 256, byte tanda di-XOR 0x80) dan MSD (rekursi byte paling signifikan dulu, insertion sort untuk bucket ≤ 16 elemen, scratch per kedalaman dipakai ulang). Lolos uji properti vs oracle native sort: 89/89, termasuk tepi ±2147483648 dan input tidak termutasi.
+- **Tolok ukur (wall-clock, 7 distribusi × N = 1e4/1e5/1e6):** LSD tercepat di **semua** distribusi pada N ≥ 1e5 — mis. 18,10 ms vs 152,99 ms (3-way quicksort) pada 1e6 kunci acak — dan hampir tidak sensitif terhadap input (18–23 ms). MSD tertinggal 1,3–2,6× (rasio LSD/MSD = 0,38–0,74 di semua 21 sel), konsisten dengan pengukuran C++ yang dipublikasikan dan panduan cutoff Sedgewick. Quicksort 3-arah adaptif tetap unggul di `constant` (3,76 ms) dan sedikit unggul di `few-unique-8` (18,20 vs 21,22) — persis input yang tidak bisa dieksploitasi radix.
+- **Penyegaran suite penuh:** tolok ukur wall-clock seluruh 256 provider (N=200, 10 trials) → research/runtime_results.txt (64-way Merge 0,23 ms tetap tercepat tanpa duplikat). Baris-baris produksi utama battle suite dikonfirmasi segar (N=100, 250 trials) → research/results_2026-11.txt; Ford-Johnson terkonfirmasi 526,96 / τ 1,0000 / tanpa duplikat. Snapshot results.txt asli dipertahankan; titik lutut produksi tidak berubah.
+- **Rekomendasi:** untuk pemeringkatan preferensi manusia, Ford-Johnson tetap titik lutut produksi. Jika suatu saat mode "kunci numerik" ditambahkan, LSD radix (bukan MSD) adalah pilihan yang tepat — O(4n) pass stabil, tanpa perbandingan, stabil pada input adversarial.
