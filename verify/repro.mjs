@@ -18,7 +18,7 @@
  * seeded PRNG, so the numbers are reproducible run to run.
  *
  *   cd verify
- *   npm install
+ *   npm ci
  *   npm run verify
  *
  * Exit code 0 when every check passes, 1 when the defect (or a regression of
@@ -48,7 +48,7 @@ function mulberry32(seed) {
 /* ------------------------------------------------------------------ *
  *  Boot the real app inside jsdom                                     *
  * ------------------------------------------------------------------ */
-function boot(seed, savedSession = null) {
+function boot(seed, savedSession = null, configure = () => {}) {
 	const rng = mulberry32(seed);
 	const clipboard = { text: null };
 	const dom = new JSDOM(HTML, {
@@ -56,6 +56,8 @@ function boot(seed, savedSession = null) {
 		runScripts: 'dangerously',
 		pretendToBeVisual: true,
 		beforeParse(window) {
+			const schedule = window.setTimeout.bind(window);
+			window.setTimeout = (fn, ms, ...args) => ms === 150 ? (window.finishVote = fn, 0) : schedule(fn, ms, ...args);
 			window.Math.random = rng;
 			window.matchMedia ??= query => ({
 				matches: false,
@@ -71,32 +73,27 @@ function boot(seed, savedSession = null) {
 				configurable: true,
 				value: { writeText: t => (clipboard.text = t, Promise.resolve()) }
 			});
+			configure(window);
 			if (savedSession !== null)
 				window.localStorage.setItem('preferenceRankData', savedSession);
 		}
 	});
+	windows.set(dom.window.app, dom.window);
 	return { window: dom.window, rng, clipboard };
 }
 
 /* ------------------------------------------------------------------ *
- *  Drive a whole session synchronously. Mirrors PreferenceRank.choose *
- *  minus the 150 ms UI debounce: identical match/closure/step logic.  *
+ * Drive the real controls; release the vote debounce without sleeping.
  * ------------------------------------------------------------------ */
+const windows = new WeakMap();
 function driveSteps(app, decide, maxSteps) {
-	const n = app.items.length;
+	const window = windows.get(app);
 	let steps = 0;
 	while (app.pair && steps < maxSteps) {
-		const [a, b] = app.pair;
-		const result = decide(a, b);
-		app.history.push({ pair: app.pair, step: app.step, swapped: app.swapped, state: app.provider.snap() });
-		app.matches.push({ a, b, result });
-		if (result === 1 || result === 0) {
-			const [w, l] = result === 1 ? [a, b] : [b, a];
-			app._applyTransitiveClosure(w, l, n);
-		}
-		app.dirty = true;
-		app.step++;
-		app.next(result);
+		const result = decide(...app.pair);
+		const button = result === .5 ? 'tie' : Boolean(result) !== app.swapped ? 'left' : 'right';
+		window.document.getElementById(button).click();
+		window.finishVote?.();
 		steps++;
 	}
 	return steps;
@@ -358,6 +355,68 @@ async function main() {
 		const done = driveSteps(app2, decide2, 1e6);
 		check(!app2.pair, `resumed session ran to completion (+${done} comparisons)`);
 		checkInvariants(app2);
+	}
+
+	// Each pair is asked once, and the asymmetric cycle does not flatten all scores.
+	for (const n of [4,5]) {
+		const app = runSession(boot(18), {items:itemList(n), quick:false, ties:false,
+			decide:(a,b) => +(a !== 0 || b !== 3)});
+		check(new Set(app.matches.map(m => `${m.a}:${m.b}`)).size === n*(n-1)/2 && app.matches.length === n*(n-1)/2, `round robin covers all pairs (n=${n})`);
+		check(app.scores[0] > app.scores[3], 'direct wins decide an asymmetric cycle');
+	}
+	for (const quick of [true,false]) {
+		const {window} = boot(22), doc = window.document, el = id => doc.getElementById(id);
+		const app = runSession({window}, {items:itemList(8), quick, ties:true, decide:()=>1, pauseAfter:4});
+		app.cancel(); app.cancel();
+		check(!el('resume').classList.contains('hidden'), 'matching session can resume');
+		el('quickRank').click();
+		check(el('resume').classList.contains('hidden'), 'different mode hides resume');
+		el('quickRank').click(); el('items').value += '\nNew'; el('items').dispatchEvent(new window.Event('input'));
+		check(el('resume').classList.contains('hidden'), 'different items hide resume');
+		el('items').value = app.items.join('\n'); el('items').dispatchEvent(new window.Event('input')); el('resume').click();
+		el('settingsDialog').setAttribute('open','');
+		doc.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));
+		check(app.step === 4, 'settings suppresses battle shortcut'); el('settingsDialog').removeAttribute('open');
+		const before = JSON.stringify(app.pair); el('tie').click(); el('left').click(); app.save();
+		const after = JSON.stringify(app.pair);
+		const resumed = boot(23,window.localStorage.getItem('preferenceRankData')).window;
+		resumed.document.getElementById('sessionContinue').click(); const other = resumed.app;
+		check(other.step === 5 && other.matches[4].result === .5 && !other.busy && JSON.stringify(other.pair) === after, 'reload during debounce keeps exactly one vote');
+		resumed.document.getElementById('undo').click();
+		check(JSON.stringify(other.pair) === before && other.step === 4, 'undo after reload restores prior pair');
+		resumed.document.getElementById('tie').click();
+		check(JSON.stringify(other.pair) === after, 'replaying undone tie gives same next pair');
+	}
+	{
+		const booted = boot(44), {window} = booted;
+		let warned = false;
+		window.confirm = () => { warned = true; return false; };
+		const input = window.document.getElementById('items');
+		input.value = itemList(1000).join('\n');
+		window.app.start();
+		check(warned && !window.app.provider, 'declining large list starts no session');
+		const app = runSession(booted, {items:itemList(65), quick:true, ties:false, decide:()=>1});
+		check(!app.stats && app.scores.length === 65, 'large result available without uncertainty calculation');
+		const button = [...window.document.querySelectorAll('#results button')].find(b => b.textContent === app.string('calcStats'));
+		button.click();
+		check(app.stats?.cis.length === 65, 'explicit request computes uncertainty estimates');
+	}
+
+	for (const denied of [true,false]) {
+		const {window} = boot(12,null,w => {
+			if (denied) Object.defineProperty(w,'localStorage',{get(){throw new Error('denied');}});
+			else w.Storage.prototype.setItem = () => {throw new Error('quota');};
+		});
+		const app = runSession({window},{items:itemList(3), quick:false,ties:false,decide:()=>1});
+		check(!app.pair && window.document.getElementById('saveStatus').textContent === app.string('unsaved'), 'storage failure: finish in memory with warning');
+	}
+	{
+		const {window, clipboard} = s1.booted;
+		for (const value of [undefined,{writeText:async()=>{throw new Error('denied');}}]) {
+			Object.defineProperty(window.navigator,'clipboard',{configurable:true,value});
+			await window.app.copyResults();
+			check(window.document.querySelector('#manualCopy textarea')?.value === clipboard.text, 'manual copy contains identical TSV');
+		}
 	}
 
 	console.log(failures ? `\nRESULT: ${failures} check(s) FAILED` : '\nRESULT: all checks passed');

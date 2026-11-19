@@ -1204,6 +1204,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 				<input type="checkbox" id="showGrade">
 				<label for="showGrade" id="labelGrade"></label>
 			</div>
+			<small id="saveStatus" role="status"></small>
 			<div id="announcer" class="visually-hidden" aria-live="polite"></div>
 			<button id="undo" class="secondary hidden" disabled></button>
 			<button id="copy" class="secondary hidden"></button>
@@ -1530,6 +1531,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					placeholderItems: 'Apple\nBlueberry\nCherry',
 					copy: 'Copy Results',
 					copied: 'Copied!',
+					saved: 'Saved locally',
+					unsaved: 'Not saved — keep this tab open.',
+					manualCopy: 'Clipboard unavailable. Select and copy the results below.',
+					largeList: 'Large list: scoring may take time. Continue?',
+					calcStats: 'Calculate uncertainty estimates',
 					resumeTitle: 'Resume Session?',
 					resumeMessage: 'A previous ranking session was found. Do you want to continue where you left off?',
 					resumeConfirm: 'Continue',
@@ -1583,6 +1589,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					placeholderItems: 'Apel\nBluberi\nCeri',
 					copy: 'Salin Hasil',
 					copied: 'Disalin!',
+					saved: 'Tersimpan secara lokal',
+					unsaved: 'Belum tersimpan — jangan tutup tab ini.',
+					manualCopy: 'Papan klip tidak tersedia. Pilih dan salin hasil di bawah.',
+					largeList: 'Daftar besar: penghitungan mungkin berlangsung lama. Lanjutkan?',
+					calcStats: 'Hitung estimasi ketidakpastian',
 					resumeTitle: 'Lanjutkan Sesi?',
 					resumeMessage: 'Sesi peringkat sebelumnya ditemukan. Apakah Anda ingin melanjutkannya?',
 					resumeConfirm: 'Lanjutkan',
@@ -1842,26 +1853,28 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					return count * (count - 1) / 2;
 				}
 				constructor(count) {
-					const len = count * (count - 1) / 2;
-					this.pairs = new Array(len);
-					let k = 0;
-					for (let i = 0; i < count; i++)
-						for (let j = i + 1; j < count; j++)
-							this.pairs[k++] = [i, j];
-					for (let i = len; i--; ) {
-						const j = Math.random() * (i + 1) | 0;
-						const temp = this.pairs[i];
-						this.pairs[i] = this.pairs[j];
-						this.pairs[j] = temp;
+					// Shuffle entrants once; enumerate round-robin rounds on demand.
+					this.order = Array.from({length: count}, (_, i) => i);
+					if (count % 2) this.order.push(null); // bye
+					for (let i = this.order.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[this.order[i], this.order[j]] = [this.order[j], this.order[i]];
 					}
+					this.total = FullPairProvider.estimate(count);
 					this.index = 0;
 				}
 				next() {
-					return this.index < this.pairs.length ? this.pairs[this.index++] : null;
+					if (this.pairs) return this.pairs[this.index++] || null; // legacy save
+					const ring = this.order.length - 1, half = this.order.length / 2;
+					while (this.index < ring * half) {
+						const round = Math.floor(this.index / half), slot = this.index++ % half;
+						const a = this.order[slot ? (round + slot) % ring : ring];
+						const b = this.order[(round - slot + ring) % ring];
+						if (a != null && b != null) return a < b ? [a,b] : [b,a];
+					}
+					return null;
 				}
-				getProgress(step) {
-					return `${step}/${this.pairs.length}`;
-				}
+				getProgress(step) { return `${step}/${this.total}`; }
 				snap() {
 					return this.index;
 				}
@@ -2069,24 +2082,29 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						this.results(preventFocus);
 				}
 				save() {
-					localStorage.setItem('preferenceRankData', JSON.stringify({
-						inputValue: elements.items.value,
-						settings: {
-							theme: elements.theme.value,
-							language: this.language,
-							showGrade: this.showGrade,
-							allowTies: elements.allowTies.checked,
-							quickRank: elements.quickRank.checked
-						},
-						battle: this.provider ? (()=>{
-							const { reach, adj, stats, _rawScores, currentRanking, ...battleData } = this;
-							return {
-								...battleData,
-								provider: this.provider,
-								providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full'
-							};
-						})() : (this.pending || null)
-					}));
+					try {
+						localStorage.setItem('preferenceRankData', JSON.stringify({
+							inputValue: elements.items.value,
+							settings: {
+								theme: elements.theme.value,
+								language: this.language,
+								showGrade: this.showGrade,
+								allowTies: elements.allowTies.checked,
+								quickRank: elements.quickRank.checked
+							},
+							battle: this.provider ? (()=>{
+								const { items, matches, pair, swapped, step, swaps, history, allowTies, showGrade, provider, sortState } = this;
+								return {
+									items, matches, pair, swapped, step, swaps, history, allowTies, showGrade, provider, sortState,
+									providerType: this.provider instanceof QuickPairProvider ? 'quick' : 'full'
+								};
+							})() : (this.pending || null)
+						}));
+						document.getElementById('saveStatus').textContent = this.string('saved');
+					} catch { this.storageWarning(); }
+				}
+				storageWarning() {
+					document.getElementById('saveStatus').textContent = this.string('unsaved');
 				}
 				load() {
 					try {
@@ -2110,7 +2128,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 							return this.restoreBattle(data.battle);
 						}
 					} catch {
-						localStorage.removeItem('preferenceRankData');
+						this.storageWarning();
 					}
 					this.display('inputSection');
 				}
@@ -2136,14 +2154,22 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					this.reset();
 				}
 				restoreBattle(battle) {
-					Object.assign(this, battle);
-					this._rebuildReach();
+					for (const key of ['items','matches','pair','swapped','step','swaps','history','allowTies','showGrade','sortState']) {
+						if (key in battle) this[key] = battle[key];
+					}
+					this.busy = false;
+					// Older versions could save a vote before advancing the provider.
+					if (battle.busy && this.history.length) {
+						const last = this.history.pop();
+						this.matches.length = this.step = last.step;
+					}
 					this.dirty = true;
 					this.showGrade = Boolean(battle.showGrade);
 					elements.showGrade.checked = this.showGrade;
-					this.scores = Object.values(battle.scores);
+					this.scores = Array(this.items.length).fill(1000);
 					this.provider = new (battle.providerType === 'quick' ? QuickPairProvider : FullPairProvider)(this.items.length);
 					Object.assign(this.provider, battle.provider);
+					this._rebuildReach();
 					elements.allowTies.checked = this.allowTies;
 					elements.quickRank.checked = battle.providerType === 'quick';
 					this.setTies(this.allowTies);
@@ -2229,7 +2255,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					}
 					elements.items.value = unique.join('\n');
 					const n = unique.length;
-					const rowSize = (n + 31) >> 5;
+					if (n < 2) return;
+					if ((n > 100 || (!elements.quickRank.checked && FullPairProvider.estimate(n) > 1000)) && !window.confirm(this.string('largeList'))) return;
+					this.statsRequested = false;
 					Object.assign(this, {
 						items: unique,
 						scores: Array(n).fill(1e3),
@@ -2241,12 +2269,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						history: [],
 						busy: false,
 						swaps: {},
-						dirty: true,
-						reach: new Uint32Array(n * rowSize)
+						dirty: true
 					});
-					for (let i = 0; i < n; i++) this.reach[i * rowSize + (i >> 5)] |= (1 << (i & 31));
 					elements.undo.disabled = true;
 					this.provider = new (elements.quickRank.checked ? QuickPairProvider : FullPairProvider)(unique.length);
+					this._rebuildReach();
 					elements.tieWrap.classList.toggle('hidden', !this.allowTies);
 					this.updateHelp();
 					this.display('battleSection');
@@ -2268,7 +2295,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					const wins = new Float64Array(n);
 					const adjCounts = new Uint32Array(n * n);
 					const rowSize = (n + 31) >> 5;
-					for (let i = 0; i < n; i++) {
+					const quick = this.provider instanceof QuickPairProvider;
+					for (let i = 0; quick && i < n; i++) {
 						const iIdx = i * rowSize;
 						for (let j = 0; j < n; j++) {
 							if (i === j || !((this.reach[iIdx + (j >> 5)] >> (j & 31)) & 1)) continue;
@@ -2280,9 +2308,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 					if (this.matches) {
 						for (const match of this.matches) {
-							if (match.result === 0.5) {
-								wins[match.a] += 0.5;
-								wins[match.b] += 0.5;
+							if (match.result === 0.5 || this.provider instanceof FullPairProvider) {
+								wins[match.a] += match.result;
+								wins[match.b] += 1 - match.result;
 								adjCounts[match.a * n + match.b] += 1;
 								adjCounts[match.b * n + match.a] += 1;
 							}
@@ -2373,12 +2401,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					this.scores = Array.from(rawScores);
 					this.dirty = false;
 				}
-				_rebuildReach() {
+				_rebuildReach(matches = this.matches) {
+					if (!(this.provider instanceof QuickPairProvider)) return;
 					const n = this.items.length;
 					const rowSize = (n + 31) >> 5;
 					this.reach = new Uint32Array(n * rowSize);
 					for (let i = 0; i < n; i++) this.reach[i * rowSize + (i >> 5)] |= (1 << (i & 31));
-					for (const match of this.matches) {
+					for (const match of matches) {
 						if (match.result === 1 || match.result === 0) {
 							const [w, l] = match.result === 1 ? [match.a, match.b] : [match.b, match.a];
 							this._applyTransitiveClosure(w, l, n);
@@ -2411,7 +2440,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						pair: this.pair,
 						step: this.step,
 						swapped: this.swapped,
-						state: this.provider.snap()
+						state: this.provider instanceof FullPairProvider ? this.provider.snap() : null
 					});
 					const [a,b] = this.pair, n = this.items.length;
 					const result = winner === 'tie' ? .5 : +(winner === (this.swapped ? 'right' : 'left'));
@@ -2420,7 +2449,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						b,
 						result
 					});
-					if (result === 1 || result === 0) {
+					if (this.provider instanceof QuickPairProvider && result !== .5) {
 						const [w, l] = result === 1 ? [a, b] : [b, a];
 						this._applyTransitiveClosure(w, l, n);
 					}
@@ -2429,24 +2458,16 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					elements.undo.disabled = false;
 					this.updateProgress();
 					this.clear();
-					(winner === 'tie' ? elements.tie : elements[winner]).classList.add('selected');
-					setTimeout(() => {
-						if (!this.busy) return;
-						this.busy = false;
-						this.next(result);
+					this.next(result);
+					// The delay only prevents double votes; no durable work is pending.
+					if (this.pair) {
 						this.save();
-					}, 150);
+						setTimeout(() => { this.busy = false; }, 150);
+					} else this.busy = false;
 				}
 				next(result) {
 					this.clear();
-					const n = this.items.length;
-					let nextPair = this.provider.next(this, result);
-					const rowSize = (n + 31) >> 5;
-					while (this.provider instanceof QuickPairProvider && nextPair && (((this.reach[nextPair[0] * rowSize + (nextPair[1] >> 5)] >> (nextPair[1] & 31)) & 1) || ((this.reach[nextPair[1] * rowSize + (nextPair[0] >> 5)] >> (nextPair[0] & 31)) & 1))) {
-						this.provider.isTransitiveDiscovery = true;
-						this.provider._lastTransitiveResult = ((this.reach[nextPair[0] * rowSize + (nextPair[1] >> 5)] >> (nextPair[1] & 31)) & 1) ? 1 : 0;
-						nextPair = this.provider.next(this, this.provider._lastTransitiveResult);
-					}
+					const nextPair = this.nextUnseen(result);
 					if (!nextPair) {
 						this.pair = null;
 						return this.results();
@@ -2455,6 +2476,17 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					const swapKey = nextPair[0] < nextPair[1] ? `${nextPair[0]}-${nextPair[1]}` : `${nextPair[1]}-${nextPair[0]}`;
 					this.swapped = this.swaps[swapKey] ??= Math.random() < .5;
 					this.render();
+				}
+				nextUnseen(result) {
+					const n = this.items.length;
+					let nextPair = this.provider.next(this, result);
+					const rowSize = (n + 31) >> 5;
+					while (this.provider instanceof QuickPairProvider && nextPair && (((this.reach[nextPair[0] * rowSize + (nextPair[1] >> 5)] >> (nextPair[1] & 31)) & 1) || ((this.reach[nextPair[1] * rowSize + (nextPair[0] >> 5)] >> (nextPair[0] & 31)) & 1))) {
+						this.provider.isTransitiveDiscovery = true;
+						this.provider._lastTransitiveResult = ((this.reach[nextPair[0] * rowSize + (nextPair[1] >> 5)] >> (nextPair[1] & 31)) & 1) ? 1 : 0;
+						nextPair = this.provider.next(this, this.provider._lastTransitiveResult);
+					}
+					return nextPair;
 				}
 				render() {
 					let[a,b] = this.pair;
@@ -2500,7 +2532,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					const baseRanking = [...this.scores.keys()].sort((a,b)=>this.scores[b] - this.scores[a]);
 					const ranks = [];
 					baseRanking.forEach((x,i)=>ranks[x] = i + 1);
-					if (dirty || !this.stats)
+					if (this.items.length > 64 && !this.statsRequested) this.stats = null;
+					else if (dirty || !this.stats)
 						this.stats = Stats.calculate(this.items, this.scores, this.adj, this._rawScores);
 					const sortDir = this.sortState.direction === 'asc' ? 1 : -1;
 					const sorters = {
@@ -2519,6 +2552,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					headerWrapper.innerHTML = `<h2>${this.string('resultsTitle')}</h2>`;
 					headerWrapper.appendChild(elements.undo);
 					headerWrapper.appendChild(elements.copy);
+					if (this.items.length > 64 && !this.statsRequested) {
+						const button = document.createElement('button');
+						button.textContent = this.string('calcStats');
+						button.onclick = () => { this.statsRequested = true; this.results(true); };
+						headerWrapper.appendChild(button);
+					}
 					elements.results.appendChild(headerWrapper);
 					const filterDiv = document.createElement('div');
 					filterDiv.className = 'filter-wrap';
@@ -2629,7 +2668,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					if (focusTarget && !preventFocus)
 						setTimeout(()=>focusTarget.focus(), 50);
 				}
-				copyResults() {
+				async copyResults() {
 					const baseRanking = [...this.scores.keys()].sort((a,b)=>this.scores[b] - this.scores[a]);
 					const ranks = [];
 					baseRanking.forEach((x,i)=>ranks[x] = i + 1);
@@ -2657,13 +2696,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						return row.join('\t');
 					}
 					);
-					navigator.clipboard.writeText([headers, ...lines].join('\n')).then(()=>{
+					const tsv = [headers, ...lines].join('\n');
+					try {
+						await navigator.clipboard.writeText(tsv);
 						clearTimeout(this.copyTimeout);
 						elements.copy.textContent = this.string('copied');
 						elements.announcer.textContent = `${this.string('resultsTitle')} ${this.string('copied')}`;
 						this.copyTimeout = setTimeout(()=>elements.copy.textContent = this.string('copy'), 2e3);
+					} catch {
+						document.getElementById('manualCopy')?.remove();
+						const label = document.createElement('label');
+						label.id = 'manualCopy';
+						label.textContent = this.string('manualCopy');
+						const area = document.createElement('textarea');
+						area.readOnly = true;
+						area.value = tsv;
+						label.append(area);
+						elements.results.firstChild.after(label);
+						area.focus(); area.select();
 					}
-					);
 				}
 				cancel() {
 					const reset = ()=>{
@@ -2686,14 +2737,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 						const last = this.history.pop();
 						while (this.matches.length > last.step) this.matches.pop();
 						this.dirty = true;
-						this._rebuildReach();
 
 						Object.assign(this, {
 							step: last.step,
 							pair: last.pair,
 							swapped: last.swapped
 						});
-						this.provider.restore(last.state, this.matches);
+						if (this.provider instanceof QuickPairProvider && last.state == null) {
+							// Replay on undo rather than storing the entire sort stack per vote.
+							this.provider = new QuickPairProvider(this.items.length);
+							this._rebuildReach([]);
+							this.nextUnseen();
+							for (const {a,b,result} of this.matches) {
+								if (result !== .5) this._applyTransitiveClosure(result ? a : b, result ? b : a, this.items.length);
+								this.nextUnseen(result);
+							}
+						} else {
+							this.provider.restore(last.state);
+							this._rebuildReach();
+						}
 						this.render();
 						this.display('battleSection');
 						elements.undo.disabled = !this.history.length;
@@ -2714,7 +2776,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 					this.save();
 				}
 				key(event) {
-					if (event.repeat)
+					if (event.repeat || document.querySelector('dialog[open]') || !elements.sessionModal.classList.contains('hidden'))
 						return;
 					const {key, ctrlKey, metaKey, shiftKey} = event;
 					const isModifier = ctrlKey || metaKey;

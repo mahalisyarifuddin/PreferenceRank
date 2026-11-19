@@ -12,7 +12,7 @@ PreferenceRank mengurutkan pilihan Anda dengan membandingkannya dalam pasangan. 
 ## Mode Peringkat
 PreferenceRank menawarkan dua mode berbeda untuk mengurutkan pilihan Anda:
 
-- **Peringkat Penuh (Bawaan):** Menggunakan sistem round-robin yang komprehensif (Pertarungan = N(N-1)/2). Menjamin preferensi yang paling akurat tetapi tumbuh secara kuadratik. Terbaik untuk daftar kecil (<20 pilihan).
+- **Peringkat Penuh (Bawaan):** Menggunakan sistem round-robin yang komprehensif (Pertarungan = N(N-1)/2). Menanyakan setiap pasangan tepat satu kali dan hanya menghitung suara tersebut (seri berarti masing-masing mendapat setengah kemenangan). Ini menjamin cakupan, bukan konsistensi preferensi. Terbaik untuk daftar kecil (<20 pilihan).
 
 - **Peringkat Cepat:** Menggunakan **Ford-Johnson** untuk pembuatan pasangan yang efisien dan tanpa duplikat, dikombinasikan dengan **kemenangan transitif bayangan** untuk akurasi yang unggul.
 
@@ -25,6 +25,8 @@ Berdasarkan analisis perbandingan terhadap **168 provider pengurutan yang terdaf
 | Budgeted Merge Sort | 520.00 | 0.9619 |
 | **Ford-Johnson (Quick)** | 527.02 | 1.0000 |
 *Peringkat Cepat mengurangi jumlah pertarungan hingga sekitar 89% dibandingkan dengan Peringkat Penuh, sekaligus tetap mempertahankan akurasi peringkat yang tinggi. Algoritma yang menghasilkan perbandingan ganda dikecualikan dari proses produksi untuk memastikan efisiensi pengguna yang maksimal.*
+
+Tolok ukur membandingkan hasil dengan urutan acuan yang konsisten; angka ini bukan jaminan akurasi untuk pilihan manusia yang berubah atau membentuk siklus.
 
 ### Analisis Pencarian
 Kami juga menganalisis efisiensi algoritma pencarian dalam konteks operasi berbasis perbandingan. Pencarian biner mencapai efisiensi logaritmik ($O(\log N)$), secara signifikan mengungguli pencarian linear ($O(N)$) seiring bertambahnya ukuran daftar, yang sangat penting untuk algoritma seperti Binary Insertion Sort. Tolok ukur terperinci untuk N=10, 100, dan 1000 dapat ditemukan di [ANALYSIS-id.md](ANALYSIS-id.md).
@@ -43,14 +45,14 @@ Berdasarkan **analisis titik lutut**, ambang konvergensi ditetapkan ke 1e-7. Nil
 - **Input Fleksibel**: Urutkan apa saja—karakter, makanan, film, tujuan wisata, dan lainnya.
 - **Dua Mode Peringkat**: Pilih antara "Peringkat Penuh" yang komprehensif atau "Peringkat Cepat" yang cerdas (lihat detail di atas).
 - **Penilaian Ilmiah**: Menggunakan sistem peringkat Elo Bradley-Terry untuk hasil yang akurat.
-- **Estimasi Ketidakpastian**: Memvisualisasikan kepercayaan peringkat dengan detail "Rentang Peringkat" dan "Interval Kepercayaan (IK)", tersedia di mode **Peringkat Cepat** dan **Peringkat Penuh**.
+- **Estimasi Ketidakpastian**: Memvisualisasikan kepercayaan peringkat dengan detail "Rentang Peringkat" dan "Interval Kepercayaan (IK)", tersedia di mode **Peringkat Cepat** dan **Peringkat Penuh**. Untuk lebih dari 64 pilihan, skor ditampilkan terlebih dahulu; gunakan tombol estimasi ketidakpastian bila diperlukan.
 - **Jumlah Pertandingan**: Lihat jumlah pertarungan yang diikuti setiap pilihan untuk wawasan lebih mendalam.
 - **Nilai Huruf**: Sistem nilai huruf opsional berdasarkan skor Elo (S, A, B, C, D, E, F).
 - **Urungkan dan Seri**: Membatalkan pilihan terakhir Anda dengan mudah atau mengizinkan hasil seri dalam peringkat.
 - **Ringan**: Sebuah file HTML tunggal tanpa dependensi eksternal, membuatnya portabel dan cepat.
 - **Opsi Tema**: Pilih antara tema terang, gelap, atau otomatis untuk pengalaman yang dipersonalisasi.
 - **Pintasan Papan Ketik**: Gunakan pintasan papan ketik untuk pemilihan yang lebih cepat selama pemeringkatan.
-- **Penyimpanan Sesi**: Kemajuan Anda secara otomatis disimpan ke penyimpanan lokal peramban Anda, memungkinkan Anda untuk melanjutkan sesi peringkat kapan saja.
+- **Penyimpanan Sesi**: Pesan status menunjukkan apakah peramban berhasil menyimpan kemajuan Anda secara lokal. Jika gagal, Anda tetap dapat menyelesaikan sesi, tetapi jangan tutup tab sebelum menyalin hasil.
 - **Salin Hasil**: Salin tabel peringkat akhir Anda ke papan klip dengan mudah dengan satu klik.
 - **Dukungan Multi-bahasa**: Tersedia dalam bahasa Inggris dan Bahasa Indonesia.
 
@@ -59,6 +61,15 @@ PreferenceRank bersifat sumber terbuka, memungkinkan Anda untuk memodifikasi dan
 
 ## Lisensi
 Proyek ini dilisensikan di bawah Lisensi MIT. Lihat file `LICENSE` untuk detailnya.
+
+## Verifikasi untuk kontributor
+Gunakan Node.js 22 dari direktori utama repositori:
+
+```sh
+cd verify
+npm ci
+npm run verify
+```
 
 ## Kontribusi
 Kontribusi sangat disambut! Jangan ragu untuk melakukan fork pada repositori dan kirimkan pull request. Untuk perubahan besar, silakan buka issue terlebih dahulu untuk mendiskusikan ide Anda.
