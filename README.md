@@ -12,7 +12,7 @@ PreferenceRank sorts your items by comparing them in pairs. It uses an **Elo rat
 ## Ranking Modes
 PreferenceRank offers two distinct modes to sort your items:
 
-- **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Guarantees the most accurate preferences but grows quadratically. Best for small lists (<20 items).
+- **Full Rank (Default):** Uses a comprehensive round-robin system (Battles = N(N-1)/2). Asks every pair exactly once and scores only those votes (a tie counts as half a win each). This guarantees coverage, not consistent preferences. Best for small lists (<20 items).
 
 - **Quick Rank:** Uses **Ford-Johnson** for efficient, non-duplicating pair generation, combined with **shadow transitive wins** for superior accuracy.
 
@@ -28,6 +28,8 @@ Based on a comparative analysis of **256 registered sorting providers** (see [AN
 | Binary Insertion | 530.28 | 1.0000 |
 | Binary Gnome | 530.34 | 1.0000 |
 *Quick Rank reduces battles by ~89% compared to Full Rank while maintaining high ranking accuracy. Algorithms that produce duplicate comparisons are excluded from production to ensure maximum user efficiency.*
+
+The benchmark compares results against a consistent reference order. Its accuracy figures are not guarantees for human votes that change or form cycles.
 
 ### Search Analysis
 We also analyzed the efficiency of search algorithms within the context of comparison-based operations. Binary search achieves logarithmic efficiency ($O(\log N)$), significantly outperforming linear search ($O(N)$) as list sizes grow, which is critical for algorithms like Binary Insertion Sort. Detailed benchmarks for N=10, 100, and 1000 can be found in [ANALYSIS.md](ANALYSIS.md).
@@ -53,15 +55,26 @@ Based on a **knee point analysis**, the convergence threshold is set to 1e-7. Th
 - **Lightweight**: A single HTML file with no external dependencies, making it portable and fast.
 - **Theme Options**: Choose between light, dark, or auto themes for a personalized experience.
 - **Keyboard Shortcuts**: Use keyboard shortcuts for quicker selections during ranking.
-- **Session Persistence**: Your progress is automatically saved to your browser's local storage, allowing you to resume ranking sessions anytime.
+- **Session Persistence**: A status message tells you whether your browser saved your progress locally.
 - **Copy Results**: Easily copy your final ranking table to the clipboard with a single click.
 - **Multi-language Support**: Available in English and Bahasa Indonesia.
+
+For more than 64 items, scores appear first; request uncertainty estimates from the results screen if needed. If local storage fails, you can still finish in memory. Keep the tab open until you have copied your results.
 
 ## Customization
 PreferenceRank is open source, allowing you to modify and adapt it as needed. Tweak the algorithm, redesign the UI, or add new functionality—it's all up to you.
 
 ## License
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+## Contributor verification
+With Node.js 22, run from the repository root:
+
+```sh
+cd verify
+npm ci
+npm run verify
+```
 
 ## Contributions
 Contributions are welcome! Feel free to fork the repository and submit a pull request. For major changes, please open an issue first to discuss your ideas.
